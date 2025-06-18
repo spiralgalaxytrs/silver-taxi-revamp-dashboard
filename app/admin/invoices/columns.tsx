@@ -1,0 +1,233 @@
+"use client";
+
+import { ColumnDef } from "@tanstack/react-table";
+import { Button } from "components/ui/button";
+import { ArrowUpDown, MoreHorizontal, Download } from "lucide-react";
+import { toast } from "sonner"
+import { Checkbox } from "components/ui/checkbox";
+import { Edit, Copy, Trash, Eye } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogFooter
+} from 'components/ui/alert-dialog';
+import { useRouter } from "next/navigation";
+import { useState, useCallback } from "react";
+import { useInvoiceStore } from "stores/invoiceStore";
+
+export type Invoice = {
+  // id: string ;
+  invoiceId: string | "";
+  totalAmount: number;
+  status: string;
+  email: string;
+  createdAt: string;
+};
+
+export const columns: ColumnDef<Invoice>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+      />
+    ),
+  },
+  {
+    header: "S.No",
+    cell: ({ row }) => {
+      return <div>{row.index + 1}</div>
+    },
+  },
+  {
+    accessorKey: "invoiceNo",
+    header: "Invoice ID",
+  },
+  {
+    accessorKey: "email",
+    header: "Email"
+  },
+  {
+    accessorKey: "totalAmount",
+    header: () => <div className="text-right">Amount</div>,
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("totalAmount"));
+      const formatted = new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+      }).format(amount);
+
+      return <div className="text-right font-medium">{formatted}</div>;
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Created At",
+    cell: ({ row }) => {
+      const createdAt: string = row.getValue("createdAt");
+      if (!createdAt) {
+        return <div>-</div>;
+      }
+
+      // Parse the stored UTC date
+      const utcDate = new Date(createdAt);
+
+      // Adjust back to IST (Subtract 5.5 hours)
+      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+      // Format the corrected IST time
+      const options: Intl.DateTimeFormatOptions = {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      };
+
+      const formattedDate = istDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      const amPmTime = new Intl.DateTimeFormat("en-IN", options).format(utcDate);
+
+      return (
+        <div>
+          <div>{formattedDate}</div>
+          <div>{amPmTime}</div>
+        </div>
+      )
+    },
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      const invoice = row.original;
+      const router = useRouter()
+      const [isDialogOpen, setIsDialogOpen] = useState(false);
+      const { deleteInvoice, fetchInvoices } = useInvoiceStore()
+
+      const handleCopy = (id: string) => {
+        navigator.clipboard.writeText(id)
+          .then(() => {
+            toast.success("IP id copied!", {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
+          })
+          .catch((err) => {
+            // console.error("Failed to copy ID", err);
+            toast.error("Failed to copy ID", {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          });
+      };
+
+      const handleEditInvoice = useCallback(async (id: string | undefined) => {
+        await router.push(`/admin/invoices/edit/${id}`)
+      }, [router])
+
+      const cancelDelete = () => {
+        setIsDialogOpen(false);
+      }
+
+      const confirmDelete = async (id: string) => {
+        await deleteInvoice(id);
+        setIsDialogOpen(false);
+        toast.success("Invoice deleted successfully");
+      };
+
+      return (
+        <>
+          <div className="flex items-center gap-3 justify-center">
+            <div className="flex iems-center gap-3">
+
+              {/* View Icon */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-blue-600 hover:text-blue-800 tool-tip"
+                data-tooltip="View Details"
+                onClick={() => router.push(`/admin/invoices/view/${invoice.invoiceId}`)}
+              >
+                <Eye className="h-5 w-5" />
+              </Button>
+
+              {/* Edit Icon */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-green-600 hover:text-green-800 tool-tip"
+                data-tooltip="Edit Booking"
+                onClick={() => handleEditInvoice(invoice.invoiceId)}
+              >
+                <Edit className="h-5 w-5" />
+              </Button>
+
+              {/* Delete Icon */}
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-600 hover:text-red-800 tool-tip"
+                  data-tooltip="Delete Offer"
+                  onClick={() => setIsDialogOpen(true)}
+                >
+                  <Trash className="h-5 w-5" />
+                </Button>
+
+                <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this invoice?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => confirmDelete(invoice.invoiceId ?? '')}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+              {/* Copy Icon */}
+              {/* <Button
+              variant="ghost"
+              size="icon"
+              className="text-gray-500 hover:text-gray-700 tool-tip"
+              data-tooltip="Copy"
+              onClick={() => handleCopy(invoice.invoiceId)}
+            >
+              <Download className="h-5 w-5" />
+            </Button> */}
+
+            </div>
+          </div>
+        </>
+      );
+    },
+  },
+];
