@@ -25,8 +25,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Diamond Cabs",
-  description: "Diamond Cabs - A comprehensive platform for managing cab bookings, vendor interactions, and payment processing.",
+  title: "Silver Taxi",
+  description: "Silver Taxi - A comprehensive platform for managing cab bookings, vendor interactions, and payment processing.",
 };
 
 export default function RootLayout({
