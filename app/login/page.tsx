@@ -61,8 +61,7 @@ export default function LoginPage() {
 
     await login(formData.email, formData.password);
 
-    // Use a local state to manage the status code after login
-    const status = useAuthStore.getState().statusCode; // Get the latest status code
+    const status = useAuthStore.getState().statusCode; 
     const message = useAuthStore.getState().message;
     
     if (status === 200 || status === 201) {
