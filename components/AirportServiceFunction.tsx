@@ -25,7 +25,7 @@ export default function AirportServiceSection({ isEditing, serviceId, title }: S
     const { service, fetchServiceById, updateService } = useServiceStore();
     const [updatedService, setUpdatedService] = useState<AirportService>({
         serviceId: "",
-        name: "",
+        name: title,
         tax: { CGST: 0, SGST: 0, IGST: 0 },
         isActive: false,
         minKm: 0,
@@ -45,6 +45,7 @@ export default function AirportServiceSection({ isEditing, serviceId, title }: S
         if (service) {
             setUpdatedService({
                 ...service,
+                name: title,
                 city: service.city || [],
                 include: service.include || "",
                 exclude: service.exclude || ""
@@ -163,7 +164,7 @@ export default function AirportServiceSection({ isEditing, serviceId, title }: S
                                                 <Input
                                                     id="SGST"
                                                     type="number"
-                                                    value={updatedService.tax.SGST || 0}
+                                                    value={updatedService.tax?.SGST || 0}
                                                     className="mt-3"
                                                     onChange={(e) => handleTaxChange("SGST", Number(e.target.value))}
                                                 />
@@ -173,7 +174,7 @@ export default function AirportServiceSection({ isEditing, serviceId, title }: S
                                                 <Input
                                                     id="IGST"
                                                     type="number"
-                                                    value={updatedService.tax.IGST || 0}
+                                                    value={updatedService.tax?.IGST || 0}
                                                     className="mt-3"
                                                     onChange={(e) => handleTaxChange("IGST", Number(e.target.value))}
                                                 />

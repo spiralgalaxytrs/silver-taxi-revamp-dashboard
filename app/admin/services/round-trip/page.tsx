@@ -51,7 +51,7 @@ export default function RoundTripPage() {
               </button>
             </div>
 
-            <ServiceSection isEditing={isEditing} serviceId={id} title="Round Trip" />
+            <ServiceSection isEditing={isEditing} serviceId={id} title="Round trip" />
 
             <div className="border-b border-black" />
 

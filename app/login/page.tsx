@@ -11,9 +11,7 @@ import { toast } from "sonner";
 export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    // email: "tenant@gmail.com",
-    // password: "admin123",
-    email: "diamondcabs@gmail.com",
+    email: "silvertaxi@gmail.com",
     password: "12345678",
   });
   const login = useAuthStore((state) => state.login);
