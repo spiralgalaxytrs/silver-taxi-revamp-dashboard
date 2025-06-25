@@ -18,38 +18,33 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const [loading, setLoading] = useState<boolean>(true)
-  // const [isAuthorized, setIsAuthorized] = useState<AuthState>({
-  //   token: "",
-  //   role: ""
-  // })
+  const [isAuthorized, setIsAuthorized] = useState<AuthState>({
+    token: "",
+    role: ""
+  })
 
-  // useEffect(() => {
-  //   const getToken: string | null = sessionStorage.getItem('token')
-  //   const getRole: string | null = sessionStorage.getItem('role')
-  //   setIsAuthorized({
-  //     token: getToken,
-  //     role: getRole
-  //   })
-  //   setLoading(false)
-  // }, [])
+  useEffect(() => {
+    const getToken: string | null = sessionStorage.getItem('token')
+    const getRole: string | null = sessionStorage.getItem('role')
+    setIsAuthorized({
+      token: getToken,
+      role: getRole
+    })
+    setLoading(false)
+  }, [])
 
-  const isAuthorized = {
-    token: 'dummytoken',
-    role: 'admin'
+
+  if (loading) {
+    return <Loading />
   }
 
+  if (isAuthorized.token === "") {
+    return <Unauthorized />
+  }
 
-  // if (loading) {
-  //   return <Loading />
-  // }
-
-  // if (isAuthorized.token === "") {
-  //   return <Unauthorized />
-  // }
-
-  // if (isAuthorized.role !== "admin") {
-  //   return <Unauthorized />
-  // }
+  if (isAuthorized.role !== "admin") {
+    return <Unauthorized />
+  }
 
 
   return (

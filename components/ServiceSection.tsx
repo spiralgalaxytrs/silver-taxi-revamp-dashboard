@@ -23,7 +23,7 @@ export function ServiceSection({ isEditing, serviceId, title }: ServiceSectionPr
   const router = useRouter();
   const [updatedService, setUpdatedService] = useState<Service>({
     serviceId: "",
-    name: "",
+    name: title,
     tax: { CGST: 0, SGST: 0, IGST: 0 },
     isActive: false,
     minKm: 0,
@@ -33,25 +33,28 @@ export function ServiceSection({ isEditing, serviceId, title }: ServiceSectionPr
     exclude: "",
   });
 
-
   useEffect(() => {
-    
+
     const resolveId = async () => {
       const id = await serviceId;
       setId(id);
       fetchServiceById(id);
       useServiceStore.getState().service;
+      console.log("Service fetched:", service?.isActive);
       if (service) {
         setUpdatedService({
           ...service,
+          name: title,
           include: service.include || "",
           exclude: service.exclude || ""
         });
       }
     }
     resolveId();
+    console.log("Updated Service State:", updatedService);
 
   }, [serviceId]);
+
 
 
   const handleTaxChange = (key: keyof Service["tax"], value: any) => {
@@ -65,11 +68,13 @@ export function ServiceSection({ isEditing, serviceId, title }: ServiceSectionPr
   };
 
   const handleInputChange = (key: keyof Service, value: any) => {
+    console.log("handleInputChange called with key:", key, "and value:", value);
     if (key === "isActive") {
       setUpdatedService((prev) => ({
         ...prev,
         [key]: value,
       }));
+
     } else {
       setUpdatedService((prev) => ({
         ...prev,
@@ -87,6 +92,7 @@ export function ServiceSection({ isEditing, serviceId, title }: ServiceSectionPr
 
   const handleUpdateService = () => {
     if (updatedService) {
+      console.log("Updated Service:", updatedService);
       updateService(serviceId, updatedService);
       const status = useServiceStore.getState().statusCode;
       const message = useServiceStore.getState().message;
@@ -147,7 +153,7 @@ export function ServiceSection({ isEditing, serviceId, title }: ServiceSectionPr
                       <Input
                         id="SGST"
                         type="number"
-                        value={updatedService.tax.SGST || 0}
+                        value={updatedService.tax?.SGST || 0}
                         className="mt-3"
                         onChange={(e) => handleTaxChange("SGST", Number(e.target.value))}
                       />
@@ -157,7 +163,7 @@ export function ServiceSection({ isEditing, serviceId, title }: ServiceSectionPr
                       <Input
                         id="IGST"
                         type="number"
-                        value={updatedService.tax.IGST || 0}
+                        value={updatedService.tax?.IGST || 0}
                         className="mt-3"
                         onChange={(e) => handleTaxChange("IGST", Number(e.target.value))}
                       />
