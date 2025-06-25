@@ -38,7 +38,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       }
 
       const getBaseUrl = () => {
-        return process.env.NEXT_PUBLIC_APP_MODE === 'development' 
+        return process.env.NEXT_PUBLIC_APP_MODE == 'development' 
           ? process.env.NEXT_PUBLIC_DEV_SOCKET_URL 
           : process.env.NEXT_PUBLIC_SOCKET_URL;
       }

@@ -155,6 +155,7 @@ export const useServiceStore = create<ServiceState>()(
                     });
                 } catch (error) {
                     const axiosError = error as AxiosError<ErrorResponse>;
+                    console.error("Update Service Error:", axiosError);
                     set({
                         error: axiosError.response?.data?.message,
                         isLoading: false,
