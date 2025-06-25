@@ -8,6 +8,7 @@ import {
   User,
   AudioWaveform,
   BadgePercent,
+  
   Calendar,
   Settings,
   CreditCard,
@@ -21,7 +22,8 @@ import {
   ChartColumnIncreasing,
   MapPin,
   BookOpenCheck,
-  HandCoins
+  HandCoins,
+  TicketPercent
 } from "lucide-react";
 import Image from "next/image";
 import { useProfileStore } from "stores/profileStore";
@@ -156,31 +158,31 @@ const AdminSidebarItems: {
         { name: "Create Invoice", href: "/admin/invoices/create", icon: SquareChevronRight },
       ],
     },
-    { name: "Site Analytics", href: "/admin/iptracking", icon: ChartColumnIncreasing },
-    {
-      name: "Blog",
-      icon: BookOpenCheck,
-      dropdown: [
-        { name: "Blog", href: "/admin/blog", icon: SquareChevronRight },
-        { name: "Create Blog", href: "/admin/blog/create", icon: SquareChevronRight },
-      ]
-    },
-    {
-      name: "Dynamic Routes",
-      icon: Route,
-      dropdown: [
-        { name: "Dynamic Routes", href: "/admin/dynamic-routes", icon: SquareChevronRight },
-        { name: "Create Dynamic Route", href: "/admin/dynamic-routes/create", icon: SquareChevronRight },
-      ]
-    },
-    {
-      name: "Popular Routes",
-      icon: MapPin,
-      dropdown: [
-        { name: "Popular Routes", href: "/admin/popular-routes", icon: SquareChevronRight },
-        { name: "Create Popular Route", href: "/admin/popular-routes/create", icon: SquareChevronRight },
-      ]
-    },
+    // { name: "Site Analytics", href: "/admin/iptracking", icon: ChartColumnIncreasing },
+    // {
+    //   name: "Blog",
+    //   icon: BookOpenCheck,
+    //   dropdown: [
+    //     { name: "Blog", href: "/admin/blog", icon: SquareChevronRight },
+    //     { name: "Create Blog", href: "/admin/blog/create", icon: SquareChevronRight },
+    //   ]
+    // },
+    // {
+    //   name: "Dynamic Routes",
+    //   icon: Route,
+    //   dropdown: [
+    //     { name: "Dynamic Routes", href: "/admin/dynamic-routes", icon: SquareChevronRight },
+    //     { name: "Create Dynamic Route", href: "/admin/dynamic-routes/create", icon: SquareChevronRight },
+    //   ]
+    // },
+    // {
+    //   name: "Popular Routes",
+    //   icon: MapPin,
+    //   dropdown: [
+    //     { name: "Popular Routes", href: "/admin/popular-routes", icon: SquareChevronRight },
+    //     { name: "Create Popular Route", href: "/admin/popular-routes/create", icon: SquareChevronRight },
+    //   ]
+    // },
     {
       name: "Offers",
       icon: BadgePercent,
@@ -189,6 +191,16 @@ const AdminSidebarItems: {
         { name: "Create Offers", href: "/admin/offers/create", icon: SquareChevronRight },
       ],
     },
+
+       {
+      name: "Promo Code",
+      icon: TicketPercent,
+      dropdown: [
+        { name: "Promo Codes", href: "/admin/promo-codes", icon: SquareChevronRight },
+        { name: "Create Promo Codes", href: "/admin/promo-codes/create", icon: SquareChevronRight },
+      ],
+    },
+    
     {
       name: "Payments",
       icon: CreditCard,
