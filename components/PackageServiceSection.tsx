@@ -26,7 +26,7 @@ export default function PackageServiceSection({ isEditing, serviceId, title }: S
     const { service, fetchServiceById, updateService } = useServiceStore();
     const [updatedService, setUpdatedService] = useState<PackageService>({
         serviceId: "",
-        name: "",
+        name: title,
         tax: { CGST: 0, SGST: 0, IGST: 0 },
         isActive: false,
         minKm: 0,
@@ -46,6 +46,7 @@ export default function PackageServiceSection({ isEditing, serviceId, title }: S
         if (service) {
             setUpdatedService({
                 ...service,
+                name: title,
                 city: service.city || [],
                 include: service.include || "",
                 exclude: service.exclude || ""

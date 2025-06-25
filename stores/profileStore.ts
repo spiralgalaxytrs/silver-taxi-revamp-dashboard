@@ -106,6 +106,7 @@ export const useProfileStore = create<ProfileState>()(
                         .then(async (res) => {
                             profileData.logo = res.data.data;
                             const response = await axios.post("/v1/company-profile", profileData)
+                            console.log("Profile created successfully", response.data);
                             set({
                                 profile: response.data.data,
                                 isLoading: false,
@@ -114,6 +115,7 @@ export const useProfileStore = create<ProfileState>()(
                             });
                         })
                         .catch((err) => {
+                            console.error("Error uploading image:", err);
                             set({
                                 error: err.response?.data?.message,
                                 isLoading: false,
