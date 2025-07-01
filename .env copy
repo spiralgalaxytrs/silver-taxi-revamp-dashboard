@@ -1,0 +1,15 @@
+PORT=3012
+
+NEXT_PUBLIC_APP_MODE = development
+# NEXT_PUBLIC_APP_MODE = production
+
+# Development API URL
+NEXT_PUBLIC_DEV_API_URL=http://localhost:3011
+NEXT_PUBLIC_DEV_SOCKET_URL=ws://localhost:3011/v1
+
+# Production API URL
+NEXT_PUBLIC_API_URL=https://localhost:3060
+NEXT_PUBLIC_SOCKET_URL=wss://localhost:3060
+
+# Google Maps API Key
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyB4SeIiVlODvMafSbUwJeDU0vsRR98o9Dc
