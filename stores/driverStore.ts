@@ -29,14 +29,14 @@ interface Driver {
     panCardRemark?: string;
     aadharImageFront?: string;
     aadharImageBack?: string;
-    aadharImageFrontVerified?: "pending" | "accepted" | "rejected";
-    aadharImageBackVerified?: "pending" | "accepted" | "rejected";
+    aadharImageFrontVerified?:  "pending" | "accepted" | "rejected";
+    aadharImageBackVerified?:  "pending" | "accepted" | "rejected";
     aadharImageFrontRemark?: string;
     aadharImageBackRemark?: string;
     licenseImageFront?: string;
     licenseImageBack?: string;
-    licenseImageFrontVerified?: "pending" | "accepted" | "rejected";
-    licenseImageBackVerified?: "pending" | "accepted" | "rejected";
+    licenseImageFrontVerified?:  "pending" | "accepted" | "rejected";
+    licenseImageBackVerified?:  "pending" | "accepted" | "rejected";
     licenseImageFrontRemark?: string;
     licenseImageBackRemark?: string;
 
@@ -58,6 +58,86 @@ interface Driver {
     totalAmount?: number;
     startAmount?: number;
 }
+
+interface wallet {
+    transactionId: string;
+    initiatedBy: string;
+    initiatedTo: string;
+    type: string;
+    date: string;
+    // vendorId: string;
+    driverId: string;
+    amount: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+
+
+interface ExpiryStatus {
+    license: {
+        expiry: string;
+        isExpired: boolean;
+    };
+    vehicles: Array<{
+        id: number;
+        vehicleId: string;
+        rcBook: {
+            expiry: string;
+            isExpired: boolean;
+        };
+        insurance: {
+            expiry: string;
+            isExpired: boolean;
+        };
+        pollution: {
+            expiry: string;
+            isExpired: boolean;
+        };
+    }>;
+}
+interface ErrorResponse {
+    message: string;
+    success: boolean;
+}
+
+// const useDriverStore = create((set) => ({
+//     drivers: [],
+//     fetchDrivers: async () => {
+//       const response = await axios.get("/api/drivers");
+//       set({ drivers: response.data });
+//     },
+//     getActiveDrivers: () => {
+//       const state = useDriverStore.getState();
+//       return state.drivers.filter((driver) => driver.status === "active");
+//     },
+//   }));
+
+interface DriverState {
+    drivers: Driver[];
+    driver: Driver | null;
+    wallets: wallet[];
+    activeDrivers: Driver[];
+    error: string | null;
+    statusCode: number | null;
+    message: string | null;
+    isLoading: boolean;
+    fetchDrivers: () => Promise<void>;
+    fetchDriverById: (id: string) => Promise<void>;
+    createDriver: (newDriver: Partial<Driver>) => Promise<void>;
+    updateDriver: (id: string, driverData: Partial<Driver>) => Promise<void>;
+    deleteDriver: (id: string) => Promise<void>;
+    getActiveDrivers: () => Promise<void>;
+    getDriverWallet: (id: string) => Promise<void>;
+    addDriverWallet: (id: string, amount: number, remark: string, adjustmentReason: string) => Promise<void>;
+    minusDriverWallet: (id: string, amount: number, remark: string, adjustmentReason: string) => Promise<void>;
+    multiDeleteDrivers: (driverIds: string[]) => Promise<void>;
+    toggleDriverStatus: (id: string, status: boolean) => Promise<void>;
+    verificationStatus: (id: string, data: any) => Promise<string>;
+    expiryCheck: (id: string) => Promise<void>;
+
+}
+
 
 
 export interface VehicleAttributes {
@@ -97,91 +177,10 @@ export interface VehicleAttributes {
     insuranceRemark?: string;
     pollutionImage?: string;
     pollutionExpiryDate?: string;
-    pollutionImageVerified?: "pending" | "accepted" | "rejected";
+    pollutionImageVerified  ?: "pending" | "accepted" | "rejected";
     pollutionImageRemark?: string;
 }
 
-interface wallet {
-    transactionId: string;
-    initiatedBy: string;
-    initiatedTo: string;
-    type: string;
-    date: string;
-    // vendorId: string;
-    driverId: string;
-    amount: number;
-    createdAt: string;
-    updatedAt: string;
-}
-
-
-
-
-interface ExpiryStatus {
-    license: {
-        expiry: string;
-        isExpired: boolean;
-    };
-    vehicles: Array<{
-        id: number;
-        vehicleId: string;
-        rcBook: {
-            expiry: string;
-            isExpired: boolean;
-        };
-        insurance: {
-            expiry: string;
-            isExpired: boolean;
-        };
-        pollution: {
-            expiry: string;
-            isExpired: boolean;
-        };
-    }>;
-}
-
-interface ErrorResponse {
-    message: string;
-    success: boolean;
-}
-
-// const useDriverStore = create((set) => ({
-//     drivers: [],
-//     fetchDrivers: async () => {
-//       const response = await axios.get("/api/drivers");
-//       set({ drivers: response.data });
-//     },
-//     getActiveDrivers: () => {
-//       const state = useDriverStore.getState();
-//       return state.drivers.filter((driver) => driver.status === "active");
-//     },
-//   }));
-
-interface DriverState {
-    drivers: Driver[];
-    driver: Driver | null;
-    wallets: wallet[];
-    activeDrivers: Driver[];
-    error: string | null;
-    statusCode: number | null;
-    message: string | null;
-    isLoading: boolean;
-    fetchDrivers: () => Promise<void>;
-    fetchDriverById: (id: string) => Promise<void>;
-    createDriver: (newDriver: Partial<Driver>) => Promise<void>;
-    updateDriver: (id: string, driverData: Partial<Driver>) => Promise<void>;
-    deleteDriver: (id: string) => Promise<void>;
-    getActiveDrivers: () => Promise<void>;
-    getDriverWallet: (id: string) => Promise<void>;
-    addDriverWallet: (id: string, amount: number, remark: string, adjustmentReason: string) => Promise<void>;
-    minusDriverWallet: (id: string, amount: number, remark: string, adjustmentReason: string) => Promise<void>;
-    multiDeleteDrivers: (driverIds: string[]) => Promise<void>;
-    toggleDriverStatus: (id: string, status: boolean) => Promise<void>;
-    expiryCheck: (id: string) => Promise<void>;
-    verificationStatus: (id: string, data: any) => Promise<string>;
-
-
-}
 
 export const useDriverStore = create<DriverState>()(
     persist(
@@ -362,10 +361,10 @@ export const useDriverStore = create<DriverState>()(
                 }
             },
 
-            addDriverWallet: async (id, amount, remark) => {
+            addDriverWallet: async (id, amount, remark, adjustmentReason) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const response = await axios.post(`/v1/drivers/wallet/add/${id}`, { amount, remark });
+                    const response = await axios.post(`/v1/drivers/wallet/add/${id}`, { amount, remark, adjustmentReason });
                     set((state) => ({
                         drivers: state.drivers.map((driver) =>
                             driver.driverId === id ? { ...driver, wallet: response.data.data } : driver
@@ -384,10 +383,10 @@ export const useDriverStore = create<DriverState>()(
                 }
             },
 
-            minusDriverWallet: async (id, amount, remark) => {
+            minusDriverWallet: async (id, amount, remark, adjustmentReason) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const response = await axios.post(`/v1/drivers/wallet/minus/${id}`, { amount, remark });
+                    const response = await axios.post(`/v1/drivers/wallet/minus/${id}`, { amount, remark, adjustmentReason });
                     set((state) => ({
                         drivers: state.drivers.map((driver) =>
                             driver.driverId === id ? { ...driver, wallet: response.data.data } : driver
@@ -461,7 +460,7 @@ export const useDriverStore = create<DriverState>()(
                 set({ isLoading: true, error: null });
                 try {
                     if (!data.status) throw new Error("Status is required");
-
+                 
 
                     const response = await axios.put(`/v1/drivers/verification/${id}`, data);
 
@@ -506,9 +505,17 @@ export const useDriverStore = create<DriverState>()(
                     throw new Error(message);
                 }
             },
+
+
+
+
+
+
         }),
         { name: "driver-store" }
     )
 );
 
 export type { Driver, ExpiryStatus };
+
+

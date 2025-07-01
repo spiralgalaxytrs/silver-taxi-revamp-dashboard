@@ -425,6 +425,7 @@ export default function ViewDriverPage() {
         }
     }, [bookings, id]);
 
+    
 
     useEffect(() => {
         const fetchTransactions = async () => {

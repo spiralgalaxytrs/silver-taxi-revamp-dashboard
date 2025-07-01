@@ -48,6 +48,8 @@ function TaxiCompanyProfile() {
     </>
   }
 
+  console.log("Details", profile);
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-[#EBF3E8] to-[#EBF3E8] py-12 px-4 sm:px-6 lg:px-8">

@@ -124,14 +124,14 @@ const AdminSidebarItems: {
             { name: "Round Trip", href: "/admin/price-changes/outStation/roundtrip-pricing", icon: SquareChevronRight },
           ],
         },
-        {
-          name: "Airport Pricing",
-          icon: SquareChevronDown,
-          subDropdown: [
-            { name: "Pickup ", href: "/admin/price-changes/airport/pickup-pricing", icon: SquareChevronRight },
-            { name: "Drop", href: "/admin/price-changes/airport/drop-pricing", icon: SquareChevronRight },
-          ],
-        },
+        // {
+        //   name: "Airport Pricing",
+        //   icon: SquareChevronDown,
+        //   subDropdown: [
+        //     { name: "Pickup ", href: "/admin/price-changes/airport/pickup-pricing", icon: SquareChevronRight },
+        //     { name: "Drop", href: "/admin/price-changes/airport/drop-pricing", icon: SquareChevronRight },
+        //   ],
+        // },
       ],
     },
     {
