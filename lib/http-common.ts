@@ -6,12 +6,6 @@ const base_url =
         ? process.env.NEXT_PUBLIC_DEV_API_URL
         : process.env.NEXT_PUBLIC_API_URL;
 
-
-console.log('App Mode: >>', APP_MODE);
-console.log('API URL:>>', process.env.NEXT_PUBLIC_API_URL);
-console.log('API URL:>>', process.env.NEXT_PUBLIC_DEV_API_URL);
-console.log('Base URL: >>', base_url);
-
 if (!base_url) {
     throw new Error("Base URL is not defined. Check your environment variables.");
 }
