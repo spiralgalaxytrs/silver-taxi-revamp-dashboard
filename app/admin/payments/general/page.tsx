@@ -220,7 +220,7 @@ export default function GeneralPaymentPage() {
         <div className="rounded bg-white p-5 shadow">
           <div className="flex flex-col">
             <div className="flex justify-between items-center mb-5">
-              <h1 className="text-2xl font-bold tracking-tight">General Payment</h1>
+              <h1 className="text-2xl font-bold tracking-tight">Customer Payment</h1>
               <div className="flex items-center gap-2">
                 {/* {showFilters && <Button variant="outline" onClick={handleClear}>
                   Clear
@@ -274,7 +274,7 @@ export default function GeneralPaymentPage() {
                 <Label className="text-sm font-medium leading-none">Search</Label>
                 <Input
                   id="search"
-                  placeholder="Search payments"
+                  placeholder="Transaction ID / Phone"
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                 />
@@ -286,9 +286,9 @@ export default function GeneralPaymentPage() {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="completed">Paid</SelectItem>
+                    <SelectItem value="pending">Refund Pending</SelectItem>
+                    <SelectItem value="cancelled">Refund</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

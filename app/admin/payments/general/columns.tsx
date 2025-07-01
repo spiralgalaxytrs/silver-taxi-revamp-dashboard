@@ -13,7 +13,7 @@ export type GeneralTransaction = {
     type: string;
     amount: number;
     createdAt: string;
-    description: string
+    description: string;
 };
 
 export const columns: ColumnDef<GeneralTransaction>[] = [
@@ -25,30 +25,38 @@ export const columns: ColumnDef<GeneralTransaction>[] = [
         accessorKey: "transactionId",
         header: "Transaction ID",
     },
-    {
-        accessorKey: "driverId",
-        header: "Driver ID",
-        cell: ({ row }) => {
-            const driverId = row.getValue("driverId");
-            return driverId || "-";
-        }
-    },
-    {
-        accessorKey: "vendorId",
-        header: "Vendor ID",
-        cell: ({ row }) => {
-            const vendorId = row.getValue("vendorId");
-            return vendorId || "-";
-        }
-    },
+    // {
+    //     accessorKey: "driverId",
+    //     header: "Driver ID",
+    //     cell: ({ row }) => {
+    //         const driverId = row.getValue("driverId");
+    //         return driverId || "-";
+    //     }
+    // },
+    // {
+    //     accessorKey: "vendorId",
+    //     header: "Vendor ID",
+    //     cell: ({ row }) => {
+    //         const vendorId = row.getValue("vendorId");
+    //         return vendorId || "-";
+    //     }
+    // },
     {
         accessorKey: "initiatedTo",
-        header: "Name/Phone",
+        header: "Name",
     },
-    {
-        accessorKey: "ownedBy",
-        header: "Category",
+      {
+        accessorKey: "initiatedTo",
+        header: "Phone",
+    },  {
+        accessorKey: "initiatedTo",
+        header: "Email",
     },
+
+    // {
+    //     accessorKey: "ownedBy",
+    //     header: "Category",
+    // },
     {
         accessorKey: "type",
         header: "Transaction Type",
@@ -78,9 +86,13 @@ export const columns: ColumnDef<GeneralTransaction>[] = [
             return <div>{prefix} {formatted}</div>
         },
     },
+      {
+        accessorKey: "initiatedTo",
+        header: "Status",
+    },
     {
         accessorKey: "createdAt",
-        header: "Date/Time",
+        header: "Created Date/Time",
         cell: ({ row }) => {
             const createdAt: string = row.getValue("createdAt")
             const date = new Date(createdAt);

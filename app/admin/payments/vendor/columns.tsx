@@ -24,14 +24,23 @@ export const columns: ColumnDef<VendorTransaction>[] = [
         accessorKey: "transactionId",
         header: "Transaction ID",
     },
-    {
-        accessorKey: "vendorId",
-        header: "Vendor ID",
-    },
+    // {
+    //     accessorKey: "vendorId",
+    //     header: "Vendor ID",
+    // },
     {
         accessorKey: "initiatedTo",
-        header: "Name/Phone",
+        header: "Name",
     },
+      {
+        accessorKey: "initiatedTo",
+        header: "Phone",
+    },
+      {
+        accessorKey: "initiatedTo",
+        header: "Email",
+    },
+      
     {
         accessorKey: "ownedBy",
         header: "Category",
@@ -66,8 +75,12 @@ export const columns: ColumnDef<VendorTransaction>[] = [
         },
     },
     {
+        accessorKey: "initiatedTo",
+        header: "Status",
+    },
+    {
         accessorKey: "createdAt",
-        header: "Date/Time",
+        header: "Created Date/Time",
         cell: ({ row }) => {
             const createdAt: string = row.getValue("createdAt")
             const date = new Date(createdAt);

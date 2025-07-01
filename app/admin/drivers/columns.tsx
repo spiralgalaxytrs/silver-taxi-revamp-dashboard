@@ -80,10 +80,10 @@ export const columns: ColumnDef<Driver>[] = [
     accessorKey: "phone",
     header: "Phone Number",
   },
-  {
-    accessorKey: "license",
-    header: "License Number",
-  },
+  // {
+  //   accessorKey: "license",
+  //   header: "License Number",
+  // },
   {
     accessorKey: "walletAmount",
     header: "Wallet Balance",
