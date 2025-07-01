@@ -264,7 +264,7 @@ export default function VendorPaymentPage() {
               <Label htmlFor="search">Search</Label>
               <Input
                 id="search"
-                placeholder="Search payments"
+                placeholder="Transaction ID / Phone"
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
               />
@@ -277,9 +277,9 @@ export default function VendorPaymentPage() {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="completed">Paid</SelectItem>
+                    <SelectItem value="pending">Refund Pending</SelectItem>
+                    <SelectItem value="cancelled">Refund</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

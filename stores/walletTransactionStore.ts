@@ -13,9 +13,10 @@ type WalletTransaction = {
     amount: number;
     status: string;
     date: string;
+    reason?: string;
     remark: string;
     description: string
-    createdAt: string;    
+    createdAt: string;
 };
 
 interface ErrorResponse {
@@ -59,7 +60,7 @@ export const useWalletTransactionStore = create<WalletTransactionState>()(
                 } catch (error) {
                     const axiosError = error as AxiosError<ErrorResponse>;
                     set({
-                        vendorTransactions:[],
+                        vendorTransactions: [],
                         error: axiosError.response?.data?.message,
                         isLoading: false,
                         message: axiosError.response?.data?.message,
@@ -79,8 +80,9 @@ export const useWalletTransactionStore = create<WalletTransactionState>()(
                     });
                 } catch (error) {
                     const axiosError = error as AxiosError<ErrorResponse>;
+                    console.log("Error", axiosError.response?.data);
                     set({
-                        driverTransactions:[],
+                        driverTransactions: [],
                         error: axiosError.response?.data?.message,
                         isLoading: false,
                         message: axiosError.response?.data?.message,
@@ -101,7 +103,7 @@ export const useWalletTransactionStore = create<WalletTransactionState>()(
                 } catch (error) {
                     const axiosError = error as AxiosError<ErrorResponse>;
                     set({
-                        vendorTransactions:[],
+                        vendorTransactions: [],
                         error: axiosError.response?.data?.message,
                         isLoading: false,
                         message: axiosError.response?.data?.message,
@@ -122,7 +124,7 @@ export const useWalletTransactionStore = create<WalletTransactionState>()(
                 } catch (error) {
                     const axiosError = error as AxiosError<ErrorResponse>;
                     set({
-                        driverTransactions:[],
+                        driverTransactions: [],
                         error: axiosError.response?.data?.message,
                         isLoading: false,
                         message: axiosError.response?.data?.message,

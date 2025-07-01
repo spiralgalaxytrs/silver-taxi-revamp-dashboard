@@ -50,7 +50,7 @@ export default function DriversPage(): JSX.Element {
   const [inactiveDrivers, setInactiveDrivers] = useState(0);
 
   const [driverData, setDriverData] = useState(
-    drivers?.map(driver => ({ ...driver, id: driver.driverId }))
+    drivers?.map(driver => ({ ...driver, id: driver?.driverId }))
   );
 
   // Filters state for search and created date range
@@ -69,7 +69,7 @@ export default function DriversPage(): JSX.Element {
     if (drivers) {
       setDriverData(drivers.map(driver => ({
         ...driver,
-        id: driver.driverId ?? '',
+        id: driver?.driverId ?? '',
         walletAmount: driver.wallet?.balance ?? 0
       })));
     }
@@ -86,7 +86,7 @@ export default function DriversPage(): JSX.Element {
 
     if (filters.search) {
       filtered = filtered.filter(driver =>
-        driver.driverId?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        driver?.driverId?.toLowerCase().includes(filters.search.toLowerCase()) ||
         driver.name.toLowerCase().includes(filters.search.toLowerCase()) ||
         driver.email?.toLowerCase().includes(filters.search.toLowerCase())
       );
@@ -187,7 +187,7 @@ export default function DriversPage(): JSX.Element {
   const confirmBulkDelete = async () => {
     const selectedIds = Object.keys(rowSelection);
     await multiDeleteDrivers(selectedIds);
-    const newData = driverData.filter(driver => !selectedIds.includes(driver.driverId ?? ''));
+    const newData = driverData.filter(driver => !selectedIds.includes(driver?.driverId ?? ''));
     setDriverData(newData);
     setRowSelection({});
     const status = useDriverStore.getState().statusCode

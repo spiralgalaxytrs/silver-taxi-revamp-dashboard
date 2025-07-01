@@ -1,13 +1,13 @@
 import React from 'react'
 
 const PreLoader = () => {
-    const text = "Diamond Cabs";
+    const text = "Silver Taxi";
     const rings = 2;
     const ringSectors = 30;
   
     const styleCenter = {
       display: "flex",
-      justifyContent: "center",
+      justifyContent: "center", 
       alignItems: "center",
       height: "90vh",
       width: "100dvw",

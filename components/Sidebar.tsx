@@ -8,7 +8,7 @@ import {
   User,
   AudioWaveform,
   BadgePercent,
-  
+
   Calendar,
   Settings,
   CreditCard,
@@ -102,14 +102,14 @@ const AdminSidebarItems: {
             { name: "Hourly Packages", href: "/admin/services/packages/hourly", icon: SquareChevronRight },
           ],
         },
-        {
-          name: "Airport",
-          icon: SquareChevronDown,
-          subDropdown: [
-            { name: "Pickup ", href: "/admin/services/airport/pickup", icon: SquareChevronRight },
-            { name: "Drop", href: "/admin/services/airport/drop", icon: SquareChevronRight },
-          ],
-        },
+        // {
+        //   name: "Airport",
+        //   icon: SquareChevronDown,
+        //   subDropdown: [
+        //     { name: "Pickup ", href: "/admin/services/airport/pickup", icon: SquareChevronRight },
+        //     { name: "Drop", href: "/admin/services/airport/drop", icon: SquareChevronRight },
+        //   ],
+        // },
       ],
     },
     {
@@ -124,14 +124,14 @@ const AdminSidebarItems: {
             { name: "Round Trip", href: "/admin/price-changes/outStation/roundtrip-pricing", icon: SquareChevronRight },
           ],
         },
-        {
-          name: "Airport Pricing",
-          icon: SquareChevronDown,
-          subDropdown: [
-            { name: "Pickup ", href: "/admin/price-changes/airport/pickup-pricing", icon: SquareChevronRight },
-            { name: "Drop", href: "/admin/price-changes/airport/drop-pricing", icon: SquareChevronRight },
-          ],
-        },
+        // {
+        //   name: "Airport Pricing",
+        //   icon: SquareChevronDown,
+        //   subDropdown: [
+        //     { name: "Pickup ", href: "/admin/price-changes/airport/pickup-pricing", icon: SquareChevronRight },
+        //     { name: "Drop", href: "/admin/price-changes/airport/drop-pricing", icon: SquareChevronRight },
+        //   ],
+        // },
       ],
     },
     {
@@ -142,14 +142,14 @@ const AdminSidebarItems: {
         { name: "Create Vehicle", href: "/admin/vehicles/create", icon: SquareChevronRight },
       ],
     },
-    {
-      name: "Special Packages",
-      icon: PackagePlus,
-      dropdown: [
-        { name: "Packages", href: "/admin/special-packages", icon: SquareChevronRight },
-        { name: "Create Packages", href: "/admin/special-packages/create", icon: SquareChevronRight },
-      ],
-    },
+    // {
+    //   name: "Special Packages",
+    //   icon: PackagePlus,
+    //   dropdown: [
+    //     { name: "Packages", href: "/admin/special-packages", icon: SquareChevronRight },
+    //     { name: "Create Packages", href: "/admin/special-packages/create", icon: SquareChevronRight },
+    //   ],
+    // },
     {
       name: "Invoices",
       icon: FileText,
@@ -192,7 +192,7 @@ const AdminSidebarItems: {
       ],
     },
 
-       {
+    {
       name: "Promo Code",
       icon: TicketPercent,
       dropdown: [
@@ -200,13 +200,13 @@ const AdminSidebarItems: {
         { name: "Create Promo Codes", href: "/admin/promo-codes/create", icon: SquareChevronRight },
       ],
     },
-    
+
     {
       name: "Payments",
       icon: CreditCard,
       dropdown: [
         // { name: "All Payment", href: "/admin/payments", icon:   SquareChevronRight },
-        { name: "General Payment", href: "/admin/payments/general", icon: SquareChevronRight },
+        { name: "Customer Payment", href: "/admin/payments/general", icon: SquareChevronRight },
         // { name: "Customer Payment", href: "/admin/payments/customer", icon: SquareChevronRight },
         { name: "Driver Payment", href: "/admin/payments/driver", icon: SquareChevronRight },
         // { name: "Service Payment", href: "/admin/payments/service", icon: SquareChevronRight },
@@ -322,30 +322,31 @@ export default function Sidebar({ createdBy }: { createdBy: string }) {
   return (
     <div className="flex flex-col w-64 bg-white border-r overflow-y-auto scrollbar-hide">
       <div className="flex justify-center h-20 border-b">
-        <div style={{ position: "relative", width: "200px",top:"-15px"}} className="p-14">
-          {typeof cProfile?.logo === 'string' && cProfile.logo ? (
+        <div style={{ position: "relative", width: "120px", height: "60px", top: "-15px" }} className="p-4">
+          {cProfile?.logo === 'string' && cProfile.logo ? (
             <Image
               src={cProfile.logo}
               alt="logo"
               priority
-              fill
+              width={120}
+              height={60}
               quality={100}
-              sizes="120px"
               style={{ objectFit: "contain" }}
             />
           ) : (
             <Image
-              src="/img/logo-v1.png"
+              src="/img/silver-logo.png"
               alt="logo"
               priority
-              fill
-              sizes="100px"
+              width={120}
+              height={60}
               style={{ objectFit: "contain" }}
             />
           )}
           <Link href={`/img/logo-v1-white.png`} target="_blank" rel="noopener noreferrer"></Link>
           <Link href={`/img/logo-v1.png`} target="_blank" rel="noopener noreferrer"></Link>
         </div>
+
       </div>
       <nav className="flex-grow">
         <ul className="flex flex-col py-4">
