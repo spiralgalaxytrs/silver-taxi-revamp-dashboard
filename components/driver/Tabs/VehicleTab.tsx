@@ -267,7 +267,7 @@ export default function VehicleTab({
                                 remark: vehicle.pollutionImageRemark,
                               },
                             ]
-                              .filter((doc) => doc.url)
+                              .filter((doc) => doc?.url)
                               .map((doc) => (
                                 <div key={doc.type} className="border rounded-lg p-4">
                                   <div className="flex justify-between items-center mb-3">
@@ -309,12 +309,12 @@ export default function VehicleTab({
                                       <div
                                         className="relative h-48 w-full rounded-md overflow-hidden border cursor-pointer group"
                                         onClick={() =>
-                                          handleImageClick(doc.url || "/placeholder.png", doc.label)
+                                          handleImageClick(doc?.url || "/placeholder.png", doc.label)
                                         }
                                       >
                                         <Image
-                                          src={doc.url || "/placeholder.png"}
-                                          alt={doc.label}
+                                          src={doc?.url || "/placeholder.png"}
+                                          alt={doc?.label}
                                           fill
                                           className="object-contain bg-gray-50"
                                           onError={(e) => {
