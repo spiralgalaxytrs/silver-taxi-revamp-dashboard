@@ -139,58 +139,58 @@ const EditDriverPage = () => {
         }
     };
 
-    const handleAddDriverWallet = async (id: string, amount: number, remark: string) => {
-        try {
-            await addDriverWallet(id, amount, remark); // Assuming your API function can accept remarks
-            const message = useDriverStore.getState().message;
-            setFormData(prev => ({
-                ...prev,
-                walletAmount: prev.walletAmount + amount
-            }));
-            setAdjustmentAmount(''); // Reset after operation
-            setAdjustmentRemarks(''); // Reset remarks after operation
-            toast.success("Wallet amount added successfully!", {
-                style: {
-                    backgroundColor: "#009F7F",
-                    color: "#fff",
-                },
-            });
-        } catch (error) {
-            toast.error(message || "Failed to add wallet amount.", {
-                style: {
-                    backgroundColor: "#FF0000",
-                    color: "#fff",
-                },
-            });
-            // console.error(error);
-        }
-    };
+    // const handleAddDriverWallet = async (id: string, amount: number, remark: string) => {
+    //     try {
+    //         await addDriverWallet(id, amount, remark); // Assuming your API function can accept remarks
+    //         const message = useDriverStore.getState().message;
+    //         setFormData(prev => ({
+    //             ...prev,
+    //             walletAmount: prev.walletAmount + amount
+    //         }));
+    //         setAdjustmentAmount(''); // Reset after operation
+    //         setAdjustmentRemarks(''); // Reset remarks after operation
+    //         toast.success("Wallet amount added successfully!", {
+    //             style: {
+    //                 backgroundColor: "#009F7F",
+    //                 color: "#fff",
+    //             },
+    //         });
+    //     } catch (error) {
+    //         toast.error(message || "Failed to add wallet amount.", {
+    //             style: {
+    //                 backgroundColor: "#FF0000",
+    //                 color: "#fff",
+    //             },
+    //         });
+    //         // console.error(error);
+    //     }
+    // };
 
-    const handleMinusDriverWallet = async (id: string, amount: number, remark: string) => {
-        try {
-            await minusDriverWallet(id, amount, remark); // Assuming your API function can accept remarks
-            setFormData(prev => ({
-                ...prev,
-                walletAmount: prev.walletAmount - amount
-            }));
-            setAdjustmentAmount(''); // Reset after operation
-            setAdjustmentRemarks(''); // Reset remarks after operation
-            toast.success("Wallet amount deducted successfully!", {
-                style: {
-                    backgroundColor: "#009F7F",
-                    color: "#fff",
-                },
-            });
-        } catch (error) {
-            toast.error(message || "Failed to deduct wallet amount.", {
-                style: {
-                    backgroundColor: "#FF0000",
-                    color: "#fff",
-                },
-            });
-            // console.error(error);
-        }
-    };
+    // const handleMinusDriverWallet = async (id: string, amount: number, remark: string) => {
+    //     try {
+    //         await minusDriverWallet(id, amount, remark); // Assuming your API function can accept remarks
+    //         setFormData(prev => ({
+    //             ...prev,
+    //             walletAmount: prev.walletAmount - amount
+    //         }));
+    //         setAdjustmentAmount(''); // Reset after operation
+    //         setAdjustmentRemarks(''); // Reset remarks after operation
+    //         toast.success("Wallet amount deducted successfully!", {
+    //             style: {
+    //                 backgroundColor: "#009F7F",
+    //                 color: "#fff",
+    //             },
+    //         });
+    //     } catch (error) {
+    //         toast.error(message || "Failed to deduct wallet amount.", {
+    //             style: {
+    //                 backgroundColor: "#FF0000",
+    //                 color: "#fff",
+    //             },
+    //         });
+    //         // console.error(error);
+    //     }
+    // };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -410,7 +410,7 @@ const EditDriverPage = () => {
                                             <div className="flex items-center gap-2">
                                                 <Button
                                                     variant="outline"
-                                                    onClick={() => handleMinusDriverWallet(id, Number(adjustmentAmount), adjustmentRemarks)}
+                                                    // onClick={() => handleMinusDriverWallet(id, Number(adjustmentAmount), adjustmentRemarks)}
                                                     className="h-11 w-11 p-0 rounded-lg border-red-200 hover:bg-red-50 text-red-600"
                                                 >
                                                     <Minus className="w-5 h-5" />
@@ -427,7 +427,7 @@ const EditDriverPage = () => {
                                                 />
                                                 <Button
                                                     variant="outline"
-                                                    onClick={() => handleAddDriverWallet(id, Number(adjustmentAmount), adjustmentRemarks)}
+                                                    // onClick={() => handleAddDriverWallet(id, Number(adjustmentAmount), adjustmentRemarks)}
                                                     className="h-11 w-11 p-0 rounded-lg border-green-200 hover:bg-green-50 text-green-600"
                                                 >
                                                     <Plus className="w-5 h-5" />

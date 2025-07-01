@@ -24,13 +24,20 @@ export const columns: ColumnDef<DriverTransaction>[] = [
         accessorKey: "transactionId",
         header: "Transaction ID",
     },
-    {
-        accessorKey: "driverId",
-        header: "Driver ID",
-    },
+    // {
+    //     accessorKey: "driverId",
+    //     header: "Driver ID",
+    // },
     {
         accessorKey: "initiatedTo",
-        header: "Name/Phone",
+        header: "Name",
+    },
+      {
+        accessorKey: "initiatedTo",
+        header: "Phone",
+    },  {
+        accessorKey: "initiatedTo",
+        header: "Email",
     },
     {
         accessorKey: "ownedBy",
@@ -65,9 +72,13 @@ export const columns: ColumnDef<DriverTransaction>[] = [
             return <div>{prefix} {formatted}</div>
         },
     },
+      {
+        accessorKey: "initiatedTo",
+        header: "Status",
+    },
     {
         accessorKey: "createdAt",
-        header: "Date/Time",
+        header: "Created Date/Time",
         cell: ({ row }) => {
             const createdAt: string = row.getValue("createdAt")
             const date = new Date(createdAt);
