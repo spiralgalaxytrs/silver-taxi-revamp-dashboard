@@ -101,16 +101,23 @@ export const columns: ColumnDef<Booking>[] = [
     header: "Booking ID",
   },
 
+
   {
     accessorKey: "name",
     header: "Customer Name",
+    cell: ({ row }) => {
+      const name = row.getValue("name");
+      return <div>{!name || name === "null" ? "-" : String(name)}</div>;
+    },
   },
+
+
   {
     accessorKey: "phone",
     header: "Mobile Number",
     cell: ({ row }) => {
       const phone = row.getValue("phone") as string;
-      return <div>+{phone}</div>;
+      return <div>{phone}</div>;
     },
   },
   {
@@ -173,31 +180,70 @@ export const columns: ColumnDef<Booking>[] = [
       return <div>{amPmTime}</div>;
     },
   },
-  {
-    accessorKey: "dropDate",
-    header: "Drop Date",
-    cell: ({ row }) => {
-      const dropDate: string = row.getValue("dropDate");
-      if (!dropDate) {
-        return <div>-</div>;
-      }
+  // {
+  //   accessorKey: "dropDate",
+  //   header: "Drop Date",
+  //   cell: ({ row }) => {
+  //     const dropDate: string = row.getValue("dropDate");
+  //     if (!dropDate) {
+  //       return <div>-</div>;
+  //     }
 
-      // Parse the stored UTC date
-      const utcDate = new Date(dropDate);
 
-      // Adjust back to IST (Subtract 5.5 hours)
-      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+  //     // Parse the stored UTC date
+  //     const utcDate = new Date(dropDate);
 
-      // Format the corrected IST date
-      const formattedDate = istDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
+  //     console.log("UTC DAte new", utcDate);
 
-      return <div>{formattedDate}</div>;
-    },
+  //     // Adjust back to IST (Subtract 5.5 hours)
+  //     const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+  //     console.log("ISDate", istDate);
+
+  //     // Format the corrected IST date
+  //     const formattedDate = istDate.toLocaleDateString("en-IN", {
+  //       day: "2-digit",
+  //       month: "2-digit",
+  //       year: "numeric",
+  //     });
+
+
+  //     return <div>{dropDate}</div>;
+  //   },
+  // },
+{
+  accessorKey: "dropDate",
+  header: "Drop Date",
+  cell: ({ row }) => {
+    const dropDateRaw = row.getValue("dropDate"); 
+    const dropTime =  "00:00"; 
+
+    if (!dropDateRaw || dropDateRaw === "null") {
+      return <div>-</div>;
+    }
+
+    const dropDateStr = typeof dropDateRaw === "string" ? dropDateRaw : "";
+    const [day, month, year] = dropDateStr.split("/");
+    if (!day || !month || !year) {
+      return <div>Invalid Date</div>;
+    }
+
+    const isoDateStr = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${dropTime}`;
+    const date = new Date(isoDateStr);
+
+    if (isNaN(date.getTime())) {
+      return <div>Invalid Date</div>;
+    }
+
+    const formatted = date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+
+    return <div>{formatted}</div>;
   },
+},
 
   {
     accessorKey: "serviceType",
@@ -544,7 +590,7 @@ export const columns: ColumnDef<Booking>[] = [
 
       // Parse the stored UTC date
       const utcDate = new Date(bookingDate);
-      console.log("utcDate ===> ",utcDate.toLocaleTimeString());
+      console.log("utcDate ===> ", utcDate.toLocaleTimeString());
       // Adjust back to IST (Subtract 5.5 hours)
       const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
 

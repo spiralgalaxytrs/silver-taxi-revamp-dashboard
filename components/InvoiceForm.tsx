@@ -329,74 +329,81 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
     if (bookings.length > 0) {
       const booking = bookings.filter((b: any) => b.bookingId === bookingId);
       booking.forEach((b: any) => {
+      // Check if invoice already has name, email, phone (from edit mode)
+      if (
+        !shippingAddress.name &&
+        !shippingAddress.email &&
+        !shippingAddress.phone
+      ) {
         setShippingAddress({
-          ...shippingAddress,
-          name: b.name || "",
-          phone: b.phone || "",
-          email: b.email || "",
+        ...shippingAddress,
+        name: b.name || "",
+        phone: b.phone || "",
+        email: b.email || "",
         });
-        setPickupDrop({
-          pickup: b.pickup || "",
-          drop: b.drop || "",
-        });
-        setSelectedServiceName(b.serviceType as string);
+      }
+      setPickupDrop({
+        pickup: b.pickup || "",
+        drop: b.drop || "",
+      });
+      setSelectedServiceName(b.serviceType as string);
 
-        setKm({ km: b.distance || 0 });
+      setKm({ km: b.distance || 0 });
 
-        const newDetails = `${b.pickup || ""} - ${b.drop || ""}`;
-        setItems((prevItems) => {
-          const newItems = [...prevItems];
-          if (newItems.length > 0) {
-            newItems[0] = {
-              ...newItems[0],
-              details: newDetails,
-              service: b.serviceType || "",
-              vehicleType: b.vehicles.type || "",
-              km: b.distance || 0,
-              price: b.pricePerKm || 0,
-              amount: b.estimatedAmount || 0,
-              finalAmount: b.finalAmount || 0,
-              time: b.duration || ""
-            };
-          }
-          return newItems;
-        });
-
-        // Only set static charges if they are not 0
-        const staticChargesData = {
-          discount: b.discountAmount || 0,
-          advanceAmount: b.advanceAmount || 0,
-          driverBeta: b.driverBeta || 0,
-          toll: b.toll || 0,
-          hill: b.hill || 0,
-          permitCharge: b.permitCharge || 0,
+      const newDetails = `${b.pickup || ""} - ${b.drop || ""}`;
+      setItems((prevItems) => {
+        const newItems = [...prevItems];
+        if (newItems.length > 0) {
+        newItems[0] = {
+          ...newItems[0],
+          details: newDetails,
+          service: b.serviceType || "",
+          vehicleType: b.vehicles?.type || "",
+          km: b.distance || 0,
+          price: b.pricePerKm || 0,
+          amount: b.estimatedAmount || 0,
+          finalAmount: b.finalAmount || 0,
+          time: b.duration || ""
         };
-        setStaticCharges(staticChargesData);
-
-        setIsDiscountPrefilled(!!b.discountAmount);
-        setIsDriverBetaPrefilled(!!b.driverBeta);
-        setIsAdvanceFilled(!!b.advanceAmount);
-        setIsTollFilled(!!b.toll);
-        setIsHillFilled(!!b.hill);
-        setIsPermitChargeFilled(!!b.permitCharge);
-
-        if (b.offerId) {
-          const offer = offers.find((o: any) => o.offerId === b.offerId);
-          if (offer) {
-            setSelectedOffer(offer);
-            setIsOfferPrefilled(true);
-            if (offer.type === "Flat") {
-              setOfferAmount(offer.value);
-            } else if (offer.type === "Percentage") {
-              const itemTotal = items[0].amount || 0;
-              const discountAmount = (itemTotal * offer.value) / 100;
-              setOfferAmount(discountAmount);
-            }
-          }
-        } else {
-          handleServiceBasedOffer(b.serviceType || "");
         }
-        // setTimeout(() => fetchDistance(0, newDetails), 0);
+        return newItems;
+      });
+
+      // Only set static charges if they are not 0
+      const staticChargesData = {
+        discount: b.discountAmount || 0,
+        advanceAmount: b.advanceAmount || 0,
+        driverBeta: b.driverBeta || 0,
+        toll: b.toll || 0,
+        hill: b.hill || 0,
+        permitCharge: b.permitCharge || 0,
+      };
+      setStaticCharges(staticChargesData);
+
+      setIsDiscountPrefilled(!!b.discountAmount);
+      setIsDriverBetaPrefilled(!!b.driverBeta);
+      setIsAdvanceFilled(!!b.advanceAmount);
+      setIsTollFilled(!!b.toll);
+      setIsHillFilled(!!b.hill);
+      setIsPermitChargeFilled(!!b.permitCharge);
+
+      if (b.offerId) {
+        const offer = offers.find((o: any) => o.offerId === b.offerId);
+        if (offer) {
+        setSelectedOffer(offer);
+        setIsOfferPrefilled(true);
+        if (offer.type === "Flat") {
+          setOfferAmount(offer.value);
+        } else if (offer?.type === "Percentage") {
+          const itemTotal = items[0].amount || 0;
+          const discountAmount = (itemTotal * offer.value) / 100;
+          setOfferAmount(discountAmount);
+        }
+        }
+      } else {
+        handleServiceBasedOffer(b.serviceType || "");
+      }
+      // setTimeout(() => fetchDistance(0, newDetails), 0);
       });
     }
     setLoadingBooking(false);
@@ -426,9 +433,9 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
       if (activeOffer) {
         setSelectedOffer(activeOffer);
         setIsOfferPrefilled(false); // Editable since it's not from booking
-        if (activeOffer.type === "Flat") {
+        if (activeOffer?.type === "Flat") {
           setOfferAmount(activeOffer.value);
-        } else if (activeOffer.type === "Percentage") {
+        } else if (activeOffer?.type === "Percentage") {
           const itemTotal = items[0].amount || 0;
           const discountAmount = (itemTotal * activeOffer.value) / 100;
           setOfferAmount(discountAmount);
@@ -468,9 +475,9 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
 
     // Recalculate offer amount if not prefilled from booking and discount is applied
     if (selectedOffer && !isOfferPrefilled) {
-      if (selectedOffer.type === "Flat") {
+      if (selectedOffer?.type === "Flat") {
         setOfferAmount(selectedOffer.value);
-      } else if (selectedOffer.type === "Percentage") {
+      } else if (selectedOffer?.type === "Percentage") {
         const discountAmount = (itemTotal * selectedOffer.value) / 100;
         setOfferAmount(discountAmount);
       }
@@ -570,10 +577,10 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       toast.error(errorMessage, {
         style: {
-            backgroundColor: "#FF0000",
-            color: "#fff",
+          backgroundColor: "#FF0000",
+          color: "#fff",
         },
-    }); // Display the backend error message in the toast
+      }); // Display the backend error message in the toast
       // console.error("Error creating invoice:", error);
     }
   };
@@ -597,6 +604,8 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
       router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`);
     }
   };
+
+
 
   const handleConfirmNavigation = () => {
     setIsFormDirty(false);
@@ -663,18 +672,28 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                   onChange={(e) => setShippingAddress({ ...shippingAddress, name: e.target.value })}
                 />
               </div>
-              <div>
+                <div>
                 <Label>Phone</Label>
+
                 <Input
-                  type="text"
+                  type="tel"
                   placeholder="Phone"
-                  value={shippingAddress.phone}
+                  value={shippingAddress?.phone}
                   onChange={(e) => {
-                    const numericValue = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
-                    setShippingAddress({ ...shippingAddress, phone: numericValue })
+                  // Allow only numbers and optional leading +
+                  let value = e.target.value.replace(/[^0-9+]/g, '');
+                  // Remove leading zeros, allow optional +
+                  if (value.startsWith('+')) {
+                    value = '+' + value.slice(1).replace(/^0+/, '');
+                  } else {
+                    value = value.replace(/^0+/, '');
+                  }
+                  // Limit to 15 chars (E.164 max)
+                  value = value.slice(0, 15);
+                  setShippingAddress({ ...shippingAddress, phone: value });
                   }}
                 />
-              </div>
+                </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

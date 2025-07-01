@@ -299,6 +299,7 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
         }
       };
 
+
       return (
         <>
           <div className="flex items-center gap-3">
@@ -350,6 +351,8 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+
+
 
             {/*Convert to booking*/}
             {enquiry.status !== "Booked" && <DropdownMenu>

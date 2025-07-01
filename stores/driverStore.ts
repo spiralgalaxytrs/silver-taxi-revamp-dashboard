@@ -16,23 +16,89 @@ interface Driver {
     licenseImage?: File | string | undefined;
     bookingCount?: number;
     assigned?: boolean;
-    totalEarnings:number;
+    totalEarnings: number;
     vehicleId?: string;
+    vehicle: VehicleAttributes[];
     isActive: boolean | null;
     remark?: string;
     walletAmount: number;
+    adminVerified?: "Pending" | "Approved" | "Rejected";
     walletId?: string;
+    panCardImage?: string;
+    panCardVerified?: "pending" | "accepted" | "rejected";
+    panCardRemark?: string;
+    aadharImageFront?: string;
+    aadharImageBack?: string;
+    aadharImageFrontVerified?: "pending" | "accepted" | "rejected";
+    aadharImageBackVerified?: "pending" | "accepted" | "rejected";
+    aadharImageFrontRemark?: string;
+    aadharImageBackRemark?: string;
+    licenseImageFront?: string;
+    licenseImageBack?: string;
+    licenseImageFrontVerified?: "pending" | "accepted" | "rejected";
+    licenseImageBackVerified?: "pending" | "accepted" | "rejected";
+    licenseImageFrontRemark?: string;
+    licenseImageBackRemark?: string;
+
     wallet?: {
         balance: number;
         walletId: string;
         currency: string;
     };
     createdAt: string;
+    documentVerified?: boolean;
+    profileVerified?: boolean;
+    documentRemark?: string;
+
+
+
     updatedAt: string;
     plusAmount?: number;
     minusAmount?: number;
     totalAmount?: number;
     startAmount?: number;
+}
+
+
+export interface VehicleAttributes {
+    id: number;
+    adminId: string;
+    tenantId: string;
+    vehicleId?: string;
+    driverId?: string;
+    name: string;
+    type: string;
+    fuelType?: 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid';
+    isActive: boolean;
+    imageUrl?: string | null;
+    seats?: number;
+    bags?: number;
+    order?: number;
+    vehicleYear?: number;
+    vehicleNumber?: string;
+    driverBeta?: number;
+    isAdminVehicle?: boolean;
+    adminVerified?: "Pending" | "Approved" | "Rejected";
+    documentUploaded?: boolean;
+    profileVerified?: boolean;
+    documentVerified?: boolean;
+    remark?: string;
+    documentRemark?: string;
+    RCBookImageFront?: string;
+    RCBookImageBack?: string;
+    RCExpiryDate?: Date;
+    rcFrontVerified?: "pending" | "accepted" | "rejected";
+    rcFrontRemark?: string;
+    rcBackVerified?: "pending" | "accepted" | "rejected";
+    rcBackRemark?: string;
+    insuranceImage?: string;
+    insuranceExpiryDate?: string;
+    insuranceVerified?: "pending" | "accepted" | "rejected";
+    insuranceRemark?: string;
+    pollutionImage?: string;
+    pollutionExpiryDate?: string;
+    pollutionImageVerified?: "pending" | "accepted" | "rejected";
+    pollutionImageRemark?: string;
 }
 
 interface wallet {
@@ -48,6 +114,31 @@ interface wallet {
     updatedAt: string;
 }
 
+
+
+
+interface ExpiryStatus {
+    license: {
+        expiry: string;
+        isExpired: boolean;
+    };
+    vehicles: Array<{
+        id: number;
+        vehicleId: string;
+        rcBook: {
+            expiry: string;
+            isExpired: boolean;
+        };
+        insurance: {
+            expiry: string;
+            isExpired: boolean;
+        };
+        pollution: {
+            expiry: string;
+            isExpired: boolean;
+        };
+    }>;
+}
 
 interface ErrorResponse {
     message: string;
@@ -82,10 +173,14 @@ interface DriverState {
     deleteDriver: (id: string) => Promise<void>;
     getActiveDrivers: () => Promise<void>;
     getDriverWallet: (id: string) => Promise<void>;
-    addDriverWallet: (id: string, amount: number,remark: string) => Promise<void>;
-    minusDriverWallet: (id: string, amount: number, remark: string) => Promise<void>;
+    addDriverWallet: (id: string, amount: number, remark: string, adjustmentReason: string) => Promise<void>;
+    minusDriverWallet: (id: string, amount: number, remark: string, adjustmentReason: string) => Promise<void>;
     multiDeleteDrivers: (driverIds: string[]) => Promise<void>;
     toggleDriverStatus: (id: string, status: boolean) => Promise<void>;
+    expiryCheck: (id: string) => Promise<void>;
+    verificationStatus: (id: string, data: any) => Promise<string>;
+
+
 }
 
 export const useDriverStore = create<DriverState>()(
@@ -100,7 +195,7 @@ export const useDriverStore = create<DriverState>()(
             statusCode: null,
             message: null,
             isLoading: false,
-            
+
             fetchDrivers: async () => {
                 set({ isLoading: true, error: null });
                 try {
@@ -116,7 +211,7 @@ export const useDriverStore = create<DriverState>()(
                 } catch (error) {
                     const axiosError = error as AxiosError<ErrorResponse>;
                     set({
-                        drivers:[],
+                        drivers: [],
                         error: axiosError.response?.data?.message,
                         isLoading: false,
                         message: axiosError.response?.data?.message,
@@ -137,7 +232,7 @@ export const useDriverStore = create<DriverState>()(
                 } catch (error) {
                     const axiosError = error as AxiosError<ErrorResponse>;
                     set({
-                        driver:null,
+                        driver: null,
                         message: axiosError.response?.data?.message,
                         error: axiosError.response?.data?.message,
                         isLoading: false,
@@ -238,7 +333,7 @@ export const useDriverStore = create<DriverState>()(
                 } catch (error) {
                     const axiosError = error as AxiosError<ErrorResponse>;
                     set({
-                        activeDrivers:[],
+                        activeDrivers: [],
                         message: axiosError.response?.data?.message,
                         error: axiosError.response?.data?.message,
                         isLoading: false,
@@ -259,7 +354,7 @@ export const useDriverStore = create<DriverState>()(
                 } catch (error) {
                     const axiosError = error as AxiosError<ErrorResponse>;
                     set({
-                        wallets:[],
+                        wallets: [],
                         message: axiosError.response?.data?.message,
                         error: axiosError.response?.data?.message,
                         isLoading: false,
@@ -292,7 +387,7 @@ export const useDriverStore = create<DriverState>()(
             minusDriverWallet: async (id, amount, remark) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const response = await axios.post(`/v1/drivers/wallet/minus/${id}`, { amount, remark});
+                    const response = await axios.post(`/v1/drivers/wallet/minus/${id}`, { amount, remark });
                     set((state) => ({
                         drivers: state.drivers.map((driver) =>
                             driver.driverId === id ? { ...driver, wallet: response.data.data } : driver
@@ -361,10 +456,59 @@ export const useDriverStore = create<DriverState>()(
                         message: axiosError.response?.data?.message || "An error occurred.",
                     });
                 }
-            }
+            },
+            verificationStatus: async (id: string, data: any) => {
+                set({ isLoading: true, error: null });
+                try {
+                    if (!data.status) throw new Error("Status is required");
+
+
+                    const response = await axios.put(`/v1/drivers/verification/${id}`, data);
+
+                    const updatedDriver = response.data.updatedFields;
+
+                    set((state) => ({
+                        drivers: state.drivers.map((driver) =>
+                            driver.driverId === id ? updatedDriver : driver
+                        ),
+                        isLoading: false,
+                        message: response.data.message,
+                        statusCode: response.status,
+                    }));
+
+                    return response.data.message;
+                } catch (error) {
+                    const axiosError = error as AxiosError<ErrorResponse>;
+                    const message = axiosError.response?.data?.message || "Update failed";
+                    set({ message, error: message, isLoading: false });
+                    throw new Error(message);
+                }
+            },
+            expiryCheck: async (id: string) => {
+                set({ isLoading: true, error: null });
+
+                try {
+                    const response = await axios.get(`/v1/drivers/expiry-check/${id}`);
+                    const expiryData = response.data.data; // expected to be an object like: { license: { isExpired: true, expiryDate: "..." }, ... }
+
+                    set((state) => ({
+                        expiryResults: expiryData, // Optional: if you're storing it in the state
+                        isLoading: false,
+                        message: response.data.message || "Expiry check completed",
+                        statusCode: response.status,
+                    }));
+
+                    return expiryData;
+                } catch (error) {
+                    const axiosError = error as AxiosError<ErrorResponse>;
+                    const message = axiosError.response?.data?.message || "Expiry check failed";
+                    set({ message, error: message, isLoading: false });
+                    throw new Error(message);
+                }
+            },
         }),
         { name: "driver-store" }
     )
 );
 
-export type { Driver };
+export type { Driver, ExpiryStatus };

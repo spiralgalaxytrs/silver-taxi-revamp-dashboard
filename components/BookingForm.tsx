@@ -291,7 +291,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         if (pickup && drop) {
             setLocalLoading(true);
             try {
-                const response = await axios.get(`/distance`, {
+                const response = await axios.get(`/global/distance`, {
                     params: { origin: pickup, destination: drop }
                 });
                 let { distance, duration } = response.data.data;
