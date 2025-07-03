@@ -181,8 +181,8 @@ export default function VehicleTab({
                             <p className="text-gray-900">
                               {vehicleExpiry?.rcBook?.expiry
                                 ? new Date(vehicleExpiry?.rcBook?.expiry).toLocaleDateString()
-                                : vehicle.RCExpiryDate
-                                ? new Date(vehicle.RCExpiryDate).toLocaleDateString()
+                                : vehicle.rcExpiryDate
+                                ? new Date(vehicle.rcExpiryDate).toLocaleDateString()
                                 : "-"}
                             </p>
                           </div>
@@ -224,15 +224,15 @@ export default function VehicleTab({
                           <h3 className="text-lg font-bold">Vehicle Documents</h3>
                         </div>
 
-                        {(vehicle.RCBookImageFront ||
-                          vehicle.RCBookImageBack ||
+                        {(vehicle.rcBookImageFront ||
+                          vehicle.rcBookImageBack ||
                           vehicle.insuranceImage ||
                           vehicle.pollutionImage) ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {[
+                             {[
                               {
                                 type: "rcFront" as VerificationField,
-                                url: vehicle.RCBookImageFront,
+                                url: vehicle.rcBookImageFront,
                                 label: "RC Book Front",
                                 expiry: vehicleExpiry?.rcBook?.expiry,
                                 isExpired: vehicleExpiry?.rcBook?.isExpired,
@@ -241,7 +241,7 @@ export default function VehicleTab({
                               },
                               {
                                 type: "rcBack" as VerificationField,
-                                url: vehicle.RCBookImageBack,
+                                url: vehicle.rcBookImageBack,
                                 label: "RC Book Back",
                                 expiry: vehicleExpiry?.rcBook?.expiry,
                                 isExpired: vehicleExpiry?.rcBook?.isExpired,

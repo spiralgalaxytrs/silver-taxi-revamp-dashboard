@@ -117,21 +117,46 @@ export const columns: ColumnDef<Booking>[] = [
     header: "Mobile Number",
     cell: ({ row }) => {
       const phone = row.getValue("phone") as string;
-      return <div>{phone}</div>;
-    },
-  },
-  {
-    accessorKey: "pickup",
-    header: "From",
-  },
-  {
-    accessorKey: "drop",
-    header: "To",
-  },
-  {
-    accessorKey: "pickupDate",
-    header: "PickUp Date",
-    cell: ({ row }) => {
+      <div>{phone}</div>;
+        },
+      },
+      {
+        accessorKey: "pickup",
+        header: "From",
+        cell: ({ row }) => {
+      const pickup = row.getValue("pickup") as string;
+      if (!pickup) return <div>-</div>;
+      let display = pickup;
+      if (pickup.length > 15) {
+          const firstWord = pickup.split(" ")[0];
+          if (firstWord.length > 15) {
+            return <div>{pickup.slice(0, 15)}...</div>;
+          }
+          return <div>{firstWord}...</div>;
+          }
+          return <div>{pickup}</div>;
+        },
+        },
+        {
+        accessorKey: "drop",
+        header: "To",
+        cell: ({ row }) => {
+          const drop = row.getValue("drop") as string;
+          if (!drop) return <div>-</div>;
+          if (drop.length > 15) {
+          const firstWord = drop.split(" ")[0];
+          if (firstWord.length > 15) {
+            return <div>{drop.slice(0, 15)}...</div>;
+          }
+          return <div>{firstWord}...</div>;
+          }
+          return <div>{drop}</div>;
+        },
+        },
+        {
+        accessorKey: "pickupDate",
+        header: "PickUp Date",
+        cell: ({ row }) => {
       const pickupDate: string = row.getValue("pickupDate");
       if (!pickupDate) {
         return <div>-</div>;
