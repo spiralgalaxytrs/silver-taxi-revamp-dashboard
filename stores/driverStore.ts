@@ -164,9 +164,9 @@ export interface VehicleAttributes {
     documentVerified?: boolean;
     remark?: string;
     documentRemark?: string;
-    RCBookImageFront?: string;
-    RCBookImageBack?: string;
-    RCExpiryDate?: Date;
+    rcBookImageFront?: string;
+    rcBookImageBack?: string;
+    rcExpiryDate?: Date;
     rcFrontVerified?: "pending" | "accepted" | "rejected";
     rcFrontRemark?: string;
     rcBackVerified?: "pending" | "accepted" | "rejected";
