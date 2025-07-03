@@ -71,15 +71,17 @@ interface Offer {
 interface InvoiceFormProps {
   invId?: string;
   createdBy: string;
+  bookingid?: string;
 }
 
-export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
+export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceFormProps) {
   const router = useRouter();
   const [selectedServiceName, setSelectedServiceName] = useState("");
   const [invoiceId, setInvoiceId] = useState("");
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
   const [bookingId, setBookingId] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
+  const [bookingStatus, setBookingStatus] = useState("");
   const [shippingAddress, setShippingAddress] = useState({
     name: "",
     address: "",
@@ -145,6 +147,8 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
     fetchOffers();
     fetchInvoices();
   }, [fetchServices, fetchOffers, fetchInvoices]);
+
+  
 
   // Fetch invoice data if invoiceId is provided (Edit mode)
   useEffect(() => {
@@ -328,6 +332,8 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
     await fetchBookings();
     if (bookings.length > 0) {
       const booking = bookings.filter((b: any) => b.bookingId === bookingId);
+       setBookingStatus(booking[0].paymentStatus);
+      // console.log("Status", booking);
       booking.forEach((b: any) => {
       // Check if invoice already has name, email, phone (from edit mode)
       if (
@@ -421,7 +427,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
   };
 
   useEffect(() => {
-    if (bookingId !== "") {
+    if (bookingId) {
       fetchBookingDetails(bookingId);
     }
   }, [bookingId]);
@@ -646,7 +652,17 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
           </div> */}
           <div className="mt-1 border-gray-900">
             <Label>Payment Status</Label>
-            <Select value={paymentStatus} onValueChange={(value) => setPaymentStatus(value)}>
+            <Select
+              value={
+              (bookingStatus === "Pending"
+                ? "Unpaid"
+                : bookingStatus) || paymentStatus
+              }
+              onValueChange={(value) => {
+              setPaymentStatus(value);
+              setBookingStatus(value);
+              }}
+            >
               <SelectTrigger id="paymentStatus" className="py-3 border-grey">
                 <SelectValue placeholder="Select Payment Status" />
               </SelectTrigger>
