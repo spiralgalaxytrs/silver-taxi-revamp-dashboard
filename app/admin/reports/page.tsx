@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card'
 import { Button } from 'components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from 'components/ui/select'
-import { DatePickerWithRange } from 'components/DatePickerWithRange'
-import { RevenueChart } from 'components/RevenueChart'
-import { TripsChart } from 'components/TripsChart'
+import { DatePickerWithRange } from 'components/others/DatePickerWithRange'
+import { RevenueChart } from 'components/charts/RevenueChart'
+import { TripsChart } from 'components/charts/TripsChart'
 import { DateRange } from 'react-day-picker'
 
 export default function ReportsPage() {

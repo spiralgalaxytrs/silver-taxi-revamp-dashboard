@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import PopularRoutesForm from "components/popularRoutesForm"
+import PopularRoutesForm from "components/others/popularRoutesForm"
 import { useState, useEffect } from "react"
 
 const EditRoutePage = ({ params }: { params: Promise<{ id: string }> }) => {  

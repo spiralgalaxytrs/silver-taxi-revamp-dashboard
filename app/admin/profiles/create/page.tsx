@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from 'next/navigation'
-import ProfileForm from 'components/ProfileForm'
+import ProfileForm from 'components/profile/ProfileForm'
 import { Button } from 'components/ui/button'
 
 

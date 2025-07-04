@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { BookingForm } from 'components/BookingForm'
+import { BookingForm } from 'components/booking/BookingForm'
 import { Button } from 'components/ui/button'
 import { toast } from "sonner"
 

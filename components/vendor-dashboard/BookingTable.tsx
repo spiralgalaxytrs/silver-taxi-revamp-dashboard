@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Loading from 'app/Loading';
 import { columns } from 'app/vendor/bookings/columns';
 import { useBookingStore } from 'stores/bookingStore';
-import { DataTable } from 'components/DataTable';
+import { DataTable } from 'components/others/DataTable';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 

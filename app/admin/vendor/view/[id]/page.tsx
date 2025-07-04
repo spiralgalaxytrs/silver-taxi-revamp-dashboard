@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent } from 'components/ui/card';
-import CounterCard from "components/CounterCard";
+import CounterCard from "components/cards/CounterCard";
 import { Activity, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useVendorStore } from "stores/vendorStore";
@@ -12,7 +12,7 @@ import { useBookingStore } from 'stores/bookingStore';
 import { columns } from "./columns";
 import React from "react";
 import { Button } from "components/ui/button";
-import { DataTable } from "components/DataTable";
+import { DataTable } from "components/others/DataTable";
 import { Switch } from "components/ui/switch";
 import { walletColumns, VendorTransaction } from "./walletColumns";
 

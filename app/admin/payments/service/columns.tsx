@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { DetailsPopup } from '../../../../components/DetailsPopup'
+import { DetailsPopup } from '../../../../components/others/DetailsPopup'
 import { Button } from "components/ui/button";
 import { Edit, Copy, Trash, Eye } from 'lucide-react';
 import { Checkbox } from "components/ui/checkbox";

@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from 'components/ui/button'
-import VehicleForm from 'components/VehicleForm'
+import VehicleForm from 'components/vehicle/VehicleForm'
 import { useRouter } from 'next/navigation'
 import { ArrowBigLeft } from 'lucide-react'
 

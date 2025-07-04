@@ -1,9 +1,9 @@
 'use client'
-import Sidebar from 'components/Sidebar'
-import { UserNav } from 'components/UserNav'
-import { NotificationCenter } from 'components/NotificationCenter'
+import Sidebar from 'components/menubar/Sidebar'
+import { UserNav } from 'components/menubar/UserNav'
+import { NotificationCenter } from 'components/others/NotificationCenter'
 import { useEffect, useState } from 'react'
-import Unauthorized from 'components/UnAuthorized'
+import Unauthorized from 'components/others/UnAuthorized'
 import Loading from 'app/Loading'
 import { SocketProvider } from 'providers/websocket/SocketProvider'
 

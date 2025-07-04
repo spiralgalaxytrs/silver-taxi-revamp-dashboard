@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { Button } from 'components/ui/button'
 import { useState, useEffect } from 'react'
-import InvoiceForm from 'components/InvoiceForm'
+import InvoiceForm from 'components/invoice/InvoiceForm'
 
 export default function EditInvoiceForm({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()

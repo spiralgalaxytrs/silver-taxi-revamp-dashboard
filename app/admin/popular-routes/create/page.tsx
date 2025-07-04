@@ -14,7 +14,7 @@ import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { usePopularRoutesStore } from "../../../../stores/popularRoutesStore";
 import { useRouter } from "next/navigation";
-import PopularRoutesForm from "components/popularRoutesForm";
+import PopularRoutesForm from "components/others/popularRoutesForm";
 
 export default function Index() {
   const router = useRouter();

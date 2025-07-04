@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { VehicleCard } from "components/VehicleCard"
+import { VehicleCard } from "components/vehicle/VehicleCard"
 import { Button } from "components/ui/button"
 import { useVehicleStore } from "stores/vehicleStore"
 import { useEffect, useMemo } from "react"

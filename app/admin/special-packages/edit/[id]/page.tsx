@@ -1,11 +1,11 @@
 "use client"
 
 import { useRouter } from 'next/navigation'
-import { AIPackagesForm } from 'components/AIPackagesForm'
+import { AIPackagesForm } from 'components/all includes/AIPackagesForm'
 import { Button } from 'components/ui/button'
 import { toast } from "sonner"
 import { useState, useEffect } from 'react'
-import { SpecialPackageForm } from 'components/SpecialPackageForm'
+import { SpecialPackageForm } from 'components/serives/packages/SpecialPackageForm'
 
 
 export default function EditPackagePage({ params }: { params: Promise<{ id: string }> }) {

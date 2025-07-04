@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardTitle, CardHeader, CardContent } from 'components/ui/card';
-import CounterCard from 'components/CounterCard';
+import CounterCard from 'components/cards/CounterCard';
 import { Activity } from 'lucide-react';
 import Link from "next/link";
 

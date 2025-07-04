@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from 'components/ui/button'
-import InvoiceForm from 'components/InvoiceForm'
+import InvoiceForm from 'components/invoice/InvoiceForm'
 
 const page = () => {
   const router = useRouter();

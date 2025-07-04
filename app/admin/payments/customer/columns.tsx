@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { toast } from 'sonner';
 import { useState } from "react"
 import { Badge } from "components/ui/badge";
-import { DetailsPopup } from "../../../../components/DetailsPopup";
+import { DetailsPopup } from "../../../../components/others/DetailsPopup";
 import {
   DropdownMenu,
   DropdownMenuContent,
