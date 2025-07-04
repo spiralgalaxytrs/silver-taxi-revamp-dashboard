@@ -2,10 +2,15 @@
 import { useState, useEffect } from 'react';
 import Loading from 'app/Loading';
 import { columns } from 'app/admin/enquiry/columns';
-import { useEnquiryStore } from 'stores/enquiryStore';
+import { useEnquiryStore } from 'stores/enquiryStore-';
 import { DataTable } from 'components/others/DataTable';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import {
+    MaterialReactTable,
+    MRT_ColumnDef
+} from 'material-react-table';
+
 
 export const EnquiryTable: React.FC = () => {
     const router = useRouter();
@@ -97,11 +102,31 @@ export const EnquiryTable: React.FC = () => {
                 </div>
             </div>
             <div className="rounded bg-white shadow ">
-                <DataTable
-                    columns={columns.slice(1, columns.length - 1)}
-                    data={enquiryFilteredData as any}
-                    onSort={handleSort}
-                    sortConfig={sortConfig}
+                 <MaterialReactTable
+                    columns={columns as MRT_ColumnDef<any>[]}
+                    data={enquiryFilteredData}
+                    enableRowSelection
+                    positionGlobalFilter="left"
+                    enableSorting
+                    initialState={{
+                        density: 'compact',
+                        pagination: { pageIndex: 0, pageSize: 10 },
+                        showGlobalFilter: true,
+                    }}
+                    muiSearchTextFieldProps={{
+                        placeholder: 'Search enquiries...',
+                        variant: 'outlined',
+                        fullWidth: true, // 🔥 Makes the search bar take full width
+                        sx: {
+                            minWidth: '400px', // Adjust width as needed
+                            marginLeft: '16px',
+                        },
+                    }}
+                    muiToolbarAlertBannerProps={{
+                        sx: {
+                            justifyContent: 'flex-start', // Aligns search left
+                        },
+                    }}
                 />
             </div>
         </div>

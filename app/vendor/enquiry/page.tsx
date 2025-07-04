@@ -9,7 +9,7 @@ import { Button } from 'components/ui/button'
 import { Input } from 'components/ui/input'
 import { Label } from 'components/ui/label'
 import { ListRestart, RotateCcw, ArrowDown, ArrowUp, Activity, Trash, Loader2 } from 'lucide-react';
-import { useEnquiryStore } from 'stores/enquiryStore'
+import { useEnquiryStore } from 'stores/enquiryStore-'
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
 import { Card } from 'components/ui/card';
 import dayjs from 'dayjs'
@@ -141,7 +141,7 @@ export default function EnquiryPage() {
         enquiry.phone.toLowerCase().includes(filters.search.toLowerCase()) ||
         enquiry.pickup.toLowerCase().includes(filters.search.toLowerCase()) ||
         enquiry.drop.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enquiry.serviceName.toLowerCase().includes(filters.search.toLowerCase()) ||
+        enquiry.serviceType.toLowerCase().includes(filters.search.toLowerCase()) ||
         enquiry.type.toLowerCase().includes(filters.search.toLowerCase()) ||
         enquiry.status.toLowerCase().includes(filters.search.toLowerCase()) ||
         enquiry.createdBy.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -157,13 +157,13 @@ export default function EnquiryPage() {
 
     if (filters.serviceName && filters.serviceName !== "all") {
       filteredData = filteredData.filter(enquiry =>
-        enquiry.serviceName?.toLowerCase() === filters.serviceName.toLowerCase()
+        enquiry.serviceType?.toLowerCase() === filters.serviceName.toLowerCase()
       );
     }
 
     if (filters.enquiryStartDate || filters.enquiryEndDate) {
       filteredData = filteredData.filter(enquiry => {
-        const enquiredDate = new Date(enquiry.pickupDate).setHours(0, 0, 0, 0);
+        const enquiredDate = new Date(enquiry.pickupDateTime).setHours(0, 0, 0, 0);
         const startDate = filters.enquiryStartDate ? new Date(filters.enquiryStartDate).setHours(0, 0, 0, 0) : null;
         const endDate = filters.enquiryEndDate ? new Date(filters.enquiryEndDate).setHours(0, 0, 0, 0) : null;
 
@@ -173,7 +173,7 @@ export default function EnquiryPage() {
 
     if (filters.pickupStartDate || filters.pickupEndDate) {
       filteredData = filteredData.filter(enquiry => {
-        const pickupDate = new Date(enquiry.pickupDate).setHours(0, 0, 0, 0);
+        const pickupDate = new Date(enquiry.pickupDateTime).setHours(0, 0, 0, 0);
         const startDate = filters.pickupStartDate ? new Date(filters.pickupStartDate).setHours(0, 0, 0, 0) : null;
         const endDate = filters.pickupEndDate ? new Date(filters.pickupEndDate).setHours(0, 0, 0, 0) : null;
 

@@ -9,7 +9,7 @@ import {
   DialogTitle
 } from "components/ui/dialog";
 import { Button } from "components/ui/button";
-import { useEnquiryStore } from 'stores/enquiryStore';
+import { useEnquiryStore } from 'stores/enquiryStore-';
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Book } from 'lucide-react';
 
@@ -65,10 +65,10 @@ export function EnquiryPopup({ trigger, id, title = 'Enquiry Details', width, si
           "Pick Up": enquiry.pickup || '-',
           "Drop": enquiry.drop || '-',
           "Type": enquiry.type || '-',
-          "Pickup Date": formatDate(enquiry.pickupDate) || '-',
-          "Pickup Time": formattedTime(enquiry.pickupDate) || '-',
+          "Pickup Date": formatDate(enquiry.pickupDateTime) || '-',
+          "Pickup Time": formattedTime(enquiry.pickupDateTime) || '-',
           "dropDate": enquiry.dropDate ? formatDate(enquiry.dropDate.toString()) : '-',
-          "Service Type": enquiry.serviceName || '-',
+          "Service Type": enquiry.serviceType || '-',
           "CreatedBy": enquiry.createdBy || '-',
           "Status": enquiry.status || '-',
           "Enquiry Date": formatDate(enquiry.createdAt) || '-',

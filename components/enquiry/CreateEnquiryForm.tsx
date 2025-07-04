@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
-import { useEnquiryStore } from '../../stores/enquiryStore'
+import { useEnquiryStore } from '../../stores/enquiryStore-'
 import { useServiceStore } from "stores/serviceStore";
 import { useRouter } from 'next/navigation'
 import { getMinDateTime, getMaxDateTime } from '../../lib/date-restrict'
@@ -98,7 +98,7 @@ export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryForm
             if (enquiry) {
                 setFormData({
                     ...enquiry,
-                    pickupDateTime: enquiry.pickupDate,
+                    pickupDateTime: enquiry.pickupDateTime,
                     dropDate: enquiry.dropDate ? enquiry.dropDate : null
                 })
                 setServiceType(enquiry.name)

@@ -6,6 +6,7 @@ import "./globals.css";
 import Loading from "./Loading";
 import { CustomProvider } from 'rsuite';
 import GoogleMapsProvider from "providers/google/GoogleMapProvider";
+import ReactQueryProvider from "providers/react query/ReactQueryProvider";
 import "../public/styles/main.css"
 import "../public/css/column.css";
 import "../public/css/InvoiceForm.css";
@@ -29,13 +30,13 @@ export const metadata: Metadata = {
   description: "Silver Taxi - A comprehensive platform for managing cab bookings, vendor interactions, and payment processing.",
 };
 
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <>
       <html lang="en">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -43,14 +44,15 @@ export default function RootLayout({
         >
           <CustomProvider>
             <Suspense fallback={<Loading />}>
-              <GoogleMapsProvider>
-                {children}
-              </GoogleMapsProvider>
+              <ReactQueryProvider >
+                <GoogleMapsProvider>
+                  {children}
+                </GoogleMapsProvider>
+              </ReactQueryProvider>
               <Toaster />
             </Suspense>
           </CustomProvider>
         </body>
       </html>
-    </>
   );
 }

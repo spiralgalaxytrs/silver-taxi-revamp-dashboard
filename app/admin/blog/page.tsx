@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -66,7 +66,7 @@ export default function BlogPage() {
   };
 
   return (
-    <>
+    <React.Fragment>
       <div className="max-w-6xl mx-auto space-y-8 p-3">
         <div className="flex justify-between items-center border-b border-gray-200 pb-4">
           <h1 className="text-3xl font-bold text-gray-800">Blogs</h1>
@@ -142,6 +142,6 @@ export default function BlogPage() {
           )}
         </div>
       </div>
-    </>
+    </React.Fragment>
   );
 }

@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation"
 import { Checkbox } from "components/ui/checkbox"
 import { AIPPopup } from "components/all includes/AIPPopup"
 import { useCallback, useState } from "react"
-import { AllIncludes } from 'stores/allIncludesStore'
-import { useAllIncludesStore } from "stores/allIncludesStore"
+import { AllIncludes } from 'stores/allIncludesStore-'
+import { useAllIncludesStore } from "stores/allIncludesStore-"
 import { toast } from "sonner"
 import {
   AlertDialog,
