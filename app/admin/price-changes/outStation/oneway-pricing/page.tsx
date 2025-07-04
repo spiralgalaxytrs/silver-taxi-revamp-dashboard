@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { PriceForm } from "../../../../../components/price-form"
-import { PriceCard } from "../../../../../components/price-card"
+import { PriceForm } from "../../../../../components/others/price-form"
+import { PriceCard } from "../../../../../components/cards/price-card"
 import { usePriceStore } from "../../../../../stores/priceChangingStore"
 import { Loader2 } from 'lucide-react';
 import { useServiceStore } from "stores/serviceStore";

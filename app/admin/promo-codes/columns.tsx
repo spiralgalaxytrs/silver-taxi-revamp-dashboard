@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { OfferPopup } from "components/OfferPopup";
+import { OfferPopup } from "components/offers/OfferPopup";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "components/ui/button";
 import { Checkbox } from "components/ui/checkbox";

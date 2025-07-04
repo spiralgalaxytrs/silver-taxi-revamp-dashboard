@@ -7,7 +7,7 @@ import { Edit, SendHorizontal, Copy, Trash, Eye, Link, CheckCircle } from "lucid
 import { useRouter } from "next/navigation"
 import { Badge } from "components/ui/badge"
 import { Checkbox } from "components/ui/checkbox";
-import { BookingPopup } from "components/BookingPopup"
+import { BookingPopup } from "components/booking/BookingPopup"
 import {
   DropdownMenu,
   DropdownMenuContent,

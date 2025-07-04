@@ -2,7 +2,7 @@
 
 import { LoadScript } from "@react-google-maps/api";
 import { useMemo } from "react";
-import PreLoader from "../../components/PreLoader";
+import PreLoader from "../../components/others/PreLoader";
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 

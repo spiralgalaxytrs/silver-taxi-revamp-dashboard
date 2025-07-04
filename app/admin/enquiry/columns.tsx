@@ -6,7 +6,7 @@ import { Button } from "components/ui/button"
 import { Edit, MoreHorizontal, Trash, Eye, Loader2 } from 'lucide-react'
 import { Badge } from "components/ui/badge"
 import { Checkbox } from "components/ui/checkbox";
-import { EnquiryPopup } from "components/EnquiryPopup"
+import { EnquiryPopup } from "components/enquiry/EnquiryPopup"
 import { toast } from "sonner"
 import {
   AlertDialog,

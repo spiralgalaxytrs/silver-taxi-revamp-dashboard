@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from 'components/ui/button'
-import InviocePDF from 'components/InviocePDF'  
+import InviocePDF from 'components/invoice/InviocePDF'  
 
 const page = () => {
   const router = useRouter()

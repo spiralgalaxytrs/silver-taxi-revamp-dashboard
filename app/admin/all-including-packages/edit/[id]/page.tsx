@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from 'next/navigation'
-import { AIPackagesForm } from 'components/AIPackagesForm'
+import { AIPackagesForm } from 'components/all includes/AIPackagesForm'
 import { Button } from 'components/ui/button'
 import { toast } from "sonner"
 import { useState, useEffect } from 'react'

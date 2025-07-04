@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { Button } from 'components/ui/button'
-import InvoiceForm from 'components/InvoiceForm'
+import InvoiceForm from 'components/invoice/InvoiceForm'
 import { useParams } from 'next/navigation'
 
 const page = () => {

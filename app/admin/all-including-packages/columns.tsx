@@ -5,7 +5,7 @@ import { Button } from "components/ui/button"
 import { Edit, Trash, Eye } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Checkbox } from "components/ui/checkbox"
-import { AIPPopup } from "components/AIPPopup"
+import { AIPPopup } from "components/all includes/AIPPopup"
 import { useCallback, useState } from "react"
 import { AllIncludes } from 'stores/allIncludesStore'
 import { useAllIncludesStore } from "stores/allIncludesStore"

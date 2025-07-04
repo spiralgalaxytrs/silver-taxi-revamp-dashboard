@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { Button } from 'components/ui/button'
-import ProfileForm from 'components/ProfileForm'
+import ProfileForm from 'components/profile/ProfileForm'
 import { useEffect, useState } from 'react'
 
 
