@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { Button } from 'components/ui/button'
 import { toast } from "sonner"
-import { CreateOfferForm } from 'components/CreateOfferForm'
+import { CreateOfferForm } from 'components/offers/CreateOfferForm'
 
 export default function CreateOfferPage() {
   const router = useRouter()

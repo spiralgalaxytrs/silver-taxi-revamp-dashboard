@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { Edit, Loader2, CircleX } from "lucide-react";
 import { useServiceStore } from "stores/serviceStore";
 import { useVehicleStore } from "stores/vehicleStore";
-import  PackageServiceSection  from "../../../../../components/PackageServiceSection";
+import  PackageServiceSection  from "../../../../../components/serives/packages/PackageServiceSection";
 import { Tabs, TabsTrigger, TabsList } from "components/ui/tabs";
-import { PackageTariffSection } from "../../../../../components/PackageTariffSection";
+import { PackageTariffSection } from "../../../../../components/serives/packages/PackageTariffSection";
 
 export default function DaysPage() {
   const [isEditing, setIsEditing] = useState(false);

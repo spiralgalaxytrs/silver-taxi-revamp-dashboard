@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "components/ui/button"
 import { Edit, Eye, Trash } from 'lucide-react'
 import { MdContentCopy } from "react-icons/md";
-import { DetailsPopup } from '../../../components/DetailsPopup'
+import { DetailsPopup } from '../../../components/others/DetailsPopup'
 import {
   DropdownMenu,
   DropdownMenuContent,

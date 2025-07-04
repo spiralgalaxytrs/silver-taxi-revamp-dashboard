@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from 'next/navigation'
-import { VendorForm } from 'components/VendorForm'
+import { VendorForm } from 'components/vendor/VendorForm'
 import { Button } from 'components/ui/button'
 import { toast } from "sonner"
 import React, { useState, useEffect } from 'react'

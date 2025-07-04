@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { toast } from "sonner"
-import { DataTable } from 'components/DataTable'
+import { DataTable } from 'components/others/DataTable'
 import { useRouter } from 'next/navigation'
 import { columns } from './columns'
 import { Button } from 'components/ui/button'
@@ -10,10 +10,10 @@ import { Input } from 'components/ui/input'
 import { Label } from 'components/ui/label'
 import { ListRestart, RotateCcw, ArrowDown, ArrowUp, Activity, Trash, Loader2 } from 'lucide-react';
 import { useEnquiryStore } from 'stores/enquiryStore'
-import DateRangeAccordion from 'components/DateRangeAccordion';
+import DateRangeAccordion from 'components/others/DateRangeAccordion';
 import { Card } from 'components/ui/card';
 import dayjs from 'dayjs'
-import CounterCard from 'components/CounterCard';
+import CounterCard from 'components/cards/CounterCard';
 import { Select, SelectContent, SelectValue, SelectTrigger, SelectItem } from 'components/ui/select'
 import {
   AlertDialog,

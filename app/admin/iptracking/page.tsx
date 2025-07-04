@@ -2,14 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
-import { DataTable } from 'components/DataTable';
+import { DataTable } from 'components/others/DataTable';
 import { columns } from './columns';
 import { useIpTrackingStore } from 'stores/ipTrackingStore';
 import { Card } from 'components/ui/card';
-import CounterCard from 'components/CounterCard';
+import CounterCard from 'components/cards/CounterCard';
 import { Activity, ArrowDown, ArrowUp, Trash } from 'lucide-react';
 import { Label } from 'components/ui/label';
-import DateRangeAccordion from '../../../components/DateRangeAccordion';
+import DateRangeAccordion from '../../../components/others/DateRangeAccordion';
 import { Button } from 'components/ui/button';
 import { toast } from "sonner"
 import {

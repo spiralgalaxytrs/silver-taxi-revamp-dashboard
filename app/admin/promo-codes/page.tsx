@@ -1,6 +1,6 @@
 "use client"
 
-import { DataTable } from 'components/DataTable';
+import { DataTable } from 'components/others/DataTable';
 import { columns } from './columns';
 import { Button } from 'components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -9,7 +9,7 @@ import { ListRestart, ArrowDown, ArrowUp, Activity, Trash, Loader2 } from 'lucid
 import { Input } from 'components/ui/input';
 import { Label } from 'components/ui/label';
 import { Card } from 'components/ui/card';
-import CounterCard from 'components/CounterCard';
+import CounterCard from 'components/cards/CounterCard';
 import {
     Select,
     SelectContent,
@@ -28,7 +28,7 @@ import {
     AlertDialogCancel,
     AlertDialogFooter
 } from 'components/ui/alert-dialog';
-import DateRangeAccordion from 'components/DateRangeAccordion';
+import DateRangeAccordion from 'components/others/DateRangeAccordion';
 import { useOfferStore } from 'stores/offerStore';
 import { toast } from "sonner";
 

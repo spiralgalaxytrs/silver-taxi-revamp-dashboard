@@ -2,15 +2,15 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { DataTable } from "components/DataTable";
+import { DataTable } from "components/others/DataTable";
 import { columns } from "./columns";
 import { Card } from 'components/ui/card'
-import CounterCard from 'components/CounterCard'
+import CounterCard from 'components/cards/CounterCard'
 import { Button } from "components/ui/button";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Activity, Trash, ArrowDown, ArrowUp, Loader2 } from "lucide-react";
-import DateRangeAccordion from "components/DateRangeAccordion";
+import DateRangeAccordion from "components/others/DateRangeAccordion";
 import {
   AlertDialog,
   AlertDialogTrigger,

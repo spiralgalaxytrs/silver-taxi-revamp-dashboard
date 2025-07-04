@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { Button } from 'components/ui/button'
-import { VendorForm } from 'components/VendorForm'
+import { VendorForm } from 'components/vendor/VendorForm'
 
 export default function CreateVendorPage() {
   const router = useRouter()
