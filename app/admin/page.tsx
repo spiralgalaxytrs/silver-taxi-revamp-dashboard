@@ -2,17 +2,17 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card'
-import { Overview } from 'components/Overview'
+import { Overview } from 'components/others/Overview'
 import { Activity, Users, ArrowBigRight, Calendar, MessageSquare, Car, FileText, User, BadgePercent, Route } from 'lucide-react'
-import CounterCard from 'components/CounterCard'
-import { BarChartComponent } from 'components/BarChart'
-import { PaymentComponent } from 'components/PaymentChart'
+import CounterCard from 'components/cards/CounterCard'
+import { BarChartComponent } from 'components/charts/BarChart'
+import { PaymentComponent } from 'components/charts/PaymentChart'
 import { InvoiceTable } from 'components/admin-dashboard/InvoiceTable'
 import { BookingTable } from 'components/admin-dashboard/BookingTable'
 import { EnquiryTable } from 'components/admin-dashboard/EnquiryTable'
 import { useBookingStore } from 'stores/bookingStore'
-import { AreaChart } from 'components/AreaChart'
-import ShortcutSection from "components/ShortCut"
+import { AreaChart } from 'components/charts/AreaChart'
+import ShortcutSection from "components/others/ShortCut"
 
 export default function AdminDashboard() {
   const { bookings } = useBookingStore();

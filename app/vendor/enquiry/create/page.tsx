@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from 'next/navigation'
-import { CreateEnquiryForm } from 'components/CreateEnquiryForm'
+import { CreateEnquiryForm } from 'components/enquiry/CreateEnquiryForm'
 import { Button } from 'components/ui/button'
 import { toast } from "sonner"
 import { useState } from 'react'

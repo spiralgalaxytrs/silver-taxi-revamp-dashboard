@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { DataTable } from 'components/DataTable';
+import { DataTable } from 'components/others/DataTable';
 import { columns } from 'app/admin/invoices/columns';
 import { useInvoiceStore } from 'stores/invoiceStore'
 import { ColumnDef } from '@tanstack/react-table'

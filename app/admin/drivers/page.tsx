@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { DataTable } from "components/DataTable";
+import { DataTable } from "components/others/DataTable";
 import { columns, Driver } from "./columns";
 import { Button } from "components/ui/button";
 import { useDriverStore } from "stores/driverStore";
@@ -18,9 +18,9 @@ import {
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Card } from "components/ui/card";
-import CounterCard from "components/CounterCard";
+import CounterCard from "components/cards/CounterCard";
 import { Activity, Trash, ArrowDown, ArrowUp, Loader2 } from "lucide-react";
-import DateRangeAccordion from "components/DateRangeAccordion";
+import DateRangeAccordion from "components/others/DateRangeAccordion";
 import {
   AlertDialog,
   AlertDialogContent,

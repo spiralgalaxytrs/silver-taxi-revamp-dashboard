@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { DetailsPopup } from '../../../components/DetailsPopup'
+import { DetailsPopup } from '../../../components/others/DetailsPopup'
 import { Button } from "components/ui/button";
 import { MdContentCopy } from "react-icons/md"
 import { toast } from "sonner"

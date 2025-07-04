@@ -4,10 +4,10 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card'
 import { Button } from 'components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from 'components/ui/select'
-import { DatePickerWithRange } from 'components/DatePickerWithRange'
-import { UserActivityChart } from 'components/UseActivityChart'
-import { AppUsageChart } from 'components/AppUsageChart'
-import { RetentionRateChart } from 'components/RetentionRateChart'
+import { DatePickerWithRange } from 'components/others/DatePickerWithRange'
+import { UserActivityChart } from 'components/charts/UseActivityChart'
+import { AppUsageChart } from 'components/charts/AppUsageChart'
+import { RetentionRateChart } from 'components/charts/RetentionRateChart'
 
 
 export default function AppAnalyticsPage() {

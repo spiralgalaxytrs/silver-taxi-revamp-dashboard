@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { Button } from "components/ui/button";
 import { toast } from "sonner";
-import { CreateEnquiryForm } from "components/CreateEnquiryForm";
+import { CreateEnquiryForm } from "components/enquiry/CreateEnquiryForm";
 import React, { useEffect, useState } from "react";
 
 

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { DataTable } from 'components/DataTable';
+import { DataTable } from 'components/others/DataTable';
 import { useRouter } from 'next/navigation';
 import { columns } from './columns';
 import { Button } from 'components/ui/button';
 import { Card } from 'components/ui/card';
-import CounterCard from 'components/CounterCard';
+import CounterCard from 'components/cards/CounterCard';
 import { Input } from 'components/ui/input';
 import { Booking, useBookingStore } from 'stores/bookingStore';
 import { ArrowDown, ArrowUp, Activity, Trash } from 'lucide-react';
@@ -32,7 +32,7 @@ import {
   AlertDialogCancel,
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
-import DateRangeAccordion from 'components/DateRangeAccordion';
+import DateRangeAccordion from 'components/others/DateRangeAccordion';
 
 export default function BookingsPage() {
   const router = useRouter();

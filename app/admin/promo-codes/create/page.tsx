@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { Button } from 'components/ui/button'
 import { toast } from "sonner"
-import { CreatePromoForm } from 'components/CreatePromoForm'
+import { CreatePromoForm } from 'components/offers/CreatePromoForm'
 
 export default function CreateOfferPage() {
   const router = useRouter()
