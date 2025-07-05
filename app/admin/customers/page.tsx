@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { DataTable } from "components/others/DataTable";
 import { columns } from "./columns";
 import { Button } from "components/ui/button";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Card } from "components/ui/card";
 import CounterCard from "components/cards/CounterCard";
-import { Activity, Trash, ArrowDown, ArrowUp } from "lucide-react";
+import { Activity, Trash, ArrowDown, ArrowUp, RefreshCcw } from "lucide-react";
 import DateRangeAccordion from "components/others/DateRangeAccordion";
 import { toast } from "sonner"
 import { useRouter } from "next/navigation";
@@ -27,6 +26,10 @@ import {
   useCustomers,
   useBulkDeleteCustomers
 } from "hooks/react-query/useCustomer";
+import {
+  MRT_ColumnDef,
+  MaterialReactTable
+} from 'material-react-table'
 
 interface Customer {
   customerId?: string;
@@ -49,12 +52,12 @@ export default function CustomersPage() {
   const {
     data: customers = [],
     isLoading,
-    isError
+    isError,
+    refetch
   } = useCustomers();
 
   const {
     mutate: multiDeleteCustomers
-
   } = useBulkDeleteCustomers();
 
 
@@ -63,8 +66,11 @@ export default function CustomersPage() {
     createdStartDate: '',
     createdEndDate: '',
   });
+
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [isSpinning, setIsSpinning] = useState(false)
   const [showFilters, setShowFilters] = useState(false);
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
     columnId: string | null;
@@ -196,24 +202,20 @@ export default function CustomersPage() {
     setTotalSpent(spent);
   }, [customers]);
 
-  const handleSort = (columnId: string) => {
-    setSortConfig((prev) => ({
-      columnId,
-      direction:
-        prev.columnId === columnId && prev.direction === "asc" ? "desc" : "asc",
-    }));
-  };
-
   // Handle bulk deletion from the table
   const handleBulkDelete = () => {
-    const selectedIds = Object.keys(rowSelection);
+    const selectedIndices = Object.keys(rowSelection)
+    const selectedIds = selectedIndices.map(index => {
+      const customerId = finalData[parseInt(index)]?.customerId
+      return customerId !== undefined ? customerId : null
+    }).filter(id => id !== null)
     if (selectedIds.length === 0) return;
     setIsDialogOpen(true);
   };
 
   const confirmBulkDelete = async () => {
     const selectedIds = Object.keys(rowSelection);
-    multiDeleteCustomers(selectedIds,{
+    multiDeleteCustomers(selectedIds, {
       onSuccess: () => {
         toast.success("Customers deleted successfully!", {
           style: {
@@ -239,6 +241,16 @@ export default function CustomersPage() {
   const cancelBulkDelete = () => {
     setIsDialogOpen(false);
   }
+
+  const handleRefetch = async () => {
+    setIsSpinning(true);
+    try {
+      await refetch(); // wait for the refetch to complete
+    } finally {
+      // stop spinning after short delay to allow animation to play out
+      setTimeout(() => setIsSpinning(false), 500);
+    }
+  };
 
   const getFormattedCreatedDateRange = () => {
     const start = filters.createdStartDate ? new Date(filters.createdStartDate).toLocaleDateString() : '';
@@ -379,13 +391,47 @@ export default function CustomersPage() {
         {/* Data Table */}
         <div className="rounded bg-white shadow">
           {finalData.length > 0 ? (
-            <DataTable
-              columns={columns}
+            <MaterialReactTable
+              columns={columns as MRT_ColumnDef<any>[]}
               data={finalData}
-              onSort={handleSort}
-              sortConfig={sortConfig}
-              rowSelection={rowSelection}
+              enableRowSelection
+              positionGlobalFilter="left"
               onRowSelectionChange={setRowSelection}
+              state={{ rowSelection, sorting }}
+              onSortingChange={setSorting}
+              enableSorting
+              initialState={{
+                density: 'compact',
+                pagination: { pageIndex: 0, pageSize: 10 },
+                showGlobalFilter: true,
+              }}
+              muiSearchTextFieldProps={{
+                placeholder: 'Search customers...',
+                variant: 'outlined',
+                fullWidth: true, // 🔥 Makes the search bar take full width
+                sx: {
+                  minWidth: '600px', // Adjust width as needed
+                  marginLeft: '16px',
+                },
+              }}
+              muiToolbarAlertBannerProps={{
+                sx: {
+                  justifyContent: 'flex-start', // Aligns search left
+                },
+              }}
+              renderTopToolbarCustomActions={() => (
+                <div className="flex flex-1 justify-end items-center">
+                  {/* 🔁 Refresh Button */}
+                  <Button
+                    variant={"ghost"}
+                    onClick={handleRefetch}
+                    className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                    title="Refresh Data"
+                  >
+                    <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                  </Button>
+                </div>
+              )}
             />
           ) : (
             <p className="h-24 text-center pt-10">No data available.</p>

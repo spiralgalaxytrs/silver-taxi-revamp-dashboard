@@ -4,16 +4,19 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "components/ui/button";
 import CounterCard from "components/cards/CounterCard";
-import { Activity, Loader2 } from "lucide-react";
+import { Activity, Loader2, RefreshCcw } from "lucide-react";
 import { Card, CardContent } from 'components/ui/card';
 import Link from "next/link";
-import { DataTable } from "components/others/DataTable";
 import { bookingColumns } from "./columns";
 import {
   useCustomers,
   useCustomerBookings,
   useCustomerById,
 } from 'hooks/react-query/useCustomer';
+import {
+  MRT_ColumnDef,
+  MaterialReactTable
+} from 'material-react-table'
 
 export default function ViewCustomerPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -35,6 +38,7 @@ export default function ViewCustomerPage({ params }: { params: Promise<{ id: str
   const {
     data: customers = [],
     isLoading: isCustomersLoading,
+    refetch
   } = useCustomers();
 
   const {
@@ -45,6 +49,7 @@ export default function ViewCustomerPage({ params }: { params: Promise<{ id: str
   const {
     data: customerBookings = [],
     isLoading: isBookingsLoading,
+    refetch: refetchBookings
   } = useCustomerBookings(id ?? '');
 
   const unFiltered = [...customerBookings].sort((a, b) => {
@@ -53,22 +58,25 @@ export default function ViewCustomerPage({ params }: { params: Promise<{ id: str
     return bCreatedAt - aCreatedAt;
   });
 
-const fData = useMemo(() => {
-  let sorted = [...unFiltered];
-  if (sortConfig.columnId && sortConfig.direction) {
-    sorted.sort((a, b) => {
-      const aValue = a[sortConfig.columnId as keyof typeof a];
-      const bValue = b[sortConfig.columnId as keyof typeof b];
-      if (aValue == null || bValue == null) return 0; // Add null check here
-      if (aValue === bValue) return 0;
-      return sortConfig.direction === 'asc'
-        ? aValue > bValue ? 1 : -1
-        : aValue < bValue ? 1 : -1;
-    });
-  }
-  return sorted;
-}, [unFiltered, sortConfig]);
+  const fData = useMemo(() => {
+    let sorted = [...unFiltered];
+    if (sortConfig.columnId && sortConfig.direction) {
+      sorted.sort((a, b) => {
+        const aValue = a[sortConfig.columnId as keyof typeof a];
+        const bValue = b[sortConfig.columnId as keyof typeof b];
+        if (aValue == null || bValue == null) return 0; // Add null check here
+        if (aValue === bValue) return 0;
+        return sortConfig.direction === 'asc'
+          ? aValue > bValue ? 1 : -1
+          : aValue < bValue ? 1 : -1;
+      });
+    }
+    return sorted;
+  }, [unFiltered, sortConfig]);
 
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [isSpinning, setIsSpinning] = useState(false)
   const [totalTrips, setTotalTrips] = useState(0);
   const [totalEarnings, setTotalEarnings] = useState(0);
 
@@ -83,13 +91,16 @@ const fData = useMemo(() => {
     setTotalEarnings(stats.totalValue);
   }, [fData]);
 
-  const handleSort = (columnId: string) => {
-    setSortConfig(prev => ({
-      columnId,
-      direction: prev.columnId === columnId && prev.direction === 'asc' ? 'desc' : 'asc',
-    }));
+  const handleRefetch = async () => {
+    setIsSpinning(true);
+    try {
+      await refetchBookings();
+    } finally {
+      // stop spinning after short delay to allow animation to play out
+      setTimeout(() => setIsSpinning(false), 500);
+    }
   };
-  
+
   if (isCustomersLoading || isCustomerLoading || isBookingsLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -165,11 +176,45 @@ const fData = useMemo(() => {
                   <Button className="px-6 py-2">Back to Customers</Button>
                 </Link>
               </div>
-              <DataTable
-                columns={bookingColumns}
+              <MaterialReactTable
+                columns={bookingColumns as MRT_ColumnDef<any>[]}
                 data={fData}
-                onSort={handleSort}
-                sortConfig={sortConfig}
+                positionGlobalFilter="left"
+                state={{ sorting }}
+                onSortingChange={setSorting}
+                enableSorting
+                initialState={{
+                  density: 'compact',
+                  pagination: { pageIndex: 0, pageSize: 10 },
+                  showGlobalFilter: true,
+                }}
+                muiSearchTextFieldProps={{
+                  placeholder: 'Search Bookings...',
+                  variant: 'outlined',
+                  fullWidth: true, // 🔥 Makes the search bar take full width
+                  sx: {
+                    minWidth: '600px', // Adjust width as needed
+                    marginLeft: '16px',
+                  },
+                }}
+                muiToolbarAlertBannerProps={{
+                  sx: {
+                    justifyContent: 'flex-start', // Aligns search left
+                  },
+                }}
+                renderTopToolbarCustomActions={() => (
+                  <div className="flex flex-1 justify-end items-center">
+                    {/* 🔁 Refresh Button */}
+                    <Button
+                      variant={"ghost"}
+                      onClick={handleRefetch}
+                      className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                      title="Refresh Data"
+                    >
+                      <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                    </Button>
+                  </div>
+                )}
               />
             </div>
           </div>

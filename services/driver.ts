@@ -69,10 +69,11 @@ export const toggleDriverStatus = async ({
 }: {
   id: string;
   status: boolean;
-}): Promise<boolean> => {
-  const res = await axios.post("/v1/toggles-change/driver", { id, status });
+}): Promise<any> => {
+  const res = await axios.post(`/v1/toggles-change/driver/${id}`, { status });
   return res.data.data;
 };
+
 
 export const adjustDriverWallet = async ({
   id,

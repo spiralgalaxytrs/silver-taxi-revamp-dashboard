@@ -8,7 +8,6 @@ import { Label } from "components/ui/label";
 import { toast } from "sonner";
 import { Textarea } from "components/ui/textarea";
 import { Card, CardContent } from "components/ui/card";
-import { useDriverStore } from "stores/-driverStore";
 import {
     Select,
     SelectContent,
@@ -28,6 +27,12 @@ import {
     AlertDialogCancel,
     AlertDialogFooter
 } from 'components/ui/alert-dialog'
+import { notFound } from "next/navigation";
+import {
+    useDriverById,
+    useUpdateDriver,
+    useAdjustWallet
+} from 'hooks/react-query/useDriver';
 
 type FormDataType = {
     id: string;
@@ -59,7 +64,18 @@ const EditDriverPage = () => {
     const params = useParams();
     const id = params?.id as string;
 
-    const { fetchDriverById, updateDriver, driver, isLoading, error, message, statusCode, addDriverWallet, minusDriverWallet } = useDriverStore();
+    const {
+        data: driver = null,
+        isLoading,
+        isError
+    } = useDriverById(id);
+
+    const {
+        mutate: updateDriver,
+        isPending: isUpdatePending
+    } = useUpdateDriver();
+
+
 
     // ✅ Prevent uncontrolled input error by ensuring default values are always set
     const [formData, setFormData] = useState<FormDataType>({
@@ -83,12 +99,6 @@ const EditDriverPage = () => {
     const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
     const [adjustmentRemarks, setAdjustmentRemarks] = useState('');
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
-
-    useEffect(() => {
-        if (id) {
-            fetchDriverById(id);
-        }
-    }, [id]);
 
     useEffect(() => {
         if (driver) {
@@ -139,84 +149,30 @@ const EditDriverPage = () => {
         }
     };
 
-    // const handleAddDriverWallet = async (id: string, amount: number, remark: string) => {
-    //     try {
-    //         await addDriverWallet(id, amount, remark); // Assuming your API function can accept remarks
-    //         const message = useDriverStore.getState().message;
-    //         setFormData(prev => ({
-    //             ...prev,
-    //             walletAmount: prev.walletAmount + amount
-    //         }));
-    //         setAdjustmentAmount(''); // Reset after operation
-    //         setAdjustmentRemarks(''); // Reset remarks after operation
-    //         toast.success("Wallet amount added successfully!", {
-    //             style: {
-    //                 backgroundColor: "#009F7F",
-    //                 color: "#fff",
-    //             },
-    //         });
-    //     } catch (error) {
-    //         toast.error(message || "Failed to add wallet amount.", {
-    //             style: {
-    //                 backgroundColor: "#FF0000",
-    //                 color: "#fff",
-    //             },
-    //         });
-    //         // console.error(error);
-    //     }
-    // };
-
-    // const handleMinusDriverWallet = async (id: string, amount: number, remark: string) => {
-    //     try {
-    //         await minusDriverWallet(id, amount, remark); // Assuming your API function can accept remarks
-    //         setFormData(prev => ({
-    //             ...prev,
-    //             walletAmount: prev.walletAmount - amount
-    //         }));
-    //         setAdjustmentAmount(''); // Reset after operation
-    //         setAdjustmentRemarks(''); // Reset remarks after operation
-    //         toast.success("Wallet amount deducted successfully!", {
-    //             style: {
-    //                 backgroundColor: "#009F7F",
-    //                 color: "#fff",
-    //             },
-    //         });
-    //     } catch (error) {
-    //         toast.error(message || "Failed to deduct wallet amount.", {
-    //             style: {
-    //                 backgroundColor: "#FF0000",
-    //                 color: "#fff",
-    //             },
-    //         });
-    //         // console.error(error);
-    //     }
-    // };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         try {
-            await updateDriver(id, formData);
-            const status = useDriverStore.getState().statusCode;
-            const message = useDriverStore.getState().message;
-            if (status === 200 || status === 201) {
-                toast.success("Driver updated successfully", {
-                    style: {
-                        backgroundColor: "#009F7F",
-                        color: "#fff",
-                    },
-                });
-                await new Promise((resolve) => setTimeout(resolve, 2000));
-                router.push("/admin/drivers");
-                setIsFormDirty(false);
-            } else {
-                toast.error(message || "Failed to update driver", {
-                    style: {
-                        backgroundColor: "#FF0000",
-                        color: "#fff",
-                    },
-                });
-            }
+            updateDriver({ id, data: formData }, {
+                onSuccess: () => {
+                    toast.success("Driver updated successfully", {
+                        style: {
+                            backgroundColor: "#009F7F",
+                            color: "#fff",
+                        },
+                    });
+                    setTimeout(() => router.push("/admin/drivers"), 2000)
+                    setIsFormDirty(false);
+                },
+                onError: () => {
+                    toast.error("Failed to update driver", {
+                        style: {
+                            backgroundColor: "#FF0000",
+                            color: "#fff",
+                        },
+                    });
+                }
+            });
         } catch (error) {
             toast.error("An unexpected error occurred", {
                 style: {
@@ -257,6 +213,12 @@ const EditDriverPage = () => {
         setShowUnsavedChangesDialog(false);
         pendingNavigation();
     };
+
+    const isPage = true
+
+    if (isPage) {
+        return notFound()
+    }
 
     return (
         <>
@@ -327,44 +289,6 @@ const EditDriverPage = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>License Validity Date <span className='text-red-500'>*</span></Label>
-                                    <Input
-                                        id="licenseValidity"
-                                        name="licenseValidity"
-                                        type="date"
-                                        value={formData.licenseValidity}
-                                        onChange={handleInputChange}
-                                        required
-                                        className="h-12"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Aadhar Number <span className='text-red-500'>*</span></Label>
-                                    <Input
-                                        id="aadharNumber"
-                                        name="aadharNumber"
-                                        value={formData.aadharNumber}
-                                        onChange={handleInputChange}
-                                        required
-                                        className="h-12"
-                                        placeholder="Enter Aadhar number"
-                                    />
-                                </div>
-
-                                {/* <div className="space-y-2">
-                                    <Label>Driver Image URL</Label>
-                                    <Input
-                                        id="driverImageUrl"
-                                        name="driverImageUrl"
-                                        value={formData.driverImageUrl}
-                                        onChange={handleInputChange}
-                                        className="h-12"
-                                        placeholder="Enter image URL"
-                                    />
-                                </div> */}
-
-                                <div className="space-y-2">
                                     <Label>License Image URL</Label>
                                     <img
                                         src={
@@ -375,18 +299,6 @@ const EditDriverPage = () => {
                                         className="w-full h-32 object-cover rounded"
                                     />
                                 </div>
-
-                                {/* <div className="space-y-2">
-                                    <Label>Vehicle ID</Label>
-                                    <Input
-                                        id="vehicleId"
-                                        name="vehicleId"
-                                        value={formData.vehicleId}
-                                        onChange={handleInputChange}
-                                        className="h-12"
-                                        placeholder="Enter vehicle ID"
-                                    />
-                                </div> */}
 
                                 <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
                                     <div className="space-y-1">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { DataTable } from 'components/others/DataTable';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { columns } from './columns';
 import { Button } from 'components/ui/button';
 import { Card } from 'components/ui/card';
@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from 'components/ui/select';
-import Loading from 'app/Loading';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -33,9 +32,15 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
+import {
+  useBackNavigation
+} from 'hooks/navigation/useBackNavigation'
+import { useNavigationStore } from 'stores/navigationStore';
 
 export default function BookingsPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const { previousPath } = useNavigationStore()
   const { bookings, fetchBookings, isLoading, error, bulkDeleteBookings } = useBookingStore();
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [totalBookings, setTotalBookings] = useState(0);
@@ -75,6 +80,11 @@ export default function BookingsPage() {
       dropDate: booking.dropDate ? new Date(booking.dropDate).toLocaleDateString() : null,
     }))
   );
+
+  useEffect(() => {
+    console.log("pathname >> ", pathname);
+    console.log("previousPath >> ", previousPath);
+  }, [pathname, previousPath]);
 
   useEffect(() => {
     setBookingData(

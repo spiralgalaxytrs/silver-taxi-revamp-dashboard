@@ -35,10 +35,16 @@ export default function EnquiryPage() {
   const router = useRouter()
 
 
-  const { data: enquiries = [], isLoading, error, refetch } = useEnquiries();
-  const { mutate: bulkDeleteEnquiries } = useBulkDeleteEnquiries();
+  const {
+    data: enquiries = [],
+    isLoading,
+    error,
+    refetch
+  } = useEnquiries();
+  const {
+    mutate: bulkDeleteEnquiries
+  } = useBulkDeleteEnquiries();
 
-  // const { enquiries, fetchEnquiries, isLoading, error, bulkDeleteEnquiries } = useEnquiryStore()
   const [filters, setFilters] = useState({
     search: '',
     vehicleType: '',
@@ -54,21 +60,16 @@ export default function EnquiryPage() {
 
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [isSpinning, setIsSpinning] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const [totalEnquiries, setTotalEnquiries] = useState(0)
   const [todayEnquiries, setTodayEnquiries] = useState(0)
   const [manualEnquiries, setManualEnquiries] = useState(0)
   const [websiteEnquiries, setWebsiteEnquiries] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isSpinning, setIsSpinning] = useState(false)
 
-  const [enquiryData, setEnquiryData] = useState(
-    enquiries.map((enquiry) => ({
-      ...enquiry,
-      id: enquiry.enquiryId,
-      dropDate: enquiry.dropDate ? new Date(enquiry.dropDate) : null,
-    }))
-  )
+
+  const [enquiryData, setEnquiryData] = useState<any[]>([])
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -217,22 +218,6 @@ export default function EnquiryPage() {
     setWebsiteEnquiries(counts.website)
   }, [filteredData])
 
-  // useEffect(() => {
-  //   fetchEnquiries()
-  //   const intervalId = setInterval(() => {
-  //     applyFilters()
-  //   }, 180000)
-  //   return () => clearInterval(intervalId)
-  // }, [fetchEnquiries])
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-      </div>
-    )
-  }
-
   const handleCreateEnquiry = () => {
     router.push('/admin/enquiry/create')
   }
@@ -276,31 +261,29 @@ export default function EnquiryPage() {
       const enquiryId = filteredData[parseInt(index)]?.enquiryId
       return enquiryId !== undefined ? enquiryId : null
     }).filter(id => id !== null)
-    await bulkDeleteEnquiries(selectedIds)
-    const newData = filteredData
-      .filter((enquiry) => !selectedIds.includes(enquiry.enquiryId || ''))
-      .map((enquiry) => ({ ...enquiry, id: enquiry.enquiryId }))
-    setEnquiryData(newData)
-    setRowSelection({})
-    const status = useEnquiryStore.getState().statusCode
-    const message = useEnquiryStore.getState().message
-    if (status === 200 || status === 201) {
-      toast.success("Enquiries deleted successfully", {
-        style: {
-          backgroundColor: "#009F7F",
-          color: "#fff",
-        },
-      })
-      router.push("/admin/enquiry")
-    } else {
-      toast.error(message || "Error deleting Enquiries", {
-        style: {
-          backgroundColor: "#FF0000",
-          color: "#fff",
-        },
-      })
-    }
-    setIsDialogOpen(false)
+    bulkDeleteEnquiries(selectedIds, {
+      onSuccess: (data: any) => {
+        setIsDialogOpen(false)
+        const message = data?.message || "Enquiries deleted successfully";
+        toast.success(message, {
+          style: {
+            backgroundColor: "#009F7F",
+            color: "#fff",
+          },
+        });
+        setTimeout(() => router.push("/admin/enquiry"), 2000)
+      },
+      onError: (error: any) => {
+        setIsDialogOpen(false)
+        toast.error(error?.response?.data?.message || "Error deleting enquiries!", {
+          style: {
+            backgroundColor: "#FF0000",
+            color: "#fff",
+          },
+        })
+      }
+    })
+
   }
 
   const cancelBulkDelete = () => {
@@ -316,6 +299,14 @@ export default function EnquiryPage() {
       setTimeout(() => setIsSpinning(false), 500);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <div className="p-6 space-y-6">
