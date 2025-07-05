@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "components
 import { Button } from "components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "components/ui/dialog";
 import { Trash2, PlusCircle, Edit } from "lucide-react";
-import { useBlogStore } from "stores/blogsStore";
+import { useBlogStore } from "stores/-blogsStore";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel, AlertDialogFooter } from 'components/ui/alert-dialog';
 import { toast } from "sonner";
 import Image from "next/image";

@@ -20,7 +20,7 @@ import {
   AlertDialogCancel,
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
-import { useOfferStore } from "stores/offerStore";
+import { useOfferStore } from "stores/-offerStore";
 import { useRouter } from "next/navigation";
 
 type Offers = {

@@ -23,7 +23,7 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import { Select, SelectItem, SelectTrigger, SelectValue, SelectContent } from "components/ui/select";
-import { useVendorStore } from "stores/vendorStore";
+import { useVendorStore } from "stores/-vendorStore";
 
 export default function VendorPage() {
   const router = useRouter();

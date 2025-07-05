@@ -28,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
-import { Enquiry, useEnquiryStore } from "stores/enquiryStore-"
+import { Enquiry, useEnquiryStore } from "stores/-enquiryStore"
 
 
 export const columns: ColumnDef<Enquiry, unknown>[] = [
@@ -104,7 +104,7 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
 
       return <div>{amPmTime}</div>;
     }
-    },
+  },
   {
     accessorKey: "dropDate",
     header: "Drop Date",
@@ -140,19 +140,19 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
         if (statusCode === 200 || statusCode === 201) {
           toast.success("Enquiry type updated successfully", {
             style: {
-                backgroundColor: "#009F7F",
-                color: "#fff",
+              backgroundColor: "#009F7F",
+              color: "#fff",
             },
-        });
+          });
         } else {
           toast.error(message || "Failed to update type", {
             style: {
-                backgroundColor: "#FF0000",
-                color: "#fff",
+              backgroundColor: "#FF0000",
+              color: "#fff",
             },
-        });
+          });
         }
-        await fetchEnquiries(); 
+        await fetchEnquiries();
       };
 
       const getStatusColor = (status: string) => {
@@ -181,7 +181,7 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
                 <Badge variant="outline" className={getStatusColor(status || "")}>{status}</Badge>
               </Button>
             </DropdownMenuTrigger>
-          {status !== "Booked" && <DropdownMenuContent align="end" className="w-48">
+            {status !== "Booked" && <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={async () => {
@@ -226,7 +226,7 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
       }
       const date = new Date(createdAt);
       const convertedDate = date.toLocaleDateString();
-      const options: Intl.DateTimeFormatOptions = {timeZone: "Asia/Kolkata", hour: 'numeric', minute: 'numeric', hour12: true };
+      const options: Intl.DateTimeFormatOptions = { timeZone: "Asia/Kolkata", hour: 'numeric', minute: 'numeric', hour12: true };
       const amPmTime = date.toLocaleTimeString('en-IN', options);
 
       return (
@@ -262,16 +262,16 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
         } catch (error) {
           toast.error("An unexpected error occurred", {
             style: {
-                backgroundColor: "#FF0000",
-                color: "#fff",
+              backgroundColor: "#FF0000",
+              color: "#fff",
             },
-        });
+          });
           console.error("Delete Error:", error);
         }
       };
 
       return (
-        <>
+        <React.Fragment>
           <div className="flex items-center gap-3">
             <EnquiryPopup
               trigger={
@@ -323,7 +323,7 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
             </AlertDialog>
 
             {/*Convert to booking*/}
-           {enquiry.status !== "Booked" && <DropdownMenu>
+            {enquiry.status !== "Booked" && <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
                   <span className="sr-only">Open menu</span>
@@ -339,7 +339,7 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
               </DropdownMenuContent>
             </DropdownMenu>}
           </div>
-        </>
+        </React.Fragment>
       )
     },
   },

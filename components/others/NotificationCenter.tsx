@@ -12,7 +12,7 @@ import {
     DropdownMenuTrigger,
 } from 'components/ui/dropdown-menu';
 import { ScrollArea } from 'components/ui/scroll-area';
-import { useNotificationStore } from 'stores/notificationStore';
+import { useNotificationStore } from 'stores/-notificationStore';
 import { useSocket } from 'providers/websocket/SocketProvider';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';

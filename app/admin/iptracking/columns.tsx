@@ -19,7 +19,7 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import { useState } from "react";
-import { useIpTrackingStore } from "stores/ipTrackingStore";
+import { useIpTrackingStore } from "stores/-ipTrackingStore";
 
 export type IpTracking = {
   ipAddress: string;

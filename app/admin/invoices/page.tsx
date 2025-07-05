@@ -30,7 +30,7 @@ import {
 } from 'components/ui/alert-dialog';
 import { ArrowDown, ArrowUp, Activity, Trash } from 'lucide-react';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
-import { useInvoiceStore } from 'stores/invoiceStore';
+import { useInvoiceStore } from 'stores/-invoiceStore';
 
 export default function InvoicesPage() {
   const { invoices, fetchInvoices, multiDeleteInvoice } = useInvoiceStore();

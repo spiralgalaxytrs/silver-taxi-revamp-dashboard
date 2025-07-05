@@ -18,7 +18,7 @@ import { Checkbox } from "components/ui/checkbox";
 import { toast } from 'sonner';
 import { Badge } from "components/ui/badge"
 import { useCallback, useEffect, useState } from "react"
-import { useDriverStore } from "stores/driverStore"
+import { useDriverStore } from "stores/-driverStore"
 import {
   AlertDialog,
   AlertDialogTrigger,

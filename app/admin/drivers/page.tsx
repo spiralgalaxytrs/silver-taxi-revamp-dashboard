@@ -6,7 +6,7 @@ import Link from "next/link";
 import { DataTable } from "components/others/DataTable";
 import { columns, Driver } from "./columns";
 import { Button } from "components/ui/button";
-import { useDriverStore } from "stores/driverStore";
+import { useDriverStore } from "stores/-driverStore";
 import { toast } from "sonner"
 import {
   Select,

@@ -19,7 +19,7 @@ import {
 } from 'components/ui/alert-dialog';
 import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
-import { useInvoiceStore } from "stores/invoiceStore";
+import { useInvoiceStore } from "stores/-invoiceStore";
 
 export type Invoice = {
   // id: string ;

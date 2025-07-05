@@ -5,8 +5,8 @@ import jsPDF from "jspdf"
 import html2canvas from "html2canvas"
 import { Button } from "components/ui/button"
 import { Download, Phone, Mail } from "lucide-react"
-import { useInvoiceStore } from "stores/invoiceStore"
-import { useProfileStore } from "stores/profileStore"
+import { useInvoiceStore } from "stores/-invoiceStore"
+import { useProfileStore } from "stores/-profileStore"
 import { Profile } from "types/profile"
 
 const Invoice = ({ id }: { id: string }) => {

@@ -16,7 +16,7 @@ import {
 } from "components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogFooter, AlertDialogDescription, AlertDialogTitle, AlertDialogHeader, AlertDialogContent } from "components/ui/alert-dialog";
-import { useVendorStore } from "stores/vendorStore"
+import { useVendorStore } from "stores/-vendorStore"
 
 
 export const columns: ColumnDef<any, unknown>[] = [

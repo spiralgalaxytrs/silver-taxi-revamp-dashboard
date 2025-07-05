@@ -3,13 +3,13 @@ export interface Enquiry {
   name: string;
   email: string;
   phone: string;
-  pickupDate: string;
+  pickupDateTime: string;
   pickupTime: string;
   dropDate?: string | null;
   pickup: string;
   drop: string;
   serviceId: string;
-  serviceName: "Round Trip" | "One Way" | "Airport Pickup" | "Airport Drop" | "Day Packages" | "Hourly Packages";
+  serviceType: "Round Trip" | "One Way" | "Airport Pickup" | "Airport Drop" | "Day Packages" | "Hourly Packages";
   type: "Website" | "App" | "Manual";
   status: "Current" | "Future" | "Fake" | "Booked";
   createdBy: "Admin" | "Vendor";

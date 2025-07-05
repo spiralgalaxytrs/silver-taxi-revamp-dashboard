@@ -7,7 +7,7 @@ import { Button } from "components/ui/button"
 import { Input } from "components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "components/ui/dialog"
 import { Trash2, PlusCircle, Edit, ArrowRight, ArrowLeft } from "lucide-react"
-import { useDynamicRouteStore } from "stores/dynamicRouteStore"
+import { useDynamicRouteStore } from "stores/-dynamicRouteStore"
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -20,7 +20,7 @@ import {
   AlertDialogFooter,
 } from 'components/ui/alert-dialog';
 import { toast } from "sonner"
-import { usePopularRoutesStore } from "stores/popularRoutesStore"
+import { usePopularRoutesStore } from "stores/-popularRoutesStore"
 import Image from "next/image"
 interface PopularRoutes {
   routeId: string;

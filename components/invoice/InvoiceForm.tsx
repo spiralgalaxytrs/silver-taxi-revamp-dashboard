@@ -8,10 +8,10 @@ import { Label } from "components/ui/label";
 import { Textarea } from "../ui/textarea";
 import { PlusIcon } from "lucide-react";
 import { customAlphabet, nanoid } from 'nanoid';
-import { useInvoiceStore } from "../../stores/invoiceStore";
+import { useInvoiceStore } from "../../stores/-invoiceStore";
 import { useBookingStore } from "../../stores/bookingStore";
-import { useServiceStore } from "stores/serviceStore";
-import { useOfferStore } from "stores/offerStore";
+import { useServiceStore } from "stores/-serviceStore";
+import { useOfferStore } from "stores/-offerStore";
 import axios from "axios";
 import {
   Select,

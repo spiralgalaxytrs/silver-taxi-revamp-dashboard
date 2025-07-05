@@ -28,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
-import { Enquiry, useEnquiryStore } from "stores/enquiryStore-"
+import { Enquiry, useEnquiryStore } from "stores/-enquiryStore"
 
 export const 
 columns: MRT_ColumnDef<Enquiry>[] = [

@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "components/ui/button"
-import { useOfferStore } from "stores/offerStore"
+import { useOfferStore } from "stores/-offerStore"
 import { Edit, SendHorizontal, Copy, Trash, Eye, Link, CheckCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "components/ui/badge"
@@ -19,7 +19,7 @@ import {
 } from "components/ui/dropdown-menu"
 import { useCallback, useEffect, useState } from "react"
 import { useBookingStore } from "stores/bookingStore"
-import { useDriverStore } from "stores/driverStore"
+import { useDriverStore } from "stores/-driverStore"
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -39,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "components/ui/select"
-import { useVendorStore } from "stores/vendorStore"
+import { useVendorStore } from "stores/-vendorStore"
 
 export type Booking = {
   bookingId?: string;

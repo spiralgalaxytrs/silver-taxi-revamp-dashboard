@@ -326,8 +326,8 @@ import {
 import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";
 import { useBookingStore } from "stores/bookingStore";
-import { useWalletTransactionStore } from "stores/walletTransactionStore";
-import { useDriverStore, Driver, ExpiryStatus } from "stores/driverStore";
+import { useWalletTransactionStore } from "stores/-walletTransactionStore";
+import { useDriverStore, Driver, ExpiryStatus } from "stores/-driverStore";
 import { toast } from "sonner";
 import ProfileTab from "components/driver/Tabs/ProfileTab";
 import VehicleTab from "components/driver/Tabs/VehicleTab";

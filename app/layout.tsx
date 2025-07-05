@@ -6,7 +6,7 @@ import "./globals.css";
 import Loading from "./Loading";
 import { CustomProvider } from 'rsuite';
 import GoogleMapsProvider from "providers/google/GoogleMapProvider";
-import ReactQueryProvider from "providers/react query/ReactQueryProvider";
+import ReactQueryProvider from "providers/react-query/ReactQueryProvider";
 import "../public/styles/main.css"
 import "../public/css/column.css";
 import "../public/css/InvoiceForm.css";

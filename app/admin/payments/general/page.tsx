@@ -30,7 +30,7 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
-import { useWalletTransactionStore } from "stores/walletTransactionStore";
+import { useWalletTransactionStore } from "stores/-walletTransactionStore";
 
 export default function GeneralPaymentPage() {
   const router = useRouter();

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { toast } from "sonner"
 import { DataTable } from 'components/others/DataTable'
 import { useRouter } from 'next/navigation'
@@ -9,7 +9,7 @@ import { Button } from 'components/ui/button'
 import { Input } from 'components/ui/input'
 import { Label } from 'components/ui/label'
 import { ListRestart, RotateCcw, ArrowDown, ArrowUp, Activity, Trash, Loader2 } from 'lucide-react';
-import { useEnquiryStore } from 'stores/enquiryStore-'
+import { useEnquiryStore } from 'stores/-enquiryStore'
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
 import { Card } from 'components/ui/card';
 import dayjs from 'dayjs'
@@ -323,7 +323,7 @@ export default function EnquiryPage() {
   };
 
   return (
-    <>
+    <React.Fragment>
       <div className="p-6 space-y-6">
         <div className="rounded bg-white p-5 shadow ">
           <div className="flex flex-col">
@@ -529,6 +529,6 @@ export default function EnquiryPage() {
           />
         </div>
       </div>
-    </>
+    </React.Fragment>
   )
 }

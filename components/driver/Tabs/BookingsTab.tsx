@@ -11,7 +11,7 @@ import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "components/ui/select";
 import { StatsCard } from "./StatsCard";
-import { Driver } from "stores/driverStore";
+import { Driver } from "stores/-driverStore";
 import { toast } from "sonner";
 
 interface BookingsTabProps {

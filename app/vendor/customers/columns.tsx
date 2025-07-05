@@ -18,7 +18,7 @@ import {
 } from 'components/ui/alert-dialog';
 import { useRouter } from "next/navigation"
 import { useState } from "react";
-import { useCustomerStore } from "stores/customerStore";
+import { useCustomerStore } from "stores/-customerStore";
 
 export type Customer = {
   customerId?: string;

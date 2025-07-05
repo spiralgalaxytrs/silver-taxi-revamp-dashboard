@@ -9,7 +9,7 @@ import { Activity, Loader2 } from "lucide-react";
 import { Card, CardContent } from 'components/ui/card';
 import { Input } from 'components/ui/input';
 import Link from "next/link";
-import { useCustomerStore } from "stores/customerStore";
+import { useCustomerStore } from "stores/-customerStore";
 import { DataTable } from "components/others/DataTable";
 import { bookingColumns, Booking } from "./columns";
 import React from "react";

@@ -8,7 +8,7 @@ import { Label } from "components/ui/label";
 import { toast } from "sonner";
 import { Textarea } from "components/ui/textarea";
 import { Card, CardContent } from "components/ui/card";
-import { useVendorStore } from "stores/vendorStore"; // Assume you have a vendor store
+import { useVendorStore } from "stores/-vendorStore"; // Assume you have a vendor store
 import {
     Select,
     SelectContent,

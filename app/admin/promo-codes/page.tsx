@@ -29,7 +29,7 @@ import {
     AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
-import { useOfferStore } from 'stores/offerStore';
+import { useOfferStore } from 'stores/-offerStore';
 import { toast } from "sonner";
 
 export default function OffersPage() {

@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import SunEditor from "suneditor-react";
-import { useImageUploadStore } from "stores/imageUploadStore";
-import { useBlogStore } from "stores/blogsStore";
+import { useImageUploadStore } from "stores/-imageUploadStore";
+import { useBlogStore } from "stores/-blogsStore";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Button } from "components/ui/button";

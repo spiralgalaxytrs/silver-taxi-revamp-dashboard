@@ -9,7 +9,7 @@ import { Label } from 'components/ui/label'
 import { ListRestart, RefreshCcw, ArrowDown, ArrowUp, Activity, Trash, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { columns } from './columns'
-import { useEnquiryStore } from 'stores/enquiryStore-'
+import { useEnquiryStore } from 'stores/-enquiryStore'
 import DateRangeAccordion from 'components/others/DateRangeAccordion'
 import { Card } from 'components/ui/card'
 import dayjs from 'dayjs'
@@ -28,10 +28,8 @@ import {
 } from 'components/ui/alert-dialog'
 import {
   useEnquiries,
-  useCreateEnquiry,
-  useDeleteEnquiry,
   useBulkDeleteEnquiries
-} from 'hooks/react-query/enquiry'
+} from 'hooks/react-query/useEnquiry'
 
 export default function EnquiryPage() {
   const router = useRouter()
@@ -62,6 +60,7 @@ export default function EnquiryPage() {
   const [manualEnquiries, setManualEnquiries] = useState(0)
   const [websiteEnquiries, setWebsiteEnquiries] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isSpinning, setIsSpinning] = useState(false)
 
   const [enquiryData, setEnquiryData] = useState(
     enquiries.map((enquiry) => ({
@@ -74,8 +73,6 @@ export default function EnquiryPage() {
   const handleFilterChange = (key: string, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
   }
-
-  console.log("enquiryData >> ", enquiries)
 
   const categorizeEnquiries = (enquiries: any[]) => {
     const today = dayjs().startOf('day')
@@ -148,7 +145,7 @@ export default function EnquiryPage() {
         enquiry.phone?.toLowerCase().includes(filters.search.toLowerCase()) ||
         enquiry.pickup?.toLowerCase().includes(filters.search.toLowerCase()) ||
         enquiry.drop?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enquiry.serviceName?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        enquiry.serviceType?.toLowerCase().includes(filters.search.toLowerCase()) ||
         enquiry.type?.toLowerCase().includes(filters.search.toLowerCase()) ||
         enquiry.status?.toLowerCase().includes(filters.search.toLowerCase()) ||
         enquiry.createdBy?.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -164,13 +161,13 @@ export default function EnquiryPage() {
 
     if (filters.serviceName && filters.serviceName !== 'all') {
       filteredData = filteredData.filter((enquiry) =>
-        enquiry.serviceName?.toLowerCase() === filters.serviceName.toLowerCase()
+        enquiry.serviceType?.toLowerCase() === filters.serviceName.toLowerCase()
       )
     }
 
     if (filters.enquiryStartDate || filters.enquiryEndDate) {
       filteredData = filteredData.filter((enquiry) => {
-        const enquiredDate = new Date(enquiry.pickupDate).setHours(0, 0, 0, 0)
+        const enquiredDate = new Date(enquiry.pickupDateTime).setHours(0, 0, 0, 0)
         const startDate = filters.enquiryStartDate
           ? new Date(filters.enquiryStartDate).setHours(0, 0, 0, 0)
           : null
@@ -183,7 +180,7 @@ export default function EnquiryPage() {
 
     if (filters.pickupStartDate || filters.pickupEndDate) {
       filteredData = filteredData.filter((enquiry) => {
-        const pickupDate = new Date(enquiry.pickupDate).setHours(0, 0, 0, 0)
+        const pickupDate = new Date(enquiry.pickupDateTime).setHours(0, 0, 0, 0)
         const startDate = filters.pickupStartDate
           ? new Date(filters.pickupStartDate).setHours(0, 0, 0, 0)
           : null
@@ -309,6 +306,16 @@ export default function EnquiryPage() {
   const cancelBulkDelete = () => {
     setIsDialogOpen(false)
   }
+
+  const handleRefetch = async () => {
+    setIsSpinning(true);
+    try {
+      await refetch(); // wait for the refetch to complete
+    } finally {
+      // stop spinning after short delay to allow animation to play out
+      setTimeout(() => setIsSpinning(false), 500);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -542,11 +549,11 @@ export default function EnquiryPage() {
               {/* 🔁 Refresh Button */}
               <Button
                 variant={"ghost"}
-                onClick={() => refetch()}
-                className="text-gray-600 hover:text-primary transition p-0 m-0"
+                onClick={handleRefetch}
+                className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
                 title="Refresh Data"
               >
-                <RefreshCcw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
               </Button>
             </div>
           )}
