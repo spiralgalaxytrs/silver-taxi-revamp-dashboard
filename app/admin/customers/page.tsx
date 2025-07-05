@@ -10,8 +10,7 @@ import { Card } from "components/ui/card";
 import CounterCard from "components/cards/CounterCard";
 import { Activity, Trash, ArrowDown, ArrowUp } from "lucide-react";
 import DateRangeAccordion from "components/others/DateRangeAccordion";
-import { useCustomerStore } from "stores/-customerStore";
-import {toast} from "sonner"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation";
 import {
   AlertDialog,
@@ -24,6 +23,10 @@ import {
   AlertDialogCancel,
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
+import {
+  useCustomers,
+  useBulkDeleteCustomers
+} from "hooks/react-query/useCustomer";
 
 interface Customer {
   customerId?: string;
@@ -41,7 +44,20 @@ interface Customer {
 
 export default function CustomersPage() {
   const router = useRouter()
-  const { customers, fetchCustomers,multiDeleteCustomers } = useCustomerStore();
+
+
+  const {
+    data: customers = [],
+    isLoading,
+    isError
+  } = useCustomers();
+
+  const {
+    mutate: multiDeleteCustomers
+
+  } = useBulkDeleteCustomers();
+
+
   const [filters, setFilters] = useState({
     search: "",
     createdStartDate: '',
@@ -55,10 +71,6 @@ export default function CustomersPage() {
     direction: "asc" | "desc" | null;
   }>({ columnId: null, direction: null });
 
-
-  useEffect(() => {
-    fetchCustomers();
-  }, [fetchCustomers]);
 
   // Counters for metrics: total customers, total bookings, and total spent
   const [totalCustomers, setTotalCustomers] = useState(0);
@@ -164,11 +176,11 @@ export default function CustomersPage() {
     let total = 0;
     let bookings = 0;
     let spent = 0;
-  
+
     customers.forEach((customer) => {
       total += 1; // Count total customers
       bookings += customer.bookingCount; // Sum total bookings
-  
+
       // Ensure totalAmount is a valid number
       const amount = Number(customer.totalAmount);
       if (!isNaN(amount)) {
@@ -177,7 +189,7 @@ export default function CustomersPage() {
         console.error("Invalid totalAmount:", customer.totalAmount);
       }
     });
-  
+
     // Update state
     setTotalCustomers(total);
     setTotalBookings(bookings);
@@ -201,20 +213,27 @@ export default function CustomersPage() {
 
   const confirmBulkDelete = async () => {
     const selectedIds = Object.keys(rowSelection);
-    await multiDeleteCustomers(selectedIds);
-    const newData = finalData
-      .filter(customer => !selectedIds.includes(customer.customerId ?? ''))
-    // .map(customer => ({ ...customer, id: customer.customerId }));
-    setCustomerData(newData);
-    setRowSelection({});
-    const status = useCustomerStore.getState().statusCode
-    if (status !== 200 && status !== 201) {
-      toast.error("Error deleting Customers!");
-    } else {
-      toast.success("Customers deleted successfully!");
-      router.push("/admin/customers");
-    }
-    setIsDialogOpen(false);
+    multiDeleteCustomers(selectedIds,{
+      onSuccess: () => {
+        toast.success("Customers deleted successfully!", {
+          style: {
+            backgroundColor: "#009F7F",
+            color: "#fff",
+          },
+        });
+        setIsDialogOpen(false);
+        router.push("/admin/customers");
+      },
+      onError: (error: any) => {
+        setIsDialogOpen(false);
+        toast.error(error?.response?.data?.message || "Error deleting Customers!", {
+          style: {
+            backgroundColor: "#FF0000",
+            color: "#fff",
+          },
+        });
+      }
+    });
   }
 
   const cancelBulkDelete = () => {
@@ -345,14 +364,14 @@ export default function CustomersPage() {
                   />
                 </div>
                 <div className='flex justify-start items-center'>
-                <Button
-                  className='mt-5 p-1 border-none bg-[#009F87] flex justify-center items-center w-28'
-                  // variant="outline"
-                  onClick={handleClear}
-                >
-                  Clear
-                </Button>
-              </div>
+                  <Button
+                    className='mt-5 p-1 border-none bg-[#009F87] flex justify-center items-center w-28'
+                    // variant="outline"
+                    onClick={handleClear}
+                  >
+                    Clear
+                  </Button>
+                </div>
               </div>
             )}
           </div>

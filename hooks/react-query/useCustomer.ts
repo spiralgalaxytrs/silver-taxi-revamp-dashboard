@@ -23,7 +23,7 @@ export const useVendorCustomers = () => {
   });
 };
 
-export const useCustomer = (id: string) => {
+export const useCustomerById = (id: string) => {
   return useQuery<Customer>({
     queryKey: ["customer", id],
     queryFn: () => getCustomerById(id),
