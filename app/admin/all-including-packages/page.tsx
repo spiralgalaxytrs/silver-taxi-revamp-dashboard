@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DataTable } from 'components/others/DataTable';
 import { columns } from './columns'; // Adjust the type as needed.
@@ -11,7 +11,6 @@ import { Card } from 'components/ui/card';
 import CounterCard from 'components/cards/CounterCard';
 import { ArrowDown, ArrowUp, Trash, Activity } from 'lucide-react';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
-import { useAllIncludesStore, AllIncludes } from 'stores/-allIncludesStore';
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -24,12 +23,27 @@ import {
   AlertDialogCancel,
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
+import {
+  useAllIncludes,
+  useBulkDeleteIncludes,
+  useDeleteInclude
+} from 'hooks/react-query/useAllIncludes';
 
 export default function AllIncludingPackagesPage() {
   const router = useRouter();
-  const { fetchAllIncludes, deleteInclude, allIncludes, bulkDeleteAllIncludes, isLoading, error } = useAllIncludesStore();
+
+  const {
+    data: allIncludes = [],
+    isLoading,
+    error,
+  } = useAllIncludes()
+
+  const {
+    mutate: bulkDeleteAllIncludes,
+  } = useBulkDeleteIncludes();
+
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [notAllow,setNotAllow] = useState(true);
+  const [notAllow, setNotAllow] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [totalPackages, setTotalPackages] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -48,9 +62,6 @@ export default function AllIncludingPackagesPage() {
     createdStartDate: '',
     createdEndDate: '',
   });
-  useEffect(() => {
-    fetchAllIncludes();
-  }, [fetchAllIncludes]);
 
   // Update total packages when data loads
   useEffect(() => {
@@ -158,17 +169,22 @@ export default function AllIncludingPackagesPage() {
 
   const confirmBulkDelete = async () => {
     const selectedIds = Object.keys(rowSelection);
-    await bulkDeleteAllIncludes(selectedIds);
-    const newData = data.filter(pkg => !selectedIds.includes(pkg.includeId));
-    setData(newData);
+
+    bulkDeleteAllIncludes(selectedIds, {
+      onSuccess: (data: any) => {
+        toast.success(data?.message || "Package deleted successfully!", {
+          style: { backgroundColor: "#009F7F", color: "#fff" },
+        });
+        router.push("/admin/all-including-packages");
+      },
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.message || "Failed to delete packages", {
+          style: { backgroundColor: "#FF0000", color: "#fff" },
+        });
+      },
+    });
+
     setRowSelection({});
-    const status = useAllIncludesStore.getState().statusCode
-    if (status !== 200 && status !== 201) {
-      toast.error("Error deleting package!");
-    } else {
-      toast.success("Package deleted successfully!");
-      router.push("/admin/all-including-packages");
-    }
     setIsDialogOpen(false);
   };
 
@@ -190,136 +206,138 @@ export default function AllIncludingPackagesPage() {
     return start && end ? `${start} - ${end}` : 'Pick a range';
   };
 
-  if(notAllow) return null
+  if (notAllow) return null
 
   return (
-    <div className="space-y-6">
-      <div className="rounded bg-white p-5 shadow">
-        <div className="flex flex-col">
-          <div className="flex justify-between items-center mb-5">
-            <h1 className="text-2xl font-bold tracking-tight">
-              All Including Packages
-            </h1>
-            <div className="flex items-center gap-2">
-              <Button
-                className="bg-[rgb(0,159,127)]"
-                onClick={handleCreatePackage}
-              >
-                Create Package
-              </Button>
-              {/* {showFilters && <Button variant="outline" onClick={handleClear}>
+    <React.Fragment>
+      <div className="space-y-6">
+        <div className="rounded bg-white p-5 shadow">
+          <div className="flex flex-col">
+            <div className="flex justify-between items-center mb-5">
+              <h1 className="text-2xl font-bold tracking-tight">
+                All Including Packages
+              </h1>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="bg-[rgb(0,159,127)]"
+                  onClick={handleCreatePackage}
+                >
+                  Create Package
+                </Button>
+                {/* {showFilters && <Button variant="outline" onClick={handleClear}>
                 Clear
               </Button>} */}
-              <Button
-                variant="none"
-                className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                {showFilters ? "Hide Filters" : "Show Filters"}
-                {showFilters ? (
-                  <ArrowDown className="ml-2" />
-                ) : (
-                  <ArrowUp className="ml-2" />
-                )}
-              </Button>
-              <div className="flex items-center gap-2">
-                {Object.keys(rowSelection).length > 0 && (
-                  <>
-                    <Button
-                      variant="destructive"
-                      onClick={handleBulkDelete}
-                      className="flex items-center gap-2"
-                    >
-                      <Trash className="h-4 w-4" /> (
-                      {Object.keys(rowSelection).length})
-                    </Button>
+                <Button
+                  variant="none"
+                  className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  {showFilters ? "Hide Filters" : "Show Filters"}
+                  {showFilters ? (
+                    <ArrowDown className="ml-2" />
+                  ) : (
+                    <ArrowUp className="ml-2" />
+                  )}
+                </Button>
+                <div className="flex items-center gap-2">
+                  {Object.keys(rowSelection).length > 0 && (
+                    <>
+                      <Button
+                        variant="destructive"
+                        onClick={handleBulkDelete}
+                        className="flex items-center gap-2"
+                      >
+                        <Trash className="h-4 w-4" /> (
+                        {Object.keys(rowSelection).length})
+                      </Button>
 
-                    <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete {Object.keys(rowSelection).length} selected packages?
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel onClick={cancelBulkDelete}>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={confirmBulkDelete}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </>
-                )}
+                      <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete {Object.keys(rowSelection).length} selected packages?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel onClick={cancelBulkDelete}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={confirmBulkDelete}>Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
+            {/* Counter Card */}
+            <div className="flex justify-center gap-4 mb-5">
+              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 w-full" />
+                <div className="h-[150PX] w-full">
+                  <CounterCard
+                    color="bg-emerald-100"
+                    icon={Activity}
+                    count={totalPackages}
+                    label="Total Packages"
+                    cardSize="w-[180px] h-[90px]"
+                  />
+                </div>
+                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500 transform scale-x-100" />
+              </Card>
+            </div>
           </div>
-          {/* Counter Card */}
-          <div className="flex justify-center gap-4 mb-5">
-            <Card className="relative overflow-hidden border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 w-full" />
-              <div className="h-[150PX] w-full">
-                <CounterCard
-                  color="bg-emerald-100"
-                  icon={Activity}
-                  count={totalPackages}
-                  label="Total Packages"
-                  cardSize="w-[180px] h-[90px]"
+          {showFilters && (
+            <div className="flex gap-8 items-center mt-4">
+              <div className="flex flex-col w-[230px]">
+                <Label className="text-sm font-medium">Search</Label>
+                <Input
+                  id="search"
+                  placeholder="Search packages"
+                  value={filters.search}
+                  onChange={(e) =>
+                    handleFilterChange("search", e.target.value)
+                  }
                 />
               </div>
-              <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500 transform scale-x-100" />
-            </Card>
-          </div>
+              <div className="flex flex-col w-[230px]">
+                <Label className="text-sm font-medium">Created At</Label>
+                <DateRangeAccordion
+                  label={getFormattedCreatedDateRange()}
+                  startDate={filters.createdStartDate}
+                  endDate={filters.createdEndDate}
+                  onStartDateChange={(date: any) =>
+                    handleFilterChange("createdStartDate", date)
+                  }
+                  onEndDateChange={(date: any) =>
+                    handleFilterChange("createdEndDate", date)
+                  }
+                />
+              </div>
+              <div className='flex justify-start items-center'>
+                <Button
+                  className='mt-4 p-1 border-none bg-[#009F87] flex justify-center items-center w-28'
+                  // variant="outline"
+                  onClick={handleClear}
+                  disabled={isLoading}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
-        {showFilters && (
-          <div className="flex gap-8 items-center mt-4">
-            <div className="flex flex-col w-[230px]">
-              <Label className="text-sm font-medium">Search</Label>
-              <Input
-                id="search"
-                placeholder="Search packages"
-                value={filters.search}
-                onChange={(e) =>
-                  handleFilterChange("search", e.target.value)
-                }
-              />
-            </div>
-            <div className="flex flex-col w-[230px]">
-              <Label className="text-sm font-medium">Created At</Label>
-              <DateRangeAccordion
-                label={getFormattedCreatedDateRange()}
-                startDate={filters.createdStartDate}
-                endDate={filters.createdEndDate}
-                onStartDateChange={(date: any) =>
-                  handleFilterChange("createdStartDate", date)
-                }
-                onEndDateChange={(date: any) =>
-                  handleFilterChange("createdEndDate", date)
-                }
-              />
-            </div>
-            <div className='flex justify-start items-center'>
-              <Button
-                className='mt-4 p-1 border-none bg-[#009F87] flex justify-center items-center w-28'
-                // variant="outline"
-                onClick={handleClear}
-                disabled={isLoading}
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
-        )}
+        <div className="rounded bg-white shadow">
+          <DataTable
+            columns={columns}
+            data={filteredData}
+            onSort={handleSort}
+            sortConfig={sortConfig}
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
+          />
+        </div>
       </div>
-      <div className="rounded bg-white shadow">
-        <DataTable
-          columns={columns}
-          data={filteredData}
-          onSort={handleSort}
-          sortConfig={sortConfig}
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-        />
-      </div>
-    </div>
+    </React.Fragment>
   );
 }

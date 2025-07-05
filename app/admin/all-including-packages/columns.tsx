@@ -188,32 +188,30 @@ export const columns: ColumnDef<AllIncludes>[] = [
             <Edit className="h-5 w-5" />
           </Button>
 
-          <>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-red-600 hover:text-red-800 tool-tip"
-              data-tooltip="Delete Package"
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <Trash className="h-5 w-5" />
-            </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-red-600 hover:text-red-800 tool-tip"
+            data-tooltip="Delete Package"
+            onClick={() => setIsDialogOpen(true)}
+          >
+            <Trash className="h-5 w-5" />
+          </Button>
 
-            <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete this Package?
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => handleDelete(pkg.includeId ?? '')}>Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </>
+          <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this Package?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => handleDelete(pkg.includeId ?? '')}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )
     },

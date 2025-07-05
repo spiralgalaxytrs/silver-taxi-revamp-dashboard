@@ -6,10 +6,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "components
 import { Button } from "components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "components/ui/dialog";
 import { Trash2, PlusCircle, Edit } from "lucide-react";
-import { useBlogStore } from "stores/-blogsStore";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel, AlertDialogFooter } from 'components/ui/alert-dialog';
 import { toast } from "sonner";
 import Image from "next/image";
+import {
+  useBlogs,
+  useDeleteBlog,
+} from "hooks/react-query/useBlog";
 
 interface Blog {
   blogId: string;
@@ -22,31 +25,37 @@ interface Blog {
 }
 
 export default function BlogPage() {
-  const { blogs, fetchBlogs, deleteBlog } = useBlogStore();
+
+  const {
+    data: blogs = [],
+    isLoading,
+    isError,
+  } = useBlogs();
+
+  const {
+    mutate: deleteBlog,
+    isPending: isDeleting
+  } = useDeleteBlog();
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedBlogId, setSelectedBlogId] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    fetchBlogs();
-  }, [fetchBlogs]);
-
   const handleDeleteBlog = async (id: string) => {
     try {
-      await deleteBlog(id);
-      const status = useBlogStore.getState().statusCode;
-      const message = useBlogStore.getState().message;
-      if (status === 200 || status === 201) {
-        toast.success("Blog deleted successfully");
-        await fetchBlogs();
-      } else {
-        toast.error(message || "Error deleting blog!", {
-          style: {
-            backgroundColor: "#FF0000",
-            color: "#fff",
-          },
-        });
-      }
+      deleteBlog(id, {
+        onSuccess: () => {
+          toast.success("Blog deleted successfully");
+        },
+        onError: (error: any) => {
+          toast.error(error?.response?.data?.message || "Error deleting blog!", {
+            style: {
+              backgroundColor: "#FF0000",
+              color: "#fff",
+            },
+          });
+        },
+      });
     } catch (error) {
       toast.error("Failed to delete blog", {
         style: {
@@ -93,7 +102,7 @@ export default function BlogPage() {
                     alt={blog.title}
                     width={300}
                     height={100}
-                    style={{width: "100%"}}
+                    style={{ width: "100%" }}
                   />
                   <h1 className="text-gray-600 text-5xl text-center mt-3">{blog.title}</h1>
                 </CardContent>

@@ -149,6 +149,7 @@ export default function EditBlog({ params }: { params: Promise<{ id: string }> }
   };
 
   return (
+    <React.Fragment>
     <div className="bg-white rounded shadow p-10">
       <h2 className="font-bold text-4xl mb-3">Edit Blog</h2>
       <div>
@@ -259,5 +260,6 @@ export default function EditBlog({ params }: { params: Promise<{ id: string }> }
         </div>
       </div>
     </div>
+    </React.Fragment>
   );
 }
