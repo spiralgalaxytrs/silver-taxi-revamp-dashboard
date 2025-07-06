@@ -293,8 +293,12 @@ export default function BookingsPage() {
       onSuccess: (data: any) => {
         setIsDialogOpen(false);
         toast.success(data?.message || "Bookings deleted successfully!", {
-
+          style: {
+            backgroundColor: "#009F7F",
+            color: "#fff",
+          },
         });
+        setRowSelection({});
         setTimeout(() => router.push("/admin/bookings"), 500);
       },
       onError: (error: any) => {
