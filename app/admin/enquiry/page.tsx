@@ -73,8 +73,18 @@ export default function EnquiryPage() {
   const [manualEnquiries, setManualEnquiries] = useState(0)
   const [websiteEnquiries, setWebsiteEnquiries] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-
   const [enquiryData, setEnquiryData] = useState<any[]>([])
+
+  useEffect(() => {
+    setEnquiryData(
+      enquiries.map((enquiry) => ({
+        ...enquiry,
+        id: enquiry.enquiryId,
+        dropDate: enquiry.dropDate ? new Date(enquiry.dropDate) : null,
+      }))
+    )
+  }, [enquiries])
+
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -201,6 +211,14 @@ export default function EnquiryPage() {
 
   const filteredData = useMemo(() => applyFilters(), [filters, enquiryData])
 
+  useEffect(() => {
+    const counts = categorizeEnquiries(filteredData)
+    setTotalEnquiries(counts.total)
+    setTodayEnquiries(counts.today)
+    setManualEnquiries(counts.manual)
+    setWebsiteEnquiries(counts.website)
+  }, [filteredData])
+
   const handleCreateEnquiry = () => {
     router.push('/admin/enquiry/create')
   }
@@ -278,37 +296,6 @@ export default function EnquiryPage() {
       setTimeout(() => setIsSpinning(false), 500);
     }
   };
-
-  useEffect(() => {
-    if (previousPath) {
-      const paths = previousPath.split("/");
-      const isEditOrCreate = paths.includes("edit") || paths.includes("create");
-      if (isEditOrCreate) {
-        setLockBack(true);
-      }
-    }
-  }, [previousPath]);
-
-
-  useEffect(() => {
-    setEnquiryData(
-      enquiries.map((enquiry) => ({
-        ...enquiry,
-        id: enquiry.enquiryId,
-        dropDate: enquiry.dropDate ? new Date(enquiry.dropDate) : null,
-      }))
-    )
-  }, [enquiries])
-
-
-  useEffect(() => {
-    const counts = categorizeEnquiries(filteredData)
-    setTotalEnquiries(counts.total)
-    setTodayEnquiries(counts.today)
-    setManualEnquiries(counts.manual)
-    setWebsiteEnquiries(counts.website)
-  }, [filteredData])
-
 
   if (isLoading) {
     return (

@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { columns } from "./columns";
 import { Button } from "components/ui/button";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Card } from "components/ui/card";
 import CounterCard from "components/cards/CounterCard";
-import {Loader2, Activity, Trash, ArrowDown, ArrowUp, RefreshCcw } from "lucide-react";
+import { Loader2, Activity, Trash, ArrowDown, ArrowUp, RefreshCcw } from "lucide-react";
 import DateRangeAccordion from "components/others/DateRangeAccordion";
 import { toast } from "sonner"
 import { useRouter } from "next/navigation";
@@ -76,23 +76,17 @@ export default function CustomersPage() {
     columnId: string | null;
     direction: "asc" | "desc" | null;
   }>({ columnId: null, direction: null });
-
-
   // Counters for metrics: total customers, total bookings, and total spent
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
-  const [customerData, setCustomerData] = useState<any[]>([]);
 
-  useEffect(() => {
-    async function fetchData() {
-      setCustomerData(customers.map(customer => ({
-        ...customer,
-        id: customer.customerId,
-        totalAmount: customer.totalAmount,
-      })));
-    }
-    fetchData();
+  const customerData = useMemo(() => {
+    return customers.map(customer => ({
+      ...customer,
+      id: customer.customerId,
+      totalAmount: customer.totalAmount,
+    }));
   }, [customers]);
 
   const handleFilterChange = (key: string, value: string) => {
@@ -252,9 +246,6 @@ export default function CustomersPage() {
     const end = filters.createdEndDate ? new Date(filters.createdEndDate).toLocaleDateString() : '';
     return start && end ? `${start} - ${end}` : 'Pick a range';
   };
-
-  useEffect(() => {
-  }, [customerData, filters, sortConfig]);
 
   if (isLoading) {
     return (

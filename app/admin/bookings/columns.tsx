@@ -1,9 +1,8 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "components/ui/button"
 import { useOfferStore } from "stores/-offerStore"
-import { Edit, SendHorizontal, Copy, Trash, Eye, Link, CheckCircle } from "lucide-react"
+import { Edit, SendHorizontal, Trash, Eye, ChevronDown } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "components/ui/badge"
 import { Checkbox } from "components/ui/checkbox";
@@ -33,13 +32,8 @@ import {
 } from 'components/ui/alert-dialog'
 import { toast } from "sonner"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "components/ui/select"
-import { useVendorStore } from "stores/-vendorStore"
+  MRT_ColumnDef
+} from 'material-react-table'
 
 export type Booking = {
   bookingId?: string;
@@ -74,89 +68,101 @@ export type Booking = {
   advanceAmount: number | null;
 }
 
-export const columns: ColumnDef<Booking>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-      />
-    ),
-  },
+export const columns: MRT_ColumnDef<Booking>[] = [
+  // {
+  //   id: "select",
+  //   header:'select',
+  //   Header: ({ table }) => (
+  //     <Checkbox
+  //       checked={table.getIsAllPageRowsSelected()}
+  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //     />
+  //   ),
+  //   Cell: ({ row }) => (
+  //     <Checkbox
+  //       checked={row.getIsSelected()}
+  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //     />
+  //   ),
+  // },
   {
     header: "S.No",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       return <div>{row.index + 1}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "bookingId",
     header: "Booking ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
 
 
   {
     accessorKey: "name",
     header: "Customer Name",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const name = row.getValue("name");
       return <div>{!name || name === "null" ? "-" : String(name)}</div>;
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
-
-
   {
     accessorKey: "phone",
     header: "Mobile Number",
-    cell: ({ row }) => {
-      const phone = row.getValue("phone") as string;
-      <div>{phone}</div>;
-        },
-      },
-      {
-        accessorKey: "pickup",
-        header: "From",
-        cell: ({ row }) => {
+    Cell: ({ row }) => {
+      const phone = row.original.phone
+      return <div>+{phone}</div>;
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
+  {
+    accessorKey: "pickup",
+    header: "From",
+    Cell: ({ row }) => {
       const pickup = row.getValue("pickup") as string;
       if (!pickup) return <div>-</div>;
       let display = pickup;
       if (pickup.length > 15) {
-          const firstWord = pickup.split(" ")[0];
-          if (firstWord.length > 15) {
-            return <div>{pickup.slice(0, 15)}...</div>;
-          }
-          return <div>{firstWord}...</div>;
-          }
-          return <div>{pickup}</div>;
-        },
-        },
-        {
-        accessorKey: "drop",
-        header: "To",
-        cell: ({ row }) => {
-          const drop = row.getValue("drop") as string;
-          if (!drop) return <div>-</div>;
-          if (drop.length > 15) {
-          const firstWord = drop.split(" ")[0];
-          if (firstWord.length > 15) {
-            return <div>{drop.slice(0, 15)}...</div>;
-          }
-          return <div>{firstWord}...</div>;
-          }
-          return <div>{drop}</div>;
-        },
-        },
-        {
-        accessorKey: "pickupDate",
-        header: "PickUp Date",
-        cell: ({ row }) => {
+        const firstWord = pickup.split(" ")[0];
+        if (firstWord.length > 15) {
+          return <div>{pickup.slice(0, 15)}...</div>;
+        }
+        return <div>{firstWord}...</div>;
+      }
+      return <div>{pickup}</div>;
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
+  {
+    accessorKey: "drop",
+    header: "To",
+    Cell: ({ row }) => {
+      const drop = row.getValue("drop") as string;
+      if (!drop) return <div>-</div>;
+      if (drop.length > 15) {
+        const firstWord = drop.split(" ")[0];
+        if (firstWord.length > 15) {
+          return <div>{drop.slice(0, 15)}...</div>;
+        }
+        return <div>{firstWord}...</div>;
+      }
+      return <div>{drop}</div>;
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
+  {
+    accessorKey: "pickupDateTime",
+    id: "pickupDate",
+    header: "PickUp Date",
+    Cell: ({ row }) => {
       const pickupDate: string = row.getValue("pickupDate");
       if (!pickupDate) {
         return <div>-</div>;
@@ -177,11 +183,14 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{formattedDate}</div>;
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "pickupTime",
+    accessorKey: "pickupDateTime",
+    id: "pickupTime",
     header: "PickUp Time",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const pickupTime: string = row.getValue("pickupTime");
       if (!pickupTime) {
         return <div>-</div>;
@@ -204,88 +213,65 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{amPmTime}</div>;
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
-  // {
-  //   accessorKey: "dropDate",
-  //   header: "Drop Date",
-  //   cell: ({ row }) => {
-  //     const dropDate: string = row.getValue("dropDate");
-  //     if (!dropDate) {
-  //       return <div>-</div>;
-  //     }
+  {
+    accessorKey: "dropDate",
+    header: "Drop Date",
+    Cell: ({ row }) => {
+      const dropDateRaw = row.getValue("dropDate");
+      const dropTime = "00:00";
 
+      if (!dropDateRaw || dropDateRaw === "null") {
+        return <div>-</div>;
+      }
 
-  //     // Parse the stored UTC date
-  //     const utcDate = new Date(dropDate);
+      const dropDateStr = typeof dropDateRaw === "string" ? dropDateRaw : "";
+      const [day, month, year] = dropDateStr.split("/");
+      if (!day || !month || !year) {
+        return <div>Invalid Date</div>;
+      }
 
-  //     console.log("UTC DAte new", utcDate);
+      const isoDateStr = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${dropTime}`;
+      const date = new Date(isoDateStr);
 
-  //     // Adjust back to IST (Subtract 5.5 hours)
-  //     const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+      if (isNaN(date.getTime())) {
+        return <div>Invalid Date</div>;
+      }
 
-  //     console.log("ISDate", istDate);
+      const formatted = date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
 
-  //     // Format the corrected IST date
-  //     const formattedDate = istDate.toLocaleDateString("en-IN", {
-  //       day: "2-digit",
-  //       month: "2-digit",
-  //       year: "numeric",
-  //     });
-
-
-  //     return <div>{dropDate}</div>;
-  //   },
-  // },
-{
-  accessorKey: "dropDate",
-  header: "Drop Date",
-  cell: ({ row }) => {
-    const dropDateRaw = row.getValue("dropDate"); 
-    const dropTime =  "00:00"; 
-
-    if (!dropDateRaw || dropDateRaw === "null") {
-      return <div>-</div>;
-    }
-
-    const dropDateStr = typeof dropDateRaw === "string" ? dropDateRaw : "";
-    const [day, month, year] = dropDateStr.split("/");
-    if (!day || !month || !year) {
-      return <div>Invalid Date</div>;
-    }
-
-    const isoDateStr = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${dropTime}`;
-    const date = new Date(isoDateStr);
-
-    if (isNaN(date.getTime())) {
-      return <div>Invalid Date</div>;
-    }
-
-    const formatted = date.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-
-    return <div>{formatted}</div>;
+      return <div>{formatted}</div>;
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
-},
 
   {
     accessorKey: "serviceType",
     header: "Service Type",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "distance",
     header: "Distance",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const distance = parseFloat(row.getValue("distance"));
       return <div>{`${distance} Km`}</div>;
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "estimatedAmount",
     header: "Estimated Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("estimatedAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -294,11 +280,13 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "discountAmount",
     header: "Discount Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("discountAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -307,11 +295,13 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "offerId",
     header: "Offer Details",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const offerId = row.getValue("offerId")
       const { offers } = useOfferStore();
       const offer = offers.find((offer) => offer.offerId === offerId);
@@ -325,11 +315,13 @@ export const columns: ColumnDef<Booking>[] = [
         </div>
       )
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "finalAmount",
     header: "Total Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("finalAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -338,11 +330,13 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "advanceAmount",
     header: "Advance Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("advanceAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -351,11 +345,13 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "upPaidAmount",
     header: "Remaining Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("upPaidAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -364,11 +360,13 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: 'driverId',
     header: 'Driver Assigned',
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const { getActiveDrivers, activeDrivers } = useDriverStore();
       const { assignDriver, fetchBookings, bookings } = useBookingStore();
@@ -429,27 +427,27 @@ export const columns: ColumnDef<Booking>[] = [
       const assignedDriver = activeDrivers.find((driver: any) => String(driver.driverId) === String(bookedDriverId));
 
       return (
-        <>
-          <DriverSelectionPopup
-            trigger={
-              <Button variant="outline" size="sm" disabled={isLoading}>
-                {assignedDriver ? assignedDriver.name : "Assign Driver"}
-              </Button>
-            }
-            onSelectDriver={handleDriverAssignment}
-            assignedDriver={assignedDriver}
-            bookedDriverId={bookedDriverId || ""}
-            status={status}
-          />
-        </>
+        <DriverSelectionPopup
+          trigger={
+            <Button variant="outline" size="sm" disabled={isLoading}>
+              {assignedDriver ? assignedDriver.name : "Assign Driver"}
+            </Button>
+          }
+          onSelectDriver={handleDriverAssignment}
+          assignedDriver={assignedDriver}
+          bookedDriverId={bookedDriverId || ""}
+          status={status}
+        />
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
 
   {
     accessorKey: "paymentMethod",
     header: "Payment Type",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const status = row.getValue("paymentMethod") as string;
       const { togglePaymentType, fetchBookings, isLoading } = useBookingStore();
       const id = row.original.bookingId;
@@ -484,7 +482,10 @@ export const columns: ColumnDef<Booking>[] = [
                 variant="ghost"
                 className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               >
-                <Badge variant="outline">{status}</Badge> {/* Display current status */}
+                <Badge variant="outline">
+                  {status}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Badge> {/* Display current status */}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -518,11 +519,13 @@ export const columns: ColumnDef<Booking>[] = [
         </div>
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "paymentStatus",
     header: "Payment Status",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const status = row.getValue("paymentStatus") as string;
       const { togglePaymentStatus, fetchBookings, isLoading } = useBookingStore();
       const id = row.original.bookingId;
@@ -570,7 +573,10 @@ export const columns: ColumnDef<Booking>[] = [
                 variant="ghost"
                 className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               >
-                <Badge variant="outline" className={getStatusColor(status)}>{status}</Badge>
+                <Badge variant="outline" className={getStatusColor(status)}>
+                  {status}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Badge>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -598,54 +604,19 @@ export const columns: ColumnDef<Booking>[] = [
         </div>
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "type",
     header: "Booking Type",
-  },
-
-  {
-    accessorKey: "bookingDate",
-    header: "Bookings At",
-    cell: ({ row }) => {
-      const bookingDate: string = row.getValue("bookingDate");
-      if (!bookingDate) {
-        return <div>-</div>;
-      }
-
-      // Parse the stored UTC date
-      const utcDate = new Date(bookingDate);
-      console.log("utcDate ===> ", utcDate.toLocaleTimeString());
-      // Adjust back to IST (Subtract 5.5 hours)
-      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
-
-      // Format the corrected IST time
-      const options: Intl.DateTimeFormatOptions = {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      };
-
-      const formattedDate = istDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-
-      const amPmTime = new Intl.DateTimeFormat("en-IN", options).format(utcDate);
-
-      return (
-        <div>
-          <div>{formattedDate}</div>
-          <div>{amPmTime}</div>
-        </div>
-      )
-    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "status",
     header: "Trip Status",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const [isDialogOpen, setIsDialogOpen] = useState(false);
       const { toggleTripStatus, fetchBookings, isLoading } = useBookingStore();
@@ -708,7 +679,10 @@ export const columns: ColumnDef<Booking>[] = [
                 variant="ghost"
                 className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               >
-                <Badge variant="outline" className={getStatusColor(status)}>{status}</Badge>
+                <Badge variant="outline" className={getStatusColor(status)}>
+                  {status}
+                  {status !== "Completed" && <ChevronDown className="ml-2 h-4 w-4" aria-hidden="true" />}
+                </Badge>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -780,15 +754,60 @@ export const columns: ColumnDef<Booking>[] = [
         </div >
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "createdBy",
     header: "Created By",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
+
+  {
+    accessorKey: "bookingDate",
+    header: "Bookings At",
+    Cell: ({ row }) => {
+      const bookingDate: string = row.getValue("bookingDate");
+      if (!bookingDate) {
+        return <div>-</div>;
+      }
+
+      // Parse the stored UTC date
+      const utcDate = new Date(bookingDate);
+      console.log("utcDate ===> ", utcDate.toLocaleTimeString());
+      // Adjust back to IST (Subtract 5.5 hours)
+      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+      // Format the corrected IST time
+      const options: Intl.DateTimeFormatOptions = {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      };
+
+      const formattedDate = istDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      const amPmTime = new Intl.DateTimeFormat("en-IN", options).format(utcDate);
+
+      return (
+        <div>
+          <div>{formattedDate}</div>
+          <div>{amPmTime}</div>
+        </div>
+      )
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const booking = row.original
       const [isDialogOpen, setIsDialogOpen] = useState(false);
       const router = useRouter()
@@ -898,5 +917,7 @@ export const columns: ColumnDef<Booking>[] = [
         </div>
       )
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
 ]
