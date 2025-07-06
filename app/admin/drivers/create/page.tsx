@@ -5,17 +5,9 @@ import { useRouter } from 'next/navigation'
 import { Button } from 'components/ui/button'
 import { Input } from 'components/ui/input'
 import { Label } from 'components/ui/label'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from 'components/ui/select'
 import { toast } from 'sonner'
 import { Textarea } from 'components/ui/textarea'
 import { Card, CardContent } from 'components/ui/card'
-import { useDriverStore } from 'stores/driverStore'
 import {
     AlertDialog,
     AlertDialogTrigger,
@@ -28,6 +20,10 @@ import {
     AlertDialogFooter
 } from 'components/ui/alert-dialog'
 import { Upload } from 'lucide-react'
+import { notFound } from 'next/navigation'
+import {
+    useCreateDriver
+} from 'hooks/react-query/useDriver'
 
 type FormData = {
     name: string;
@@ -46,7 +42,14 @@ type FormData = {
 
 export default function AddDriverPage() {
     const router = useRouter();
-    const { createDriver } = useDriverStore();
+
+    const {
+        mutate: createDriver,
+        isPending,
+        isError
+    } = useCreateDriver();
+
+
     const [formData, setFormData] = useState<FormData>({
         name: '',
         phone: '',
@@ -79,9 +82,9 @@ export default function AddDriverPage() {
             [e.target.name]: e.target.value,
         }));
     };
-    
+
     const handleAmountChange = (name: string, value: any) => {
-        setFormData((prev) => { 
+        setFormData((prev) => {
             return {
                 ...prev,
                 [name]: String(value).replace(/[^0-9.]/g, ''),
@@ -89,14 +92,6 @@ export default function AddDriverPage() {
         })
     }
 
-    // Handle select input changes
-    const handleSelectChange = (name: string, value: string) => {
-        setIsFormDirty(true);
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
 
     // Add browser tab close/refresh prevention
     useEffect(() => {
@@ -139,33 +134,25 @@ export default function AddDriverPage() {
             };
 
             // Call API function to create a new driver
-            await createDriver(driverData);
-
-            // Get response isActive code from store
-            const isActive = useDriverStore.getState().statusCode;
-            const error = useDriverStore.getState().error;
-
-            if (isActive !== 201) {
-                toast.error(error || "Failed to add driver.", {
-                    style: {
-                        backgroundColor: "#FF0000",
-                        color: "white"
-                    },
-                });
-                return;
-            }
-
-            // Success message
-            toast.success("Driver added successfully", {
-                style: {
-                    backgroundColor: "#009F7F",
-                    color: "white"
+            createDriver(driverData, {
+                onSuccess: () => {
+                    toast.success("Driver added successfully", {
+                        style: {
+                            backgroundColor: "#009F7F",
+                            color: "white"
+                        },
+                    });
+                    setTimeout(() => router.push("/admin/drivers"), 2000);
                 },
+                onError: () => {
+                    toast.error("Failed to add driver.", {
+                        style: {
+                            backgroundColor: "#FF0000",
+                            color: "white"
+                        },
+                    });
+                }
             });
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            // Navigate to drivers list
-            router.push("/admin/drivers");
         } catch (err) {
             toast.error("An unexpected server error occurred.", {
                 style: {
@@ -176,6 +163,12 @@ export default function AddDriverPage() {
             console.error(err);
         }
     };
+
+    const isPage = true
+
+    if (isPage) {
+        return notFound()
+    }
 
     return (
         <div className='bg-white p-5 rounded-lg'>

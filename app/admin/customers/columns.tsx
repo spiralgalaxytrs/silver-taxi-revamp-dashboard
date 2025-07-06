@@ -1,8 +1,7 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "components/ui/button"
-import { Edit, Copy, Trash, Eye } from 'lucide-react';
+import { Trash, Eye } from 'lucide-react';
 import { toast } from "sonner";
 import { Checkbox } from "components/ui/checkbox";
 import {
@@ -17,8 +16,14 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import { useRouter } from "next/navigation"
-import { useState } from "react";
-import { useCustomerStore } from "stores/customerStore";
+import React, { useState } from "react";
+import {
+  MRT_ColumnDef
+} from 'material-react-table'
+import {
+  useDeleteCustomer
+} from 'hooks/react-query/useCustomer';
+
 
 export type Customer = {
   customerId?: string;
@@ -30,88 +35,90 @@ export type Customer = {
   createdBy: "Admin" | "Vendor";
 }
 
-export const columns: ColumnDef<Customer>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-      />
-    ),
-  },
+export const columns: MRT_ColumnDef<Customer>[] = [
+  // {
+  //   id: "select",
+  //   header: "Select",
+  //   Header: ({ table }) => (
+  //     <Checkbox
+  //       checked={table.getIsAllPageRowsSelected()}
+  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //     />
+  //   ),
+  //   Cell: ({ row }) => (
+  //     <Checkbox
+  //       checked={row.getIsSelected()}
+  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //     />
+  // ),
+  //   muiTableHeadCellProps: { align: 'center' },
+  // muiTableBodyCellProps: { align: 'center' },
+  // },
   {
     header: "S.No",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       return <div>{row.index + 1}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
-  // {
-  //   accessorKey: "customerId",
-  //   header: "Customer Id",
-  // },
   {
     accessorKey: "name",
     header: "Name",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "phone",
     header: "Phone",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "email",
     header: "Email",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "bookingCount",
     header: "Booking Count",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "totalAmount",
     header: "Total Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = row.getValue("totalAmount");
-  
+
       // Validate the amount
-        if (typeof amount !== "number") {
-          console.error("Invalid totalAmount:", amount);
+      if (typeof amount !== "number") {
+        console.error("Invalid totalAmount:", amount);
         return <div>Invalid Amount</div>;
       }
-  
+
       // Format the amount with INR currency symbol
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
       }).format(amount);
-  
+
       return <div>{formatted}</div>;
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const customer = row.original
       const router = useRouter()
       const [isDialogOpen, setIsDialogOpen] = useState(false);
-      const { deleteCustomer } = useCustomerStore();
-
-      // const handleCopy = (id: string) => {
-      //   navigator.clipboard.writeText(id)
-      //     .then(() => {
-      //       toast.success("Offer ID copied!"); 
-      //     })
-      //     .catch((err) => {
-      //       console.error("Failed to copy ID", err);
-      //       toast.error("Failed to copy ID");
-      //     });
-      // };
+      const {
+        mutate: deleteCustomer
+      } = useDeleteCustomer();
 
       const handleViewCustomer = async (id: string) => {
         router.push(`/admin/customers/view/${customer.customerId}`)
@@ -122,39 +129,45 @@ export const columns: ColumnDef<Customer>[] = [
       }
 
       const confirmDelete = async (id: string) => {
-        await deleteCustomer(id);
-        setIsDialogOpen(false);
-        toast.success("Customer deleted successfully");
+        deleteCustomer(id, {
+          onSuccess: () => {
+            setIsDialogOpen(false);
+            toast.success("Customer deleted successfully", {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
+          },
+          onError: (error: any) => {
+            setIsDialogOpen(false);
+            toast.error(error?.response?.data?.message || "Error deleting Customer!", {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          }
+        });
       }
 
       return (
-        <>
-        <div className="flex items-center gap-3 justify-center">
-          <div className="flex items-center gap-3">
-            {/* Edit Icon */}
-            {/* <Button
-            variant="ghost"
-            size="icon"
-            className="text-green-600 hover:text-green-800 tool-tip"
-            data-tooltip="Edit Offer"
-            onClick={() => handleEditOffer(offer.id)}
-          >
-            <Edit className="h-5 w-5" />
-          </Button> */}
+        <React.Fragment>
+          <div className="flex items-center gap-3 justify-center">
+            <div className="flex items-center gap-3">
 
-            {/* View Icon */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-blue-600 hover:text-blue-800 tool-tip"
-              data-tooltip="View Details"
-              onClick={() => handleViewCustomer(customer.customerId ?? '')}
-            >
-              <Eye className="h-5 w-5" />
-            </Button>
+              {/* View Icon */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-blue-600 hover:text-blue-800 tool-tip"
+                data-tooltip="View Details"
+                onClick={() => handleViewCustomer(customer.customerId ?? '')}
+              >
+                <Eye className="h-5 w-5" />
+              </Button>
 
-            {/* Delete Icon */}
-            <>
+              {/* Delete Icon */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -171,7 +184,7 @@ export const columns: ColumnDef<Customer>[] = [
                     <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                     <AlertDialogDescription>
                       Are you sure you want to delete this customer?
-                      </AlertDialogDescription>
+                    </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
@@ -179,22 +192,12 @@ export const columns: ColumnDef<Customer>[] = [
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-            </>
-
-            {/* Copy Icon */}
-            {/* <Button
-              variant="ghost"
-              size="icon"
-              className="text-gray-500 hover:text-gray-700 tool-tip"
-              data-tooltip="Copy"
-              onClick={() => handleCopy(customer.customerId ?? '')}
-            >
-              <Copy className="h-5 w-5" />
-            </Button> */}
+            </div>
           </div>
-        </div>
-        </>
+        </React.Fragment>
       )
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
 ]

@@ -1,20 +1,16 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "components/ui/button";
-import { Checkbox } from "components/ui/checkbox"
-import { Eye, Edit, Trash, Copy } from "lucide-react"
+import { Eye, Trash, Copy } from "lucide-react"
 import { useRouter } from "next/navigation";
 import { toast } from 'sonner';
-import { useState } from "react"
+import React, { useState } from "react"
 import { Badge } from "components/ui/badge";
 import { DetailsPopup } from "../../../../components/others/DetailsPopup";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "components/ui/dropdown-menu"
 import {
@@ -28,6 +24,9 @@ import {
   AlertDialogCancel,
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
+import {
+  MRT_ColumnDef
+} from 'material-react-table'
 // import { usePaymentStore } from "stores/paymentStore";
 
 export type CustomerPayment = {
@@ -42,58 +41,59 @@ export type CustomerPayment = {
   status: 'completed' | 'pending' | 'cancelled'
 };
 
-export const columns: ColumnDef<CustomerPayment>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-      />
-    ),
-  },
+export const columns: MRT_ColumnDef<CustomerPayment>[] = [
   {
     header: "S.No",
-    cell: ({ row }) => row.index + 1, // Assigns Serial Number dynamically
+    Cell: ({ row }) => row.index + 1,
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' }, // Assigns Serial Number dynamically
   },
   {
     accessorKey: "transactionId",
     header: "Transaction ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "refId",
     header: "Reference ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "bookingId",
     header: "Booking ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "invoiceId",
     header: "Invoice ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "date",
     header: "Date",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "driverId",
     header: "Driver ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "driverName",
     header: "Driver Name",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "totalAmount",
     header: "Total Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = row.getValue("totalAmount");
       return `Rs ${amount}`; // Format as currency
     },
@@ -101,7 +101,7 @@ export const columns: ColumnDef<CustomerPayment>[] = [
   {
     accessorKey: "status",
     header: "Payment Status",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const status = row.getValue("status") as string;
       //const { toggleBooking, fetchBookings, isLoading } = useBookingStore(); 
       const id = row.original.transactionId;
@@ -112,7 +112,6 @@ export const columns: ColumnDef<CustomerPayment>[] = [
       };
 
       return (
-        <>
           <div className="flex items-center justify-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -146,14 +145,15 @@ export const columns: ColumnDef<CustomerPayment>[] = [
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </>
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const payment = row.original;
       const [showDetails, setShowDetails] = useState(false)
       const router = useRouter();
@@ -165,10 +165,10 @@ export const columns: ColumnDef<CustomerPayment>[] = [
           .then(() => {
             toast.success("Offer ID copied!", {
               style: {
-                  backgroundColor: "#009F7F",
-                  color: "#fff",
+                backgroundColor: "#009F7F",
+                color: "#fff",
               },
-          });
+            });
           })
           .catch((err) => {
             console.error("Failed to copy ID", err);
@@ -196,7 +196,7 @@ export const columns: ColumnDef<CustomerPayment>[] = [
       }
 
       return (
-        <>
+        <React.Fragment>
           <div className="flex items-center gap-3 justify-center">
             <div className="flex items-center gap-3">
               <DetailsPopup
@@ -210,41 +210,29 @@ export const columns: ColumnDef<CustomerPayment>[] = [
                 data={payment}
                 title="Payment Details"
               />
-              {/* <Button
-              variant="ghost"
-              size="icon"
-              className="text-green-600 hover:text-green-800"
-              data-tooltip="Edit Payment"
-              onClick={() => handleEditPayment(payment.transactionId)}
-            >
-              <Edit className="h-5 w-5" />
-            </Button> */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-red-600 hover:text-red-800"
+                onClick={() => setIsDialogOpen(true)}
+              >
+                <Trash className="h-5 w-5" />
+              </Button>
 
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-600 hover:text-red-800"
-                  onClick={() => setIsDialogOpen(true)}
-                >
-                  <Trash className="h-5 w-5" />
-                </Button>
-
-                <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this Payment?
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => confirmDelete(payment.transactionId ?? '')}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </>
+              <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this Payment?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => confirmDelete(payment.transactionId ?? '')}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
 
               <Button
                 variant="ghost"
@@ -257,8 +245,10 @@ export const columns: ColumnDef<CustomerPayment>[] = [
               </Button>
             </div>
           </div>
-        </>
+        </React.Fragment>
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
 ];

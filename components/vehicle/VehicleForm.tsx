@@ -8,7 +8,7 @@ import { Input } from "components/ui/input"
 import { Label } from "components/ui/label"
 import { Switch } from '../ui/switch'
 import { Upload } from 'lucide-react';
-import { useTariffStore } from '../../stores/tariffStore';
+import { useTariffStore } from '../../stores/-tariffStore';
 import {
     Select,
     SelectContent,
@@ -19,7 +19,7 @@ import {
 import { Textarea } from "components/ui/textarea"
 import { Button } from "components/ui/button"
 import { toast } from 'sonner';
-import { useVehicleStore } from 'stores/vehicleStore';
+import { useVehicleStore } from 'stores/-vehicleStore';
 
 const VehicleForm = ({ id }: { id?: string }) => {
     const router = useRouter()

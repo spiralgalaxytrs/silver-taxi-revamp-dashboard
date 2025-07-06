@@ -20,7 +20,7 @@ import { Badge } from "components/ui/badge";
 import { Layout, Eye, ZoomIn, ZoomOut } from "lucide-react";
 import Image from "next/image";
 import VerificationActionGroup, { VerificationField } from "components/driver/VerificationActionGroup";
-import { Driver, ExpiryStatus } from "stores/driverStore";
+import { Driver, ExpiryStatus } from "stores/-driverStore";
 
 interface VehicleTabProps {
   editedDriver: Driver | null;

@@ -1,8 +1,8 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "components/ui/badge"
-import { Button } from "components/ui/button"
+import {
+  MRT_ColumnDef
+} from 'material-react-table'
 
 export type Booking = {
   id: string | undefined;
@@ -17,35 +17,48 @@ export type Booking = {
   dropDate: string | null;
 };
 
-export const columns: ColumnDef<Booking>[] = [
+export const columns: MRT_ColumnDef<Booking>[] = [
   {
     header: "S.No",
-    cell: ({ row }) => row.index + 1, // Assigns Serial Number dynamically
+    Cell: ({ row }) => row.index + 1,
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+    
   },
   {
     accessorKey: "bookingId",
     header: "Booking ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "name",
     header: "Customer Name",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "phone",
     header: "Mobile Number",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "pickup",
     header: "From",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "drop",
     header: "To",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "estimatedAmount",
     header: "Estimated Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("estimatedAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -54,11 +67,13 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "pickupDate",
     header: "PickUp Date",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const pickupDate: string = row.getValue("pickupDate");
       if (!pickupDate) {
         return <div>-</div>;
@@ -83,11 +98,13 @@ export const columns: ColumnDef<Booking>[] = [
         </div>
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "dropDate",
     header: "Drop Date",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const dropDate: string = row.getValue("dropDate");
       if (!dropDate) {
         return <div>-</div>;
@@ -108,11 +125,13 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{formattedDate}</div>;
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "bookingDate",
     header: "Bookings At",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const bookingDate: string = row.getValue("bookingDate");
       if (!bookingDate) {
         return <div>-</div>;
@@ -146,5 +165,7 @@ export const columns: ColumnDef<Booking>[] = [
         </div>
       )
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
 ]

@@ -4,23 +4,32 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent } from 'components/ui/card';
 import CounterCard from "components/cards/CounterCard";
-import { Activity, Loader2 } from "lucide-react";
+import { Activity, Loader2, RefreshCcw } from "lucide-react";
 import Link from "next/link";
-import { useVendorStore } from "stores/vendorStore";
-import { useWalletTransactionStore } from "stores/walletTransactionStore";
+import { useVendorStore } from "stores/-vendorStore";
+import { useWalletTransactionStore } from "stores/-walletTransactionStore";
 import { useBookingStore } from 'stores/bookingStore';
 import { columns } from "./columns";
 import React from "react";
 import { Button } from "components/ui/button";
-import { DataTable } from "components/others/DataTable";
 import { Switch } from "components/ui/switch";
+import {
+    MRT_ColumnDef,
+    MaterialReactTable
+} from "material-react-table";
 import { walletColumns, VendorTransaction } from "./walletColumns";
 
 export default function ViewDVendorPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
+
     const { vendors, vendor, fetchVendors, fetchVendorById, isLoading } = useVendorStore();
     const { fetchVendorTransactions, vendorTransactions } = useWalletTransactionStore();
     const { bookings, fetchBookings, error } = useBookingStore();
+
+
+    const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
+    const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+    const [isSpinning, setIsSpinning] = useState(false)
     const [totalTrips, setTotalTrips] = useState(25);
     const [totalEarnings, setTotalEarnings] = useState(0);
     const [walletAmount, setWalletAmount] = useState(0);
@@ -172,6 +181,16 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
         setTotalTrips(stats.total);
     }, [fData]);
 
+    const handleRefetch = async (isBooking: boolean) => {
+        setIsSpinning(true);
+        try {
+            // isBooking ? await fetchBookings() : await fetchVendorById(id); // wait for the refetch to complete
+        } finally {
+            // stop spinning after short delay to allow animation to play out
+            setTimeout(() => setIsSpinning(false), 500);
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -284,18 +303,90 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
                             </div>
                             <div>
                                 {showVendorTransactions ? (
-                                    <DataTable
-                                        columns={walletColumns}
+                                    <MaterialReactTable
+                                        columns={walletColumns as MRT_ColumnDef<any>[]}
                                         data={vendorsTransactions}
-                                        onSort={handleSort}
-                                        sortConfig={sortConfig}
+                                        positionGlobalFilter="left"
+                                        enableHiding={false}
+                                        onRowSelectionChange={setRowSelection}
+                                        state={{ rowSelection, sorting }}
+                                        onSortingChange={setSorting}
+                                        enableSorting
+                                        initialState={{
+                                            density: 'compact',
+                                            pagination: { pageIndex: 0, pageSize: 10 },
+                                            showGlobalFilter: true,
+                                        }}
+                                        muiSearchTextFieldProps={{
+                                            placeholder: 'Search Transactions...',
+                                            variant: 'outlined',
+                                            fullWidth: true, // 🔥 Makes the search bar take full width
+                                            sx: {
+                                                minWidth: '600px', // Adjust width as needed
+                                                marginLeft: '16px',
+                                            },
+                                        }}
+                                        muiToolbarAlertBannerProps={{
+                                            sx: {
+                                                justifyContent: 'flex-start', // Aligns search left
+                                            },
+                                        }}
+                                        renderTopToolbarCustomActions={() => (
+                                            <div className="flex flex-1 justify-end items-center">
+                                                {/* 🔁 Refresh Button */}
+                                                <Button
+                                                    variant={"ghost"}
+                                                    onClick={() => handleRefetch(false)}
+                                                    className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                                                    title="Refresh Data"
+                                                >
+                                                    <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                                                </Button>
+                                            </div>
+                                        )}
                                     />
                                 ) : (
-                                    <DataTable
-                                        columns={columns}
+                                    <MaterialReactTable
+                                        columns={columns as MRT_ColumnDef<any>[]}
                                         data={fData}
-                                        onSort={handleSort}
-                                        sortConfig={sortConfig}
+                                        positionGlobalFilter="left"
+                                        enableHiding={false} 
+                                        onRowSelectionChange={setRowSelection}
+                                        state={{ rowSelection, sorting }}
+                                        onSortingChange={setSorting}
+                                        enableSorting
+                                        initialState={{
+                                            density: 'compact',
+                                            pagination: { pageIndex: 0, pageSize: 10 },
+                                            showGlobalFilter: true,
+                                        }}
+                                        muiSearchTextFieldProps={{
+                                            placeholder: 'Search Booking...',
+                                            variant: 'outlined',
+                                            fullWidth: true, // 🔥 Makes the search bar take full width
+                                            sx: {
+                                                minWidth: '600px', // Adjust width as needed
+                                                marginLeft: '16px',
+                                            },
+                                        }}
+                                        muiToolbarAlertBannerProps={{
+                                            sx: {
+                                                justifyContent: 'flex-start', // Aligns search left
+                                            },
+                                        }}
+                                        renderTopToolbarCustomActions={() => (
+                                            <div className="flex flex-1 justify-end items-center">
+                                                {/* 🔁 Refresh Button */}
+                                                <Button
+                                                    variant={"ghost"}
+                                                    onClick={() => handleRefetch(true)}
+                                                    className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                                                    title="Refresh Data"
+                                                >
+                                                    <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                                                </Button>
+                                            </div>
+                                        )}
                                     />
                                 )}
                             </div>

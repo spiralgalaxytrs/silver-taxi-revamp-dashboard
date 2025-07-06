@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DataTable } from 'components/others/DataTable';
 import { columns, DriverTransaction } from './columns';
 import { Button } from 'components/ui/button';
-import { Activity, ArrowDown, ArrowUp, Trash } from 'lucide-react';
+import { Activity, ArrowDown, ArrowUp, Trash, RefreshCcw } from 'lucide-react';
 import CounterCard from 'components/cards/CounterCard';
 import { Card } from 'components/ui/card';
 import { Input } from 'components/ui/input';
@@ -30,13 +30,27 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
-import { useWalletTransactionStore } from "stores/walletTransactionStore";
+import { useWalletTransactionStore } from "stores/-walletTransactionStore";
+import {
+  MRT_ColumnDef,
+  MaterialReactTable
+} from 'material-react-table';
+import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
 
 export default function DriverPaymentPage() {
   const router = useRouter();
-  const { fetchAllDriverTransactions, driverTransactions} = useWalletTransactionStore();
+  const { fetchAllDriverTransactions, driverTransactions } = useWalletTransactionStore();
+
+
+  const [lockBack, setLockBack] = useState(false);
+  useBackNavigation(lockBack);
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [isSpinning, setIsSpinning] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [totalPayments, setTotalPayments] = useState(0);
+  const [todayPayments, setTodayPayments] = useState(0);
   const [sortConfig, setSortConfig] = useState<{
     columnId: string | null;
     direction: 'asc' | 'desc' | null;
@@ -48,9 +62,7 @@ export default function DriverPaymentPage() {
     dateStart: '',
     dateEnd: '',
   });
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [totalPayments, setTotalPayments] = useState(0);
-  const [todayPayments, setTodayPayments] = useState(0);
+
   const [transactionData, setTransactionData] = useState(
     driverTransactions.map(transaction => ({
       ...transaction,
@@ -58,11 +70,11 @@ export default function DriverPaymentPage() {
     }))
   );
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchAllDriverTransactions()
-  },[transactionData])
+  }, [transactionData])
 
-  const unFiltered = [...transactionData ].sort((a, b) => {
+  const unFiltered = [...transactionData].sort((a, b) => {
     const aCreatedAt = new Date(a.createdAt || "").getTime();
     const bCreatedAt = new Date(b.createdAt || "").getTime();
     return bCreatedAt - aCreatedAt; // Descending order
@@ -82,7 +94,7 @@ export default function DriverPaymentPage() {
           payment.ownedBy.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.type.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.amount.toString().toLowerCase().includes(filters.search.toLowerCase()) ||
-          payment.description.toString().toLowerCase().includes(filters.search.toLowerCase()) 
+          payment.description.toString().toLowerCase().includes(filters.search.toLowerCase())
       );
     }
 
@@ -205,8 +217,18 @@ export default function DriverPaymentPage() {
     return start && end ? `${start} - ${end}` : 'Date Range';
   };
 
+  const handleRefetch = async () => {
+    setIsSpinning(true);
+    try {
+      // await refetch(); // wait for the refetch to complete
+    } finally {
+      // stop spinning after short delay to allow animation to play out
+      setTimeout(() => setIsSpinning(false), 500);
+    }
+  };
+
   return (
-    <>
+    <React.Fragment>
       <div className="space-y-6">
         <div className="rounded bg-white p-5 shadow">
           <div className="flex flex-col">
@@ -314,16 +336,50 @@ export default function DriverPaymentPage() {
           )}
         </div>
         <div className="rounded bg-white shadow">
-          <DataTable
-            columns={columns}
+          <MaterialReactTable
+            columns={columns as MRT_ColumnDef<any>[]}
             data={filteredData}
-            onSort={handleSort}
-            sortConfig={sortConfig}
-            rowSelection={rowSelection}
+            enableRowSelection
+            positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
+            state={{ rowSelection, sorting }}
+            onSortingChange={setSorting}
+            enableSorting
+            initialState={{
+              density: 'compact',
+              pagination: { pageIndex: 0, pageSize: 10 },
+              showGlobalFilter: true,
+            }}
+            muiSearchTextFieldProps={{
+              placeholder: 'Search ...',
+              variant: 'outlined',
+              fullWidth: true, // 🔥 Makes the search bar take full width
+              sx: {
+                minWidth: '600px', // Adjust width as needed
+                marginLeft: '16px',
+              },
+            }}
+            muiToolbarAlertBannerProps={{
+              sx: {
+                justifyContent: 'flex-start', // Aligns search left
+              },
+            }}
+            renderTopToolbarCustomActions={() => (
+              <div className="flex flex-1 justify-end items-center">
+                {/* 🔁 Refresh Button */}
+                <Button
+                  variant={"ghost"}
+                  onClick={handleRefetch}
+                  className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                  title="Refresh Data"
+                >
+                  <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                </Button>
+              </div>
+            )}
           />
         </div>
       </div>
-    </>
+    </React.Fragment>
   );
 }

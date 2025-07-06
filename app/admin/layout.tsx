@@ -48,7 +48,7 @@ export default function AdminLayout({
 
 
   return (
-    <>
+    <React.Fragment>
       <SocketProvider>
         <div className="flex h-screen bg-gray-100">
           <Sidebar createdBy={isAuthorized.role as string} />
@@ -68,7 +68,7 @@ export default function AdminLayout({
           </div>
         </div>
       </SocketProvider>
-    </>
+    </React.Fragment>
   )
 }
 

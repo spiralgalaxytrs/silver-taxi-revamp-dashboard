@@ -10,7 +10,7 @@ import { Card } from "components/ui/card";
 import CounterCard from "components/cards/CounterCard";
 import { Activity, Trash, ArrowDown, ArrowUp } from "lucide-react";
 import DateRangeAccordion from "components/others/DateRangeAccordion";
-import { useCustomerStore } from "stores/customerStore";
+import { useCustomerStore } from "stores/-customerStore";
 import {toast} from "sonner"
 import { useRouter } from "next/navigation";
 import {
