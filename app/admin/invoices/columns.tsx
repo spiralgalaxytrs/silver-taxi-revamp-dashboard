@@ -1,11 +1,8 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "components/ui/button";
-import { ArrowUpDown, MoreHorizontal, Download } from "lucide-react";
 import { toast } from "sonner"
-import { Checkbox } from "components/ui/checkbox";
-import { Edit, Copy, Trash, Eye } from 'lucide-react';
+import { Edit, Trash, Eye } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -18,8 +15,11 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import { useRouter } from "next/navigation";
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useInvoiceStore } from "stores/-invoiceStore";
+import {
+  MRT_ColumnDef,
+} from 'material-react-table'
 
 export type Invoice = {
   // id: string ;
@@ -30,57 +30,70 @@ export type Invoice = {
   createdAt: string;
 };
 
-export const columns: ColumnDef<Invoice>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-      />
-    ),
-  },
+export const columns: MRT_ColumnDef<Invoice>[] = [
+  // {
+  //   id: "select",
+  //   header: "Select",
+  //   Header: ({ table }) => (
+  //     <Checkbox
+  //       checked={table.getIsAllPageRowsSelected()}
+  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //     />
+  //   ),
+  //   Cell: ({ row }) => (
+  //     <Checkbox
+  //       checked={row.getIsSelected()}
+  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //     />
+  //   ),
+  //   muiTableHeadCellProps: { align: 'center' },
+  //   muiTableBodyCellProps: { align: 'center' },
+  // },
   {
     header: "S.No",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       return <div>{row.index + 1}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "invoiceNo",
     header: "Invoice ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "email",
-    header: "Email"
+    header: "Email",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "totalAmount",
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
+    header: "Amount",
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("totalAmount"));
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
       }).format(amount);
 
-      return <div className="text-right font-medium">{formatted}</div>;
+      return <div className="font-medium">{formatted}</div>;
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "status",
     header: "Status",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "createdAt",
     header: "Created At",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const createdAt: string = row.getValue("createdAt");
       if (!createdAt) {
         return <div>-</div>;
@@ -114,11 +127,13 @@ export const columns: ColumnDef<Invoice>[] = [
         </div>
       )
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const invoice = row.original;
       const router = useRouter()
       const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -160,7 +175,7 @@ export const columns: ColumnDef<Invoice>[] = [
       };
 
       return (
-        <>
+        <React.Fragment>
           <div className="flex items-center gap-3 justify-center">
             <div className="flex iems-center gap-3">
 
@@ -187,47 +202,36 @@ export const columns: ColumnDef<Invoice>[] = [
               </Button>
 
               {/* Delete Icon */}
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-600 hover:text-red-800 tool-tip"
-                  data-tooltip="Delete Offer"
-                  onClick={() => setIsDialogOpen(true)}
-                >
-                  <Trash className="h-5 w-5" />
-                </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-red-600 hover:text-red-800 tool-tip"
+                data-tooltip="Delete Offer"
+                onClick={() => setIsDialogOpen(true)}
+              >
+                <Trash className="h-5 w-5" />
+              </Button>
 
-                <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this invoice?
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => confirmDelete(invoice.invoiceId ?? '')}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </>
-              {/* Copy Icon */}
-              {/* <Button
-              variant="ghost"
-              size="icon"
-              className="text-gray-500 hover:text-gray-700 tool-tip"
-              data-tooltip="Copy"
-              onClick={() => handleCopy(invoice.invoiceId)}
-            >
-              <Download className="h-5 w-5" />
-            </Button> */}
-
+              <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this invoice?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => confirmDelete(invoice.invoiceId ?? '')}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
-        </>
+        </React.Fragment>
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
 ];

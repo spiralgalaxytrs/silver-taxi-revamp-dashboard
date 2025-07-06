@@ -1,11 +1,11 @@
 "use client"
 
-import { DataTable } from 'components/others/DataTable';
+
 import { columns } from './columns';
 import { Button } from 'components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ListRestart, ArrowDown, ArrowUp, Activity, Trash, Loader2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Activity, Trash, Loader2, RefreshCcw } from 'lucide-react';
 import { Input } from 'components/ui/input';
 import { Label } from 'components/ui/label';
 import { Card } from 'components/ui/card';
@@ -31,16 +31,28 @@ import {
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
 import { useOfferStore } from 'stores/-offerStore';
 import { toast } from "sonner";
+import {
+    MRT_ColumnDef,
+    MaterialReactTable
+} from 'material-react-table';
+import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
 
 export default function OffersPage() {
-    const { offers, fetchOffers, multiDeleteOffers, isLoading } = useOfferStore();
+
     const router = useRouter();
+    const { offers, fetchOffers, multiDeleteOffers, isLoading } = useOfferStore();
+
+
+    const [lockBack, setLockBack] = useState(false);
+    useBackNavigation(lockBack);
+    const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
+    const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+    const [isSpinning, setIsSpinning] = useState(false)
     const [totalOffers, setTotalOffers] = useState(0);
     const [todayOffers, setTodayOffers] = useState(0);
     const [activeOffers, setActiveOffers] = useState(0);
     const [inactiveOffers, setInactiveOffers] = useState(0)
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
     const [filters, setFilters] = useState({
         search: '',
         category: '',
@@ -256,7 +268,11 @@ export default function OffersPage() {
     };
 
     const confirmBulkDelete = async () => {
-        const selectedIds = Object.keys(rowSelection);
+        const selectedIndices = Object.keys(rowSelection)
+        const selectedIds = selectedIndices.map(index => {
+            const offerId = filteredData[parseInt(index)]?.offerId
+            return offerId !== undefined ? offerId : null
+        }).filter(id => id !== null);
         await multiDeleteOffers(selectedIds);
         const newData = filteredData.filter(offer => !selectedIds.includes(offer.offerId || ""));
         setOffersData(newData);
@@ -278,6 +294,16 @@ export default function OffersPage() {
 
     const cancelBulkDelete = () => {
         setIsDialogOpen(false);
+    };
+
+    const handleRefetch = async () => {
+        setIsSpinning(true);
+        try {
+            // await refetch(); // wait for the refetch to complete
+        } finally {
+            // stop spinning after short delay to allow animation to play out
+            setTimeout(() => setIsSpinning(false), 500);
+        }
     };
 
     return (
@@ -465,18 +491,48 @@ export default function OffersPage() {
                     )}
                 </div>
                 <div className="rounded bg-white shadow">
-                    {filteredData.length > 0 ? (
-                        <DataTable
-                            columns={columns}
-                            data={filteredData}
-                            onSort={handleSort}
-                            sortConfig={sortConfig}
-                            rowSelection={rowSelection}
-                            onRowSelectionChange={setRowSelection}
-                        />
-                    ) : (
-                        <p className="h-24 text-center pt-10">No offers available.</p>
-                    )}
+                    <MaterialReactTable
+                        columns={columns as MRT_ColumnDef<any>[]}
+                        data={filteredData}
+                        enableRowSelection
+                        positionGlobalFilter="left"
+                        onRowSelectionChange={setRowSelection}
+                        state={{ rowSelection, sorting }}
+                        onSortingChange={setSorting}
+                        enableSorting
+                        initialState={{
+                            density: 'compact',
+                            pagination: { pageIndex: 0, pageSize: 10 },
+                            showGlobalFilter: true,
+                        }}
+                        muiSearchTextFieldProps={{
+                            placeholder: 'Search offers...',
+                            variant: 'outlined',
+                            fullWidth: true, // 🔥 Makes the search bar take full width
+                            sx: {
+                                minWidth: '600px', // Adjust width as needed
+                                marginLeft: '16px',
+                            },
+                        }}
+                        muiToolbarAlertBannerProps={{
+                            sx: {
+                                justifyContent: 'flex-start', // Aligns search left
+                            },
+                        }}
+                        renderTopToolbarCustomActions={() => (
+                            <div className="flex flex-1 justify-end items-center">
+                                {/* 🔁 Refresh Button */}
+                                <Button
+                                    variant={"ghost"}
+                                    onClick={handleRefetch}
+                                    className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                                    title="Refresh Data"
+                                >
+                                    <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                                </Button>
+                            </div>
+                        )}
+                    />
                 </div>
             </div>
         </>

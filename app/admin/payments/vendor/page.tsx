@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { DataTable } from 'components/others/DataTable';
 import { columns, VendorTransaction } from './columns';
 import { Button } from 'components/ui/button';
-import { Activity, ArrowDown, ArrowUp, Trash } from 'lucide-react';
+import { Activity, ArrowDown, ArrowUp, Trash, RefreshCcw } from 'lucide-react';
 import CounterCard from 'components/cards/CounterCard';
 import { Card } from 'components/ui/card';
 import { Input } from 'components/ui/input';
@@ -31,11 +30,16 @@ import {
 } from 'components/ui/alert-dialog';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
 import { useWalletTransactionStore } from "stores/-walletTransactionStore";
+import {
+  MRT_ColumnDef,
+  MaterialReactTable
+} from 'material-react-table';
+import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
 
 export default function VendorPaymentPage() {
   const router = useRouter();
-  const { fetchAllVendorTransactions, vendorTransactions} = useWalletTransactionStore();
-  const [showFilters, setShowFilters] = useState(false);
+  const { fetchAllVendorTransactions, vendorTransactions } = useWalletTransactionStore();
+
   const [sortConfig, setSortConfig] = useState<{
     columnId: string | null;
     direction: 'asc' | 'desc' | null;
@@ -48,20 +52,25 @@ export default function VendorPaymentPage() {
     dateEnd: '',
   });
 
+  const [lockBack, setLockBack] = useState(false);
+  useBackNavigation(lockBack);
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [showFilters, setShowFilters] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [totalPayments, setTotalPayments] = useState(0);
   const [todayPayments, setTodayPayments] = useState(0);
   const [transactionData, setTransactionData] = useState(
-    vendorTransactions.map(transaction => ({  
+    vendorTransactions.map(transaction => ({
       ...transaction,
       id: transaction.transactionId,
     }))
   );
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchAllVendorTransactions()
-  },[transactionData])
+  }, [transactionData])
 
 
   const unFiltered = [...transactionData].sort((a, b) => {
@@ -84,7 +93,7 @@ export default function VendorPaymentPage() {
           payment.ownedBy.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.type.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.amount.toString().toLowerCase().includes(filters.search.toLowerCase()) ||
-          payment.description.toString().toLowerCase().includes(filters.search.toLowerCase()) 
+          payment.description.toString().toLowerCase().includes(filters.search.toLowerCase())
       );
     }
 
@@ -204,99 +213,109 @@ export default function VendorPaymentPage() {
     return start && end ? `${start} - ${end}` : 'Date Range';
   };
 
+  const handleRefetch = async () => {
+    setIsSpinning(true);
+    try {
+      // await refetch(); // wait for the refetch to complete
+    } finally {
+      // stop spinning after short delay to allow animation to play out
+      setTimeout(() => setIsSpinning(false), 500);
+    }
+  };
+
   return (
-    <>
-    <div className="space-y-6">
-      <div className="rounded bg-white p-5 shadow">
-        <div className="flex flex-col">
-          <div className="flex justify-between items-center mb-5">
-            <h1 className="text-2xl font-bold tracking-tight">Vendor Payment</h1>
-            <div className="flex items-center gap-2">
-              {/* {showFilters && <Button variant="outline" onClick={handleClear}>
+    <React.Fragment>
+      <div className="space-y-6">
+        <div className="rounded bg-white p-5 shadow">
+          <div className="flex flex-col">
+            <div className="flex justify-between items-center mb-5">
+              <h1 className="text-2xl font-bold tracking-tight">Vendor Payment</h1>
+              <div className="flex items-center gap-2">
+                {/* {showFilters && <Button variant="outline" onClick={handleClear}>
                 Clear
               </Button>} */}
-              <Button
-                variant="none"
-                className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-                {showFilters ? (
-                  <ArrowDown className="ml-2" />
-                ) : (
-                  <ArrowUp className="ml-2" />
-                )}
-              </Button>
+                <Button
+                  variant="none"
+                  className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  {showFilters ? 'Hide Filters' : 'Show Filters'}
+                  {showFilters ? (
+                    <ArrowDown className="ml-2" />
+                  ) : (
+                    <ArrowUp className="ml-2" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-center gap-20 mt-4">
+              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 w-full" />
+                <div className="h-[150PX] w-full">
+                  <CounterCard
+                    color="bg-emerald-100"
+                    icon={Activity}
+                    count={totalPayments}
+                    label="Total Payments"
+                    cardSize="w-[180px] h-[90px]"
+                  />
+                </div>
+                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500 transform scale-x-100" />
+              </Card>
+              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 opacity-0 w-full" />
+                <div className="h-[150PX] w-full">
+                  <CounterCard
+                    color="bg-blue-100"
+                    icon={Activity}
+                    count={todayPayments}
+                    label="Today's Payments"
+                    cardSize="w-[180px] h-[90px]"
+                  />
+                </div>
+                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500 transform scale-x-100" />
+              </Card>
             </div>
           </div>
-          <div className="flex justify-center gap-20 mt-4">
-            <Card className="relative overflow-hidden border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 w-full" />
-              <div className="h-[150PX] w-full">
-                <CounterCard
-                  color="bg-emerald-100"
-                  icon={Activity}
-                  count={totalPayments}
-                  label="Total Payments"
-                  cardSize="w-[180px] h-[90px]"
+          {showFilters && (
+            <div className="flex gap-8 items-center mt-4 flex-wrap">
+              <div className="flex flex-col w-[230px]">
+                <Label htmlFor="search">Search</Label>
+                <Input
+                  id="search"
+                  placeholder="Transaction ID / Phone"
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
                 />
               </div>
-              <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500 transform scale-x-100" />
-            </Card>
-            <Card className="relative overflow-hidden border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 opacity-0 w-full" />
-              <div className="h-[150PX] w-full">
-                <CounterCard
-                  color="bg-blue-100"
-                  icon={Activity}
-                  count={todayPayments}
-                  label="Today's Payments"
-                  cardSize="w-[180px] h-[90px]"
+              <div className="flex flex-col w-[230px]">
+                <Label htmlFor="status">Status</Label>
+                <div className="mt-1">
+                  <Select onValueChange={(value) => handleFilterChange('status', value)}>
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="completed">Paid</SelectItem>
+                      <SelectItem value="pending">Refund Pending</SelectItem>
+                      <SelectItem value="cancelled">Refund</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex flex-col w-[230px]">
+                <Label className="text-sm font-medium leading-none">
+                  Date Range
+                </Label>
+                <DateRangeAccordion
+                  label={getFormattedDateRange()}
+                  startDate={filters.dateStart}
+                  endDate={filters.dateEnd}
+                  onStartDateChange={(date: any) => handleFilterChange('dateStart', date)}
+                  onEndDateChange={(date: any) => handleFilterChange('dateEnd', date)}
                 />
               </div>
-              <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500 transform scale-x-100" />
-            </Card>
-          </div>
-        </div>
-        {showFilters && (
-          <div className="flex gap-8 items-center mt-4 flex-wrap">
-            <div className="flex flex-col w-[230px]">
-              <Label htmlFor="search">Search</Label>
-              <Input
-                id="search"
-                placeholder="Transaction ID / Phone"
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col w-[230px]">
-              <Label htmlFor="status">Status</Label>
-              <div className="mt-1">
-                <Select onValueChange={(value) => handleFilterChange('status', value)}>
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="completed">Paid</SelectItem>
-                    <SelectItem value="pending">Refund Pending</SelectItem>
-                    <SelectItem value="cancelled">Refund</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="flex flex-col w-[230px]">
-              <Label className="text-sm font-medium leading-none">
-                Date Range
-              </Label>
-              <DateRangeAccordion
-                label={getFormattedDateRange()}
-                startDate={filters.dateStart}
-                endDate={filters.dateEnd}
-                onStartDateChange={(date: any) => handleFilterChange('dateStart', date)}
-                onEndDateChange={(date: any) => handleFilterChange('dateEnd', date)}
-              />
-            </div>
-            <div className='flex justify-start items-center'>
+              <div className='flex justify-start items-center'>
                 <Button
                   className='mt-4 p-1 border-none bg-[#009F87] flex justify-center items-center w-28'
                   // variant="outline"
@@ -305,20 +324,54 @@ export default function VendorPaymentPage() {
                   Clear
                 </Button>
               </div>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+        <div className="rounded bg-white shadow">
+          <MaterialReactTable
+            columns={columns as MRT_ColumnDef<any>[]}
+            data={filteredData}
+            enableRowSelection
+            positionGlobalFilter="left"
+            onRowSelectionChange={setRowSelection}
+            state={{ rowSelection, sorting }}
+            onSortingChange={setSorting}
+            enableSorting
+            initialState={{
+              density: 'compact',
+              pagination: { pageIndex: 0, pageSize: 10 },
+              showGlobalFilter: true,
+            }}
+            muiSearchTextFieldProps={{
+              placeholder: 'Search ...',
+              variant: 'outlined',
+              fullWidth: true, // 🔥 Makes the search bar take full width
+              sx: {
+                minWidth: '600px', // Adjust width as needed
+                marginLeft: '16px',
+              },
+            }}
+            muiToolbarAlertBannerProps={{
+              sx: {
+                justifyContent: 'flex-start', // Aligns search left
+              },
+            }}
+            renderTopToolbarCustomActions={() => (
+              <div className="flex flex-1 justify-end items-center">
+                {/* 🔁 Refresh Button */}
+                <Button
+                  variant={"ghost"}
+                  onClick={handleRefetch}
+                  className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                  title="Refresh Data"
+                >
+                  <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                </Button>
+              </div>
+            )}
+          />
+        </div>
       </div>
-      <div className="rounded bg-white shadow">
-        <DataTable
-          columns={columns}
-          data={filteredData}
-          onSort={handleSort}
-          sortConfig={sortConfig}
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-        />
-      </div>
-    </div>
-    </>
+    </React.Fragment>
   );
 }
