@@ -172,7 +172,11 @@ export default function VendorPage() {
   };
 
   const confirmBulkDelete = async () => {
-    const selectedIds = Object.keys(rowSelection);
+    const selectedIndices = Object.keys(rowSelection)
+    const selectedIds = selectedIndices.map(index => {
+      const vendorId = filteredVendors[parseInt(index)]?.vendorId
+      return vendorId !== undefined ? vendorId : null
+    }).filter(id => id !== null)
     bulkDeleteVendors(selectedIds, {
       onSuccess: (data: any) => {
         toast.success(data?.message || "Vendors deleted successfully!", {
