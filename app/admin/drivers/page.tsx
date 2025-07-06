@@ -67,6 +67,7 @@ export default function DriversPage(): JSX.Element {
   const [totalDrivers, setTotalDrivers] = useState(0);
   const [activeDrivers, setActiveDrivers] = useState(0);
   const [inactiveDrivers, setInactiveDrivers] = useState(0);
+
   const [driverData, setDriverData] = useState<any[]>([]);;
 
   // Filters state for search and created date range
