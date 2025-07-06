@@ -9,7 +9,7 @@ import {
     DialogTitle
 } from "components/ui/dialog";
 import { Button } from "components/ui/button";
-import { useOfferStore } from 'stores/offerStore';
+import { useOfferStore } from 'stores/-offerStore';
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Book } from 'lucide-react';
 

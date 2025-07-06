@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { NotificationCenter } from 'components/others/NotificationCenter';
-import { useNotificationStore } from 'stores/notificationStore';
+import { useNotificationStore } from 'stores/-notificationStore';
 import { ScrollArea } from 'components/ui/scroll-area';
 import { Button } from 'components/ui/button';
 import Image from 'next/image';

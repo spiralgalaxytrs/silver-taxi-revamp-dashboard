@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
-import { useEnquiryStore } from '../../stores/enquiryStore'
-import { useServiceStore } from "stores/serviceStore";
+import { useEnquiryStore } from '../../stores/-enquiryStore'
+import { useServiceStore } from "stores/-serviceStore";
 import { useRouter } from 'next/navigation'
 import { getMinDateTime, getMaxDateTime } from '../../lib/date-restrict'
 import {
@@ -30,6 +30,15 @@ import {
 } from 'components/ui/alert-dialog'
 import LocationAutocomplete from '../localtion/LocationAutocomplete'
 import PhoneInput from 'react-phone-input-2'
+import {
+    useCreateEnquiry,
+    useUpdateEnquiry,
+    useEnquiries
+} from 'hooks/react-query/useEnquiry'
+import {
+    useServices
+} from 'hooks/react-query/useServices'
+
 
 interface CreateEnquiryFormProps {
     onSubmit: (data: any) => void
@@ -53,18 +62,39 @@ type formData = {
 
 export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryFormProps) {
     const router = useRouter()
-    const { createEnquiry, updateEnquiry, isLoading, error, message, enquiries, fetchEnquiries } = useEnquiryStore()
+    // const { createEnquiry, updateEnquiry, isLoading, error, message, enquiries, fetchEnquiries } = useEnquiryStore()
+    const {
+        data: enquiries = [],
+        isLoading: isEnquiriesLoading,
+        refetch: enquiryRefetch
+    } = useEnquiries()
+
+    const {
+        mutate: createEnquiry,
+        isPending: isCreatingEnquiry,
+    } = useCreateEnquiry()
+
+    const {
+        mutate: updateEnquiry,
+        isPending: isUpdatingEnquiry,
+    } = useUpdateEnquiry()
+
+    const {
+        data: services = [],
+        isLoading: isServicesLoading,
+        refetch: serviceRefetch
+    } = useServices()
+
     const [serviceType, setServiceType] = useState('')
     const [subServiceType, setSubServiceType] = useState('')
     const [isFormDirty, setIsFormDirty] = useState(false);
     const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
-    const { fetchServices, services } = useServiceStore();
+    // const { fetchServices, services } = useServiceStore();
     const [serId, setSerId] = useState<string>("")
     const [initSer, initSetSer] = useState<string>("")
 
     useEffect(() => {
-        fetchServices();
         const filtered = services.filter(service => service.name === "One way");
         initSetSer(filtered[0]?.serviceId || "");
     }, [])
@@ -98,13 +128,10 @@ export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryForm
             if (enquiry) {
                 setFormData({
                     ...enquiry,
-                    pickupDateTime: enquiry.pickupDate,
+                    pickupDateTime: enquiry.pickupDateTime,
                     dropDate: enquiry.dropDate ? enquiry.dropDate : null
                 })
                 setServiceType(enquiry.name)
-                // if (enquiry.serviceId === 'ser-3') {
-                //     setSubServiceType(enquiry.type) // Assuming you want to update the sub-service based on the type
-                // }
             }
         }
     }, [id, enquiries])
@@ -128,44 +155,48 @@ export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryForm
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
         try {
             if (id) {
-                // Update existing enquiry
-                await updateEnquiry(id, formData);
-                fetchEnquiries();
+                updateEnquiry(
+                    { id, data: formData },
+                    {
+                        onSuccess: () => {
+                            toast.success("Enquiry updated successfully", {
+                                style: { backgroundColor: "#009F7F", color: "#fff" },
+                            });
+                            setTimeout(() => {
+                                router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/enquiry`);
+                            }, 1500);
+                        },
+                        onError: (error: any) => {
+                            toast.error(error?.response?.data?.message || "Failed to update enquiry", {
+                                style: { backgroundColor: "#FF0000", color: "#fff" },
+                            });
+                        },
+                    }
+                );
             } else {
-                // Create new enquiry
-                await createEnquiry(formData);
-                fetchEnquiries();
-            }
-            const status = useEnquiryStore.getState().statusCode
-            const message = useEnquiryStore.getState().message
-
-            if (status === 201 || status === 200) {
-                toast.success(id ? "Enquiry updated successfully" : "Enquiry created successfully", {
-                    style: {
-                        backgroundColor: "#009F7F",
-                        color: "#fff",
+                createEnquiry(formData, {
+                    onSuccess: () => {
+                        toast.success("Enquiry created successfully", {
+                            style: { backgroundColor: "#009F7F", color: "#fff" },
+                        });
+                        setTimeout(() => {
+                            router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/enquiry`);
+                        }, 1500);
                     },
-                })
-                await new Promise(resolve => setTimeout(resolve, 2000))
-                router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/enquiry`)
-            }
-            else {
-                toast.error(message || "Failed to create or update enquiry", {
-                    style: {
-                        backgroundColor: "#FF0000",
-                        color: "#fff",
+                    onError: (error: any) => {
+                        toast.error(error?.response?.data?.message || "Failed to create enquiry", {
+                            style: { backgroundColor: "#FF0000", color: "#fff" },
+                        });
                     },
-                })
+                });
             }
         } catch (err) {
-            toast.error("Server unexpected error occurred", {
-                style: {
-                    backgroundColor: "#FF0000",
-                    color: "#fff",
-                },
-            })
+            toast.error("Unexpected server error", {
+                style: { backgroundColor: "#FF0000", color: "#fff" },
+            });
             console.error(err);
         }
     }
@@ -407,10 +438,10 @@ export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryForm
                         <div className="flex justify-end">
                             <Button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={isUpdatingEnquiry || isCreatingEnquiry}
                                 className="px-6 py-2"
                             >
-                                {isLoading ? (id ? 'Updating...' : 'Creating...') : (id ? 'Update Enquiry' : 'Create Enquiry')}
+                                {isUpdatingEnquiry || isCreatingEnquiry ? (id ? 'Updating...' : 'Creating...') : (id ? 'Update Enquiry' : 'Create Enquiry')}
                             </Button>
                         </div>
                     </form>

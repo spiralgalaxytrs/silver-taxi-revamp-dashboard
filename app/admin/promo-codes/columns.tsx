@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { OfferPopup } from "components/offers/OfferPopup";
-import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "components/ui/button";
 import { Checkbox } from "components/ui/checkbox";
 import { Edit, Copy, Trash, Eye } from 'lucide-react';
@@ -20,8 +19,11 @@ import {
   AlertDialogCancel,
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
-import { useOfferStore } from "stores/offerStore";
+import { useOfferStore } from "stores/-offerStore";
 import { useRouter } from "next/navigation";
+import {
+  MRT_ColumnDef,
+} from 'material-react-table'
 
 type Offers = {
   offerId?: string;
@@ -38,52 +40,67 @@ type Offers = {
   claimedCount: number;
 }
 
-export const columns: ColumnDef<Offers>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-      />
-    ),
-  },
+export const columns: MRT_ColumnDef<Offers>[] = [
+  // {
+  //   id: "select",
+  //   header: "Select",
+  //   Header: ({ table }) => (
+  //     <Checkbox
+  //       checked={table.getIsAllPageRowsSelected()}
+  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //     />
+  //   ),
+  //   Cell: ({ row }) => (
+  //     <Checkbox
+  //       checked={row.getIsSelected()}
+  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //     />
+  //   ),
+  //   muiTableHeadCellProps: { align: 'center' },
+  //   muiTableBodyCellProps: { align: 'center' },
+  // },
   {
     header: "S.No",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       return <div>{row.index + 1}</div>;
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   // {
   //   accessorKey: "offerId",
   //   header: "Offer ID",
+  // muiTableHeadCellProps: { align: 'center' },
+  // muiTableBodyCellProps: { align: 'center' },
   // },
   {
     accessorKey: "offerName",
     header: "Offer Name",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "category",
     header: "Category",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "type",
     header: "Type",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "value",
     header: "Value",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const status = row.getValue("status") as boolean;
       const { toggleChanges, fetchOffers } = useOfferStore();
       const id = row.original.offerId;
@@ -120,27 +137,25 @@ export const columns: ColumnDef<Offers>[] = [
       };
 
       return (
-        <>
-          <div className="flex items-center justify-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                >
-                  <Badge variant={status ? "default" : "destructive"}>
-                    {status ? "Active" : "Inactive"}
-                  </Badge>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleToggleStatus(!status)}>
-                  {status ? "Inactive" : "Active"}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </>
+        <div className="flex items-center justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+              >
+                <Badge variant={status ? "default" : "destructive"}>
+                  {status ? "Active" : "Inactive"}
+                </Badge>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleToggleStatus(!status)}>
+                {status ? "Inactive" : "Active"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       );
     },
   },
@@ -161,11 +176,13 @@ export const columns: ColumnDef<Offers>[] = [
   //       </div>
   //     );
   //   },
+  // muiTableHeadCellProps: { align: 'center' },
+  // muiTableBodyCellProps: { align: 'center' },
   // },
   {
     accessorKey: "startDate",
     header: "Start Date",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const startDate: string = row.getValue("startDate");
       if (!startDate) {
         return <div>-</div>;
@@ -199,11 +216,13 @@ export const columns: ColumnDef<Offers>[] = [
         </div>
       )
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "endDate",
     header: "End Date",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const endDate: string = row.getValue("endDate");
       if (!endDate) {
         return <div>-</div>;
@@ -241,7 +260,7 @@ export const columns: ColumnDef<Offers>[] = [
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const offer = row.original;
       const router = useRouter()
       const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -345,5 +364,7 @@ export const columns: ColumnDef<Offers>[] = [
         </div>
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
 ];

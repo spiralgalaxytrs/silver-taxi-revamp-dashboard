@@ -27,7 +27,7 @@ import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";
 import Image from "next/image";
 import VerificationActionGroup, { VerificationField } from "components/driver/VerificationActionGroup";
-import { Driver, ExpiryStatus, useDriverStore } from "stores/driverStore";
+import { Driver, ExpiryStatus, useDriverStore } from "stores/-driverStore";
 
 interface ProfileTabProps {
     editedDriver: Driver | null;

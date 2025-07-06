@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { DataTable } from 'components/others/DataTable';
 import { columns } from 'app/admin/invoices/columns';
-import { useInvoiceStore } from 'stores/invoiceStore'
+import { useInvoiceStore } from 'stores/-invoiceStore'
 import { ColumnDef } from '@tanstack/react-table'
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';

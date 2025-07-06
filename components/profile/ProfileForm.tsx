@@ -6,7 +6,7 @@ import { Input } from 'components/ui/input';
 import { Label } from 'components/ui/label';
 import { Button } from 'components/ui/button';
 import { Upload, X, Plus } from 'lucide-react';
-import { useProfileStore } from 'stores/profileStore';
+import { useProfileStore } from 'stores/-profileStore';
 import { toast } from 'sonner';
 import { Textarea } from '../ui/textarea';
 import {

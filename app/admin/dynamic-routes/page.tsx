@@ -7,7 +7,7 @@ import { Button } from "components/ui/button"
 import { Input } from "components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "components/ui/dialog"
 import { Trash2, PlusCircle, Edit } from "lucide-react"
-import { useDynamicRouteStore } from "stores/dynamicRouteStore"
+import { useDynamicRouteStore } from "stores/-dynamicRouteStore"
 import {
   AlertDialog,
   AlertDialogTrigger,

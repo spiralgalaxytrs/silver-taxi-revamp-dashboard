@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DataTable } from 'components/others/DataTable';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { columns } from './columns';
 import { Button } from 'components/ui/button';
 import { Card } from 'components/ui/card';
 import CounterCard from 'components/cards/CounterCard';
 import { Input } from 'components/ui/input';
-import { Booking, useBookingStore } from 'stores/bookingStore';
-import { ArrowDown, ArrowUp, Activity, Trash } from 'lucide-react';
+import { ArrowDown, ArrowUp, Activity, Trash, RefreshCcw } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { Label } from 'components/ui/label';
 import { toast } from "sonner"
@@ -20,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from 'components/ui/select';
-import Loading from 'app/Loading';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -33,11 +31,40 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
+import {
+  useBackNavigation
+} from 'hooks/navigation/useBackNavigation'
+import { useNavigationStore } from 'stores/navigationStore';
+import {
+  useFetchBookings,
+  useBulkDeleteBookings
+} from 'hooks/react-query/useBooking'
+import {
+  MaterialReactTable,
+  type MRT_ColumnDef
+} from 'material-react-table'
 
 export default function BookingsPage() {
   const router = useRouter();
-  const { bookings, fetchBookings, isLoading, error, bulkDeleteBookings } = useBookingStore();
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const pathname = usePathname();
+  const { previousPath } = useNavigationStore()
+
+  // const { bookings, fetchBookings, isLoading, error, bulkDeleteBookings } = useBookingStore();
+
+  const {
+    data: bookings = [],
+    isLoading,
+    refetch
+  } = useFetchBookings();
+
+  const {
+    mutate: bulkDeleteBookings
+  } = useBulkDeleteBookings()
+
+
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [isSpinning, setIsSpinning] = useState(false)
   const [totalBookings, setTotalBookings] = useState(0);
   const [totalBookingValue, setTotalBookingValue] = useState(0);
   const [yearlyBookings, setYearlyBookings] = useState(0);
@@ -62,29 +89,13 @@ export default function BookingsPage() {
   });
   const [showFilters, setShowFilters] = useState(false);
 
-  const [sortConfig, setSortConfig] = useState<{
-    columnId: string | null;
-    direction: 'asc' | 'desc' | null;
-  }>({ columnId: null, direction: null });
-
-  const [bookingData, setBookingData] = useState(
-    bookings.map(booking => ({
+  const bookingData = useMemo(() => {
+    return bookings.map((booking: any) => ({
       ...booking,
       id: booking.bookingId,
       pickupDate: booking.pickupDate,
       dropDate: booking.dropDate ? new Date(booking.dropDate).toLocaleDateString() : null,
     }))
-  );
-
-  useEffect(() => {
-    setBookingData(
-      bookings.map(booking => ({
-        ...booking,
-        id: booking.bookingId,
-        pickupDate: booking.pickupDate,
-        dropDate: booking.dropDate ? new Date(booking.dropDate).toLocaleDateString() : null,
-      }))
-    );
   }, [bookings])
 
   const unFilteredData = [...bookingData].sort((a, b) => {
@@ -166,49 +177,10 @@ export default function BookingsPage() {
       );
     }
 
-    // Global sorting logic
-    if (sortConfig.columnId && sortConfig.direction) {
-      filteredData.sort((a, b) => {
-        const columnKey = sortConfig.columnId as keyof typeof a;
-        const aValue = a[columnKey];
-        const bValue = b[columnKey];
-
-        // Handle null/undefined cases
-        if (aValue == null) return sortConfig.direction === 'asc' ? 1 : -1;
-        if (bValue == null) return sortConfig.direction === 'asc' ? -1 : 1;
-
-        // Date comparison for date fields
-        if (['startDate', 'endDate', 'createdAt'].includes(columnKey)) {
-          const dateA = new Date(aValue as string).getTime();
-          const dateB = new Date(bValue as string).getTime();
-          return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
-        }
-
-        // Numeric comparison for numeric fields
-        if (typeof aValue === 'number' && typeof bValue === 'number') {
-          return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
-        }
-
-        // Boolean comparison for status
-        if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
-          return sortConfig.direction === 'asc'
-            ? (aValue === bValue ? 0 : aValue ? -1 : 1)
-            : (aValue === bValue ? 0 : aValue ? 1 : -1);
-        }
-
-        // String comparison for other fields
-        const strA = String(aValue).toLowerCase();
-        const strB = String(bValue).toLowerCase();
-        return sortConfig.direction === 'asc'
-          ? strA.localeCompare(strB)
-          : strB.localeCompare(strA);
-      });
-    }
-
     return filteredData;
   };
 
-  const filteredData: Booking[] = applyFilters();
+  const filteredData = applyFilters();
 
 
   useEffect(() => {
@@ -277,53 +249,15 @@ export default function BookingsPage() {
         amount: '',
         serviceType: ''
       });
-      setSortConfig({ columnId: null, direction: null }); // Reset sorting
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
   };
 
-  useEffect(() => {
-    fetchBookings();
-  }, [fetchBookings]);
-
-  const handleSort = (columnId: string) => {
-    setSortConfig(prev => ({
-      columnId,
-      direction: prev.columnId === columnId && prev.direction === 'asc' ? 'desc' : 'asc',
-    }));
-  };
-
-  useEffect(() => {
-    fetchBookings();
-
-    const intervalId = setInterval(() => {
-      applyFilters();
-    }, 180000);
-
-    return () => clearInterval(intervalId);
-  }, [fetchBookings]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-      </div>
-    )
-  }
-
-  // if (error) {
-  //   return <div>Error: {error}</div>;
-  // }
 
   const handleCreateBooking = () => {
     router.push('/admin/bookings/create');
   };
-
-  // const handleRefresh = async () => {
-  //   await handleClear();
-  //   await fetchBookings();
-  // };
 
   const getFormattedBookingDateRange = () => {
     const start = filters.bookingStartDate ? new Date(filters.bookingStartDate).toLocaleDateString() : '';
@@ -350,26 +284,51 @@ export default function BookingsPage() {
   };
 
   const confirmBulkDelete = async () => {
-    const selectedIds = Object.keys(rowSelection);
-    await bulkDeleteBookings(selectedIds);
-    const newData = filteredData
-      .filter(booking => !selectedIds.includes(booking.bookingId || ''))
-      .map(booking => ({ ...booking, id: booking.bookingId }));
-    setBookingData(newData);
-    setRowSelection({});
-    const status = useBookingStore.getState().statusCode
-    if (status !== 200 && status !== 201) {
-      toast.error("Error deleting Bookings!");
-    } else {
-      toast.success("Bookings deleted successfully!");
-      router.push("/admin/bookings");
-    }
-    setIsDialogOpen(false);
+    const selectedIndices = Object.keys(rowSelection)
+    const selectedIds = selectedIndices.map(index => {
+      const bookingId = filteredData[parseInt(index)]?.bookingId
+      return bookingId !== undefined ? bookingId : null
+    }).filter(id => id !== null)
+    bulkDeleteBookings(selectedIds, {
+      onSuccess: (data: any) => {
+        setIsDialogOpen(false);
+        toast.success(data?.message || "Bookings deleted successfully!", {
+
+        });
+        setTimeout(() => router.push("/admin/bookings"), 500);
+      },
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.message || "Error deleting Bookings!", {
+          style: {
+            backgroundColor: "#FF0000",
+            color: "#fff",
+          },
+        })
+      }
+    });
   };
 
   const cancelBulkDelete = () => {
     setIsDialogOpen(false);
   };
+
+  const handleRefetch = async () => {
+    setIsSpinning(true);
+    try {
+      await refetch(); // wait for the refetch to complete
+    } finally {
+      // stop spinning after short delay to allow animation to play out
+      setTimeout(() => setIsSpinning(false), 500);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <>
@@ -385,21 +344,6 @@ export default function BookingsPage() {
                 >
                   Create Booking
                 </Button>
-                {/* {showFilters && <Button
-                  className='border-none hover:underline-offset-1 hover:bg-none'
-                  variant="outline"
-                  onClick={handleClear}
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Refreshing..." : "Clear"}
-                </Button>} */}
-                {/* <Button
-                variant="outline"
-                onClick={handleRefresh}
-                disabled={isLoading}
-              >
-                {isLoading ? (<RotateCcw />) : (<ListRestart />)}
-              </Button> */}
                 <Button
                   variant="none"
                   className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
@@ -614,13 +558,47 @@ export default function BookingsPage() {
           )}
         </div>
         <div className="rounded bg-white shadow">
-          <DataTable
-            columns={columns}
-            data={filteredData as any}
-            onSort={handleSort}
-            sortConfig={sortConfig}
-            rowSelection={rowSelection}
+          <MaterialReactTable
+            columns={columns as MRT_ColumnDef<any>[]}
+            data={filteredData}
+            enableRowSelection
+            positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
+            state={{ rowSelection, sorting }}
+            onSortingChange={setSorting}
+            enableSorting
+            initialState={{
+              density: 'compact',
+              pagination: { pageIndex: 0, pageSize: 10 },
+              showGlobalFilter: true,
+            }}
+            muiSearchTextFieldProps={{
+              placeholder: 'Search enquiries...',
+              variant: 'outlined',
+              fullWidth: true, // 🔥 Makes the search bar take full width
+              sx: {
+                minWidth: '600px', // Adjust width as needed
+                marginLeft: '16px',
+              },
+            }}
+            muiToolbarAlertBannerProps={{
+              sx: {
+                justifyContent: 'flex-start', // Aligns search left
+              },
+            }}
+            renderTopToolbarCustomActions={() => (
+              <div className="flex flex-1 justify-end items-center">
+                {/* 🔁 Refresh Button */}
+                <Button
+                  variant={"ghost"}
+                  onClick={handleRefetch}
+                  className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                  title="Refresh Data"
+                >
+                  <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                </Button>
+              </div>
+            )}
           />
         </div>
       </div>

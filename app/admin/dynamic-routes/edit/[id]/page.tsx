@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Button } from "../../../../../components/ui/button"
 import { Input } from "../../../../../components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../../components/ui/card'
-import { useDynamicRouteStore } from "stores/dynamicRouteStore"
+import { useDynamicRouteStore } from "stores/-dynamicRouteStore"
 import { Loader2, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { Label } from "../../../../../components/ui/label"

@@ -16,11 +16,11 @@ import {
 } from '../ui/select';
 import { toast } from 'sonner';
 import { useBookingStore } from 'stores/bookingStore';
-import { useVehicleStore } from 'stores/vehicleStore';
-import { useOfferStore } from 'stores/offerStore';
+import { useVehicleStore } from 'stores/-vehicleStore';
+import { useOfferStore } from 'stores/-offerStore';
 import { getMinDateTime, getMaxDateTime,getMinDate } from '../../lib/date-restrict';
 import axios from "../../lib/http-common"
-import { useTariffStore } from 'stores/tariffStore';
+import { useTariffStore } from 'stores/-tariffStore';
 import { Loader2 } from 'lucide-react';
 import {
     AlertDialog,
@@ -33,10 +33,10 @@ import {
     AlertDialogCancel,
     AlertDialogFooter
 } from 'components/ui/alert-dialog'
-import { useEnquiryStore } from 'stores/enquiryStore';
+import { useEnquiryStore } from 'stores/-enquiryStore';
 import LocationAutocomplete from '../localtion/LocationAutocomplete';
 import PhoneInput from 'react-phone-input-2'
-import { useServiceStore } from 'stores/serviceStore';
+import { useServiceStore } from 'stores/-serviceStore';
 
 interface CreateBookingFormProps {
     id?: string;

@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs"
 
 // Add type imports at the top
 import { CompanyProfile } from "types/profile"
-import { useProfileStore } from "stores/profileStore"
+import { useProfileStore } from "stores/-profileStore"
 
 // Update the store hook with types
 

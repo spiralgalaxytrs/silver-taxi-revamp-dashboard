@@ -7,7 +7,7 @@ import { Label } from '../../ui/label';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "components/ui/card";
 import { toast } from 'sonner';
-import { useSpecialPackageStore } from 'stores/PermitChargesStore';
+import { useSpecialPackageStore } from 'stores/-PermitChargesStore';
 import {
     AlertDialog,
     AlertDialogContent,
