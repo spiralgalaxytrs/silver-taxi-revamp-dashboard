@@ -30,8 +30,7 @@ import {
 import { useRouter } from "next/navigation"
 import { Enquiry, useEnquiryStore } from "stores/-enquiryStore"
 
-export const 
-columns: MRT_ColumnDef<Enquiry>[] = [
+export const columns: MRT_ColumnDef<Enquiry>[] = [
   // {
   //   id: "select",
   //   header: 'Select',

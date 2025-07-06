@@ -8,14 +8,6 @@ import { Label } from "components/ui/label";
 import { toast } from "sonner";
 import { Textarea } from "components/ui/textarea";
 import { Card, CardContent } from "components/ui/card";
-import { useVendorStore } from "stores/-vendorStore"; // Assume you have a vendor store
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "components/ui/select";
 import { Plus, Minus } from "lucide-react";
 import {
     AlertDialog,
@@ -28,6 +20,13 @@ import {
     AlertDialogCancel,
     AlertDialogFooter,
 } from "components/ui/alert-dialog";
+import {
+    useCreateVendor,
+    useUpdateVendor,
+    useAddVendorWallet,
+    useMinusVendorWallet,
+    useVendorById
+} from "hooks/react-query/useVendor";
 
 interface VendorFormProps {
     id?: string; // Optional ID for updating a vendor
@@ -47,7 +46,16 @@ type VendorFormData = {
 export function VendorForm({ id }: VendorFormProps) {
     const router = useRouter();
 
-    const { fetchVendorById, createVendor, updateVendor, error, vendor, addVendorWallet, minusVendorWallet } = useVendorStore();
+    // const { fetchVendorById, createVendor, updateVendor, error, vendor, addVendorWallet, minusVendorWallet } = useVendorStore();
+
+    const {
+        data: vendor = null,
+        isLoading,
+    } = useVendorById(id ?? "");
+    const { mutate: createVendor } = useCreateVendor();
+    const { mutate: updateVendor } = useUpdateVendor();
+    const { mutate: addVendorWallet } = useAddVendorWallet();
+    const { mutate: minusVendorWallet } = useMinusVendorWallet();
 
     // Initialize form data with default values to prevent uncontrolled input errors
     const [formData, setFormData] = useState<VendorFormData>({
@@ -64,12 +72,6 @@ export function VendorForm({ id }: VendorFormProps) {
     const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
     const [adjustmentRemarks, setAdjustmentRemarks] = useState('');
-
-    useEffect(() => {
-        if (id) {
-            fetchVendorById(id); // Fetch vendor data if updating
-        }
-    }, [id]);
 
     useEffect(() => {
         if (vendor && id) {
@@ -115,18 +117,27 @@ export function VendorForm({ id }: VendorFormProps) {
 
     const handleAddVendorWallet = async (id: string, amount: number, remark: string) => {
         try {
-            await addVendorWallet(id, amount, remark);
-            setFormData((prev) => ({
-                ...prev,
-                walletAmount: prev.walletAmount + amount,
-            }));
-            setAdjustmentAmount(""); // Reset after operation
-            setAdjustmentRemarks('');
-            toast.success("Wallet amount added successfully!", {
-                style: {
-                    backgroundColor: "#009F7F",
-                    color: "#fff",
+            addVendorWallet({ id, amount, remark }, {
+                onSuccess: (data: any) => {
+                    toast.success(data.message || "Wallet amount added successfully!", {
+                        style: {
+                            backgroundColor: "#009F7F",
+                            color: "#fff",
+                        },
+                    });
+                    setFormData({
+                        ...formData,
+                        walletAmount: formData.walletAmount + amount
+                    })
                 },
+                onError: (error: any) => {
+                    toast.error(error?.response?.data?.message || "Error adding wallet amount!", {
+                        style: {
+                            backgroundColor: "#FF0000",
+                            color: "#fff",
+                        },
+                    });
+                }
             });
         } catch (error) {
             const errorMessage = (error instanceof Error) ? error.message : "An unexpected error occurred";
@@ -142,18 +153,27 @@ export function VendorForm({ id }: VendorFormProps) {
 
     const handleMinusVendorWallet = async (id: string, amount: number, remark: string) => {
         try {
-            await minusVendorWallet(id, amount, remark);
-            setFormData((prev) => ({
-                ...prev,
-                walletAmount: prev.walletAmount - amount,
-            }));
-            setAdjustmentAmount(""); // Reset after operation
-            setAdjustmentRemarks('');
-            toast.success("Wallet amount deducted successfully!", {
-                style: {
-                    backgroundColor: "#009F7F",
-                    color: "#fff",
+            minusVendorWallet({ id, amount, remark }, {
+                onSuccess: (data: any) => {
+                    toast.success(data.message || "Wallet amount deducted successfully!", {
+                        style: {
+                            backgroundColor: "#009F7F",
+                            color: "#fff",
+                        },
+                    });
+                    setFormData({
+                        ...formData,
+                        walletAmount: formData.walletAmount - amount
+                    })
                 },
+                onError: (error: any) => {
+                    toast.error(error?.response?.data?.message || "Error deducting wallet amount!", {
+                        style: {
+                            backgroundColor: "#FF0000",
+                            color: "#fff",
+                        },
+                    });
+                }
             });
         } catch (error) {
             const errorMessage = (error instanceof Error) ? error.message : "An unexpected error occurred";
@@ -173,7 +193,25 @@ export function VendorForm({ id }: VendorFormProps) {
         try {
             if (id) {
                 // Update vendor (no password required)
-                await updateVendor(id, formData);
+                updateVendor({ id, data: formData }, {
+                    onSuccess: (data: any) => {
+                        toast.success(data.message || "Vendor updated successfully!", {
+                            style: {
+                                backgroundColor: "#009F7F",
+                                color: "#fff",
+                            },
+                        });
+                        setTimeout(() => router.push("/admin/vendor"), 2000);
+                    },
+                    onError: (error: any) => {
+                        toast.error(error?.response?.data?.message || "Error updating vendor!", {
+                            style: {
+                                backgroundColor: "#FF0000",
+                                color: "#fff",
+                            },
+                        });
+                    }
+                });
             } else {
                 // Create vendor (ensure password is provided)
                 if (!formData.password) {
@@ -185,25 +223,26 @@ export function VendorForm({ id }: VendorFormProps) {
                     });
                     return;
                 }
-                await createVendor(formData);
-            }
-
-            const status = useVendorStore.getState().statusCode;
-            const message = useVendorStore.getState().message;
-            if (status === 200 || status === 201) {
-                toast.success(`Vendor ${id ? "updated" : "created"} successfully`, {
-                    style: {
-                        backgroundColor: "#009F7F",
-                        color: "#fff",
+                createVendor(formData, {
+                    onSuccess: (data: any) => {
+                        toast.success(data.message || "Vendor created successfully!", {
+                            style: {
+                                backgroundColor: "#009F7F",
+                                color: "#fff",
+                            },
+                        });
+                        setTimeout(() => router.push("/admin/vendor"), 2000);
                     },
+                    onError: (error: any) => {
+                        toast.error(error?.response?.data?.message || "Error creating vendor!", {
+                            style: {
+                                backgroundColor: "#FF0000",
+                                color: "#fff",
+                            },
+                        });
+                    }
                 });
-                await new Promise((resolve) => setTimeout(resolve, 2000));
-                router.push("/admin/vendor"); 
-                setIsFormDirty(false);
-                return;
             }
-            
-            toast.error(message || "Failed to save vendor");
         } catch (error) {
             toast.error("An unexpected error occurred", {
                 style: {

@@ -6,10 +6,9 @@ import { MaterialReactTable, MRT_ColumnDef } from 'material-react-table'
 import { Button } from 'components/ui/button'
 import { Input } from 'components/ui/input'
 import { Label } from 'components/ui/label'
-import { ListRestart, RefreshCcw, ArrowDown, ArrowUp, Activity, Trash, Loader2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { RefreshCcw, ArrowDown, ArrowUp, Activity, Trash, Loader2 } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
 import { columns } from './columns'
-import { useEnquiryStore } from 'stores/-enquiryStore'
 import DateRangeAccordion from 'components/others/DateRangeAccordion'
 import { Card } from 'components/ui/card'
 import dayjs from 'dayjs'
@@ -30,10 +29,15 @@ import {
   useEnquiries,
   useBulkDeleteEnquiries
 } from 'hooks/react-query/useEnquiry'
+import {
+  useNavigationStore
+} from 'stores/navigationStore'
+import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
 
 export default function EnquiryPage() {
   const router = useRouter()
-
+  const pathname = usePathname()
+  const { previousPath } = useNavigationStore()
 
   const {
     data: enquiries = [],
@@ -58,6 +62,8 @@ export default function EnquiryPage() {
     dropEndDate: '',
   })
 
+  const [lockBack, setLockBack] = useState(false);
+  useBackNavigation(lockBack);
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [isSpinning, setIsSpinning] = useState(false)
@@ -67,7 +73,6 @@ export default function EnquiryPage() {
   const [manualEnquiries, setManualEnquiries] = useState(0)
   const [websiteEnquiries, setWebsiteEnquiries] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-
 
   const [enquiryData, setEnquiryData] = useState<any[]>([])
 
@@ -94,20 +99,6 @@ export default function EnquiryPage() {
       { total: 0, today: 0, manual: 0, website: 0 }
     )
   }
-
-  // useEffect(() => {
-  //   fetchEnquiries()
-  // }, [fetchEnquiries])
-
-  useEffect(() => {
-    setEnquiryData(
-      enquiries.map((enquiry) => ({
-        ...enquiry,
-        id: enquiry.enquiryId,
-        dropDate: enquiry.dropDate ? new Date(enquiry.dropDate) : null,
-      }))
-    )
-  }, [enquiries])
 
   const handleClear = async () => {
     try {
@@ -210,20 +201,8 @@ export default function EnquiryPage() {
 
   const filteredData = useMemo(() => applyFilters(), [filters, enquiryData])
 
-  useEffect(() => {
-    const counts = categorizeEnquiries(filteredData)
-    setTotalEnquiries(counts.total)
-    setTodayEnquiries(counts.today)
-    setManualEnquiries(counts.manual)
-    setWebsiteEnquiries(counts.website)
-  }, [filteredData])
-
   const handleCreateEnquiry = () => {
     router.push('/admin/enquiry/create')
-  }
-
-  const handleRefresh = async () => {
-    await handleClear()
   }
 
   const getFormattedEnquiryDateRange = () => {
@@ -299,6 +278,37 @@ export default function EnquiryPage() {
       setTimeout(() => setIsSpinning(false), 500);
     }
   };
+
+  useEffect(() => {
+    if (previousPath) {
+      const paths = previousPath.split("/");
+      const isEditOrCreate = paths.includes("edit") || paths.includes("create");
+      if (isEditOrCreate) {
+        setLockBack(true);
+      }
+    }
+  }, [previousPath]);
+
+
+  useEffect(() => {
+    setEnquiryData(
+      enquiries.map((enquiry) => ({
+        ...enquiry,
+        id: enquiry.enquiryId,
+        dropDate: enquiry.dropDate ? new Date(enquiry.dropDate) : null,
+      }))
+    )
+  }, [enquiries])
+
+
+  useEffect(() => {
+    const counts = categorizeEnquiries(filteredData)
+    setTotalEnquiries(counts.total)
+    setTodayEnquiries(counts.today)
+    setManualEnquiries(counts.manual)
+    setWebsiteEnquiries(counts.website)
+  }, [filteredData])
+
 
   if (isLoading) {
     return (

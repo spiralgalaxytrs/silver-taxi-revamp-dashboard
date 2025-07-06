@@ -7,7 +7,7 @@ import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Card } from "components/ui/card";
 import CounterCard from "components/cards/CounterCard";
-import { Activity, Trash, ArrowDown, ArrowUp, RefreshCcw } from "lucide-react";
+import {Loader2, Activity, Trash, ArrowDown, ArrowUp, RefreshCcw } from "lucide-react";
 import DateRangeAccordion from "components/others/DateRangeAccordion";
 import { toast } from "sonner"
 import { useRouter } from "next/navigation";
@@ -82,12 +82,7 @@ export default function CustomersPage() {
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
-  const [customerData, setCustomerData] = useState(
-    customers.map(customer => ({
-      ...customer,
-      id: customer.customerId
-    }))
-  );
+  const [customerData, setCustomerData] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -152,7 +147,7 @@ export default function CustomersPage() {
         if (bValue == null) return sortConfig.direction === 'asc' ? -1 : 1;
 
         // Date comparison for date fields
-        if (['startDate', 'endDate', 'createdAt'].includes(columnKey)) {
+        if (['startDate', 'endDate', 'createdAt'].includes(columnKey as string)) {
           const dateA = new Date(aValue as string).getTime();
           const dateB = new Date(bValue as string).getTime();
           return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
@@ -260,6 +255,14 @@ export default function CustomersPage() {
 
   useEffect(() => {
   }, [customerData, filters, sortConfig]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <>
@@ -390,52 +393,48 @@ export default function CustomersPage() {
         </div>
         {/* Data Table */}
         <div className="rounded bg-white shadow">
-          {finalData.length > 0 ? (
-            <MaterialReactTable
-              columns={columns as MRT_ColumnDef<any>[]}
-              data={finalData}
-              enableRowSelection
-              positionGlobalFilter="left"
-              onRowSelectionChange={setRowSelection}
-              state={{ rowSelection, sorting }}
-              onSortingChange={setSorting}
-              enableSorting
-              initialState={{
-                density: 'compact',
-                pagination: { pageIndex: 0, pageSize: 10 },
-                showGlobalFilter: true,
-              }}
-              muiSearchTextFieldProps={{
-                placeholder: 'Search customers...',
-                variant: 'outlined',
-                fullWidth: true, // 🔥 Makes the search bar take full width
-                sx: {
-                  minWidth: '600px', // Adjust width as needed
-                  marginLeft: '16px',
-                },
-              }}
-              muiToolbarAlertBannerProps={{
-                sx: {
-                  justifyContent: 'flex-start', // Aligns search left
-                },
-              }}
-              renderTopToolbarCustomActions={() => (
-                <div className="flex flex-1 justify-end items-center">
-                  {/* 🔁 Refresh Button */}
-                  <Button
-                    variant={"ghost"}
-                    onClick={handleRefetch}
-                    className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
-                    title="Refresh Data"
-                  >
-                    <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
-                  </Button>
-                </div>
-              )}
-            />
-          ) : (
-            <p className="h-24 text-center pt-10">No data available.</p>
-          )}
+          <MaterialReactTable
+            columns={columns as MRT_ColumnDef<any>[]}
+            data={finalData}
+            enableRowSelection
+            positionGlobalFilter="left"
+            onRowSelectionChange={setRowSelection}
+            state={{ rowSelection, sorting }}
+            onSortingChange={setSorting}
+            enableSorting
+            initialState={{
+              density: 'compact',
+              pagination: { pageIndex: 0, pageSize: 10 },
+              showGlobalFilter: true,
+            }}
+            muiSearchTextFieldProps={{
+              placeholder: 'Search customers...',
+              variant: 'outlined',
+              fullWidth: true, // 🔥 Makes the search bar take full width
+              sx: {
+                minWidth: '600px', // Adjust width as needed
+                marginLeft: '16px',
+              },
+            }}
+            muiToolbarAlertBannerProps={{
+              sx: {
+                justifyContent: 'flex-start', // Aligns search left
+              },
+            }}
+            renderTopToolbarCustomActions={() => (
+              <div className="flex flex-1 justify-end items-center">
+                {/* 🔁 Refresh Button */}
+                <Button
+                  variant={"ghost"}
+                  onClick={handleRefetch}
+                  className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                  title="Refresh Data"
+                >
+                  <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                </Button>
+              </div>
+            )}
+          />
         </div>
       </div>
     </>

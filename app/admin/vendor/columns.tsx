@@ -3,9 +3,7 @@
 import React from "react"
 import { useState, useCallback } from "react"
 import { toast } from "sonner";
-import { ColumnDef } from "@tanstack/react-table"
-import { Checkbox } from "components/ui/checkbox";
-import { Edit, Copy, Trash, Eye } from 'lucide-react';
+import { Edit, Trash, Eye, ChevronDown } from 'lucide-react';
 import { Button } from "components/ui/button"
 import { Badge } from "components/ui/badge"
 import {
@@ -17,29 +15,38 @@ import {
 import { useRouter } from "next/navigation"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogFooter, AlertDialogDescription, AlertDialogTitle, AlertDialogHeader, AlertDialogContent } from "components/ui/alert-dialog";
 import { useVendorStore } from "stores/-vendorStore"
+import {
+  MRT_ColumnDef,
+} from 'material-react-table'
+import { Vendor } from 'types/react-query/vendor'
 
 
-export const columns: ColumnDef<any, unknown>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-      />
-    ),
-  },
+export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
+  // {
+  //   id: "select",
+  //   header: "Select",
+  //   Header: ({ table }) => (
+  //     <Checkbox
+  //       checked={table.getIsAllPageRowsSelected()}
+  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //     />
+  //   ),
+  //   Cell: ({ row }) => (
+  //     <Checkbox
+  //       checked={row.getIsSelected()}
+  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //     />
+  //   ),
+  //  muiTableHeadCellProps: { align: 'center' },
+  // muiTableBodyCellProps: { align: 'center' },
+  // },
   {
     header: "S.No",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       return <div>{row.index + 1}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   // {
   //   accessorKey: "vendorId",
@@ -48,66 +55,72 @@ export const columns: ColumnDef<any, unknown>[] = [
   {
     accessorKey: "name",
     header: "Name",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "phone",
     header: "Phone No",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "createdAt",
     header: "Created At",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const createdAt: string = row.getValue("createdAt")
       const date = new Date(createdAt);
       const convertedDate = date.toLocaleDateString();
       const options: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
       const amPmTime = date.toLocaleTimeString('en-IN', options);
 
-      return (  
-        <>
-        <div>
-          <div>{convertedDate}</div>
-          <div>{amPmTime}</div>
-        </div>
-        </>
+      return (
+        <React.Fragment>
+          <div>
+            <div>{convertedDate}</div>
+            <div>{amPmTime}</div>
+          </div>
+        </React.Fragment>
       )
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "isLogin",
     header: "Status",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const isActive = row.getValue("isLogin");
       const { toggleVendorStatus, fetchVendors, isLoading } = useVendorStore();
       const id = row.original.vendorId;
 
       const handleToggleStatus = async (newStatus: boolean) => {
         try {
-          await toggleVendorStatus(id, newStatus);
+          await toggleVendorStatus(id || "", newStatus);
           const status = useVendorStore.getState().statusCode;
           const message = useVendorStore.getState().message;
           if (status === 200 || status === 201) {
             toast.success("Vendor status updated successfully", {
               style: {
-                  backgroundColor: "#009F7F",
-                  color: "#fff",
+                backgroundColor: "#009F7F",
+                color: "#fff",
               },
-          });
+            });
           } else {
             toast.error(message || "Failed to update vendor status", {
               style: {
-                  backgroundColor: "#FF0000",
-                  color: "#fff",
+                backgroundColor: "#FF0000",
+                color: "#fff",
               },
-          });
+            });
           }
         } catch (error) {
           toast.error("An unexpected error occurred", {
             style: {
-                backgroundColor: "#FF0000",
-                color: "#fff",
+              backgroundColor: "#FF0000",
+              color: "#fff",
             },
-        });
+          });
           // console.error(error);
         }
       };
@@ -124,6 +137,7 @@ export const columns: ColumnDef<any, unknown>[] = [
               >
                 <Badge variant={isActive ? 'default' : 'destructive'}>
                   {isActive ? 'Active' : 'Inactive'}
+                  <ChevronDown className="ml-2 h-4 w-4" />
                 </Badge>
               </Button>
             </DropdownMenuTrigger>
@@ -139,11 +153,13 @@ export const columns: ColumnDef<any, unknown>[] = [
         </div>
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const vendor = row.original
       const [showConvertDialog, setShowConvertDialog] = useState(false);
       const router = useRouter();
@@ -163,19 +179,19 @@ export const columns: ColumnDef<any, unknown>[] = [
           .then(() => {
             toast.success("Offer ID copied!", {
               style: {
-                  backgroundColor: "#009F7F",
-                  color: "#fff",
+                backgroundColor: "#009F7F",
+                color: "#fff",
               },
-          });
+            });
           })
           .catch((err) => {
             // console.error("Failed to copy ID", err);
             toast.error("Failed to copy ID", {
               style: {
-                  backgroundColor: "#FF0000",
-                  color: "#fff",
+                backgroundColor: "#FF0000",
+                color: "#fff",
               },
-          });
+            });
           });
       };
 
@@ -200,7 +216,7 @@ export const columns: ColumnDef<any, unknown>[] = [
               size="icon"
               className="text-blue-600 hover:text-blue-800 tool-tip"
               data-tooltip="View Details"
-              onClick={() => handleViewVendor(vendor.vendorId)}
+              onClick={() => handleViewVendor(vendor.vendorId || '')}
             >
               <Eye className="h-5 w-5" />
             </Button>
@@ -212,7 +228,7 @@ export const columns: ColumnDef<any, unknown>[] = [
               size="icon"
               className="text-green-600 hover:text-green-800 tool-tip"
               data-tooltip="Edit Offer"
-              onClick={() => handleEditVendor(vendor.vendorId)}
+              onClick={() => handleEditVendor(vendor.vendorId || '')}
             >
               <Edit className="h-5 w-5" />
             </Button>
@@ -227,14 +243,14 @@ export const columns: ColumnDef<any, unknown>[] = [
                 onClick={() => setIsDialogOpen(true)}
               >
                 <Trash className="h-5 w-5" />
-              </Button> 
+              </Button>
 
               <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete this Vendor? <br/>
+                      Are you sure you want to delete this Vendor? <br />
                       <span className="text-red-500">This action cannot be undone.</span>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
@@ -260,6 +276,8 @@ export const columns: ColumnDef<any, unknown>[] = [
         </div>
       )
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
 ]
 
