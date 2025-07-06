@@ -1,3 +1,4 @@
+
 export interface CompanyProfile {
     companyId?: string | undefined;
     logo?: File | string | undefined;

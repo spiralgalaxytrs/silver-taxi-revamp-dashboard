@@ -26,7 +26,7 @@ import {
   TicketPercent
 } from "lucide-react";
 import Image from "next/image";
-import { useProfileStore } from "stores/profileStore";
+import { useProfileStore } from "stores/-profileStore";
 
 // Add these type definitions at the top of the file
 type SubDropdownItem = {

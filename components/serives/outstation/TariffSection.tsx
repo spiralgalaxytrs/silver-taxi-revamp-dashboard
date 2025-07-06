@@ -6,8 +6,8 @@ import { Label } from "components/ui/label";
 import { Switch } from "components/ui/switch";
 import { Button } from "components/ui/button";
 import { toast } from "sonner";
-import { useVehicleStore } from "stores/vehicleStore";
-import { useTariffStore } from "stores/tariffStore";
+import { useVehicleStore } from "stores/-vehicleStore";
+import { useTariffStore } from "stores/-tariffStore";
 
 interface TariffSectionProps {
     isEditing: boolean;

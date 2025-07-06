@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card'
 import { Button } from 'components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from 'components/ui/select'
@@ -17,7 +17,7 @@ export default function AppAnalyticsPage() {
   })
 
   return (
-    <>
+    <React.Fragment>
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold tracking-tight">Customer App Analytics</h2>
@@ -113,7 +113,7 @@ export default function AppAnalyticsPage() {
         </CardContent>
       </Card>
     </div>
-    </>
+    </React.Fragment>
   )
 }
 

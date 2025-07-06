@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "components/ui/button";
 import { CircleX, Edit, Loader2 } from "lucide-react";
-import { useServiceStore } from "stores/serviceStore";
-import { useVehicleStore } from "stores/vehicleStore";
+import { useServiceStore } from "stores/-serviceStore";
+import { useVehicleStore } from "stores/-vehicleStore";
 import  AirportServiceSection  from "../../../../../components/serives/airport/AirportServiceFunction";
 import { TariffSection } from "../../../../../components/serives/outstation/TariffSection";
 import { Tabs, TabsTrigger, TabsList } from "components/ui/tabs";

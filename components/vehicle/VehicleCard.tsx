@@ -5,7 +5,7 @@ import { Switch } from "components/ui/switch"
 import Link from "next/link"
 import { Button } from "components/ui/button"
 import { useState } from "react"
-import { useVehicleStore } from "stores/vehicleStore"
+import { useVehicleStore } from "stores/-vehicleStore"
 import { toast } from "sonner"
 import { Trash } from "lucide-react"
 

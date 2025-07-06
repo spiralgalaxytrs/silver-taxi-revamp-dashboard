@@ -38,7 +38,6 @@ export interface TariffUseState {
   price: number;
   extraPrice: number;
 }
-// Tariff Page Typ
 
 export interface Includes {
     hill: boolean;

@@ -7,7 +7,7 @@ import { Switch } from "components/ui/switch";
 import { toast } from "sonner";
 import { Button } from "components/ui/button";
 import { Edit, X } from "lucide-react";
-import { useServiceStore } from "stores/serviceStore";
+import { useServiceStore } from "stores/-serviceStore";
 import { Service } from "types/service";
 import { Textarea } from "components/ui/textarea";
 

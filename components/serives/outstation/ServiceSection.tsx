@@ -7,7 +7,7 @@ import { Switch } from "components/ui/switch";
 import { Button } from "components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useServiceStore } from "stores/serviceStore";
+import { useServiceStore } from "stores/-serviceStore";
 import { Service } from "types/service";
 import { Textarea } from "components/ui/textarea";
 

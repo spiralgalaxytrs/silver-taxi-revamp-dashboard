@@ -1,7 +1,9 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "components/ui/badge";
+import {
+    MRT_ColumnDef,
+} from "material-react-table"
 
 export type VendorTransaction = {
     transactionId: string;
@@ -16,31 +18,41 @@ export type VendorTransaction = {
     remark: string;
 };
 
-export const walletColumns: ColumnDef<VendorTransaction>[] = [
+export const walletColumns: MRT_ColumnDef<VendorTransaction>[] = [
     {
         header: "S.No",
-        cell: ({ row }) => row.index + 1, // Assigns Serial Number dynamically
+        Cell: ({ row }) => row.index + 1,
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "transactionId",
         header: "Transaction ID",
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     // {
     //     accessorKey: "vendorId",
     //     header: "Vendor ID",
+    //   muiTableHeadCellProps: { align: 'center' },
+    // muiTableBodyCellProps: { align: 'center' },
     // },
     {
         accessorKey: "initiatedTo",
         header: "Name/Phone",
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "ownedBy",
         header: "Category",
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "type",
         header: "Transaction Type",
-        cell: ({ row }) => {
+        Cell: ({ row }) => {
             const type = row.getValue("type") as string;
             return (
                 <div>
@@ -50,11 +62,13 @@ export const walletColumns: ColumnDef<VendorTransaction>[] = [
                 </div>
             );
         },
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "amount",
         header: "Amount",
-        cell: ({ row }) => {
+        Cell: ({ row }) => {
             const amount = parseFloat(row.getValue("amount"));
             const type = row.getValue("type") as string;
             const prefix = type.toLowerCase() === "credit" ? "+" : "-";
@@ -65,27 +79,33 @@ export const walletColumns: ColumnDef<VendorTransaction>[] = [
 
             return <div>{prefix} {formatted}</div>
         },
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "remark",
         header: "Remarks",
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "createdAt",
         header: "Date/Time",
-        cell: ({ row }) => {
-          const createdAt: string = row.getValue("createdAt")
-          const date = new Date(createdAt);
-          const convertedDate = date.toLocaleDateString();
-          const options: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
-          const amPmTime = date.toLocaleTimeString('en-IN', options);
-    
-          return (
-            <div>
-              <div>{convertedDate}</div>
-              <div>{amPmTime}</div>
-            </div>
-          )
+        Cell: ({ row }) => {
+            const createdAt: string = row.getValue("createdAt")
+            const date = new Date(createdAt);
+            const convertedDate = date.toLocaleDateString();
+            const options: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
+            const amPmTime = date.toLocaleTimeString('en-IN', options);
+
+            return (
+                <div>
+                    <div>{convertedDate}</div>
+                    <div>{amPmTime}</div>
+                </div>
+            )
         },
-      },
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
+    },
 ];

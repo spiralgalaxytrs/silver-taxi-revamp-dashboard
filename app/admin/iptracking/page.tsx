@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import { DataTable } from 'components/others/DataTable';
 import { columns } from './columns';
-import { useIpTrackingStore } from 'stores/ipTrackingStore';
+import { useIpTrackingStore } from 'stores/-ipTrackingStore';
 import { Card } from 'components/ui/card';
 import CounterCard from 'components/cards/CounterCard';
 import { Activity, ArrowDown, ArrowUp, Trash } from 'lucide-react';

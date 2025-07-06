@@ -2,11 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { DataTable } from "components/others/DataTable";
-import { columns, Driver } from "./columns";
+import { columns } from "./columns";
 import { Button } from "components/ui/button";
-import { useDriverStore } from "stores/driverStore";
 import { toast } from "sonner"
 import {
   Select,
@@ -19,7 +16,7 @@ import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Card } from "components/ui/card";
 import CounterCard from "components/cards/CounterCard";
-import { Activity, Trash, ArrowDown, ArrowUp, Loader2 } from "lucide-react";
+import { Activity, Trash, ArrowDown, ArrowUp, Loader2, RefreshCcw } from "lucide-react";
 import DateRangeAccordion from "components/others/DateRangeAccordion";
 import {
   AlertDialog,
@@ -31,13 +28,35 @@ import {
   AlertDialogCancel,
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
+import {
+  useDrivers,
+  useBulkDeleteDrivers
+} from 'hooks/react-query/useDriver';
+import {
+  MaterialReactTable,
+  type MRT_ColumnDef
+} from 'material-react-table'
 
 
 export default function DriversPage(): JSX.Element {
   const router = useRouter();
-  const { drivers, fetchDrivers, isLoading, multiDeleteDrivers, error } = useDriverStore();
+
+  const {
+    data: drivers = [],
+    isLoading,
+    isError,
+    refetch
+  } = useDrivers();
+
+  const {
+    mutate: bulkDeleteDrivers
+  } = useBulkDeleteDrivers();
+
+
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [isSpinning, setIsSpinning] = useState(false)
   const [showFilters, setShowFilters] = useState(false);
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
     columnId: string | null;
@@ -49,9 +68,7 @@ export default function DriversPage(): JSX.Element {
   const [activeDrivers, setActiveDrivers] = useState(0);
   const [inactiveDrivers, setInactiveDrivers] = useState(0);
 
-  const [driverData, setDriverData] = useState(
-    drivers?.map(driver => ({ ...driver, id: driver.driverId }))
-  );
+  const [driverData, setDriverData] = useState<any[]>([]);;
 
   // Filters state for search and created date range
   const [filters, setFilters] = useState({
@@ -60,10 +77,6 @@ export default function DriversPage(): JSX.Element {
     creationDateStart: '',
     creationDateEnd: ''
   });
-
-  useEffect(() => {
-    fetchDrivers();
-  }, [fetchDrivers]);
 
   useEffect(() => {
     if (drivers) {
@@ -153,18 +166,6 @@ export default function DriversPage(): JSX.Element {
     setSortConfig({ columnId: null, direction: null });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-      </div>
-    )
-  }
-
-  // if (error) {
-  //   return <div>Error: {error}</div>;
-  // }
-
   const handleSort = (columnId: string) => {
     setSortConfig(prev => ({
       columnId,
@@ -185,36 +186,65 @@ export default function DriversPage(): JSX.Element {
   };
 
   const confirmBulkDelete = async () => {
-    const selectedIds = Object.keys(rowSelection);
-    await multiDeleteDrivers(selectedIds);
-    const newData = driverData.filter(driver => !selectedIds.includes(driver?.driverId ?? ''));
-    setDriverData(newData);
-    setRowSelection({});
-    const status = useDriverStore.getState().statusCode
-    const message = useDriverStore.getState().message
-    if (status === 200 || status === 201) {
-      toast.success("Drivers deleted successfully", {
-        style: {
-          backgroundColor: "#009F7F",
-          color: "#fff",
+    const selectedIndices = Object.keys(rowSelection)
+    const selectedIds = selectedIndices.map(index => {
+      const driverId = finalDrivers[parseInt(index)]?.driverId
+      return driverId !== undefined ? driverId : null
+    }).filter(id => id !== null)
+    try {
+      bulkDeleteDrivers(selectedIds, {
+        onSuccess: () => {
+          toast.success("Drivers deleted successfully!", {
+            style: {
+              backgroundColor: "#009F7F",
+              color: "#fff",
+            },
+          });
+          setIsDialogOpen(false);
+          router.push("/admin/drivers");
         },
+        onError: (error: any) => {
+          setIsDialogOpen(false);
+          toast.error(error?.response?.data?.message || "Error deleting drivers!", {
+            style: {
+              backgroundColor: "#FF0000",
+              color: "#fff",
+            },
+          });
+        }
       });
-      router.push("/admin/drivers");
-    } else {
-      toast.error(message || "Error Deleting drivers", {
+    } catch (error: any) {
+      setIsDialogOpen(false);
+      toast.error(error?.response?.data?.message || "Error deleting drivers!", {
         style: {
           backgroundColor: "#FF0000",
           color: "#fff",
         },
       });
     }
-    setIsDialogOpen(false);
   };
 
   const cancelBulkDelete = () => {
     setIsDialogOpen(false);
   };
 
+  const handleRefetch = async () => {
+    setIsSpinning(true);
+    try {
+      await refetch(); // wait for the refetch to complete
+    } finally {
+      // stop spinning after short delay to allow animation to play out
+      setTimeout(() => setIsSpinning(false), 500);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
+  }
   return (
     <>
       <div className="space-y-6">
@@ -223,12 +253,9 @@ export default function DriversPage(): JSX.Element {
             <div className="flex justify-between items-center mb-5">
               <h1 className="text-3xl font-bold tracking-tight">Drivers</h1>
               <div className="flex items-center gap-2">
-                <Link href="/admin/drivers/create">
+                {/* <Link href="/admin/drivers/create">
                   <Button>Add New Driver</Button>
-                </Link>
-                {/* {showFilters && <Button variant="outline" onClick={handleClear}>
-                  Clear
-                </Button>} */}
+                </Link> */}
                 <Button
                   variant="none"
                   className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
@@ -363,13 +390,47 @@ export default function DriversPage(): JSX.Element {
         </div>
         {/* Data Table */}
         <div className="rounded bg-white shadow">
-          <DataTable
-            columns={columns}
-            data={finalDrivers as any}
-            onSort={handleSort}
-            sortConfig={sortConfig}
-            rowSelection={rowSelection}
+          <MaterialReactTable
+            columns={columns as MRT_ColumnDef<any>[]}
+            data={finalDrivers}
+            enableRowSelection
+            positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
+            state={{ rowSelection, sorting }}
+            onSortingChange={setSorting}
+            enableSorting
+            initialState={{
+              density: 'compact',
+              pagination: { pageIndex: 0, pageSize: 10 },
+              showGlobalFilter: true,
+            }}
+            muiSearchTextFieldProps={{
+              placeholder: 'Search enquiries...',
+              variant: 'outlined',
+              fullWidth: true, // 🔥 Makes the search bar take full width
+              sx: {
+                minWidth: '600px', // Adjust width as needed
+                marginLeft: '16px',
+              },
+            }}
+            muiToolbarAlertBannerProps={{
+              sx: {
+                justifyContent: 'flex-start', // Aligns search left
+              },
+            }}
+            renderTopToolbarCustomActions={() => (
+              <div className="flex flex-1 justify-end items-center">
+                {/* 🔁 Refresh Button */}
+                <Button
+                  variant={"ghost"}
+                  onClick={handleRefetch}
+                  className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                  title="Refresh Data"
+                >
+                  <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                </Button>
+              </div>
+            )}
           />
         </div>
       </div>

@@ -8,8 +8,8 @@ import { Switch } from "components/ui/switch";
 import { Button } from "components/ui/button";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import { useVehicleStore } from "stores/vehicleStore";
-import { useTariffStore } from "stores/tariffStore";
+import { useVehicleStore } from "stores/-vehicleStore";
+import { useTariffStore } from "stores/-tariffStore";
 
 interface PackageVehicleSectionProps {
     isEditing: boolean;
