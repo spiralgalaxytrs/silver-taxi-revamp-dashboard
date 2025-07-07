@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useCallback } from "react";
 import { Button } from "components/ui/button";
 import { toast } from "sonner"
 import { Edit, Trash, Eye } from 'lucide-react';
@@ -15,11 +16,12 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import { useRouter } from "next/navigation";
-import React, { useState, useCallback } from "react";
-import { useInvoiceStore } from "stores/-invoiceStore";
 import {
   MRT_ColumnDef,
 } from 'material-react-table'
+import{
+  useDeleteInvoice
+} from 'hooks/react-query/useInvoice';
 
 export type Invoice = {
   // id: string ;
@@ -136,8 +138,8 @@ export const columns: MRT_ColumnDef<Invoice>[] = [
     Cell: ({ row }) => {
       const invoice = row.original;
       const router = useRouter()
+      const { mutate: deleteInvoice } = useDeleteInvoice()
       const [isDialogOpen, setIsDialogOpen] = useState(false);
-      const { deleteInvoice, fetchInvoices } = useInvoiceStore()
 
       const handleCopy = (id: string) => {
         navigator.clipboard.writeText(id)
@@ -161,7 +163,7 @@ export const columns: MRT_ColumnDef<Invoice>[] = [
       };
 
       const handleEditInvoice = useCallback(async (id: string | undefined) => {
-        await router.push(`/admin/invoices/edit/${id}`)
+        router.push(`/admin/invoices/edit/${id}`)
       }, [router])
 
       const cancelDelete = () => {
@@ -169,9 +171,21 @@ export const columns: MRT_ColumnDef<Invoice>[] = [
       }
 
       const confirmDelete = async (id: string) => {
-        await deleteInvoice(id);
-        setIsDialogOpen(false);
-        toast.success("Invoice deleted successfully");
+        deleteInvoice(id, {
+          onSuccess: () => {
+            setIsDialogOpen(false);
+            toast.success("Invoice deleted successfully");
+          },
+          onError: (error: any) => {
+            setIsDialogOpen(false);
+            toast.error(error?.response?.data?.message || "Error deleting Invoice!", {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          }
+        });
       };
 
       return (
