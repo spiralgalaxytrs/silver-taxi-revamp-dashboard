@@ -21,7 +21,7 @@ interface TariffSectionProps {
     serviceId: string;
     vehicleId: string;
     createdBy: "Admin" | "Vendor";
-    isLoading: boolean;
+    isLoading?: boolean;
 }
 
 type Tariff = {

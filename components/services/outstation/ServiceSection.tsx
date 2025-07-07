@@ -19,11 +19,11 @@ interface ServiceSectionProps {
   isEditing: boolean;
   serviceId: string;
   title: string;
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
-export function ServiceSection({ isEditing, serviceId, title, isLoading }: ServiceSectionProps) {
- 
+export function ServiceSection({ isEditing, serviceId, title, isLoading = false }: ServiceSectionProps) {
+
   const router = useRouter();
   const [updatedService, setUpdatedService] = useState<Service>({
     serviceId: "",

@@ -50,7 +50,7 @@ export default function OneWayPage() {
             </button>
           </div>
 
-          <ServiceSection isEditing={false} serviceId={id} title="One Way" />
+          <ServiceSection isEditing={false} serviceId={id} title="One way"  />
 
           <div className="border-b border-black" />
 
