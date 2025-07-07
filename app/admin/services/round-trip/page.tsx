@@ -1,40 +1,40 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Edit, Loader2, CircleX } from "lucide-react";
-import { useServiceStore } from "stores/-serviceStore";
-import { useVehicleStore } from "stores/-vehicleStore";
-import { ServiceSection } from "../../../../components/serives/outstation/ServiceSection";
-import { TariffSection } from "../../../../components/serives/outstation/TariffSection";
+import { ServiceSection } from "../../../../components/services/outstation/ServiceSection";
+import { TariffSection } from "../../../../components/services/outstation/TariffSection";
 import { Tabs, TabsTrigger, TabsList } from "components/ui/tabs";
+import {
+  useServices
+} from 'hooks/react-query/useServices';
+import {
+  useVehicles
+} from 'hooks/react-query/useVehicle';
 
 export default function RoundTripPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
-  const [id, setId] = useState<string>("");
-  const { fetchServices ,services} = useServiceStore();
-  const { vehicles, fetchVehicles, isLoading } = useVehicleStore();
 
-  useEffect(()=>{
-    fetchVehicles();
-    fetchServices();
-    const filtered = services.filter(service => service.name === "Round trip");
-    setId(filtered[0]?.serviceId || "");
-  },[])
+  const {
+    data: services = [],
+    isLoading,
+    refetch: fetchServices
+  } = useServices();
+  const {
+    data: vehicles = [],
+    isLoading: isLoadingVehicles,
+    refetch: fetchVehicles
+  } = useVehicles();
+
+  const id = useMemo(() => {
+    return services.find(service => service.name === "Round trip")?.serviceId
+  }, [services])
 
   useEffect(() => {
     if (vehicles.length > 0) {
       setSelectedVehicleId(vehicles[0].vehicleId);
     }
   }, [vehicles]);
-
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-      </div>
-    )
-  }
 
   return (
     <>
@@ -51,7 +51,12 @@ export default function RoundTripPage() {
               </button>
             </div>
 
-            <ServiceSection isEditing={isEditing} serviceId={id} title="Round trip" />
+              <ServiceSection
+                isEditing={isEditing}
+                serviceId={id || ""}
+                title="Round trip"
+                isLoading={isLoading}
+              />
 
             <div className="border-b border-black" />
 
@@ -62,17 +67,22 @@ export default function RoundTripPage() {
                     key={vehicle.vehicleId}
                     value={vehicle.name}
                     onClick={() => setSelectedVehicleId(vehicle.vehicleId)}
+                    className={selectedVehicleId === vehicle.vehicleId ? "bg-black text-white" : ""}
                   >
                     {vehicle.name}
                   </TabsTrigger>
                 ))}
               </TabsList>
-              <TariffSection
-                isEditing={isEditing}
-                serviceId={id}
-                vehicleId={selectedVehicleId}
-                createdBy="Admin"
-              />
+
+              {id && selectedVehicleId && (
+                <TariffSection
+                  isEditing={isEditing}
+                  serviceId={id}
+                  vehicleId={selectedVehicleId}
+                  createdBy="Admin"
+                  isLoading={isLoading}
+                />
+              )}
             </Tabs>
           </div>
         </div>

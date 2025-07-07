@@ -1,25 +1,29 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Card } from "components/ui/card";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Switch } from "components/ui/switch";
 import { Button } from "components/ui/button";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useServiceStore } from "stores/-serviceStore";
 import { Service } from "types/service";
 import { Textarea } from "components/ui/textarea";
+import {
+  useServiceById,
+  useUpdateService
+} from 'hooks/react-query/useServices';
 
 interface ServiceSectionProps {
   isEditing: boolean;
   serviceId: string;
   title: string;
+  isLoading: boolean;
 }
 
-export function ServiceSection({ isEditing, serviceId, title }: ServiceSectionProps) {
-  const { service, fetchServiceById, updateService } = useServiceStore();
-  const [id, setId] = useState<string>("");
+export function ServiceSection({ isEditing, serviceId, title, isLoading }: ServiceSectionProps) {
+ 
   const router = useRouter();
   const [updatedService, setUpdatedService] = useState<Service>({
     serviceId: "",
@@ -33,28 +37,27 @@ export function ServiceSection({ isEditing, serviceId, title }: ServiceSectionPr
     exclude: "",
   });
 
+  const {
+    data: service = null,
+    isLoading: isLoadingService,
+  } = useServiceById(serviceId);
+
+  const { mutateAsync: updateService } = useUpdateService();
+
+
   useEffect(() => {
+    if (service) {
+      const updated = {
+        ...service,
+        name: title,
+        include: service.include || "",
+        exclude: service.exclude || ""
+      };
 
-    const resolveId = async () => {
-      const id = await serviceId;
-      setId(id);
-      fetchServiceById(id);
-      useServiceStore.getState().service;
-      console.log("Service fetched:", service?.isActive);
-      if (service) {
-        setUpdatedService({
-          ...service,
-          name: title,
-          include: service.include || "",
-          exclude: service.exclude || ""
-        });
-      }
+      setUpdatedService(updated);
+      // console.log("Updated Service State:", updated); 
     }
-    resolveId();
-    console.log("Updated Service State:", updatedService);
-
-  }, [serviceId]);
-
+  }, [service, title]);
 
 
   const handleTaxChange = (key: keyof Service["tax"], value: any) => {
@@ -93,30 +96,38 @@ export function ServiceSection({ isEditing, serviceId, title }: ServiceSectionPr
   const handleUpdateService = () => {
     if (updatedService) {
       console.log("Updated Service:", updatedService);
-      updateService(serviceId, updatedService);
-      const status = useServiceStore.getState().statusCode;
-      const message = useServiceStore.getState().message;
-      if (status === 200 || status === 201) {
-        toast.success("Service updated successfully", {
-          style: {
-            backgroundColor: "#009F7F",
-            color: "#fff",
-          },
-        });
-        window.location.reload();
-      } else {
-        toast.error(message, {
-          style: {
-            backgroundColor: "#FF0000",
-            color: "#fff",
-          },
-        });
-      }
+      updateService({ id: serviceId, data: updatedService }, {
+        onSuccess: () => {
+          toast.success("Service updated successfully", {
+            style: {
+              backgroundColor: "#009F7F",
+              color: "#fff",
+            },
+          });
+          window.location.reload();
+        },
+        onError: () => {
+          toast.error("Failed to update service", {
+            style: {
+              backgroundColor: "#FF0000",
+              color: "#fff",
+            },
+          });
+        }
+      });
     }
   };
 
+  if (isLoadingService) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
-    <>
+    <React.Fragment>
       <Card className="mb-8 py-3">
         <h2 className="mb-6 text-xl font-semibold">Base Detail</h2>
         <div className="grid grid-cols-2 gap-8">
@@ -305,6 +316,6 @@ export function ServiceSection({ isEditing, serviceId, title }: ServiceSectionPr
           </div>
         )}
       </Card>
-    </>
+    </React.Fragment>
   );
 } 

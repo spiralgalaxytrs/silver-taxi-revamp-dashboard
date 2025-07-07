@@ -6,14 +6,22 @@ import { Label } from "components/ui/label";
 import { Switch } from "components/ui/switch";
 import { Button } from "components/ui/button";
 import { toast } from "sonner";
-import { useVehicleStore } from "stores/-vehicleStore";
-import { useTariffStore } from "stores/-tariffStore";
+import { Loader2 } from "lucide-react";
+import {
+    useTariffs,
+    useCreateTariff,
+    useUpdateTariff
+} from 'hooks/react-query/useTariff';
+import {
+    useVehicleById
+} from 'hooks/react-query/useVehicle';
 
 interface TariffSectionProps {
     isEditing: boolean;
     serviceId: string;
     vehicleId: string;
     createdBy: "Admin" | "Vendor";
+    isLoading: boolean;
 }
 
 type Tariff = {
@@ -26,26 +34,22 @@ type Tariff = {
     createdBy: "Admin" | "Vendor";
 }
 
-export function TariffSection({ isEditing, serviceId, vehicleId, createdBy }: TariffSectionProps) {
+export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLoading }: TariffSectionProps) {
     const [localTariffs, setLocalTariffs] = useState<Record<string, Tariff>>({}); // Store tariffs locally by vehicleId
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [lastEditedVehicleId, setLastEditedVehicleId] = useState<string | null>(null);
-    const { vehicles } = useVehicleStore();
-    const { fetchTariffs, updateTariff, createTariff, tariffs } = useTariffStore();
+    // const { vehicles } = useVehicleStore();
+    // const { fetchTariffs, updateTariff, createTariff, tariffs } = useTariffStore();
 
-    // Fetch tariff when vehicleId or serviceId changes
-    // Fetch tariff when vehicleId or serviceId changes
-    useEffect(() => {
-        if (vehicleId && serviceId) {
-            fetchTariffs();
-        }
-    }, [vehicleId, serviceId, fetchTariffs]);
+    const { data: tariffs = [] } = useTariffs();
+    const { data: vehicle = null } = useVehicleById(vehicleId);
+    const { mutate: createTariff } = useCreateTariff();
+    const { mutate: updateTariff } = useUpdateTariff();
 
 
     // Update local state based on fetched tariff and current type
     useEffect(() => {
         let initialTariff: Tariff;
-        useTariffStore.getState().tariffs;
         if (tariffs && tariffs.length > 0) {
             const matchingTariff = tariffs.find(
                 (t: Tariff) =>
@@ -91,7 +95,6 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy }: Ta
     }, [vehicleId, serviceId]);
 
     useEffect(() => {
-        useTariffStore.getState().tariffs;
         return () => {
             if (hasUnsavedChanges && isEditing && lastEditedVehicleId && lastEditedVehicleId !== vehicleId) {
                 handleTariffUpdate(lastEditedVehicleId, localTariffs[lastEditedVehicleId], true); // Save silently
@@ -142,37 +145,53 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy }: Ta
 
             try {
                 if (existingTariff?.tariffId) {
-                    await updateTariff(existingTariff.tariffId, updatedTariffData);
-                } else {
-                    await createTariff(updatedTariffData);
-                }
-
-                const status = useTariffStore.getState().statusCode;
-                const message = useTariffStore.getState().message;
-
-                if (status === 200 || status === 201) {
-                    if (!silent) {
-                        toast.success(existingTariff?.tariffId ? "Tariff updated successfully!" : "New tariff created successfully!", {
-                            style: {
-                                backgroundColor: "#009F7F",
-                                color: "#fff",
-                            },
-                        });
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 2000);
-                    }
-                } else {
-                    if (!silent) toast.error(message, {
-                        style: {
-                            backgroundColor: "#FF0000",
-                            color: "#fff",
+                    updateTariff({ id: existingTariff.tariffId, data: updatedTariffData }, {
+                        onSuccess: (data: any) => {
+                            if (!silent) toast.success(data?.message || "Tariff updated successfully!", {
+                                style: {
+                                    backgroundColor: "#009F7F",
+                                    color: "#fff",
+                                },
+                            });
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
                         },
+                        onError: (error: any) => {
+                            toast.error(error?.response?.data?.message || "Failed to update tariff", {
+                                style: {
+                                    backgroundColor: "#FF0000",
+                                    color: "#fff",
+                                },
+                            });
+                        }
+                    });
+                } else {
+                    createTariff(updatedTariffData, {
+                        onSuccess: () => {
+                            if (!silent) toast.success("New tariff created successfully!", {
+                                style: {
+                                    backgroundColor: "#009F7F",
+                                    color: "#fff",
+                                },
+                            });
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        },
+                        onError: (error: any) => {
+                            if (!silent) toast.error(error?.response?.data?.message || "Failed to create tariff", {
+                                style: {
+                                    backgroundColor: "#FF0000",
+                                    color: "#fff",
+                                },
+                            });
+                        }
                     });
                 }
-            } catch (error) {
+            } catch (error: any) {
                 // console.error("Save error:", error);
-                if (!silent) toast.error(useTariffStore.getState().message, {
+                if (!silent) toast.error(error?.response?.data?.message || "Failed to save tariff", {
                     style: {
                         backgroundColor: "#FF0000",
                         color: "#fff",
@@ -200,7 +219,7 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy }: Ta
         }
     };
 
-    const selectedVehicle = vehicles.find((v) => v.vehicleId === vehicleId);
+    const selectedVehicle = vehicle;
     const currentTariff = localTariffs[vehicleId] || {
         price: 0,
         extraPrice: 0,
@@ -209,6 +228,14 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy }: Ta
         vehicleId,
         createdBy,
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-50">
+                <Loader2 className="w-12 h-12 animate-spin text-primary" />
+            </div>
+        )
+    }
 
     return (
         <Card className="p-6">

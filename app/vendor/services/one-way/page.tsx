@@ -4,8 +4,8 @@ import { Button } from "components/ui/button";
 import { Edit, Loader2, CircleX } from "lucide-react";
 import { useServiceStore } from "stores/-serviceStore";
 import { useVehicleStore } from "stores/-vehicleStore";
-import { ServiceSection } from "../../../../components/serives/outstation/ServiceSection";
-import { TariffSection } from "../../../../components/serives/outstation/TariffSection";
+import { ServiceSection } from "../../../../components/services/outstation/ServiceSection";
+import { TariffSection } from "../../../../components/services/outstation/TariffSection";
 import { Tabs, TabsTrigger, TabsList } from "components/ui/tabs";
 
 export default function OneWayPage() {
