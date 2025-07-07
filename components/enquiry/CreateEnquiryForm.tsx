@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
-import { useEnquiryStore } from '../../stores/-enquiryStore'
-import { useServiceStore } from "stores/-serviceStore";
 import { useRouter } from 'next/navigation'
 import { getMinDateTime, getMaxDateTime } from '../../lib/date-restrict'
 import {
@@ -62,7 +60,7 @@ type formData = {
 
 export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryFormProps) {
     const router = useRouter()
-    // const { createEnquiry, updateEnquiry, isLoading, error, message, enquiries, fetchEnquiries } = useEnquiryStore()
+
     const {
         data: enquiries = [],
         isLoading: isEnquiriesLoading,
@@ -86,11 +84,9 @@ export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryForm
     } = useServices()
 
     const [serviceType, setServiceType] = useState('')
-    const [subServiceType, setSubServiceType] = useState('')
     const [isFormDirty, setIsFormDirty] = useState(false);
     const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
-    // const { fetchServices, services } = useServiceStore();
     const [serId, setSerId] = useState<string>("")
     const [initSer, initSetSer] = useState<string>("")
 
@@ -108,7 +104,7 @@ export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryForm
         pickupDateTime: '',
         createdBy: createdBy as "Admin" | "Vendor",
         dropDate: null,
-        serviceId: initSer, // Default service ID
+        serviceId: initSer,
         type: 'Manual' as 'Manual' | 'Website' | 'App'
     })
 
@@ -152,6 +148,44 @@ export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryForm
         const currentData = formData;
         setIsFormDirty(JSON.stringify(initialData) !== JSON.stringify(formData));
     }, [formData]);
+
+    // Add beforeunload handler
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isFormDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isFormDirty]);
+
+    // Modify handleClose function
+    const handleClose = () => {
+        if (isFormDirty) {
+            setShowUnsavedChangesDialog(true);
+            setPendingNavigation(() => () => router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/enquiry`));
+        } else {
+            router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/enquiry`);
+        }
+    };
+
+    // Add navigation confirmation handler
+    const handleConfirmNavigation = () => {
+        setIsFormDirty(false);
+        setShowUnsavedChangesDialog(false);
+        pendingNavigation();
+    };
+
+    const handleLocationSelectFromGoogle = (address: string) => {
+        setFormData({ ...formData, pickup: address });
+    }
+
+    const handleLocationSelectToGoogle = (address: string) => {
+        setFormData({ ...formData, drop: address });
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -199,44 +233,6 @@ export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryForm
             });
             console.error(err);
         }
-    }
-
-    // Add beforeunload handler
-    useEffect(() => {
-        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (isFormDirty) {
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        };
-
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [isFormDirty]);
-
-    // Modify handleClose function
-    const handleClose = () => {
-        if (isFormDirty) {
-            setShowUnsavedChangesDialog(true);
-            setPendingNavigation(() => () => router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/enquiry`));
-        } else {
-            router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/enquiry`);
-        }
-    };
-
-    // Add navigation confirmation handler
-    const handleConfirmNavigation = () => {
-        setIsFormDirty(false);
-        setShowUnsavedChangesDialog(false);
-        pendingNavigation();
-    };
-
-    const handleLocationSelectFromGoogle = (address: string) => {
-        setFormData({ ...formData, pickup: address });
-    }
-
-    const handleLocationSelectToGoogle = (address: string) => {
-        setFormData({ ...formData, drop: address });
     }
 
     return (

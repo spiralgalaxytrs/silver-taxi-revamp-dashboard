@@ -306,247 +306,249 @@ export default function EnquiryPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="rounded bg-white p-5 shadow">
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between border-b-1 mb-5">
-            <h1 className="text-2xl font-bold tracking-tight">Enquiry Page</h1>
-            <div className="flex items-center gap-2">
-              <Button
-                className="bg-[rgb(0,159,127)] inline-flex items-center justify-center flex-shrink-0 font-medium leading-none rounded-full outline-none transition duration-300 ease-in-out focus:outline-none focus:shadow text-white border border-solid border-accent hover:bg-[rgb(0,159,135)] hover:text-white hover:border-transparent px-5 py-0 h-12 text-[15px] lg:text-base w-full md:w-auto md:ms-6"
-                onClick={handleCreateEnquiry}
-              >
-                Create Enquiry
-              </Button>
-              {showFilters && (
+    <React.Fragment>
+      <div className="p-6 space-y-6">
+        <div className="rounded bg-white p-5 shadow">
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between border-b-1 mb-5">
+              <h1 className="text-2xl font-bold tracking-tight">Enquiry Page</h1>
+              <div className="flex items-center gap-2">
                 <Button
-                  className="border-none hover:underline-offset-1 hover:bg-none"
-                  variant="outline"
-                  onClick={handleClear}
-                  disabled={isLoading}
+                  className="bg-[rgb(0,159,127)] inline-flex items-center justify-center flex-shrink-0 font-medium leading-none rounded-full outline-none transition duration-300 ease-in-out focus:outline-none focus:shadow text-white border border-solid border-accent hover:bg-[rgb(0,159,135)] hover:text-white hover:border-transparent px-5 py-0 h-12 text-[15px] lg:text-base w-full md:w-auto md:ms-6"
+                  onClick={handleCreateEnquiry}
                 >
-                  {isLoading ? "Refreshing..." : "Clear"}
+                  Create Enquiry
                 </Button>
-              )}
-              <Button
-                variant="none"
-                className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-                {showFilters ? <ArrowDown className="ml-2" /> : <ArrowUp className="ml-2" />}
-              </Button>
-              {Object.keys(rowSelection).length > 0 && (
-                <>
+                {showFilters && (
                   <Button
-                    variant="destructive"
-                    onClick={handleBulkDelete}
-                    className="flex items-center gap-2"
+                    className="border-none hover:underline-offset-1 hover:bg-none"
+                    variant="outline"
+                    onClick={handleClear}
+                    disabled={isLoading}
                   >
-                    <Trash className="h-4 w-4" />
-                    ({Object.keys(rowSelection).length})
+                    {isLoading ? "Refreshing..." : "Clear"}
                   </Button>
-                  <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete {Object.keys(rowSelection).length} selected enquiries?
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel onClick={cancelBulkDelete}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmBulkDelete}>Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              )}
+                )}
+                <Button
+                  variant="none"
+                  className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  {showFilters ? 'Hide Filters' : 'Show Filters'}
+                  {showFilters ? <ArrowDown className="ml-2" /> : <ArrowUp className="ml-2" />}
+                </Button>
+                {Object.keys(rowSelection).length > 0 && (
+                  <>
+                    <Button
+                      variant="destructive"
+                      onClick={handleBulkDelete}
+                      className="flex items-center gap-2"
+                    >
+                      <Trash className="h-4 w-4" />
+                      ({Object.keys(rowSelection).length})
+                    </Button>
+                    <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete {Object.keys(rowSelection).length} selected enquiries?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel onClick={cancelBulkDelete}>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={confirmBulkDelete}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5">
-          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 w-full" />
-            <div className="h-[150px] w-full">
-              <CounterCard
-                color="bg-emerald-100"
-                icon={Activity}
-                count={totalEnquiries}
-                label="Total Enquiries"
-                cardSize="w-[190px] h-[90px]"
-              />
-            </div>
-            <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500 transform scale-x-100" />
-          </Card>
-          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 opacity-0 w-full" />
-            <div className="h-[150px] w-full">
-              <CounterCard
-                color="bg-blue-100"
-                icon={Activity}
-                count={todayEnquiries}
-                label="Today's Enquiries"
-                cardSize="w-[190px] h-[90px]"
-              />
-            </div>
-            <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500 transform scale-x-100" />
-          </Card>
-          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-100 w-full" />
-            <div className="h-[150px] w-full">
-              <CounterCard
-                color="bg-purple-100"
-                icon={Activity}
-                count={manualEnquiries}
-                label="Manual Enquiries"
-                cardSize="w-[190px] h-[90px]"
-              />
-            </div>
-            <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500 transform scale-x-100" />
-          </Card>
-          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-100 w-full" />
-            <div className="h-[150px] w-full">
-              <CounterCard
-                color="bg-orange-100"
-                icon={Activity}
-                count={websiteEnquiries}
-                label="Website Enquiries"
-                cardSize="w-[190px] h-[90px]"
-              />
-            </div>
-            <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-orange-500 to-red-500 transform scale-x-100" />
-          </Card>
-        </div>
-        {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-t-2 mt-4 p-3 pt-8">
-            <div>
-              <label
-                htmlFor="search"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Search
-              </label>
-              <Input
-                id="search"
-                placeholder="Search in enquiries"
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="status">Select Status</Label>
-              <Select onValueChange={(value) => handleFilterChange('status', value)}>
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="fake">Fake</SelectItem>
-                  <SelectItem value="current">Current</SelectItem>
-                  <SelectItem value="future">Future</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="serviceName">Select ServiceName</Label>
-              <Select onValueChange={(value) => handleFilterChange('serviceName', value)}>
-                <SelectTrigger id="serviceName">
-                  <SelectValue placeholder="Select serviceName" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Services</SelectItem>
-                  <SelectItem value="One Way">One way</SelectItem>
-                  <SelectItem value="Round Trip">Round Trip</SelectItem>
-                  <SelectItem value="Airport">Airport</SelectItem>
-                  <SelectItem value="Package">Package</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Enquiry At
-              </Label>
-              <DateRangeAccordion
-                label={getFormattedEnquiryDateRange()}
-                startDate={filters.enquiryStartDate}
-                endDate={filters.enquiryEndDate}
-                onStartDateChange={(date: any) => handleFilterChange('enquiryStartDate', date)}
-                onEndDateChange={(date: any) => handleFilterChange('enquiryEndDate', date)}
-              />
-            </div>
-            <div>
-              <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Pickup Date
-              </Label>
-              <DateRangeAccordion
-                label={getFormattedDateRange()}
-                startDate={filters.pickupStartDate}
-                endDate={filters.pickupEndDate}
-                onStartDateChange={(date: any) => handleFilterChange('pickupStartDate', date)}
-                onEndDateChange={(date: any) => handleFilterChange('pickupEndDate', date)}
-              />
-            </div>
-            <div>
-              <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Drop Date
-              </Label>
-              <DateRangeAccordion
-                label={getFormattedDropDateRange()}
-                startDate={filters.dropStartDate}
-                endDate={filters.dropEndDate}
-                onStartDateChange={(date: any) => handleFilterChange('dropStartDate', date)}
-                onEndDateChange={(date: any) => handleFilterChange('dropEndDate', date)}
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5">
+            <Card className="relative overflow-hidden border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 w-full" />
+              <div className="h-[150px] w-full">
+                <CounterCard
+                  color="bg-emerald-100"
+                  icon={Activity}
+                  count={totalEnquiries}
+                  label="Total Enquiries"
+                  cardSize="w-[190px] h-[90px]"
+                />
+              </div>
+              <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500 transform scale-x-100" />
+            </Card>
+            <Card className="relative overflow-hidden border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 opacity-0 w-full" />
+              <div className="h-[150px] w-full">
+                <CounterCard
+                  color="bg-blue-100"
+                  icon={Activity}
+                  count={todayEnquiries}
+                  label="Today's Enquiries"
+                  cardSize="w-[190px] h-[90px]"
+                />
+              </div>
+              <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500 transform scale-x-100" />
+            </Card>
+            <Card className="relative overflow-hidden border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-100 w-full" />
+              <div className="h-[150px] w-full">
+                <CounterCard
+                  color="bg-purple-100"
+                  icon={Activity}
+                  count={manualEnquiries}
+                  label="Manual Enquiries"
+                  cardSize="w-[190px] h-[90px]"
+                />
+              </div>
+              <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500 transform scale-x-100" />
+            </Card>
+            <Card className="relative overflow-hidden border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-100 w-full" />
+              <div className="h-[150px] w-full">
+                <CounterCard
+                  color="bg-orange-100"
+                  icon={Activity}
+                  count={websiteEnquiries}
+                  label="Website Enquiries"
+                  cardSize="w-[190px] h-[90px]"
+                />
+              </div>
+              <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-orange-500 to-red-500 transform scale-x-100" />
+            </Card>
           </div>
-        )}
-      </div>
-      <div className="rounded bg-white shadow">
-        <MaterialReactTable
-          columns={columns as MRT_ColumnDef<any>[]}
-          data={filteredData}
-          enableRowSelection
-          positionGlobalFilter="left"
-          onRowSelectionChange={setRowSelection}
-          state={{ rowSelection, sorting }}
-          onSortingChange={setSorting}
-          enableSorting
-          initialState={{
-            density: 'compact',
-            pagination: { pageIndex: 0, pageSize: 10 },
-            showGlobalFilter: true,
-          }}
-          muiSearchTextFieldProps={{
-            placeholder: 'Search enquiries...',
-            variant: 'outlined',
-            fullWidth: true, // 🔥 Makes the search bar take full width
-            sx: {
-              minWidth: '600px', // Adjust width as needed
-              marginLeft: '16px',
-            },
-          }}
-          muiToolbarAlertBannerProps={{
-            sx: {
-              justifyContent: 'flex-start', // Aligns search left
-            },
-          }}
-          renderTopToolbarCustomActions={() => (
-            <div className="flex flex-1 justify-end items-center">
-              {/* 🔁 Refresh Button */}
-              <Button
-                variant={"ghost"}
-                onClick={handleRefetch}
-                className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
-                title="Refresh Data"
-              >
-                <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
-              </Button>
+          {showFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-t-2 mt-4 p-3 pt-8">
+              <div>
+                <label
+                  htmlFor="search"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Search
+                </label>
+                <Input
+                  id="search"
+                  placeholder="Search in enquiries"
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="status">Select Status</Label>
+                <Select onValueChange={(value) => handleFilterChange('status', value)}>
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="fake">Fake</SelectItem>
+                    <SelectItem value="current">Current</SelectItem>
+                    <SelectItem value="future">Future</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="serviceName">Select ServiceName</Label>
+                <Select onValueChange={(value) => handleFilterChange('serviceName', value)}>
+                  <SelectTrigger id="serviceName">
+                    <SelectValue placeholder="Select serviceName" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Services</SelectItem>
+                    <SelectItem value="One Way">One way</SelectItem>
+                    <SelectItem value="Round Trip">Round Trip</SelectItem>
+                    <SelectItem value="Airport">Airport</SelectItem>
+                    <SelectItem value="Package">Package</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Enquiry At
+                </Label>
+                <DateRangeAccordion
+                  label={getFormattedEnquiryDateRange()}
+                  startDate={filters.enquiryStartDate}
+                  endDate={filters.enquiryEndDate}
+                  onStartDateChange={(date: any) => handleFilterChange('enquiryStartDate', date)}
+                  onEndDateChange={(date: any) => handleFilterChange('enquiryEndDate', date)}
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Pickup Date
+                </Label>
+                <DateRangeAccordion
+                  label={getFormattedDateRange()}
+                  startDate={filters.pickupStartDate}
+                  endDate={filters.pickupEndDate}
+                  onStartDateChange={(date: any) => handleFilterChange('pickupStartDate', date)}
+                  onEndDateChange={(date: any) => handleFilterChange('pickupEndDate', date)}
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Drop Date
+                </Label>
+                <DateRangeAccordion
+                  label={getFormattedDropDateRange()}
+                  startDate={filters.dropStartDate}
+                  endDate={filters.dropEndDate}
+                  onStartDateChange={(date: any) => handleFilterChange('dropStartDate', date)}
+                  onEndDateChange={(date: any) => handleFilterChange('dropEndDate', date)}
+                />
+              </div>
             </div>
           )}
-        />
+        </div>
+        <div className="rounded bg-white shadow">
+          <MaterialReactTable
+            columns={columns as MRT_ColumnDef<any>[]}
+            data={filteredData}
+            enableRowSelection
+            positionGlobalFilter="left"
+            onRowSelectionChange={setRowSelection}
+            state={{ rowSelection, sorting }}
+            onSortingChange={setSorting}
+            enableSorting
+            initialState={{
+              density: 'compact',
+              pagination: { pageIndex: 0, pageSize: 10 },
+              showGlobalFilter: true,
+            }}
+            muiSearchTextFieldProps={{
+              placeholder: 'Search enquiries...',
+              variant: 'outlined',
+              fullWidth: true, // 🔥 Makes the search bar take full width
+              sx: {
+                minWidth: '600px', // Adjust width as needed
+                marginLeft: '16px',
+              },
+            }}
+            muiToolbarAlertBannerProps={{
+              sx: {
+                justifyContent: 'flex-start', // Aligns search left
+              },
+            }}
+            renderTopToolbarCustomActions={() => (
+              <div className="flex flex-1 justify-end items-center">
+                {/* 🔁 Refresh Button */}
+                <Button
+                  variant={"ghost"}
+                  onClick={handleRefetch}
+                  className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                  title="Refresh Data"
+                >
+                  <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                </Button>
+              </div>
+            )}
+          />
+        </div>
       </div>
-    </div>
+    </React.Fragment>
   )
 }

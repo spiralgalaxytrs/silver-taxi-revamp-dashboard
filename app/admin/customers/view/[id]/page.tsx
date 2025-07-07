@@ -180,11 +180,13 @@ export default function ViewCustomerPage({ params }: { params: Promise<{ id: str
                 columns={bookingColumns as MRT_ColumnDef<any>[]}
                 data={fData}
                 positionGlobalFilter="left"
+                enableHiding={false}
+                enableDensityToggle={false}
                 state={{ sorting }}
                 onSortingChange={setSorting}
                 enableSorting
                 initialState={{
-                  density: 'compact',
+                  // density: '',
                   pagination: { pageIndex: 0, pageSize: 10 },
                   showGlobalFilter: true,
                 }}
