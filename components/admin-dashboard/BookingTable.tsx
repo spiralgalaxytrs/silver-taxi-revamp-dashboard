@@ -133,7 +133,7 @@ export const BookingTable: React.FC = () => {
                             showGlobalFilter: true
                         }}
                         muiSearchTextFieldProps={{
-                            placeholder: 'Search enquiries...',
+                            placeholder: 'Search bookings...',
                             variant: 'outlined',
                             fullWidth: true, // 🔥 Makes the search bar take full width
                             sx: {

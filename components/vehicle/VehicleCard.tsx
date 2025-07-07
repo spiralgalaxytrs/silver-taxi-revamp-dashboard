@@ -12,7 +12,7 @@ import { Trash } from "lucide-react"
 interface VehicleCardProps {
     vehicleId: string
     name: string
-    fuelType: string
+    fuelType: 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid'
     isActive: boolean
     type: string
     seats: number

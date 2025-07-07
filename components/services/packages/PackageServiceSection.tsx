@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "components/ui/card";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
@@ -246,7 +246,7 @@ export default function PackageServiceSection({ isEditing, serviceId, title }: S
                         </div>
                         <div>
                             {isEditing ? (
-                                <>
+                                <div>
                                     <Label>Driver Commission %<span className="text-red-500">*</span></Label>
                                     <Input
                                         type="number"
@@ -254,17 +254,17 @@ export default function PackageServiceSection({ isEditing, serviceId, title }: S
                                         className="mt-3"
                                         onChange={(e) => handleInputChange("driverCommission", Number(e.target.value))}
                                     />
-                                </>
+                                </div>
                             ) : (
-                                <>
+                                <div>
                                     <h2 className="text-base mb-1">Driver Commission </h2>
                                     <p className="mt-3">{service?.driverCommission}%</p>
-                                </>
+                                </div>
                             )}
                         </div>
                         <div>
                             {isEditing ? (
-                                <>
+                                <div>
                                     <Label>Vendor Commission %<span className="text-red-500">*</span></Label>
                                     <Input
                                         type="number"
@@ -272,12 +272,12 @@ export default function PackageServiceSection({ isEditing, serviceId, title }: S
                                         className="mt-3"
                                         onChange={(e) => handleInputChange("vendorCommission", Number(e.target.value))}
                                     />
-                                </>
+                                </div>
                             ) : (
-                                <>
+                                <div>
                                     <h2 className="text-base mb-1">Vendor Commission </h2>
                                     <p className="mt-3">{service?.vendorCommission}%</p>
-                                </>
+                                </div>
                             )}
                         </div>
                     </div>

@@ -1,44 +1,41 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { Edit, Loader2, CircleX } from "lucide-react";
-import { useServiceStore } from "stores/-serviceStore";
-import { useVehicleStore } from "stores/-vehicleStore";
-import { ServiceSection } from "../../../../components/serives/outstation/ServiceSection";
-import { TariffSection } from "../../../../components/serives/outstation/TariffSection";
+import { ServiceSection } from "../../../../components/services/outstation/ServiceSection";
+import { TariffSection } from "../../../../components/services/outstation/TariffSection";
 import { Tabs, TabsTrigger, TabsList } from "components/ui/tabs";
+import {
+  useServices
+} from 'hooks/react-query/useServices';
+import {
+  useVehiclesAdmin
+} from 'hooks/react-query/useVehicle';
 
 export default function OneWayPage() {
   const [isEditing, setIsEditing] = useState(false);
-  const [id, setId] = useState<string>("");
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
-  const { vehicles, fetchVehicles, isLoading } = useVehicleStore();
-  const { fetchServices, services } = useServiceStore();
+
+  const {
+    data: services = [],
+    isLoading,
+    refetch: fetchServices
+  } = useServices();
+  const {
+    data: vehicles = [],
+    isLoading: isLoadingVehicles,
+    refetch: fetchVehicles
+  } = useVehiclesAdmin();
+
+  const id = useMemo(() => {
+    return services.find(service => service.name === "One way")?.serviceId
+  }, [services])
 
   useEffect(() => {
-    fetchVehicles();
-    fetchServices();
-  }, []);
-  
-  useEffect(() => {
-    useServiceStore.getState().services 
-    const filtered = services.filter(service => service.name === "One way");
-    setId(filtered[0]?.serviceId || "");
-  }, [services]);
-
-  useEffect(() => {
-    useVehicleStore.getState().vehicles
     if (vehicles.length > 0) {
-      setSelectedVehicleId(vehicles[0].vehicleId);
+      setSelectedVehicleId(vehicles[0]?.vehicleId || "");
     }
   }, [vehicles]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-      </div>
-    )
-  }
 
   return (
     <>
@@ -54,17 +51,18 @@ export default function OneWayPage() {
             </button>
           </div>
 
-          <ServiceSection isEditing={isEditing} serviceId={id} title="One way" />
+          <ServiceSection isEditing={isEditing} serviceId={id || ""} title="One way" isLoading={isLoading} />
 
           <div className="border-b border-black" />
 
           <Tabs defaultValue={vehicles[0]?.name} className="py-3">
             <TabsList className="mb-8 py-3">
-              {vehicles.map((vehicle) => (
+              {vehicles.map((vehicle: any) => (
                 <TabsTrigger
                   key={vehicle.vehicleId}
                   value={vehicle.name}
-                  onClick={() => setSelectedVehicleId(vehicle.vehicleId)}
+                  onClick={() => setSelectedVehicleId(vehicle?.vehicleId)}
+                  className={selectedVehicleId === vehicle.vehicleId ? "bg-black text-white" : ""}
                 >
                   {vehicle.name}
                 </TabsTrigger>
@@ -77,6 +75,7 @@ export default function OneWayPage() {
                 serviceId={id}
                 vehicleId={selectedVehicleId}
                 createdBy="Admin"
+                isLoading={isLoadingVehicles}
               />
             )}
           </Tabs>
