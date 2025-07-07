@@ -2,13 +2,10 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "components/ui/card"
-import { InputPicker, Checkbox } from 'rsuite';
 import CustomInputCreate from '../customer/CustomInputCreate';
 import { Input } from "components/ui/input"
 import { Label } from "components/ui/label"
-import { Switch } from '../ui/switch'
 import { Upload } from 'lucide-react';
-import { useTariffStore } from '../../stores/-tariffStore';
 import {
     Select,
     SelectContent,
@@ -16,26 +13,35 @@ import {
     SelectTrigger,
     SelectValue
 } from "components/ui/select"
-import { Textarea } from "components/ui/textarea"
 import { Button } from "components/ui/button"
 import { toast } from 'sonner';
-import { useVehicleStore } from 'stores/-vehicleStore';
+import {
+    useVehicleById,
+    useCreateVehicle,
+    useUpdateVehicle
+} from 'hooks/react-query/useVehicle';
+import { Vehicle } from 'types/react-query/vehicle'
+
+interface FormDataType {
+    name: string;
+    type: string;
+    fuelType: 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid';
+    imageUrl: File | undefined | string;
+    seats: number;
+    bags: number;
+    permitCharge?: number;
+    driverBeta: number;
+}
 
 const VehicleForm = ({ id }: { id?: string }) => {
-    const router = useRouter()
-    const { vehicles, isLoading, error, createVehicle, updateVehicle } = useVehicleStore()
+    const router = useRouter();
 
-    type FormDataType = {
-        name: string;
-        type: string;
-        fuelType: string;
-        imageUrl: File | undefined | string;
-        seats: number;
-        bags: number;
-        permitCharge?: number;
-        driverBeta: number;
-    }
-
+    const {
+        data: vehicle = null as Vehicle | null,
+        isLoading,
+    } = useVehicleById(id ?? "")
+    const { mutate: createVehicle } = useCreateVehicle()
+    const { mutate: updateVehicle } = useUpdateVehicle()
 
     const vehicleTypeData: any[] = [
         { label: "Suv", value: "Suv" },
@@ -46,33 +52,28 @@ const VehicleForm = ({ id }: { id?: string }) => {
     const [formData, setFormData] = useState<FormDataType>({
         name: '',
         type: '',
-        fuelType: '',
+        fuelType: 'Petrol',
         imageUrl: undefined,
         seats: 0,
         bags: 0,
         permitCharge: 0,
         driverBeta: 0,
-
     })
 
     useEffect(() => {
-        if (id) {
-            const vehicle = vehicles.find((vehicle) => vehicle.vehicleId === id)
-            if (vehicle) {
-                setFormData({
-                    name: vehicle.name,
-                    type: vehicle.type,
-                    fuelType: vehicle.fuelType,
-                    imageUrl: vehicle.imageUrl,
-                    seats: vehicle.seats,
-                    bags: vehicle.bags,
-                    permitCharge: vehicle.permitCharge,
-                    driverBeta: vehicle.driverBeta,
-                })
-            }
+        if (vehicle) {
+            setFormData({
+                name: vehicle.name,
+                type: vehicle.type,
+                fuelType: vehicle?.fuelType || 'Petrol',
+                imageUrl: vehicle?.imageUrl || "",
+                seats: vehicle?.seats || 0,
+                bags: vehicle?.bags || 0,
+                permitCharge: vehicle?.permitCharge,
+                driverBeta: vehicle?.driverBeta || 0,
+            })
         }
-    }, [id, vehicles])
-
+    }, [vehicle])
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -119,51 +120,46 @@ const VehicleForm = ({ id }: { id?: string }) => {
         try {
 
             if (id) {
-                await updateVehicle(id, vehicleData)
-
-                const status = useVehicleStore.getState().statusCode
-                const message = useVehicleStore.getState().message
-                if (status === 200 || status === 201) {
-                    toast.success("Vehicle updated successfully", {
-                        style: {
-                            backgroundColor: "#009F7F",
-                            color: "#fff",
-                        },
-                    })
-                    await new Promise(resolve => setTimeout(resolve, 2000))
-                    router.push('/admin/vehicles')
-                    return
-                }
-                toast.error(message, {
-                    style: {
-                        backgroundColor: "#FF0000",
-                        color: "#fff",
+                updateVehicle({ id, vehicleData }, {
+                    onSuccess: () => {
+                        toast.success("Vehicle updated successfully", {
+                            style: {
+                                backgroundColor: "#009F7F",
+                                color: "#fff",
+                            },
+                        })
+                        setTimeout(() => router.push('/admin/vehicles'), 1000)
+                    },
+                    onError: (error: any) => {
+                        toast.error(error?.response?.data?.message || "Failed to update vehicle", {
+                            style: {
+                                backgroundColor: "#FF0000",
+                                color: "#fff",
+                            },
+                        })
                     },
                 })
-                return
-            }
-
-            await createVehicle(vehicleData)
-
-            const status = useVehicleStore.getState().statusCode
-            const message = useVehicleStore.getState().message
-            if (status === 201 || status === 200) {
-                toast.success("Vehicle created successfully", {
-                    style: {
-                        backgroundColor: "#009F7F",
-                        color: "#fff",
+            } else {
+                createVehicle(vehicleData, {
+                    onSuccess: () => {
+                        toast.success("Vehicle created successfully", {
+                            style: {
+                                backgroundColor: "#009F7F",
+                                color: "#fff",
+                            },
+                        })
+                        setTimeout(() => router.push('/admin/vehicles'), 1000)
+                    },
+                    onError: (error: any) => {
+                        toast.error(error?.response?.data?.message || "Failed to create vehicle", {
+                            style: {
+                                backgroundColor: "#FF0000",
+                                color: "#fff",
+                            },
+                        })
                     },
                 })
-                await new Promise(resolve => setTimeout(resolve, 2000))
-                router.push('/admin/vehicles')
-                return
             }
-            toast.error(message, {
-                style: {
-                    backgroundColor: "#FF0000",
-                    color: "#fff",
-                },
-            })
         } catch (error) {
             toast.error("Server unexpected error occurred", {
                 style: {
@@ -215,7 +211,7 @@ const VehicleForm = ({ id }: { id?: string }) => {
                                     <div className=' mt-1' />
                                     <Select
                                         defaultValue={formData.fuelType}
-                                        onValueChange={(value) => setFormData({ ...formData, fuelType: value })}
+                                        onValueChange={(value) => setFormData({ ...formData, fuelType: value as "Petrol" | "Diesel" | "Electric" })}
                                     >
                                         <SelectTrigger id="fuelType" className='py-7 border-grey'>
                                             <SelectValue placeholder={formData.fuelType ? formData.fuelType : "Select fuel type"} />

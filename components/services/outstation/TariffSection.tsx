@@ -35,81 +35,90 @@ type Tariff = {
 }
 
 export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLoading }: TariffSectionProps) {
-    const [localTariffs, setLocalTariffs] = useState<Record<string, Tariff>>({}); // Store tariffs locally by vehicleId
+    const [localTariffs, setLocalTariffs] = useState<Record<string, Tariff>>({});
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [lastEditedVehicleId, setLastEditedVehicleId] = useState<string | null>(null);
-    // const { vehicles } = useVehicleStore();
-    // const { fetchTariffs, updateTariff, createTariff, tariffs } = useTariffStore();
 
-    const { data: tariffs = [] } = useTariffs();
-    const { data: vehicle = null } = useVehicleById(vehicleId);
+    const { data: tariffs = [], isLoading: isTariffsLoading } = useTariffs();
+    const { data: vehicle = null, isLoading: isVehicleLoading } = useVehicleById(vehicleId);
     const { mutate: createTariff } = useCreateTariff();
     const { mutate: updateTariff } = useUpdateTariff();
 
-
-    // Update local state based on fetched tariff and current type
+    // Initialize or update local tariff state when relevant data changes
     useEffect(() => {
-        let initialTariff: Tariff;
-        if (tariffs && tariffs.length > 0) {
-            const matchingTariff = tariffs.find(
-                (t: Tariff) =>
-                    t.vehicleId === vehicleId && t.serviceId === serviceId && t.createdBy === createdBy
-            );
+        if (isTariffsLoading || isVehicleLoading || !vehicleId || !serviceId) return;
 
-            const matchingTariffAdmin = tariffs.find(
-                (t: Tariff) =>
-                    t.vehicleId === vehicleId && t.serviceId === serviceId && t.createdBy === "Admin"
-            );
-            if (matchingTariff) {
-                initialTariff = { ...matchingTariff };
-            } else if (matchingTariffAdmin) {
-                initialTariff = { ...matchingTariffAdmin, createdBy: "Vendor" };
-            } else {
-                initialTariff = {
-                    price: 0,
-                    extraPrice: 0,
-                    status: true,
-                    serviceId,
-                    vehicleId,
-                    createdBy: createdBy
-                };
-            }
+        let initialTariff: Tariff;
+
+        // Find matching tariff
+        const matchingTariff = tariffs.find(
+            (t: Tariff) =>
+                t.vehicleId === vehicleId &&
+                t.serviceId === serviceId &&
+                t.createdBy === createdBy
+        );
+
+        // Find admin tariff as fallback
+        const matchingTariffAdmin = tariffs.find(
+            (t: Tariff) =>
+                t.vehicleId === vehicleId &&
+                t.serviceId === serviceId &&
+                t.createdBy === "Admin"
+        );
+
+        if (matchingTariff) {
+            initialTariff = { ...matchingTariff };
+        } else if (matchingTariffAdmin) {
+            initialTariff = {
+                ...matchingTariffAdmin,
+                createdBy: createdBy // Keep the original createdBy
+            };
         } else {
-            // No tariff exists, reset to default
+            // Default tariff
             initialTariff = {
                 price: 0,
                 extraPrice: 0,
                 status: true,
                 serviceId,
                 vehicleId,
-                createdBy: createdBy
+                createdBy
             };
         }
 
-        setLocalTariffs((prev) => ({
+        setLocalTariffs(prev => ({
             ...prev,
-            [vehicleId]: prev[vehicleId] || initialTariff,
+            [vehicleId]: initialTariff
         }));
 
         setHasUnsavedChanges(false);
-    }, [vehicleId, serviceId]);
+    }, [vehicleId, serviceId, createdBy, tariffs, isTariffsLoading, isVehicleLoading]);
 
+    // Handle cleanup for unsaved changes
     useEffect(() => {
         return () => {
             if (hasUnsavedChanges && isEditing && lastEditedVehicleId && lastEditedVehicleId !== vehicleId) {
-                handleTariffUpdate(lastEditedVehicleId, localTariffs[lastEditedVehicleId], true); // Save silently
+                handleTariffUpdate(lastEditedVehicleId, localTariffs[lastEditedVehicleId], true);
             }
         };
-    }, [vehicleId, hasUnsavedChanges, isEditing, lastEditedVehicleId]);
+    }, [vehicleId, hasUnsavedChanges, isEditing, lastEditedVehicleId, localTariffs]);
 
     const handleTariffChange = (key: keyof Tariff, value: any) => {
         const updatedValue =
-            key === "price" || key === "extraPrice" ? String(value).replace(/[^0-9.]/g, "") : value;
+            key === "price" || key === "extraPrice" ?
+                String(value).replace(/[^0-9.]/g, "") :
+                value;
 
-        setLocalTariffs((prev) => ({
+        setLocalTariffs(prev => ({
             ...prev,
             [vehicleId]: {
-                ...prev[vehicleId],
+                ...(prev[vehicleId] || {
+                    price: 0,
+                    extraPrice: 0,
+                    status: true,
+                    serviceId,
+                    vehicleId,
+                    createdBy
+                }),
                 [key]: updatedValue,
             },
         }));
@@ -134,6 +143,8 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                 price: Number(tariffData.price),
                 extraPrice: Number(tariffData.extraPrice),
                 vehicleId: targetVehicleId,
+                serviceId,
+                createdBy
             };
 
             const existingTariff = tariffs?.find(
@@ -143,11 +154,14 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                     t.createdBy === createdBy
             );
 
-            try {
-                if (existingTariff?.tariffId) {
-                    updateTariff({ id: existingTariff.tariffId, data: updatedTariffData }, {
-                        onSuccess: (data: any) => {
-                            if (!silent) toast.success(data?.message || "Tariff updated successfully!", {
+            if (existingTariff?.tariffId) {
+                updateTariff({
+                    id: existingTariff.tariffId,
+                    data: updatedTariffData
+                }, {
+                    onSuccess: (data: any) => {
+                        if (!silent) {
+                            toast.success(data?.message || "Tariff updated successfully!", {
                                 style: {
                                     backgroundColor: "#009F7F",
                                     color: "#fff",
@@ -156,20 +170,22 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                             setTimeout(() => {
                                 window.location.reload();
                             }, 1000);
-                        },
-                        onError: (error: any) => {
-                            toast.error(error?.response?.data?.message || "Failed to update tariff", {
-                                style: {
-                                    backgroundColor: "#FF0000",
-                                    color: "#fff",
-                                },
-                            });
                         }
-                    });
-                } else {
-                    createTariff(updatedTariffData, {
-                        onSuccess: () => {
-                            if (!silent) toast.success("New tariff created successfully!", {
+                    },
+                    onError: (error: any) => {
+                        toast.error(error?.response?.data?.message || "Failed to update tariff", {
+                            style: {
+                                backgroundColor: "#FF0000",
+                                color: "#fff",
+                            },
+                        });
+                    }
+                });
+            } else {
+                createTariff(updatedTariffData, {
+                    onSuccess: () => {
+                        if (!silent) {
+                            toast.success("New tariff created successfully!", {
                                 style: {
                                     backgroundColor: "#009F7F",
                                     color: "#fff",
@@ -178,48 +194,35 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                             setTimeout(() => {
                                 window.location.reload();
                             }, 1000);
-                        },
-                        onError: (error: any) => {
-                            if (!silent) toast.error(error?.response?.data?.message || "Failed to create tariff", {
+                        }
+                    },
+                    onError: (error: any) => {
+                        if (!silent) {
+                            toast.error(error?.response?.data?.message || "Failed to create tariff", {
                                 style: {
                                     backgroundColor: "#FF0000",
                                     color: "#fff",
                                 },
                             });
                         }
-                    });
-                }
-            } catch (error: any) {
-                // console.error("Save error:", error);
-                if (!silent) toast.error(error?.response?.data?.message || "Failed to save tariff", {
+                    }
+                });
+            }
+        } catch (error: any) {
+            if (!silent) {
+                toast.error(error?.response?.data?.message || "Failed to save tariff", {
                     style: {
                         backgroundColor: "#FF0000",
                         color: "#fff",
                     },
                 });
-            } finally {
-                // Refetch tariffs after save
-                // fetchTariffs();
-                setHasUnsavedChanges(false);
-                if (!silent) setLastEditedVehicleId(null);
             }
-        } catch (error) {
-            console.error('Update error:', error);
-            if (!silent) toast.error("Failed to save tariff", {
-                style: {
-                    backgroundColor: "#FF0000",
-                    color: "#fff",
-                },
-            });
         } finally {
-            if (!silent) {
-                setHasUnsavedChanges(false);
-                setLastEditedVehicleId(null);
-            }
+            setHasUnsavedChanges(false);
+            if (!silent) setLastEditedVehicleId(null);
         }
     };
 
-    const selectedVehicle = vehicle;
     const currentTariff = localTariffs[vehicleId] || {
         price: 0,
         extraPrice: 0,
@@ -229,12 +232,12 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
         createdBy,
     };
 
-    if (isLoading) {
+    if (isLoading || isTariffsLoading || isVehicleLoading) {
         return (
             <div className="flex items-center justify-center h-screen bg-gray-50">
                 <Loader2 className="w-12 h-12 animate-spin text-primary" />
             </div>
-        )
+        );
     }
 
     return (
@@ -244,9 +247,13 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                     <div>
                         <Label>Vehicle Type</Label>
                         {isEditing ? (
-                            <Input value={selectedVehicle?.type} readOnly className="mt-3" />
+                            <Input 
+                                value={vehicle?.type || ''} 
+                                readOnly 
+                                className="mt-3" 
+                            />
                         ) : (
-                            <p className="mt-3">{selectedVehicle?.type}</p>
+                            <p className="mt-3">{vehicle?.type || 'N/A'}</p>
                         )}
                     </div>
 
@@ -258,10 +265,10 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                                 </Label>
                                 <Input
                                     id="price"
-                                    type="text" // Use type="text" to allow multi-digit input
-                                    value={currentTariff.price}
+                                    type="text"
+                                    value={currentTariff.price.toString()}
                                     className="mt-3"
-                                    onChange={(e) => handleTariffChange("price", e.target.value)} // Pass the string value
+                                    onChange={(e) => handleTariffChange("price", e.target.value)}
                                 />
                             </>
                         ) : (
@@ -292,10 +299,10 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                                 </Label>
                                 <Input
                                     id="extraPrice"
-                                    type="text" // Use type="text" to allow multi-digit input
-                                    value={currentTariff.extraPrice}
+                                    type="text"
+                                    value={currentTariff.extraPrice.toString()}
                                     className="mt-3"
-                                    onChange={(e) => handleTariffChange("extraPrice", e.target.value)} // Pass the string value
+                                    onChange={(e) => handleTariffChange("extraPrice", e.target.value)}
                                 />
                             </>
                         ) : (
@@ -314,6 +321,7 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                         variant="primary"
                         className="mt-8"
                         onClick={() => handleTariffUpdate(vehicleId, currentTariff, false)}
+                        disabled={isTariffsLoading || isVehicleLoading}
                     >
                         Save
                     </Button>

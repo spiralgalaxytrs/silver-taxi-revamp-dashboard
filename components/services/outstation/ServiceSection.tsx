@@ -147,7 +147,7 @@ export function ServiceSection({ isEditing, serviceId, title, isLoading = false 
             <div>
               <h3 className="text-base mb-1">Tax</h3>
               {isEditing ? (
-                <>
+                <React.Fragment>
                   <div className="flex items-center gap-3">
                     <div>
                       <Label className="text-sm">CGST %<span className="text-red-500 ml-1">*</span></Label>
@@ -180,20 +180,18 @@ export function ServiceSection({ isEditing, serviceId, title, isLoading = false 
                       />
                     </div>
                   </div>
-                </>
+                </React.Fragment>
               ) : (
-                <>
                   <div className="flex items-center gap-3">
                     <p className="mt-3">CGST: {updatedService?.tax?.CGST || 0}%</p>
                     <p className="mt-3">SGST: {updatedService?.tax?.SGST || 0}%</p>
                     <p className="mt-3">IGST: {updatedService?.tax?.IGST || 0}%</p>
                   </div>
-                </>
               )}
             </div>
             <div>
               {isEditing ? (
-                <>
+                <div>
                   <Label>Minimum Km <span className="text-red-500">*</span></Label>
                   <Input
                     id="minKm"
@@ -202,12 +200,12 @@ export function ServiceSection({ isEditing, serviceId, title, isLoading = false 
                     className="mt-3"
                     onChange={(e) => handleInputChange("minKm", Number(e.target.value))}
                   />
-                </>
+                </div>
               ) : (
-                <>
+                <div>
                   <h2 className="text-base mb-1">Minimum Km</h2>
                   <p className="mt-3">{service?.minKm} Km</p>
-                </>
+                </div>
               )}
             </div>
           </div>
@@ -222,7 +220,7 @@ export function ServiceSection({ isEditing, serviceId, title, isLoading = false 
             </div>
             <div>
               {isEditing ? (
-                <>
+                <div>
                   <Label>Driver Commission %<span className="text-red-500">*</span></Label>
                   <Input
                     id="driverCommission"
@@ -231,17 +229,17 @@ export function ServiceSection({ isEditing, serviceId, title, isLoading = false 
                     className="mt-3"
                     onChange={(e) => handleInputChange("driverCommission", Number(e.target.value))}
                   />
-                </>
+                </div>
               ) : (
-                <>
+                <div>
                   <h2 className="text-base mb-1">Driver Commission </h2>
                   <p className="mt-3">{service?.driverCommission}%</p>
-                </>
+                </div>
               )}
             </div>
             <div>
               {isEditing ? (
-                <>
+                <div>
                   <Label>Vendor Commission %<span className="text-red-500">*</span></Label>
                   <Input
                     id="vendorCommission"
@@ -250,12 +248,12 @@ export function ServiceSection({ isEditing, serviceId, title, isLoading = false 
                     className="mt-3"
                     onChange={(e) => handleInputChange("vendorCommission", Number(e.target.value))}
                   />
-                </>
+                </div>
               ) : (
-                <>
+                <div>
                   <h2 className="text-base mb-1">Vendor Commission</h2>
                   <p className="mt-3">{service?.vendorCommission}%</p>
-                </>
+                </div>
               )}
             </div>
           </div>

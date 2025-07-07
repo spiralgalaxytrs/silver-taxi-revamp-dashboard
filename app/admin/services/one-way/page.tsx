@@ -8,7 +8,7 @@ import {
   useServices
 } from 'hooks/react-query/useServices';
 import {
-  useVehicles
+  useVehiclesAdmin
 } from 'hooks/react-query/useVehicle';
 
 export default function OneWayPage() {
@@ -24,7 +24,7 @@ export default function OneWayPage() {
     data: vehicles = [],
     isLoading: isLoadingVehicles,
     refetch: fetchVehicles
-  } = useVehicles();
+  } = useVehiclesAdmin();
 
   const id = useMemo(() => {
     return services.find(service => service.name === "One way")?.serviceId
@@ -32,7 +32,7 @@ export default function OneWayPage() {
 
   useEffect(() => {
     if (vehicles.length > 0) {
-      setSelectedVehicleId(vehicles[0].vehicleId);
+      setSelectedVehicleId(vehicles[0]?.vehicleId || "");
     }
   }, [vehicles]);
 
@@ -57,11 +57,11 @@ export default function OneWayPage() {
 
           <Tabs defaultValue={vehicles[0]?.name} className="py-3">
             <TabsList className="mb-8 py-3">
-              {vehicles.map((vehicle) => (
+              {vehicles.map((vehicle: any) => (
                 <TabsTrigger
                   key={vehicle.vehicleId}
                   value={vehicle.name}
-                  onClick={() => setSelectedVehicleId(vehicle.vehicleId)}
+                  onClick={() => setSelectedVehicleId(vehicle?.vehicleId)}
                   className={selectedVehicleId === vehicle.vehicleId ? "bg-black text-white" : ""}
                 >
                   {vehicle.name}

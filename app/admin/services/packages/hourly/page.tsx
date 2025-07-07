@@ -10,7 +10,7 @@ import {
   useServices
 } from 'hooks/react-query/useServices';
 import {
-  useVehicles
+  useVehiclesAdmin
 } from 'hooks/react-query/useVehicle';
 
 export default function HourlyPage() {
@@ -27,7 +27,7 @@ export default function HourlyPage() {
     data: vehicles = [],
     isLoading: isLoadingVehicles,
     refetch: fetchVehicles
-  } = useVehicles();
+  } = useVehiclesAdmin();
 
   const id = useMemo(() => {
     return services.find(service => service.name === "Hourly Packages")?.serviceId
@@ -35,7 +35,7 @@ export default function HourlyPage() {
 
   useEffect(() => {
     if (vehicles.length > 0) {
-      setSelectedVehicleId(vehicles[0].vehicleId);
+      setSelectedVehicleId(vehicles[0].vehicleId || "");
     }
   }, [vehicles]);
 
@@ -64,7 +64,7 @@ export default function HourlyPage() {
 
           <Tabs defaultValue={vehicles[0]?.name} className="py-3">
             <TabsList className="mb-8 py-3">
-              {vehicles.map((vehicle) => (
+              {vehicles.map((vehicle: any) => (
                 <TabsTrigger
                   key={vehicle.vehicleId}
                   value={vehicle.name}
