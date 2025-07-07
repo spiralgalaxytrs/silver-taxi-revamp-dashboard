@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getVehicles,
+  getVehiclesAdmin,
   getVehicleById,
   getActiveVehicles,
   toggleVehicleStatus,
@@ -14,6 +15,13 @@ export const useVehicles = () =>
   useQuery({
     queryKey: ["vehicles"],
     queryFn: getVehicles,
+  });
+
+// 🚘 Admin vehicles
+export const useVehiclesAdmin = () =>
+  useQuery({
+    queryKey: ["vehicles", "admin"],
+    queryFn: getVehiclesAdmin,
   });
 
 // ✅ Active vehicles

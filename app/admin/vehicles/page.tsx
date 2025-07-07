@@ -3,16 +3,19 @@
 import Link from "next/link"
 import { VehicleCard } from "components/vehicle/VehicleCard"
 import { Button } from "components/ui/button"
-import { useVehicleStore } from "stores/-vehicleStore"
 import { useEffect, useMemo } from "react"
 import { Loader2 } from "lucide-react"
+import {
+  useVehiclesAdmin
+} from 'hooks/react-query/useVehicle';
 
 export default function Page() {
-  const { vehicles, isLoading, error, fetchVehicles } = useVehicleStore()
 
-  useEffect(() => {
-    fetchVehicles()
-  }, [fetchVehicles])
+  const {
+    data: vehicles = [],
+    isLoading,
+    isError: error
+  } = useVehiclesAdmin()
 
   // Sort vehicles by createdAt in descending order
   const sortedVehicles = useMemo(() => {
@@ -50,7 +53,20 @@ export default function Page() {
         {sortedVehicles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedVehicles.map((vehicle, index) => (
-              <VehicleCard key={index} {...vehicle} createdBy="Admin"/>
+              <VehicleCard
+                key={index}
+                vehicleId={vehicle.vehicleId || ""}
+                name={vehicle.name}
+                fuelType={vehicle.fuelType as 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid'}
+                isActive={vehicle.isActive}
+                type={vehicle.type}
+                seats={vehicle.seats ?? 0}
+                bags={vehicle.bags ?? 0}
+                permitCharge={vehicle.permitCharge ?? 0}
+                driverBeta={vehicle.driverBeta ?? 0}
+                imageUrl={vehicle.imageUrl as string}
+                createdBy={"Admin"}
+              />
             ))}
           </div>
         ) : (

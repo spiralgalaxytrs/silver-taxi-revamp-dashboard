@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { Edit, Loader2, CircleX } from "lucide-react";
 import { useServiceStore } from "stores/-serviceStore";
 import { useVehicleStore } from "stores/-vehicleStore";
-import AirportServiceSection from "../../../../../components/serives/airport/AirportServiceFunction";
-import { TariffSection } from "../../../../../components/serives/outstation/TariffSection";
+import AirportServiceSection from "../../../../../components/services/airport/AirportServiceFunction";
+import { TariffSection } from "../../../../../components/services/outstation/TariffSection";
 import { Tabs, TabsTrigger, TabsList } from "components/ui/tabs";
-import { AirportTariffSection } from "components/serives/airport/AirportTariffection";
+import { AirportTariffSection } from "components/services/airport/AirportTariffection";
 
 export default function AirportPickupPage() {
   const [isEditing, setIsEditing] = useState(false);

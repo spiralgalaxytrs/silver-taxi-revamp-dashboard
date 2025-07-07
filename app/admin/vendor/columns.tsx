@@ -14,11 +14,14 @@ import {
 } from "components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogFooter, AlertDialogDescription, AlertDialogTitle, AlertDialogHeader, AlertDialogContent } from "components/ui/alert-dialog";
-import { useVendorStore } from "stores/-vendorStore"
 import {
   MRT_ColumnDef,
 } from 'material-react-table'
 import { Vendor } from 'types/react-query/vendor'
+import {
+  useToggleVendorStatus,
+  useDeleteVendor
+} from 'hooks/react-query/useVendor'
 
 
 export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
@@ -91,29 +94,33 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
     header: "Status",
     Cell: ({ row }) => {
       const isActive = row.getValue("isLogin");
-      const { toggleVendorStatus, fetchVendors, isLoading } = useVendorStore();
-      const id = row.original.vendorId;
 
+      const {
+        mutate: toggleVendorStatus,
+        isPending: isLoading
+      } = useToggleVendorStatus();
+
+      const id = row.original.vendorId ?? "";
       const handleToggleStatus = async (newStatus: boolean) => {
         try {
-          await toggleVendorStatus(id || "", newStatus);
-          const status = useVendorStore.getState().statusCode;
-          const message = useVendorStore.getState().message;
-          if (status === 200 || status === 201) {
-            toast.success("Vendor status updated successfully", {
-              style: {
-                backgroundColor: "#009F7F",
-                color: "#fff",
-              },
-            });
-          } else {
-            toast.error(message || "Failed to update vendor status", {
-              style: {
-                backgroundColor: "#FF0000",
-                color: "#fff",
-              },
-            });
-          }
+          toggleVendorStatus({ id, status: newStatus }, {
+            onSuccess: () => {
+              toast.success("Vendor status updated successfully", {
+                style: {
+                  backgroundColor: "#009F7F",
+                  color: "#fff",
+                },
+              });
+            },
+            onError: () => {
+              toast.error("Failed to update vendor status", {
+                style: {
+                  backgroundColor: "#FF0000",
+                  color: "#fff",
+                },
+              });
+            },
+          });
         } catch (error) {
           toast.error("An unexpected error occurred", {
             style: {
@@ -161,10 +168,15 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
     header: "Actions",
     Cell: ({ row }) => {
       const vendor = row.original
-      const [showConvertDialog, setShowConvertDialog] = useState(false);
       const router = useRouter();
+
+
+      const {
+        mutate: deleteVendor,
+      } = useDeleteVendor();
+
+      const [showConvertDialog, setShowConvertDialog] = useState(false);
       const [isDialogOpen, setIsDialogOpen] = useState(false);
-      const { deleteVendor } = useVendorStore();
 
       const handleViewVendor = useCallback(async (id: string) => {
         await router.push(`/admin/vendor/view/${id}`)
@@ -201,9 +213,26 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
       }
 
       const confirmDelete = async (id: string) => {
-        await deleteVendor(id);
-        setIsDialogOpen(false);
-        toast.success("Vendor deleted successfully");
+        deleteVendor(id,{
+          onSuccess: () => {
+            setIsDialogOpen(false);
+            toast.success("Vendor deleted successfully", {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
+          },
+          onError: (error: any) => {
+            setIsDialogOpen(false);
+            toast.error(error?.response?.data?.message || "Error deleting Vendor!", {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          }
+        });
       }
 
       return (

@@ -85,6 +85,14 @@ export const walletColumns: MRT_ColumnDef<VendorTransaction>[] = [
     {
         accessorKey: "remark",
         header: "Remarks",
+        Cell: ({ row }) => {
+            const remark: string = row.getValue("remark");
+            return (
+                <div>
+                    <p>{remark || "-"}</p>
+                </div>
+            )
+        },
         muiTableHeadCellProps: { align: 'center' },
         muiTableBodyCellProps: { align: 'center' },
     },
@@ -100,8 +108,8 @@ export const walletColumns: MRT_ColumnDef<VendorTransaction>[] = [
 
             return (
                 <div>
-                    <div>{convertedDate}</div>
-                    <div>{amPmTime}</div>
+                    <p>{convertedDate}</p>
+                    <p>{amPmTime}</p>
                 </div>
             )
         },
