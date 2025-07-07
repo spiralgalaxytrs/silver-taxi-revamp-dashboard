@@ -1,12 +1,22 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
+
 import { PriceForm } from "../../../../../components/others/price-form"
 import { PriceCard } from "../../../../../components/cards/price-card"
-import { usePriceStore } from "../../../../../stores/-priceChangingStore"
-import { useServiceStore } from "stores/-serviceStore";
-import { Loader2 } from 'lucide-react';
+
+import {
+    useServiceByName
+} from 'hooks/react-query/useServices'
+
+import {
+    usePriceEntryById,
+    useCreatePriceEntry,
+    useUpdatePriceEntry,
+    useDeletePriceEntry
+} from 'hooks/react-query/usePriceChanges'
 
 export type PriceEntry = {
     priceId: string
@@ -17,64 +27,47 @@ export type PriceEntry = {
 }
 
 export default function OutstationRoundTripPrice() {
-    const { priceEntry, fetchEntriesById, CreateEntry, updateEntry, deleteEntry, isLoading, error } = usePriceStore()
+    const { data: service = null } = useServiceByName("Round trip")
+
+    const { mutate: createEntry } = useCreatePriceEntry()
+    const { mutate: updateEntry } = useUpdatePriceEntry()
+    const { mutate: deleteEntry } = useDeletePriceEntry()
+
+    const id = service?.serviceId ?? ""
+    const { data: priceEntry = null, isLoading } = usePriceEntryById(id)
     const [editingEntry, setEditingEntry] = useState<PriceEntry | null>(null)
-    const [id, setId] = useState<string>("");
-    const { fetchServices, services } = useServiceStore();
 
-    useEffect(() => {
-        fetchServices();
-        const filtered = services.find(service => service.name === "Round trip");
-        if (filtered?.serviceId !== null && filtered?.serviceId !== undefined) {
-            setId(filtered.serviceId);
-        }
-    }, []);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            await fetchEntriesById(id)
-        }
-        fetchData()
-    }, [fetchEntriesById, id])
-
-
-    const handleSave = async (entry: PriceEntry) => {
-        try {
-            if (editingEntry) {
-                await updateEntry(editingEntry.priceId, entry)
-                setEditingEntry(null)
-            } else {
-                await CreateEntry(entry)
-            }
-
-            const status = usePriceStore.getState().statusCode
-            const message = usePriceStore.getState().message
-
-            if (status === 201 || status === 200) {
-                toast.success(editingEntry ? "Round trip Price updated successfully" : "Round trip created successfully", {
-                    style: {
-                        backgroundColor: "#009F7F",
-                        color: "#fff",
+    const handleSave = (entry: PriceEntry) => {
+        if (editingEntry) {
+            updateEntry(
+                { id: editingEntry.priceId, data: entry },
+                {
+                    onSuccess: () => {
+                        toast.success("Round trip Price updated successfully", {
+                            style: { backgroundColor: "#009F7F", color: "#fff" }
+                        })
+                        setEditingEntry(null)
                     },
-                })
-            }
-            else {
-                const message = usePriceStore.getState().message
-                toast.error(message, {
-                    style: {
-                        backgroundColor: "#FF0000",
-                        color: "#fff",
-                    },
-                })
-            }
-        } catch (error) {
-            toast.error("Server unexpected error occurred", {
-                style: {
-                    backgroundColor: "#FF0000",
-                    color: "#fff",
+                    onError: (error: any) => {
+                        toast.error(error?.response?.data?.message || "Failed to update round trip price", {
+                            style: { backgroundColor: "#FF0000", color: "#fff" }
+                        })
+                    }
+                }
+            )
+        } else {
+            createEntry(entry, {
+                onSuccess: () => {
+                    toast.success("Round trip created successfully", {
+                        style: { backgroundColor: "#009F7F", color: "#fff" }
+                    })
                 },
+                onError: (error: any) => {
+                    toast.error(error?.response?.data?.message || "Failed to create round trip", {
+                        style: { backgroundColor: "#FF0000", color: "#fff" }
+                    })
+                }
             })
-            console.error(error);
         }
     }
 
@@ -82,18 +75,18 @@ export default function OutstationRoundTripPrice() {
         setEditingEntry(entry)
     }
 
-    const handleDelete = async (id: string) => {
-        try {
-            await deleteEntry(id)
-            toast.success("Price deleted successfully")
-        } catch (error) {
-            toast.error("Failed to delete Price", {
-                style: {
-                    backgroundColor: "#FF0000",
-                    color: "#fff",
-                },
-            });
-        }
+    const handleDelete = (priceId: string) => {
+        deleteEntry(priceId, {
+            onSuccess: () => {
+                toast.success("Price deleted successfully")
+                setEditingEntry(null)
+            },
+            onError: () => {
+                toast.error("Failed to delete Price", {
+                    style: { backgroundColor: "#FF0000", color: "#fff" }
+                })
+            }
+        })
     }
 
     if (isLoading) {
@@ -105,24 +98,31 @@ export default function OutstationRoundTripPrice() {
     }
 
     return (
-        <>
-            <div className="p-6 space-y-6 bg-white rounded-lg shadow">
-                <div className="rounded bg-white p-5 shadow">
-                    <h1 className="text-3xl font-bold tracking-tight">Round Trip Pricing</h1>
-                </div>
-
-                <div className="rounded bg-white p-5 shadow">
-                    <PriceForm onSave={handleSave} initialData={editingEntry} isEditing={!!editingEntry} getServiceId={id} />
-                </div>
-
-                {error && <p className="text-red-500">{error}</p>}
-
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {priceEntry &&
-                        <PriceCard key={priceEntry.priceId} entry={priceEntry as PriceEntry} onEdit={handleEdit} onDelete={handleDelete} serviceName="Round Trip" />
-                    }
-                </div>
+        <div className="p-6 space-y-6 bg-white rounded-lg shadow">
+            <div className="rounded bg-white p-5 shadow">
+                <h1 className="text-3xl font-bold tracking-tight">Round Trip Pricing</h1>
             </div>
-        </>
+
+            <div className="rounded bg-white p-5 shadow">
+                <PriceForm
+                    onSave={handleSave}
+                    initialData={editingEntry}
+                    isEditing={!!editingEntry}
+                    getServiceId={id}
+                />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {priceEntry && (
+                    <PriceCard
+                        key={priceEntry.priceId}
+                        entry={priceEntry as PriceEntry}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        serviceName="Round Trip"
+                    />
+                )}
+            </div>
+        </div>
     )
 }

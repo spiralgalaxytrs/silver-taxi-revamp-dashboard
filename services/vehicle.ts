@@ -7,6 +7,11 @@ export const getVehicles = async (): Promise<Vehicle[]> => {
   return res.data.data;
 };
 
+export const getVehiclesAdmin = async (): Promise<Vehicle[]> => {
+  const res = await axios.get("/v1/vehicles/admin");
+  return res.data.data;
+};
+
 // 🚘 Get all active vehicles
 export const getActiveVehicles = async (): Promise<Vehicle[]> => {
   const res = await axios.get("/v1/vehicles/active");
@@ -45,7 +50,7 @@ export const createVehicle = async (vehicleData: Partial<Vehicle>) => {
 };
 
 // ✏️ Update existing vehicle
-export const updateVehicle = async ({ id, vehicleData }: { id: string; vehicleData: Vehicle }) => {
+export const updateVehicle = async ({ id, vehicleData }: { id: string; vehicleData: Partial<Vehicle> }) => {
   if (vehicleData.imageUrl && typeof vehicleData.imageUrl === "string") {
     const res = await axios.put(`/v1/vehicles/${id}`, vehicleData);
     return res.data.data;

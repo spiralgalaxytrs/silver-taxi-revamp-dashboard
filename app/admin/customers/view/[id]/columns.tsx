@@ -82,7 +82,7 @@ export const bookingColumns: MRT_ColumnDef<Booking>[] = [
 
       return (
         <div>
-          <div>{convertedDate}</div>
+          <p>{convertedDate}</p>
         </div>
       )
     },

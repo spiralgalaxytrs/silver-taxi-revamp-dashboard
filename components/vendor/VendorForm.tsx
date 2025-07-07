@@ -45,9 +45,7 @@ type VendorFormData = {
 
 export function VendorForm({ id }: VendorFormProps) {
     const router = useRouter();
-
-    // const { fetchVendorById, createVendor, updateVendor, error, vendor, addVendorWallet, minusVendorWallet } = useVendorStore();
-
+    
     const {
         data: vendor = null,
         isLoading,

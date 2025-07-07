@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { columns } from './columns';
 import { Button } from 'components/ui/button';
@@ -33,12 +33,20 @@ import {
   MRT_ColumnDef,
   MaterialReactTable
 } from 'material-react-table'
-import { useInvoiceStore } from 'stores/-invoiceStore';
 import { useBackNavigation } from 'hooks/navigation/useBackNavigation';
+import {
+  useInvoices,
+  useMultiDeleteInvoice
+} from 'hooks/react-query/useInvoice';
 
 export default function InvoicesPage() {
-  const { invoices, fetchInvoices, multiDeleteInvoice } = useInvoiceStore();
   const router = useRouter();
+
+  const {
+    data: invoices = [],
+    refetch
+  } = useInvoices();
+  const { mutate: multiDeleteInvoice } = useMultiDeleteInvoice();
 
   const [lockBack, setLockBack] = useState(false);
   useBackNavigation(lockBack);
@@ -64,10 +72,6 @@ export default function InvoicesPage() {
   });
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    fetchInvoices();
-  }, [fetchInvoices]);
-
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
@@ -86,26 +90,13 @@ export default function InvoicesPage() {
     }
   };
 
-  const [invoiceData, setInvoiceData] = useState(
-    invoices.map((invoice) => {
-      return {
-        ...invoice,
-        id: invoice.invoiceId ? invoice.invoiceId : "",
-        invoiceId: invoice.invoiceId || "",
-        createdAt: invoice.createdAt ? invoice.createdAt : ""
-      }
-    })
-  );
-
-  useEffect(() => {
-    if (invoices) {
-      setInvoiceData(invoices.map(invoice => ({
-        ...invoice,
-        id: invoice.invoiceId ? invoice.invoiceId : "",
-        invoiceId: invoice.invoiceId || "",
-        createdAt: invoice.createdAt ? invoice.createdAt : ""
-      })));
-    }
+  const invoiceData = useMemo(() => {
+    return invoices.map(invoice => ({
+      ...invoice,
+      id: invoice.invoiceId ? invoice.invoiceId : "",
+      invoiceId: invoice.invoiceId || "",
+      createdAt: invoice.createdAt ? invoice.createdAt : ""
+    }));
   }, [invoices]);
 
   const unFilteredData = [...invoiceData].sort((a, b) => {
@@ -236,30 +227,33 @@ export default function InvoicesPage() {
       const invoiceId = filteredData[parseInt(index)]?.invoiceId
       return invoiceId !== undefined ? invoiceId : null
     }).filter(id => id !== null)
-    await multiDeleteInvoice(selectedIds);
-    const newData = invoiceData.filter(invoice => !selectedIds.includes(invoice.invoiceId ?? ''));
-    setInvoiceData(newData);
-    setRowSelection({});
-    const status = useInvoiceStore.getState().statusCode
-    const message = useInvoiceStore.getState().message
-    if (status === 200 || status === 201) {
-      toast.success("Invoices deleted successfully");
-      router.push("/admin/invoices");
-    } else {
-      toast.error(message || "Error deleting Invoices", {
-        style: {
-          backgroundColor: "#FF0000",
-          color: "#fff",
-        },
-      });
-    }
-    setIsDialogOpen(false);
+    multiDeleteInvoice(selectedIds, {
+      onSuccess: () => {
+        toast.success("Invoices deleted successfully", {
+          style: {
+            backgroundColor: "#009F7F",
+            color: "#fff",
+          },
+        });
+        setIsDialogOpen(false);
+        router.refresh();
+      },
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.message || "Error deleting Invoices", {
+          style: {
+            backgroundColor: "#FF0000",
+            color: "#fff",
+          },
+        });
+        setIsDialogOpen(false);
+      }
+    });
   }
 
   const handleRefetch = async () => {
     setIsSpinning(true);
     try {
-      // await refetch(); // wait for the refetch to complete
+      await refetch(); // wait for the refetch to complete
     } finally {
       // stop spinning after short delay to allow animation to play out
       setTimeout(() => setIsSpinning(false), 500);
@@ -275,7 +269,7 @@ export default function InvoicesPage() {
   };
 
   return (
-    <>
+    <React.Fragment>
       <div className="space-y-6">
         <div className="rounded bg-white p-5 shadow">
           <div className="flex flex-col">
@@ -484,6 +478,6 @@ export default function InvoicesPage() {
           />
         </div>
       </div>
-    </>
+    </React.Fragment>
   );
 }

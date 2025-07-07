@@ -1,16 +1,16 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
-    createBooking,
-    deleteBooking,
-    fetchBookingById,
-    fetchBookings,
-    fetchVendorBookings,
-    updateBooking,
-    bulkDeleteBookings,
-    assignDriver,
-    toggleTripStatus,
-    togglePaymentStatus,
-    togglePaymentMethod
+  createBooking,
+  deleteBooking,
+  fetchBookingById,
+  fetchBookings,
+  fetchVendorBookings,
+  updateBooking,
+  bulkDeleteBookings,
+  assignDriver,
+  toggleTripStatus,
+  togglePaymentStatus,
+  togglePaymentMethod,
 } from "services/booking";
 import type { Booking } from "types/react-query/booking";
 

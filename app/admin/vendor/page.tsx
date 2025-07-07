@@ -324,51 +324,53 @@ export default function VendorPage() {
             </div>
           </div>
           {showFilters && (
-            <div className="flex gap-8 items-center mt-4">
-              <div className="flex flex-col w-[230px]">
-                <Label className="text-sm font-medium leading-none">Search</Label>
-                <Input
-                  id="search"
-                  placeholder="Search vendors"
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col w-[230px]">
-                <Label className="text-sm font-medium leading-none">Status</Label>
-                <div className='mt-1'>
-                  <Select onValueChange={(value) => handleFilterChange('isActive', value)}>
-                    <SelectTrigger id="isActive">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="true">Active</SelectItem>
-                      <SelectItem value="false">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
+            <React.Fragment>
+              <div className="flex gap-8 items-center mt-4">
+                <div className="flex flex-col w-[230px]">
+                  <Label className="text-sm font-medium leading-none">Search</Label>
+                  <Input
+                    id="search"
+                    placeholder="Search vendors"
+                    value={filters.search}
+                    onChange={(e) => handleFilterChange("search", e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col w-[230px]">
+                  <Label className="text-sm font-medium leading-none">Status</Label>
+                  <div className='mt-1'>
+                    <Select onValueChange={(value) => handleFilterChange('isActive', value)}>
+                      <SelectTrigger id="isActive">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="true">Active</SelectItem>
+                        <SelectItem value="false">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex flex-col w-[230px]">
+                  <Label className="text-sm font-medium leading-none">Created Date Range</Label>
+                  <DateRangeAccordion
+                    label={getFormattedCreatedDateRange()}
+                    startDate={filters.creationDateStart}
+                    endDate={filters.creationDateEnd}
+                    onStartDateChange={(date: any) => handleFilterChange("creationDateStart", date)}
+                    onEndDateChange={(date: any) => handleFilterChange("creationDateEnd", date)}
+                  />
+                </div>
+                <div className='flex justify-start items-center'>
+                  <Button
+                    className='mt-4 p-1 border-none bg-[#009F87] flex justify-center items-center w-28'
+                    // variant="outline"
+                    onClick={handleClear}
+                    disabled={isLoading}
+                  >
+                    Clear
+                  </Button>
                 </div>
               </div>
-              <div className="flex flex-col w-[230px]">
-                <Label className="text-sm font-medium leading-none">Created Date Range</Label>
-                <DateRangeAccordion
-                  label={getFormattedCreatedDateRange()}
-                  startDate={filters.creationDateStart}
-                  endDate={filters.creationDateEnd}
-                  onStartDateChange={(date: any) => handleFilterChange("creationDateStart", date)}
-                  onEndDateChange={(date: any) => handleFilterChange("creationDateEnd", date)}
-                />
-              </div>
-              <div className='flex justify-start items-center'>
-                <Button
-                  className='mt-4 p-1 border-none bg-[#009F87] flex justify-center items-center w-28'
-                  // variant="outline"
-                  onClick={handleClear}
-                  disabled={isLoading}
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
+            </React.Fragment>
           )}
         </div>
         {/* Data Table */}
