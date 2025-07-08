@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { Button } from "components/ui/button"
 import { useOfferStore } from "stores/-offerStore"
 import { Edit, SendHorizontal, Trash, Eye, ChevronDown } from "lucide-react"
