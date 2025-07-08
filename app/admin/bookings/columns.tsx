@@ -6,7 +6,6 @@ import { useOfferStore } from "stores/-offerStore"
 import { Edit, SendHorizontal, Trash, Eye, ChevronDown } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "components/ui/badge"
-import { Checkbox } from "components/ui/checkbox";
 import { BookingPopup } from "components/booking/BookingPopup"
 import { DriverSelectionPopup } from "components/driver/SelectDriver"
 import {
@@ -59,7 +58,7 @@ export type Booking = {
   offerName?: string;
   paymentMethod: "UPI" | "Bank" | "Cash" | "Card";
   type: "Website" | "App" | "Manual";
-  paymentStatus: "Pending" | "Paid" | "Partially Paid";
+  paymentStatus: "Unpaid" | "Paid" | "Partial Paid";
   serviceType: "One way" | "Round trip" | "Hourly Package" | "Day Package" | "Airport";
   vehicleName: string;
   distance: number | null;
@@ -766,10 +765,10 @@ export const columns: MRT_ColumnDef<Booking>[] = [
   },
 
   {
-    accessorKey: "bookingDate",
+    accessorKey: "createdAt",
     header: "Bookings At",
     Cell: ({ row }) => {
-      const bookingDate: string = row.getValue("bookingDate");
+      const bookingDate: string = row.getValue("createdAt");
       if (!bookingDate) {
         return <div>-</div>;
       }
