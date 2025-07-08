@@ -69,7 +69,7 @@ type Booking = {
     packageType?: string;
     dayOrHour?: string;
     type: "Website" | "App" | "Manual";
-    paymentStatus: "Pending" | "Paid" | "Partially Paid";
+    paymentStatus: "Unpaid" | "Paid" | "Partial Paid";
     serviceType: "One way" | "Round trip" | "Airport Pickup" | "Airport Drop" | "Day Packages" | "Hourly Packages";
     status: "Completed" | "Cancelled" | "Not-Started" | "Started";
     createdBy: "Admin" | "Vendor";
@@ -131,7 +131,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         paymentMethod: 'Cash',
         status: 'Not-Started',
         createdBy: createdBy as "Admin" | "Vendor",
-        paymentStatus: 'Pending',
+        paymentStatus: 'Unpaid',
         toll: 0,
         hill: 0,
         permitCharge: 0,
