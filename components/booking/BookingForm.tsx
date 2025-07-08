@@ -69,7 +69,7 @@ type Booking = {
     packageType?: string;
     dayOrHour?: string;
     type: "Website" | "App" | "Manual";
-    paymentStatus: "Pending" | "Paid" | "Partially Paid";
+    paymentStatus: "Unpaid" | "Paid" | "Partial Paid";
     serviceType: "One way" | "Round trip" | "Airport Pickup" | "Airport Drop" | "Day Packages" | "Hourly Packages";
     status: "Completed" | "Cancelled" | "Not-Started" | "Started";
     createdBy: "Admin" | "Vendor";
@@ -90,7 +90,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
     const { enquiry, fetchEnquiryById } = useEnquiryStore();
     const { vehicles, fetchActiveVehicles } = useVehicleStore();
     const { tariffs, fetchTariffs, packageTariffs, fetchPackageTariffByVehicleId, pkgTariffs, fetchPackageTariffs } = useTariffStore();
-    const { services } = useServiceStore();
+    const { services , fetchServices } = useServiceStore();
     const { offers, fetchOffers } = useOfferStore();
     const [currentStep, setCurrentStep] = useState(1);
     const [localLoading, setLocalLoading] = useState(false);
@@ -131,7 +131,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         paymentMethod: 'Cash',
         status: 'Not-Started',
         createdBy: createdBy as "Admin" | "Vendor",
-        paymentStatus: 'Pending',
+        paymentStatus: 'Unpaid',
         toll: 0,
         hill: 0,
         permitCharge: 0,
@@ -216,6 +216,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         const initSer = services.find(service => service.name === "One way");
         setServiceId(initSer?.serviceId as string);
         fetchActiveVehicles();
+        fetchServices();
         fetchOffers();
         fetchTariffs();
     }, []);
@@ -1033,7 +1034,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {['Pending', 'Paid', 'Partially Paid'].map(status => (
+                                                {['Unpaid', 'Paid', 'Partial Paid'].map(status => (
                                                     <SelectItem key={status} value={status}>
                                                         {status}
                                                     </SelectItem>
