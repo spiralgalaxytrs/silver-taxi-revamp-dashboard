@@ -56,6 +56,7 @@ export function EnquiryPopup({ trigger, id, title = 'Enquiry Details', width, si
     setError(null);
     try {
       const enquiry = enquiries.find((enquiry) => enquiry.enquiryId === id);
+      console.log("enquiry >> ",enquiry);
       if (enquiry) {
         const formattedEnquiry = {
           "Enquiry Id": enquiry.enquiryId || '-',
