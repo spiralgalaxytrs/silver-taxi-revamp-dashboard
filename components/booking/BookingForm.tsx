@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '../ui/button';
 import { useSearchParams } from 'next/navigation';
 import { Input } from '../ui/input';
@@ -15,12 +15,8 @@ import {
     SelectValue,
 } from '../ui/select';
 import { toast } from 'sonner';
-import { useBookingStore } from 'stores/bookingStore';
-import { useVehicleStore } from 'stores/-vehicleStore';
-import { useOfferStore } from 'stores/-offerStore';
-import { getMinDateTime, getMaxDateTime,getMinDate } from '../../lib/date-restrict';
+import { getMinDateTime, getMaxDateTime, getMinDate } from '../../lib/date-restrict';
 import axios from "../../lib/http-common"
-import { useTariffStore } from 'stores/-tariffStore';
 import { Loader2 } from 'lucide-react';
 import {
     AlertDialog,
@@ -33,10 +29,32 @@ import {
     AlertDialogCancel,
     AlertDialogFooter
 } from 'components/ui/alert-dialog'
-import { useEnquiryStore } from 'stores/-enquiryStore';
 import LocationAutocomplete from '../localtion/LocationAutocomplete';
 import PhoneInput from 'react-phone-input-2'
-import { useServiceStore } from 'stores/-serviceStore';
+import {
+    useServices
+} from 'hooks/react-query/useServices';
+import {
+    useTariffs,
+    usePackageTariffs,
+    usePackageTariffByVehicle
+} from 'hooks/react-query/useTariff';
+import {
+    useCreateBooking,
+    useUpdateBooking,
+    useFetchBookingById
+} from 'hooks/react-query/useBooking';
+import {
+    useVehiclesAdmin
+} from 'hooks/react-query/useVehicle';
+import {
+    useEnquiryById
+} from 'hooks/react-query/useEnquiry';
+import {
+    useOffers
+} from 'hooks/react-query/useOffers';
+
+
 
 interface CreateBookingFormProps {
     id?: string;
@@ -86,22 +104,32 @@ type Booking = {
 export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { createBooking, updateBooking, bookings, isLoading, error } = useBookingStore();
-    const { enquiry, fetchEnquiryById } = useEnquiryStore();
-    const { vehicles, fetchActiveVehicles } = useVehicleStore();
-    const { tariffs, fetchTariffs, packageTariffs, fetchPackageTariffByVehicleId, pkgTariffs, fetchPackageTariffs } = useTariffStore();
-    const { services , fetchServices } = useServiceStore();
-    const { offers, fetchOffers } = useOfferStore();
+    const enquiryIdParam = searchParams.get('enquiryId')
+
+    const { data: vehicles = [], isLoading: isVehiclesLoading } = useVehiclesAdmin();
+    const { data: services = [], isLoading: isServicesLoading } = useServices();
+    const { data: tariffs = [], isLoading: isTariffsLoading } = useTariffs();
+    const { data: offers = [], isLoading: isOffersLoading } = useOffers();
+    // const { data: packageTariffs = [], isLoading: isPackageTariffsLoading } = usePackageTariffs();
+    const { data: enquiry = null } = useEnquiryById(enquiryIdParam || "")
+    const { data: booking = null, isLoading: isBookingLoading } = useFetchBookingById(id || "");
+    const { mutate: createBooking, isPending: isCreatePending } = useCreateBooking();
+    const { mutate: updateBooking, isPending: isUpdatePending } = useUpdateBooking();
+
+
     const [currentStep, setCurrentStep] = useState(1);
     const [localLoading, setLocalLoading] = useState(false);
     const [updatedOffers, setUpdatedOffers] = useState<any[]>([]);
     const [isFormDirty, setIsFormDirty] = useState(false);
-    const [serviceId, setServiceId] = useState('');
+    // const [serviceId, setServiceId] = useState('');
     const [serviceType, setServiceType] = useState("")
     const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
-    const [isTariffsLoaded, setIsTariffsLoaded] = useState(false);
-    const [filteredVehicles, setFilteredVehicles] = useState<any[]>([]);
+    // const [filteredVehicles, setFilteredVehicles] = useState<any[]>([]);
+
+    const filteredVehicles = useMemo(() => {
+        return vehicles.filter((vehicle) => vehicle.isActive === true);
+    }, [vehicles, serviceType]);
 
     const [formData, setFormData] = useState<Booking>({
         name: '',
@@ -142,150 +170,105 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         pricePerKm: 0,
     });
 
-    let pastTimeToastShown = false; // Flag to track if the toast has been shown
-
+    let pastTimeToastShown = false;
 
     const findServiceId = (serviceType: string) => {
-        const services = useServiceStore.getState().services;
         const foundService: any = services.find(service => service.name === serviceType);
         return foundService ? foundService.serviceId as string : "";
     }
 
+    const findServiceType = (serviceId: string) => {
+        const gotService = services.find(service => service.serviceId === serviceId);
+        return gotService?.name || "";
+    };
+
+    // useEffect to update formData when `enquiry` arrives
     useEffect(() => {
-        const fetchEnquiry = async () => {
-            if (searchParams.get('enquiryId')) {
-                const enquiryId = searchParams.get('enquiryId') as string;
-                await fetchEnquiryById(enquiryId); // Await the fetchEnquiryById call
-                if (enquiry) {
-                    const findServiceType = (serviceId: string) => {
-                        const services = useServiceStore.getState().services;
-                        const gotService: any = services.find(service => service.serviceId === serviceId);
-                        return gotService ? gotService.name as string : "";
-                    }
-                    setFormData({
-                        ...formData,
-                        name: enquiry.name || '',
-                        email: enquiry.email || '',
-                        phone: enquiry.phone || '',
-                        pickup: enquiry.pickup || '',
-                        drop: enquiry.drop || '',
-                        vehicleId: enquiry.vehicleId || '',
-                        packageId:enquiry.packageId,
-                        enquiryId: enquiry.enquiryId || null,
-                        pickupDateTime: new Date(enquiry.pickupDateTime).toISOString().slice(0, 16),
-                        dropDate: enquiry.dropDate ? new Date(enquiry.dropDate).toISOString().slice(0, 10) : null,
-                        serviceType: findServiceType(enquiry.serviceId) as "One way" | "Round trip" | "Airport Pickup" | "Airport Drop" | "Day Packages" | "Hourly Packages", // Removed await as it's not needed
-                        type: enquiry.type,
-                        createdBy: enquiry.createdBy as "Admin" | "Vendor",
-                    });
-                }
-            }
+        if (enquiryIdParam && enquiry) {
+            const updatedEnquiryData = {
+                name: enquiry.name || '',
+                email: enquiry.email || '',
+                phone: enquiry.phone || '',
+                pickup: enquiry.pickup || '',
+                drop: enquiry.drop || '',
+                vehicleId: enquiry.vehicleId || '',
+                packageId: enquiry.packageId,
+                enquiryId: enquiry.enquiryId || null,
+                pickupDateTime: new Date(enquiry.pickupDateTime).toISOString().slice(0, 16),
+                dropDate: enquiry.dropDate ? new Date(enquiry.dropDate).toISOString().slice(0, 10) : null,
+                serviceType: findServiceType(enquiry.serviceId) as
+                    | "One way"
+                    | "Round trip"
+                    | "Airport Pickup"
+                    | "Airport Drop"
+                    | "Day Packages"
+                    | "Hourly Packages",
+                type: enquiry.type,
+                createdBy: enquiry.createdBy as "Admin" | "Vendor",
+            };
+
+            setFormData(prev => ({ ...prev, ...updatedEnquiryData }));
         }
-        fetchEnquiry();
+    }, [enquiryIdParam, enquiry]);
 
-        if (id) {
-            const booking = bookings.find(b => b.bookingId === id);
-            console.log("booking data ==>", booking)
-            if (booking) {
-                setFormData({
-                    ...booking,
-                    pickupDateTime: typeof (booking.pickupDate) === "string" ? booking.pickupDate.slice(0, 16) : new Date().toLocaleString(),
-                    dropDate: booking.dropDate ? (typeof booking.dropDate === "string" ? booking.dropDate.slice(0, 10) : new Date(booking.dropDate).toLocaleString().slice(0, 10)) : null,
-                    vehicleId: booking.vehicleId || '',
-                    packageId:booking.packageId,
-                    distance: booking.distance || 0,
-                    finalAmount: booking.finalAmount || 0,
-                    estimatedAmount: booking.estimatedAmount || 0,
-                    discountAmount: booking.discountAmount || 0,
-                    advanceAmount: booking.advanceAmount || 0,
-                    upPaidAmount: booking.upPaidAmount || 0,
-                    price: booking.price || 0,
-                    extraPrice: booking.extraPrice || 0,
-                    distanceLimit: booking.distanceLimit || 0,
-                    createdBy: booking.createdBy as "Admin" | "Vendor",
-                    serviceType: booking.serviceType as "One way" | "Round trip" | "Airport Pickup" | "Airport Drop" | "Day Packages" | "Hourly Packages"
-                });
-                console.log("form data ===>",formData)
-                setCurrentStep(2);
-            }
+    useEffect(() => {
+        if (id && booking) {
+            const updatedBookingData = {
+                ...booking,
+                pickupDateTime:
+                    typeof booking.pickupDate === "string"
+                        ? booking.pickupDate.slice(0, 16)
+                        : new Date().toISOString().slice(0, 16),
+                dropDate: booking.dropDate
+                    ? typeof booking.dropDate === "string"
+                        ? booking.dropDate.slice(0, 10)
+                        : new Date(booking.dropDate).toISOString().slice(0, 10)
+                    : null,
+                vehicleId: booking.vehicleId || '',
+                packageId: booking.packageId,
+                distance: booking.distance || 0,
+                finalAmount: booking.finalAmount || 0,
+                estimatedAmount: booking.estimatedAmount || 0,
+                discountAmount: booking.discountAmount || 0,
+                advanceAmount: booking.advanceAmount || 0,
+                upPaidAmount: booking.upPaidAmount || 0,
+                price: booking.price || 0,
+                extraPrice: booking.extraPrice || 0,
+                distanceLimit: booking.distanceLimit || 0,
+                createdBy: booking.createdBy as "Admin" | "Vendor",
+                serviceType: booking.serviceType as
+                    | "One way"
+                    | "Round trip"
+                    | "Airport Pickup"
+                    | "Airport Drop"
+                    | "Day Packages"
+                    | "Hourly Packages",
+            };
+            setFormData(updatedBookingData);
+            setCurrentStep(2);
         }
-    }, [id, bookings]);
-
-    useEffect(() => {
-        const services = useServiceStore.getState().services;
-        const initSer = services.find(service => service.name === "One way");
-        setServiceId(initSer?.serviceId as string);
-        fetchActiveVehicles();
-        fetchServices();
-        fetchOffers();
-        fetchTariffs();
-    }, []);
-
-    useEffect(() => {
-        const fetchTariffsAndSetLoaded = async () => {
-            await fetchTariffs();
-            setIsTariffsLoaded(true);
-        };
-        fetchTariffsAndSetLoaded();
-    }, []);
+    }, [id, booking]);
 
     useEffect(() => {
         if (offers.length > 0) {
-            setUpdatedOffers(offers.filter(offer => offer.status === true));
+            setUpdatedOffers(offers.filter((offer: any) => offer.status === true));
         }
     }, [offers]);
 
     // Add this useEffect to fetch package tariffs when service type and vehicle are selected
-    useEffect(() => {
-        const fetchPackages = async () => {
-            if ((formData.serviceType === 'Day Packages' || formData.serviceType === 'Hourly Packages') && formData.vehicleId) {
-                const serviceId = findServiceId(formData.serviceType);
-                const type = formData.serviceType === 'Day Packages' ? 'day' : 'hourly';
-                if (serviceId) {
-                    await fetchPackageTariffByVehicleId(formData.vehicleId, serviceId, type);
-                }
-            }
-        };
-        fetchPackages();
-    }, [formData.serviceType, formData.vehicleId]);
+    const {
+        data: pkgTariffs = [],
+        isLoading: isPkgTariffsLoading
+    } = usePackageTariffByVehicle(formData.vehicleId, findServiceId(formData.serviceType) as string, 'hourly');
 
     useEffect(() => {
-        const initialData = {
-            name: '',
-            email: '',
-            phone: '',
-            pickup: '',
-            drop: '',
-            pickupDateTime: '',
-            dropDate: '',
-            serviceType: 'One way',
-            vehicleId: '',
-            distance: 0,
-            offerId: null,
-            packageId: '',
-            packageType: '',
-            dayOrHour: "",
-            finalAmount: 0,
-            estimatedAmount: 0,
-            discountAmount: 0,
-            advanceAmount: 0,
-            type: 'Manual',
-            paymentMethod: 'Cash',
-            status: 'Not-Started',
-            createdBy: 'Admin',
-            paymentStatus: 'Pending',
-            toll: 0,
-            hill: 0,
-            permitCharge: 0,
-            taxPercentage: 0,
-            taxAmount: 0,
-            driverBeta: 0,
-            duration: "",
-            pricePerKm: 0,
-        };
+        const initialData = { ...formData }; // same as before
+        const isDirty = JSON.stringify(initialData) !== JSON.stringify(formData);
 
-        const currentData = formData;
-        setIsFormDirty(JSON.stringify(initialData) !== JSON.stringify(formData));
+        setIsFormDirty(prev => {
+            if (prev !== isDirty) return isDirty;
+            return prev;
+        });
     }, [formData]);
 
     const fetchDistance = async (pickup: string, drop: string) => {
@@ -417,7 +400,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                     newState.offerId = null;
                     newState.discountAmount = 0;
                 } else {
-                    const offer = offers.find((offer) => offer.offerId === value);
+                    const offer = offers.find((offer: any) => offer.offerId === value);
                     if (offer?.type === "Percentage") {
                         newState.discountAmount = Math.trunc((Number(newState.estimatedAmount) * offer.value) / 100);
                     } else if (offer?.type === "Flat") {
@@ -442,12 +425,6 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         e.preventDefault();
 
         const serviceId = findServiceId(formData.serviceType);
-        setServiceId(serviceId);
-
-        if (!isTariffsLoaded) {
-            toast.error("Tariffs are still loading. Please wait...");
-            return;
-        }
 
         // Validate required fields
         if (
@@ -487,30 +464,48 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         e.preventDefault();
         try {
             if (id) {
-                await updateBooking(id, formData);
-            } else {
-                await createBooking(formData);
-            }
-            const status = useBookingStore.getState().statusCode;
-            const message = useBookingStore.getState().message;
-            if (status === 200 || status === 201) {
-                toast.success(message, {
-                    style: {
-                        backgroundColor: "#009F7F",
-                        color: "#fff",
+                updateBooking({ id, data: formData }, {
+                    onSuccess: (data: any) => {
+                        toast.success(data?.message || 'Booking updated successfully', {
+                            style: {
+                                backgroundColor: "#009F7F",
+                                color: "#fff",
+                            },
+                        });
+                        setTimeout(() => router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/bookings`), 500);
                     },
+                    onError: (error: any) => {
+                        toast.error(error?.response?.data?.message || 'Failed to update booking', {
+                            style: {
+                                backgroundColor: "#FF0000",
+                                color: "#fff",
+                            },
+                        });
+                    }
                 });
-                router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/bookings`);
             } else {
-                toast.error(message, {
-                    style: {
-                        backgroundColor: "#FF0000",
-                        color: "#fff",
+                createBooking(formData, {
+                    onSuccess: (data: any) => {
+                        toast.success(data?.message || 'Booking created successfully', {
+                            style: {
+                                backgroundColor: "#009F7F",
+                                color: "#fff",
+                            },
+                        });
+                        setTimeout(() => router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/bookings`), 500);
                     },
+                    onError: (error: any) => {
+                        toast.error(error?.response?.data?.message || 'Failed to create booking', {
+                            style: {
+                                backgroundColor: "#FF0000",
+                                color: "#fff",
+                            },
+                        });
+                    }
                 });
             }
-        } catch (err) {
-            toast.error(error || "Failed to save booking", {
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to save booking", {
                 style: {
                     backgroundColor: "#FF0000",
                     color: "#fff",
@@ -530,73 +525,6 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         window.addEventListener("beforeunload", handleBeforeUnload);
         return () => window.removeEventListener("beforeunload", handleBeforeUnload);
     }, [isFormDirty]);
-
-
-    useEffect(() => {
-        fetchPackageTariffs(serviceType)
-    }, [serviceType])
-
-    const getFilteredVehicles = async (serviceType: string, vehicles: any[], tariffs: any[]) => {
-        
-        const normalizedServiceType = serviceType === "Day Packages" ? "day" :
-            serviceType === "Hourly Packages" ? "hourly" :
-                serviceType;
-        setServiceType(normalizedServiceType);
-
-        const serviceId = findServiceId(serviceType); // Map serviceType to serviceId
-
-        if (!serviceId) {
-            console.warn("Invalid serviceId. Returning empty array.");
-            return [];
-        }
-
-        const isPackageType = serviceType === "Day Packages" || serviceType === "Hourly Packages";
-
-        // Main filtering logic wrapped in an async function
-        const filterVehicles = async () => {
-            const filtered = vehicles.filter((vehicle) => {
-                let vehicleTariffs;
-
-                if (isPackageType) {
-                    // For package types, we need to check both the serviceId and the package type
-                    vehicleTariffs = pkgTariffs.filter((tariff: any) => {
-                        const isMatchingService = tariff.serviceId === serviceId;
-                        const isMatchingType = serviceType === "Hourly Packages" ? true : tariff.type === normalizedServiceType;
-                        const isMatchingVehicle = tariff.vehicleId === vehicle?.vehicleId;
-                        const hasValidPrice = Number(tariff.extraPrice) > 0;
-                        const isActive = tariff.status === true;
-                        
-                        return isMatchingService && isMatchingType && isMatchingVehicle && hasValidPrice && isActive;
-                    });
-                } else {
-                    vehicleTariffs = tariffs.filter((tariff: any) => {
-                        return (
-                            tariff.vehicleId === vehicle?.vehicleId &&
-                            tariff.serviceId === serviceId &&
-                            Number(tariff.price) > 0 &&
-                            Number(tariff.extraPrice) > 0
-                        );
-                    });
-                }
-
-                return vehicleTariffs.length > 0;
-            });
-
-            return filtered;
-        };
-
-        // Return the promise from filterVehicles
-        return await filterVehicles();
-    };
-
-    useEffect(() => {
-        const fetchFilteredVehicles = async () => {
-            const vehiclesFiltered = await getFilteredVehicles(formData.serviceType, vehicles, tariffs);
-            setFilteredVehicles(vehiclesFiltered);
-        };
-
-        fetchFilteredVehicles();
-    }, [formData.serviceType, vehicles, tariffs, pkgTariffs]);
 
     // Modify handleClose function
     const handleClose = () => {
@@ -626,7 +554,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
             return today.toISOString().slice(11, 16); // Extract HH:MM
         }
 
-        return ""; // No restriction for future dates
+        return "";
     };
 
     const handleLocationSelectFromGoogle = (address: string) => {
@@ -643,30 +571,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         }));
     }
 
-    // Add this useEffect to trigger fair calculation when package details change
-    useEffect(() => {
-        const calculatePackageFare = async () => {
-            if (
-                (formData.serviceType === 'Day Packages' || formData.serviceType === 'Hourly Packages') &&
-                formData.vehicleId &&
-                formData.packageId &&
-                formData.pickupDateTime
-            ) {
-                await handleFairCalculation(
-                    formData.serviceType,
-                    formData.vehicleId,
-                    formData.distance || 0,
-                    formData.pickupDateTime,
-                    formData.dropDate || '',
-
-                );
-            }
-        };
-
-        calculatePackageFare();
-    }, [formData.packageId, formData.vehicleId, formData.pickupDateTime]);
-
-    const isAnyLoading = isLoading || localLoading;
+    const isAnyLoading = localLoading || isTariffsLoading || isVehiclesLoading;
     if (isAnyLoading) {
         return (
             <div className="flex items-center justify-center h-[500px] bg-gray-50">
@@ -680,7 +585,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         <Card className="rounded-none">
             <div className="flex justify-between items-center p-6 pb-0">
                 <h2 className="text-3xl font-bold tracking-tight">
-                    {id ? 'Edit Booking' : 'Create New Booking'}
+                    {id ? 'Edit Booking' : enquiryIdParam ? ` Update Enquiry → Booking` : 'Create New Booking'}
                 </h2>
                 <Button onClick={handleClose} variant="outline">
                     Close
@@ -763,7 +668,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         value={formData.vehicleId || ""} // Ensure this is not an empty string
                                         onValueChange={async (v) => {
                                             const selectedVehicle = filteredVehicles.find(vehicle => vehicle.vehicleId === v);
-                                            
+
                                             // Update all related fields at once
                                             setFormData(prev => {
                                                 const newState = {
@@ -795,14 +700,14 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                 </div>
 
                                 {/* Add this new conditional package selection */}
-                                {(formData.serviceType === 'Day Packages' || formData.serviceType === 'Hourly Packages') && formData.vehicleId && (
+                                {/* {(formData.serviceType === 'Day Packages' || formData.serviceType === 'Hourly Packages') && formData.vehicleId && (
                                     <div className="space-y-2">
                                         <Label>Package Selection <span className='text-red-500'>*</span></Label>
                                         <Select
                                             value={formData.packageId}
                                             onValueChange={async (v) => {
                                                 const selectedPackage = packageTariffs.find(pkg => pkg.packageId === v);
-                                                
+
                                                 // Update all related fields at once
                                                 setFormData(prev => {
                                                     const newState = {
@@ -825,13 +730,13 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                     .filter(pkg => pkg.createdBy === 'Admin')
                                                     .map(pkg => (
                                                         <SelectItem key={pkg.packageId} value={pkg.packageId}>
-                                                            {pkg.dayOrHour} {pkg.dayOrHour > 1 ? "Hours" : "Hour" } - {pkg.distanceLimit} Km - ₹ {pkg.price}
+                                                            {pkg.dayOrHour} {pkg.dayOrHour > 1 ? "Hours" : "Hour"} - {pkg.distanceLimit} Km - ₹ {pkg.price}
                                                         </SelectItem>
                                                     ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                )}
+                                )} */}
 
                                 <div className="space-y-2">
                                     <Label>Customer Name <span className='text-red-500'>*</span></Label>
@@ -1063,12 +968,12 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                             <Button
                                 type="button"
                                 onClick={handleNextStep}
-                                disabled={isLoading}
+                                disabled={isAnyLoading}
                             >
                                 Next
                             </Button>
                         ) : (
-                            <Button type="submit" disabled={isLoading}>
+                            <Button type="submit" disabled={isCreatePending || isUpdatePending}>
                                 {id ? 'Update Booking' : 'Create Booking'}
                             </Button>
                         )}

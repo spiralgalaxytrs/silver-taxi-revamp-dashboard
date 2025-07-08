@@ -5,6 +5,8 @@ export interface Enquiry {
   phone: string;
   pickupDateTime: string;
   pickupTime: string;
+  vehicleId?: string;
+  packageId?: string;
   dropDate?: string | null;
   pickup: string;
   drop: string;

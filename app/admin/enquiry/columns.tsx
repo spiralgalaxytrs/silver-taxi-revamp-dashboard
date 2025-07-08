@@ -68,6 +68,32 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
     muiTableBodyCellProps: { align: 'center' },
   },
   {
+    accessorKey: "name",
+    header: "Customer Name",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+    Cell: ({ row }) => {
+      const name: string = row.original.name;
+      if (!name) {
+        return <div>-</div>;
+      }
+      return <div>{name}</div>;
+    }
+  },
+  {
+    accessorKey: "phone",
+    header: "Phone Number",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+    Cell: ({ row }) => {
+      const phone: string = row.original.phone;
+      if (!phone) {
+        return <div>-</div>;
+      }
+      return <div>+{phone}</div>;
+    }
+  },
+  {
     accessorKey: "pickup",
     header: "From",
     muiTableHeadCellProps: { align: 'center' },
