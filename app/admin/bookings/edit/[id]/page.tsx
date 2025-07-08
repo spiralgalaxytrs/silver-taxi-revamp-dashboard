@@ -25,11 +25,10 @@ export default function EditBookingPage({ params }: { params: Promise<{ id: stri
 
 
   return (
-    <>
-      <div className="space-y-6 bg-white  rounded-lg p-4">
-        <BookingForm id={id} createdBy={createdBy} />
-      </div>
-    </>)
+    <div className="space-y-6 bg-white  rounded-lg p-4">
+      <BookingForm id={id} createdBy={createdBy} />
+    </div>
+  )
 }
 
 
