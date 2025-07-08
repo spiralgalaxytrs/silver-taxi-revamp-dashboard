@@ -1034,7 +1034,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {['Pending', 'Paid', 'Partially Paid'].map(status => (
+                                                {['Unpaid', 'Paid', 'Partial Paid'].map(status => (
                                                     <SelectItem key={status} value={status}>
                                                         {status}
                                                     </SelectItem>

@@ -557,9 +557,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         switch (status) {
           case "Paid":
             return "bg-[#009F7F] text-white";
-          case "Pending":
+          case "Unpaid":
             return "bg-[#D89216] text-white";
-          case "Partially Paid":
+          case "Partial Paid":
             return "bg-[#327bf0] text-white";
           default:
             return "bg-gray-100";
@@ -583,7 +583,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
             <DropdownMenuContent align="end" className="w-48">
               {/* Dropdown options for updating the status */}
               <DropdownMenuItem
-                onClick={() => handlePStatusToggle("Pending")}
+                onClick={() => handlePStatusToggle("Unpaid")}
                 disabled={isLoading}
               >
                 Pending
@@ -595,7 +595,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
                 Paid
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handlePStatusToggle("Partially Paid")}
+                onClick={() => handlePStatusToggle("Partial Paid")}
                 disabled={isLoading}
               >
                 Partially Paid
