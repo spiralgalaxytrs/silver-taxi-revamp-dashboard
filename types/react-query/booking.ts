@@ -35,7 +35,7 @@ export interface Booking {
   duration: string | null;
   paymentMethod: "UPI" | "Bank" | "Cash" | "Card";
   type: "Website" | "App" | "Manual";
-  paymentStatus:  "Pending" | "Paid" | "Partially Paid";
+  paymentStatus:  "Unpaid" | "Paid" | "Partial Paid";
   serviceType: "One way" | "Round trip" | "Airport Pickup" | "Airport Drop" | "Day Packages" | "Hourly Packages";
   vehicleName: string;
   amount: number | null;
