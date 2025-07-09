@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Loading from 'app/Loading';
 import { columns } from 'app/admin/bookings/columns';
 import { useBookingStore } from 'stores/bookingStore';
@@ -101,15 +101,13 @@ export const BookingTable: React.FC = () => {
     };
 
     if (isLoading) {
-        <>
-            <div className="flex items-center justify-center h-screen bg-gray-50">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
-            </div>
-        </>
+        <div className="flex items-center justify-center h-screen bg-gray-50">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        </div>
     }
 
     return (
-        <>
+        <React.Fragment>
             <div className="p-6 space-y-6">
                 <div className="rounded bg-white p-5 shadow md:p-5">
                     <div className="flex items-center justify-between border-b-1">
@@ -162,6 +160,6 @@ export const BookingTable: React.FC = () => {
                     />
                 </div>
             </div>
-        </>
+        </React.Fragment>
     )
 }

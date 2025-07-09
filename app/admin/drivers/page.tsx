@@ -44,9 +44,8 @@ export default function DriversPage(): JSX.Element {
   const {
     data: drivers = [],
     isLoading,
-    isError,
     refetch
-  } = useDrivers();
+  } = useDrivers({ enabled: true });
 
   const {
     mutate: bulkDeleteDrivers
@@ -245,7 +244,7 @@ export default function DriversPage(): JSX.Element {
     )
   }
   return (
-    <>
+    <React.Fragment>
       <div className="space-y-6">
         <div className="rounded bg-white p-5 shadow ">
           <div className="flex flex-col">
@@ -435,6 +434,6 @@ export default function DriversPage(): JSX.Element {
           />
         </div>
       </div>
-    </>
+    </React.Fragment>
   );
 }
