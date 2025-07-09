@@ -12,7 +12,7 @@ import {
 import { useRouter } from "next/navigation"
 import { toast } from 'sonner';
 import { Badge } from "components/ui/badge"
-import TooltipProvider from "components/others/TooltipProvider"
+import TooltipProvider from "components/others/TooltipComponent"
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -86,16 +86,17 @@ export const columns: MRT_ColumnDef<Driver>[] = [
     accessorKey: "isOnline",
     header: "Online Status",
     Cell: ({ row }) => {
-      const status = row.getValue("isOnline") as string || "-"
+      const status = row.getValue("isOnline") as boolean
       console.log("status >> ", status)
 
       return (
-        <div>
+        <div className="flex justify-center">
           {status ? (
             <TooltipProvider name={"Online"}>
               <Image
                 src="/img/gif/online.gif"
                 alt="Online"
+                className="cursor-pointer"
                 width={50}
                 height={50}
               />
@@ -105,6 +106,7 @@ export const columns: MRT_ColumnDef<Driver>[] = [
               <Image
                 src="/img/gif/offline.gif"
                 alt="Offline"
+                className="cursor-pointer"
                 width={50}
                 height={50}
               />

@@ -30,30 +30,18 @@ export const columns: MRT_ColumnDef<DriverTransaction>[] = [
         muiTableHeadCellProps: { align: 'center' },
         muiTableBodyCellProps: { align: 'center' },
     },
-    // {
-    //     accessorKey: "driverId",
-    //     header: "Driver ID",
-    // muiTableHeadCellProps: { align: 'center' },
-    // muiTableBodyCellProps: { align: 'center' },
-    // },
     {
-        accessorKey: "initiatedTo",
+        accessorKey: "initiatedBy",
         header: "Name",
         muiTableHeadCellProps: { align: 'center' },
         muiTableBodyCellProps: { align: 'center' },
     },
     {
-        accessorKey: "initiatedBy",
+        accessorKey: "initiatedTo",
         header: "Phone",
         muiTableHeadCellProps: { align: 'center' },
         muiTableBodyCellProps: { align: 'center' },
     },
-    // {
-    //     accessorKey: "initiatedTo",
-    //     header: "Email",
-    //     muiTableHeadCellProps: { align: 'center' },
-    //     muiTableBodyCellProps: { align: 'center' },
-    // },
     {
         accessorKey: "ownedBy",
         header: "Category",
