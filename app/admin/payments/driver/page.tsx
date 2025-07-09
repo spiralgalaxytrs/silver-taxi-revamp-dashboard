@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { DataTable } from 'components/others/DataTable';
 import { columns, DriverTransaction } from './columns';
@@ -10,7 +10,6 @@ import CounterCard from 'components/cards/CounterCard';
 import { Card } from 'components/ui/card';
 import { Input } from 'components/ui/input';
 import { Label } from 'components/ui/label';
-import { toast } from "sonner"
 import {
   Select,
   SelectContent,
@@ -30,16 +29,21 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
-import { useWalletTransactionStore } from "stores/-walletTransactionStore";
 import {
   MRT_ColumnDef,
   MaterialReactTable
 } from 'material-react-table';
 import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
+import {
+  useAllDriverTransactions
+} from "hooks/react-query/useWallet";
 
 export default function DriverPaymentPage() {
   const router = useRouter();
-  const { fetchAllDriverTransactions, driverTransactions } = useWalletTransactionStore();
+
+  const {
+    data: driverTransactions = []
+  } = useAllDriverTransactions();
 
 
   const [lockBack, setLockBack] = useState(false);
@@ -63,16 +67,14 @@ export default function DriverPaymentPage() {
     dateEnd: '',
   });
 
-  const [transactionData, setTransactionData] = useState(
-    driverTransactions.map(transaction => ({
-      ...transaction,
-      id: transaction.transactionId,
-    }))
+  const transactionData = useMemo(() =>
+      driverTransactions.map(transaction => ({
+        ...transaction,
+        id: transaction.transactionId,
+      })),
+    [driverTransactions]
   );
 
-  useEffect(() => {
-    fetchAllDriverTransactions()
-  }, [transactionData])
 
   const unFiltered = [...transactionData].sort((a, b) => {
     const aCreatedAt = new Date(a.createdAt || "").getTime();

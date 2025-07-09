@@ -29,6 +29,7 @@ import {
 } from "components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import { Enquiry, useEnquiryStore } from "stores/-enquiryStore"
+import TooltipComponent from "components/others/TooltipComponent"
 
 export const columns: MRT_ColumnDef<Enquiry>[] = [
   // {
@@ -96,12 +97,30 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
   {
     accessorKey: "pickup",
     header: "From",
+    Cell: ({ row }) => {
+      const pickup = row.getValue("pickup") as string
+      if (!pickup) return <div>-</div>
+      return (
+        <TooltipComponent name={pickup}>
+          <div>{pickup.slice(0, 15)}...</div>
+        </TooltipComponent>
+      )
+    },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "drop",
     header: "To",
+    Cell: ({ row }) => {
+      const drop = row.getValue("drop") as string
+      if (!drop) return <div>-</div>
+      return (
+        <TooltipComponent name={drop}>
+          <div>{drop.slice(0, 15)}...</div>
+        </TooltipComponent>
+      )
+    },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
