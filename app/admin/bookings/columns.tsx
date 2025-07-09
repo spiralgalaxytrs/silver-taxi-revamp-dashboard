@@ -44,6 +44,7 @@ import {
 import {
   MRT_ColumnDef
 } from 'material-react-table';
+import TooltipComponent from "components/others/TooltipComponent";
 
 export type Booking = {
   bookingId?: string;
@@ -137,15 +138,11 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     Cell: ({ row }) => {
       const pickup = row.getValue("pickup") as string;
       if (!pickup) return <div>-</div>;
-      let display = pickup;
-      if (pickup.length > 15) {
-        const firstWord = pickup.split(" ")[0];
-        if (firstWord.length > 15) {
-          return <div>{pickup.slice(0, 15)}...</div>;
-        }
-        return <div>{firstWord}...</div>;
-      }
-      return <div>{pickup}</div>;
+      return (
+        <TooltipComponent name={pickup}>
+          <div>{pickup.slice(0, 15)}...</div>
+        </TooltipComponent>
+      )
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
@@ -156,14 +153,11 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     Cell: ({ row }) => {
       const drop = row.getValue("drop") as string;
       if (!drop) return <div>-</div>;
-      if (drop.length > 15) {
-        const firstWord = drop.split(" ")[0];
-        if (firstWord.length > 15) {
-          return <div>{drop.slice(0, 15)}...</div>;
-        }
-        return <div>{firstWord}...</div>;
-      }
-      return <div>{drop}</div>;
+      return (
+        <TooltipComponent name={drop}>
+          <div>{drop.slice(0, 15)}...</div>
+        </TooltipComponent>
+      )
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
@@ -657,7 +651,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
             return;
           }
         }
-        toggleTripStatus({id, status:newStatus},{
+        toggleTripStatus({ id, status: newStatus }, {
           onSuccess: (data: any) => {
             toast.success(data?.message || 'Trip status updated successfully', {
               style: {
@@ -827,7 +821,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       } = useDeleteBooking();
       const handleDelete = async (id: string) => {
         try {
-          deleteBooking(id,{
+          deleteBooking(id, {
             onSuccess: () => {
               toast.success("Booking deleted successfully");
             },
@@ -859,74 +853,76 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       }
 
       return (
-        <div className="flex items-center gap-3">
-          {/* Convert to Booking Icon */}
+        <React.Fragment>
+          <div className="flex items-center gap-3">
+            {/* Convert to Booking Icon */}
 
-          {/*View Icon*/}
-          <BookingPopup
-            trigger={
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-blue-600 hover:text-blue-800 tool-tip"
-                data-tooltip="View Details"
-              >
-                <Eye className="h-5 w-5" />
-              </Button>
-            }
-            id={booking.bookingId || ""}
-          />
+            {/*View Icon*/}
+            <BookingPopup
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-blue-600 hover:text-blue-800 tool-tip"
+                  data-tooltip="View Details"
+                >
+                  <Eye className="h-5 w-5" />
+                </Button>
+              }
+              id={booking.bookingId || ""}
+            />
 
-          {/* Edit Icon */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-green-600 hover:text-green-800 tool-tip"
-            data-tooltip="Edit Booking"
-            disabled={booking.status === "Completed"}
-            onClick={() => handleEditBooking(booking.bookingId)}
-          >
-            <Edit className="h-5 w-5" />
-          </Button>
+            {/* Edit Icon */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-green-600 hover:text-green-800 tool-tip"
+              data-tooltip="Edit Booking"
+              disabled={booking.status === "Completed"}
+              onClick={() => handleEditBooking(booking.bookingId)}
+            >
+              <Edit className="h-5 w-5" />
+            </Button>
 
-          {/* Delete Icon */}
-          <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-red-600 hover:text-red-800 tool-tip"
-                data-tooltip="Delete Driver"
-                onClick={() => setIsDialogOpen(true)}
-              >
-                <Trash className="h-5 w-5" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete these bookings?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setIsDialogOpen(false)}>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => { handleDelete(booking.bookingId || ""); setIsDialogOpen(false); }}>Delete</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            {/* Delete Icon */}
+            <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-600 hover:text-red-800 tool-tip"
+                  data-tooltip="Delete Driver"
+                  onClick={() => setIsDialogOpen(true)}
+                >
+                  <Trash className="h-5 w-5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete these bookings?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setIsDialogOpen(false)}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => { handleDelete(booking.bookingId || ""); setIsDialogOpen(false); }}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
-          {/* Convert to booking  */}
-          {booking.status === "Completed" && <Button
-            variant="ghost"
-            size="icon"
-            className="text-yellow-600 hover:text-yellow-800 tool-tip"
-            data-tooltip="Convert to Booking"
-            onClick={() => handleConvertBooking(booking.bookingId || "")}
-          >
-            <SendHorizontal className="h-6 w-6" />
-          </Button>}
-        </div>
+            {/* Convert to booking  */}
+            {booking.status === "Completed" && <Button
+              variant="ghost"
+              size="icon"
+              className="text-yellow-600 hover:text-yellow-800 tool-tip"
+              data-tooltip="Convert to Booking"
+              onClick={() => handleConvertBooking(booking.bookingId || "")}
+            >
+              <SendHorizontal className="h-6 w-6" />
+            </Button>}
+          </div>
+        </React.Fragment>
       )
     },
     muiTableHeadCellProps: { align: 'center' },

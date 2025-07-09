@@ -10,17 +10,17 @@ type TooltipAttributes = {
     children: React.ReactNode
 }
 
-const TooltipProvider = ({ name, children }: TooltipAttributes) => {
+const TooltipComponent = ({ name, children }: TooltipAttributes) => {
     return (
         <Tooltip>
             <TooltipTrigger asChild>
                 {children}
             </TooltipTrigger>
             <TooltipContent>
-                <p>{name}</p>
+                <h4 className='text-white bg-black p-2 rounded'>{name}</h4>
             </TooltipContent>
         </Tooltip>
     )
 }
 
-export default TooltipProvider
+export default TooltipComponent
