@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createBooking,
   deleteBooking,
@@ -38,53 +38,85 @@ export const useFetchBookingById = (id: string) => {
 };
 
 export const useCreateBooking = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createBooking,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    }
   });
 };
 
 export const useUpdateBooking = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Booking> }) =>
       updateBooking(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    }
   });
 };
 
 export const useDeleteBooking = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteBooking,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    }
   });
 };
 
 export const useBulkDeleteBookings = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: bulkDeleteBookings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    }
   });
 };
 
 export const useAssignDriver = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: assignDriver,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    }
   });
 };
 
 export const useToggleTripStatus = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       toggleTripStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    }
   });
 };
 
 export const useTogglePaymentMethod = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, method }: { id: string; method: string }) =>
       togglePaymentMethod(id, method),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    }
   });
 };
 
 export const useTogglePaymentStatus = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       togglePaymentStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    }
   });
 };

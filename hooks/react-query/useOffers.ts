@@ -15,6 +15,14 @@ export const useOffers = () => {
   });
 };
 
+export const useOffersById = (id: string) => {
+  return useQuery({
+    queryKey: ["offers", id],
+    queryFn: getOffers,
+    enabled: !!id,
+  });
+};
+
 export const useCreateOffer = () => {
   const queryClient = useQueryClient();
   return useMutation({

@@ -1,8 +1,7 @@
 "use client"
 
-import React from "react"
+import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "components/ui/button"
-import { useOfferStore } from "stores/-offerStore"
 import { Edit, SendHorizontal, Trash, Eye, ChevronDown } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "components/ui/badge"
@@ -16,9 +15,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "components/ui/dropdown-menu"
-import { useCallback, useEffect, useState } from "react"
-import { useBookingStore } from "stores/bookingStore"
-import { useDriverStore } from "stores/-driverStore"
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -29,11 +25,25 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogFooter
-} from 'components/ui/alert-dialog'
-import { toast } from "sonner"
+} from 'components/ui/alert-dialog';
+import { toast } from "sonner";
+import {
+  useAssignDriver,
+  useTogglePaymentMethod,
+  useToggleTripStatus,
+  useTogglePaymentStatus,
+  useDeleteBooking,
+  useFetchBookings
+} from "hooks/react-query/useBooking";
+import {
+  useActiveDrivers
+} from 'hooks/react-query/useDriver';
+import {
+  useOffers
+} from 'hooks/react-query/useOffers';
 import {
   MRT_ColumnDef
-} from 'material-react-table'
+} from 'material-react-table';
 
 export type Booking = {
   bookingId?: string;
@@ -303,8 +313,8 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     header: "Offer Details",
     Cell: ({ row }) => {
       const offerId = row.getValue("offerId")
-      const { offers } = useOfferStore();
-      const offer = offers.find((offer) => offer.offerId === offerId);
+      const { data: offers = [] } = useOffers();
+      const offer = offers.find((offer: any) => offer.offerId === offerId);
       if (!offer) {
         return <div>-</div>
       }
@@ -368,57 +378,47 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     header: 'Driver Assigned',
     Cell: ({ row }) => {
       const status = row.getValue("status") as string;
-      const { getActiveDrivers, activeDrivers } = useDriverStore();
-      const { assignDriver, fetchBookings, bookings } = useBookingStore();
-      const bookingId = row.original.bookingId;
+      const { data: activeDrivers = [] } = useActiveDrivers();
+      const { data: bookings = [] } = useFetchBookings();
+      const {
+        mutate: assignDriver,
+      } = useAssignDriver();
+      const bookingId = row.original?.bookingId as string ?? "";
       const [isLoading, setIsLoading] = useState(false);
       // const [selectedDriverId, setSelectedDriverId] = useState<string>(''); // Keep this state for UI purposes
-
-      // Fetch active drivers only when the component mounts or when the driver list is empty
-      useEffect(() => {
-        if (activeDrivers.length === 0) {
-          getActiveDrivers();
-        }
-      }, [activeDrivers.length, getActiveDrivers]);
 
       const handleDriverAssignment = async (driverId: string) => {
         try {
           if (!bookingId) return;
 
           // setSelectedDriverId(driverId);
-          await assignDriver(bookingId, driverId);
+          assignDriver({ bookingId, driverId }, {
+            onSuccess: (data: any) => {
+              toast.success(data?.message || 'Driver assigned successfully', {
+                style: {
+                  backgroundColor: "#009F7F",
+                  color: "#fff",
+                },
+              });
+            },
+            onError: (error: any) => {
+              toast.error(error?.response?.data?.message || 'Assignment failed', {
+                style: {
+                  backgroundColor: "#FF0000",
+                  color: "#fff",
+                },
+              });
+              // setSelectedDriverId('');
+            }
+          });
 
-          const { statusCode, message } = useBookingStore.getState();
-
-          if (statusCode === 200 || statusCode === 201) {
-            toast.success('Driver assigned successfully', {
-              style: {
-                backgroundColor: "#009F7F",
-                color: "#fff",
-              },
-            });
-            setTimeout(async () => {
-              await fetchBookings();
-              getActiveDrivers();
-            }, 1000);
-          } else {
-            toast.error(message, {
-              style: {
-                backgroundColor: "#FF0000",
-                color: "#fff",
-              },
-            });
-            // setSelectedDriverId('');
-          }
-        } catch (error) {
-          const { message } = useBookingStore.getState();
-          toast.error(message, {
+        } catch (error: any) {
+          toast.error(error?.response?.data?.message || 'Assignment failed', {
             style: {
               backgroundColor: "#FF0000",
               color: "#fff",
             },
           });
-          // setSelectedDriverId('');
         }
       };
 
@@ -449,29 +449,31 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     header: "Payment Type",
     Cell: ({ row }) => {
       const status = row.getValue("paymentMethod") as string;
-      const { togglePaymentType, fetchBookings, isLoading } = useBookingStore();
-      const id = row.original.bookingId;
+      const {
+        mutate: togglePaymentType,
+        isPending: isLoading
+      } = useTogglePaymentMethod();
+      const id = row.original?.bookingId as string ?? "";
 
       const handlePmethodToggleStatus = async (newStatus: string) => {
-        await togglePaymentType(id, newStatus);
-        const statusCode = useBookingStore.getState().statusCode;
-        const message = useBookingStore.getState().message;
-        if (statusCode === 200 || statusCode === 201) {
-          toast.success("Payment type updated successfully", {
-            style: {
-              backgroundColor: "#009F7F",
-              color: "#fff",
-            },
-          });
-          await fetchBookings();
-        } else {
-          toast.error(message, {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
-          });
-        }
+        togglePaymentType({ id, method: newStatus }, {
+          onSuccess: (data: any) => {
+            toast.success(data?.message || 'Payment type updated successfully', {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Payment type update failed', {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          }
+        });
       };
 
       return (
@@ -527,29 +529,31 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     header: "Payment Status",
     Cell: ({ row }) => {
       const status = row.getValue("paymentStatus") as string;
-      const { togglePaymentStatus, fetchBookings, isLoading } = useBookingStore();
-      const id = row.original.bookingId;
+      const {
+        mutate: togglePaymentStatus,
+        isPending: isLoading
+      } = useTogglePaymentStatus();
+      const id = row.original?.bookingId as string ?? "";
 
       const handlePStatusToggle = async (newStatus: string) => {
-        await togglePaymentStatus(id, newStatus);
-        const statusCode = useBookingStore.getState().statusCode;
-        const message = useBookingStore.getState().message;
-        if (statusCode === 200 || statusCode === 201) {
-          toast.success("Payment status updated successfully", {
-            style: {
-              backgroundColor: "#009F7F",
-              color: "#fff",
-            },
-          });
-          await fetchBookings();
-        } else {
-          toast.error(message, {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
-          });
-        }
+        togglePaymentStatus({ id, status: newStatus }, {
+          onSuccess: (data: any) => {
+            toast.success(data?.message || 'Payment status updated successfully', {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Payment status update failed', {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          }
+        });
       };
 
       const getStatusColor = (status: string) => {
@@ -619,8 +623,11 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     Cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const [isDialogOpen, setIsDialogOpen] = useState(false);
-      const { toggleTripStatus, fetchBookings, isLoading } = useBookingStore();
-      const id = row.original.bookingId;
+      const {
+        mutate: toggleTripStatus,
+        isPending: isLoading
+      } = useToggleTripStatus();
+      const id = row.original?.bookingId as string ?? "";
       const booking = row.original;
 
       const getStatusColor = (status: string) => {
@@ -650,25 +657,24 @@ export const columns: MRT_ColumnDef<Booking>[] = [
             return;
           }
         }
-        await toggleTripStatus(id, newStatus);
-        const statusCode = useBookingStore.getState().statusCode;
-        const message = useBookingStore.getState().message;
-        if (statusCode === 200 || statusCode === 201) {
-          toast.success("Trip status updated successfully", {
-            style: {
-              backgroundColor: "#009F7F",
-              color: "#fff",
-            },
-          });
-          await fetchBookings();
-        } else {
-          toast.error(message, {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
-          });
-        }
+        toggleTripStatus({id, status:newStatus},{
+          onSuccess: (data: any) => {
+            toast.success(data?.message || 'Trip status updated successfully', {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Trip status update failed', {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          }
+        });
       };
 
       return (
@@ -813,18 +819,24 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       const router = useRouter()
 
       const handleEditBooking = useCallback(async (id: string | undefined) => {
-        await router.push(`/admin/bookings/edit/${id}`)
+        router.push(`/admin/bookings/edit/${id}`)
       }, [router])
 
-      const { deleteBooking } = useBookingStore();
+      const {
+        mutate: deleteBooking,
+      } = useDeleteBooking();
       const handleDelete = async (id: string) => {
         try {
-          await deleteBooking(id); // Wait for deletion to complete
-          await useBookingStore.getState().fetchBookings();
-          toast.success("Booking deleted successfully");
-          window.location.reload();
-        } catch (error) {
-          toast.error("Failed to booking driver", {
+          deleteBooking(id,{
+            onSuccess: () => {
+              toast.success("Booking deleted successfully");
+            },
+            onError: () => {
+              toast.error("Failed to delete booking");
+            },
+          }); // Wait for deletion to complete
+        } catch (error: any) {
+          toast.error(error?.response?.data?.message || "Failed to booking driver", {
             style: {
               backgroundColor: "#FF0000",
               color: "#fff",
