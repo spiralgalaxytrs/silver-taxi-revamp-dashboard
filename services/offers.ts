@@ -2,7 +2,12 @@
 import axios from "lib/http-common";
 
 export const getOffers = async () => {
-  const { data } = await axios.get("/v1/offers/");
+  const { data } = await axios.get("/v1/offers");
+  return data.data;
+};
+
+export const getOffersById = async (id: string) => {
+  const { data } = await axios.get(`/v1/offers/${id}`);
   return data.data;
 };
 

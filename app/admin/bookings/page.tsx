@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DataTable } from 'components/others/DataTable';
 import { useRouter, usePathname } from 'next/navigation';
 import { columns } from './columns';
@@ -71,7 +71,6 @@ export default function BookingsPage() {
   const [completedBookings, setCompletedBookings] = useState(0);
   const [manualBookings, setManualBookings] = useState(0);
   const [vendorBookings, setVendorBookings] = useState(0);
-  const [todayBookings, setTodayBookings] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
@@ -335,7 +334,7 @@ export default function BookingsPage() {
   }
 
   return (
-    <>
+    <React.Fragment>
       <div className="p-6 space-y-6">
         <div className="rounded bg-white p-5 shadow">
           <div className="flex flex-col">
@@ -606,6 +605,6 @@ export default function BookingsPage() {
           />
         </div>
       </div>
-    </>
+    </React.Fragment>
   );
 }
