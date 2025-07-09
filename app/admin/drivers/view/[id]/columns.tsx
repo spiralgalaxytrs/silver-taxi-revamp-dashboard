@@ -1,8 +1,8 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "components/ui/badge"
-import { Button } from "components/ui/button"
+import {
+  MRT_ColumnDef,
+} from 'material-react-table'
 
 export type WalletAttributes = {
   balance: number;
@@ -21,35 +21,71 @@ export type Booking = {
   driverBeta: number | null;
 };
 
-export const columns: ColumnDef<Booking>[] = [
+export const columns: MRT_ColumnDef<Booking>[] = [
   {
     header: "S.No",
-    cell: ({ row }) => row.index + 1, // Assigns Serial Number dynamically
+    Cell: ({ row }) => row.index + 1, // Assigns Serial Number dynamically
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "bookingId",
     header: "Booking ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "name",
     header: "Customer Name",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "phone",
     header: "Mobile Number",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "pickup",
     header: "From",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+    Cell: ({ row }) => {
+      const pickup = row.getValue("pickup") as string;
+      if (!pickup) return <div>-</div>;
+      if (pickup.length > 15) {
+        const firstWord = pickup.split(" ")[0];
+        if (firstWord.length > 15) {
+          return <div>{pickup.slice(0, 15)}...</div>;
+        }
+        return <div>{firstWord}...</div>;
+      }
+      return <div>{pickup}</div>;
+    }
   },
   {
     accessorKey: "drop",
     header: "To",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+    Cell: ({ row }) => {
+      const drop = row.getValue("drop") as string;
+      if (!drop) return <div>-</div>;
+      if (drop.length > 15) {
+        const firstWord = drop.split(" ")[0];
+        if (firstWord.length > 15) {
+          return <div>{drop.slice(0, 15)}...</div>;
+        }
+        return <div>{firstWord}...</div>;
+      }
+      return <div>{drop}</div>;
+    }
   },
   {
     accessorKey: "driverBeta",
     header: "Driver Beta",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("driverBeta"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -58,11 +94,13 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "estimatedAmount",
     header: "Estimated Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("estimatedAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -70,12 +108,13 @@ export const columns: ColumnDef<Booking>[] = [
       }).format(amount)
 
       return <div>{formatted}</div>
-    },
+    }
   },
   {
-    accessorKey: "pickupDate",
+    accessorKey: "pickupDateTime",
+    id: "pickupDate",
     header: "PickUp Date",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const pickupDate: string = row.getValue("pickupDate")
       if (pickupDate === null) {
         return <div>-</div>
@@ -88,7 +127,7 @@ export const columns: ColumnDef<Booking>[] = [
   {
     accessorKey: "dropDate",
     header: "Drop Date",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const dropDate: string = row.getValue("dropDate")
       if (dropDate === null) {
         return <div>-</div>
@@ -104,10 +143,10 @@ export const columns: ColumnDef<Booking>[] = [
     }
   },
   {
-    accessorKey: "bookingDate",
+    accessorKey: "createdAt",
     header: "Bookings At",
-    cell: ({ row }) => {
-      const bookingDate: string = row.getValue("bookingDate");
+    Cell: ({ row }) => {
+      const bookingDate: string = row.getValue("createdAt");
       if (!bookingDate) {
         return <div>-</div>;
       }
@@ -140,5 +179,7 @@ export const columns: ColumnDef<Booking>[] = [
         </div>
       )
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
 ]

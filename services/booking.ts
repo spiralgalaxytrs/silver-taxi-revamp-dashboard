@@ -13,6 +13,12 @@ export const fetchVendorBookings = async () => {
   return response.data.data;
 };
 
+// Get Driver bookings
+export const fetchDriverBookings = async (driverId: string) => {
+  const response = await axios.get(`/v1/bookings/driver/${driverId}`);
+  return response.data.data;
+};
+
 // Get booking by ID
 export const fetchBookingById = async (id: string) => {
   const response = await axios.get(`/v1/bookings/${id}`);

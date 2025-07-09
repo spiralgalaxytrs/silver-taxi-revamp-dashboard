@@ -5,6 +5,7 @@ import {
   fetchBookingById,
   fetchBookings,
   fetchVendorBookings,
+  fetchDriverBookings,
   updateBooking,
   bulkDeleteBookings,
   assignDriver,
@@ -26,6 +27,14 @@ export const useFetchVendorBookings = () => {
   return useQuery({
     queryKey: ["vendor-bookings"],
     queryFn: fetchVendorBookings,
+  });
+};
+
+export const useFetchDriverBookings = (id: string) => {
+  return useQuery({
+    queryKey: ["driver-bookings", id],
+    queryFn: () => fetchDriverBookings(id),
+    enabled: !!id
   });
 };
 

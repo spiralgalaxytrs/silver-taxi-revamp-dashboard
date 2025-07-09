@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent } from "components/ui/card";
 import { Loader2, ChevronLeft } from "lucide-react";
@@ -11,6 +11,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "components/ui/tooltip";
+import { capitalize } from "lib/capitalize";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,9 +20,18 @@ import {
 } from "components/ui/dropdown-menu";
 import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";
-import { useBookingStore } from "stores/bookingStore";
-import { useWalletTransactionStore } from "stores/-walletTransactionStore";
-import { useDriverStore, Driver, ExpiryStatus } from "stores/-driverStore";
+import {
+    useAdjustWallet,
+    useDriverById,
+    useDriverExpiryCheck
+} from 'hooks/react-query/useDriver';
+import {
+    useDriverTransactions
+} from 'hooks/react-query/useWallet';
+import {
+    useFetchDriverBookings
+} from "hooks/react-query/useBooking";
+import { Driver, ExpiryStatus } from "types/react-query/driver";
 import { toast } from "sonner";
 import ProfileTab from "components/driver/Tabs/ProfileTab";
 import VehicleTab from "components/driver/Tabs/VehicleTab";
@@ -32,20 +42,28 @@ import { walletColumns, DriverTransaction } from "./walletColumns";
 
 export default function ViewDriverPage() {
     const router = useRouter();
-    const { id } = useParams();
-    const { bookings, fetchBookings } = useBookingStore();
-    const { fetchDriverTransactions, driverTransactions } = useWalletTransactionStore();
-    const { toggleDriverStatus, driver, fetchDriverById, isLoading, error, fetchDrivers, minusDriverWallet, addDriverWallet, expiryCheck } = useDriverStore();
+    const { id = "" } = useParams();
+    const {
+        data: bookings = [],
+        isPending: isLoading
+    } = useFetchDriverBookings(id as string || "");
+    const {
+        data: driverTransactions = [],
+        isPending: isLoadingTransactions
+    } = useDriverTransactions(id as string || "");
+    const { mutate: adjustDriverWallet } = useAdjustWallet();
+    const {
+        data: driver = null,
+        isError: error
+    } = useDriverById(id as string);
+    const {
+        data: expiryStatus = null
+    } = useDriverExpiryCheck(id as string);
     const [totalTrips, setTotalTrips] = useState(0);
     const [totalEarnings, setTotalEarnings] = useState(0);
     const [walletAmount, setWalletAmount] = useState(0);
-    const [walletTransactions, setDriverTransactions] = useState<DriverTransaction[]>([]);
     const [activeTab, setActiveTab] = useState("profile");
-    const [isEditing, setIsEditing] = useState(false);
     const [editedDriver, setEditedDriver] = useState<Driver | null>(null);
-    const [remarks, setRemarks] = useState("");
-    const [openDialog, setOpenDialog] = useState(false);
-    const [currentDocType, setCurrentDocType] = useState("");
     const [vehicleId, setVehicleId] = useState<undefined | string>("");
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [selectedImageLabel, setSelectedImageLabel] = useState<string>("");
@@ -54,40 +72,18 @@ export default function ViewDriverPage() {
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const imageContainerRef = useRef<HTMLDivElement>(null);
-    const [dialogAction, setDialogAction] = useState<"accept" | "reject" | null>(null);
     const [sortConfig, setSortConfig] = useState<{
         columnId: string | null;
         direction: "asc" | "desc" | null;
     }>({ columnId: null, direction: null });
     const [bookingData, setBookingData] = useState<any[]>([]);
-    const [filters, setFilters] = useState({
-        search: "",
-        isActive: null,
-        creationDateStart: "",
-        creationDateEnd: "",
-    });
-    const [status, setStatus] = useState<string>("");
     const [adjustmentAmount, setAdjustmentAmount] = useState("");
     const [adjustmentRemarks, setAdjustmentRemarks] = useState("");
     const [adjustmentType, setAdjustmentType] = useState("add");
     const [localError, setLocalError] = useState("");
     const [walletMessage, setWalletMessage] = useState("");
     const [adjustmentReason, setAdjustmentReason] = useState("");
-    const [expiryStatus, setExpiryStatus] = useState<ExpiryStatus | null>(null);
 
-    useEffect(() => {
-        if (id) {
-            fetchDriverById(id as string);
-            fetchBookings();
-            // fetchDriverTransactions(id as string);
-            fetchExpiryStatus(id as string);
-
-            console.log("ID", id);
-        }
-    }, [id, fetchDriverById,
-        fetchBookings,
-        //fetchDriverTransactions
-    ]);
 
     useEffect(() => {
         if (driver) {
@@ -107,9 +103,8 @@ export default function ViewDriverPage() {
 
     useEffect(() => {
         if (bookings && id) {
-            const filteredBookings = bookings?.filter((booking) => booking?.driverId === id);
             setBookingData(
-                filteredBookings.map((booking) => ({
+                bookings.map((booking: any) => ({
                     ...booking,
                     id: booking?.bookingId,
                     pickupDate: booking?.pickupDate,
@@ -119,43 +114,26 @@ export default function ViewDriverPage() {
         }
     }, [bookings, id]);
 
-    
 
-    useEffect(() => {
-        const fetchTransactions = async () => {
-            if (id) {
-                const data = driverTransactions
-                    .filter((t) => t?.driverId === id)
-                    .map((transaction) => ({
-                        transactionId: transaction?.transactionId ?? "",
-                        driverId: transaction?.driverId ?? "",
-                        initiatedBy: transaction?.initiatedBy ?? "",
-                        initiatedTo: transaction?.initiatedTo ?? "",
-                        ownedBy: transaction?.ownedBy ?? "",
-                        type: transaction?.type ?? "",
-                        amount: Number(transaction?.amount) || 0,
-                        description: transaction?.description ?? "",
-                        createdAt: transaction?.createdAt ?? "",
-                        remark: transaction?.remark ?? "",
-                        reason: transaction?.reason ?? "",
-                    }));
-                setDriverTransactions(data);
-            }
-        };
-        fetchTransactions();
+    const filteredDriverTransactions = useMemo(() => {
+        if (!id || !driverTransactions) return [];
+
+        return driverTransactions
+            .filter((t) => t?.driverId === id)
+            .map((transaction) => ({
+                transactionId: transaction?.transactionId ?? "",
+                driverId: transaction?.driverId ?? "",
+                initiatedBy: transaction?.initiatedBy ?? "",
+                initiatedTo: transaction?.initiatedTo ?? "",
+                ownedBy: transaction?.ownedBy ?? "",
+                type: transaction?.type ?? "",
+                amount: Number(transaction?.amount) || 0,
+                description: transaction?.description ?? "",
+                createdAt: transaction?.createdAt ?? "",
+                remark: transaction?.remark ?? "",
+                reason: transaction?.reason ?? "",
+            }));
     }, [driverTransactions, id]);
-
-
-            
-
-    const fetchExpiryStatus = async (driverId: string) => {
-        try {
-            const data = await expiryCheck(driverId);
-            setExpiryStatus(data as any);
-        } catch (error) {
-            console.error("Error fetching expiry status:", error);
-        }
-    };
 
     const handleBack = () => {
         router.push("/admin/drivers");
@@ -167,8 +145,6 @@ export default function ViewDriverPage() {
             direction: prev.columnId === columnId && prev.direction === "asc" ? "desc" : "asc",
         }));
     };
-
-
 
     const handleImageClick = (url: string, label: string) => {
         setSelectedImage(url);
@@ -248,70 +224,82 @@ export default function ViewDriverPage() {
     };
 
     const handleSubmit = async () => {
-        if (!adjustmentAmount || isNaN(Number(adjustmentAmount)) || Number(adjustmentAmount) <= 0) {
+        const amount = Number(adjustmentAmount);
+        const id = editedDriver?.driverId;
+
+        if (!amount || isNaN(amount) || amount <= 0) {
             setLocalError("Please enter a valid positive amount");
             return;
         }
+
+        if (!id) {
+            setLocalError("Driver ID is missing");
+            return;
+        }
+
         try {
-            const amount = Number(adjustmentAmount);
-            const id = editedDriver?.driverId;
-            if (!id) {
-                setLocalError("Driver ID is missing");
-                return;
-            }
-            let response;
-            if (adjustmentType === "add") {
-                response = await addDriverWallet(id, amount, adjustmentRemarks, adjustmentReason);
-            } else {
-                response = await minusDriverWallet(id, amount, adjustmentRemarks, adjustmentReason);
-            }
+            adjustDriverWallet({ id, amount, remark: adjustmentRemarks, adjustmentReason, type: adjustmentType as "add" | "minus" }, {
+                onSuccess: () => {
+                    toast.success(
+                        adjustmentType === "add"
+                            ? "Amount added successfully!"
+                            : "Amount subtracted successfully!",
+                        {
+                            style: {
+                                backgroundColor: "#009F7F",
+                                color: "#fff",
+                            },
+                        }
+                    );
 
-            await fetchDriverById(id);
+                    // Reset fields
+                    handleClose();
 
-            if (editedDriver?.wallet) {
-                const newBalance =
-                    adjustmentType === "add"
-                        ? (editedDriver?.wallet?.balance ?? 0) + amount
-                        : (editedDriver?.wallet?.balance ?? 0) - amount;
+                    // Optional optimistic UI update
+                    if (editedDriver?.wallet) {
+                        const newBalance =
+                            adjustmentType === "add"
+                                ? (editedDriver.wallet.balance ?? 0) + amount
+                                : (editedDriver.wallet.balance ?? 0) - amount;
 
-                setEditedDriver((prev) => {
-                    if (!prev || !prev.wallet || !prev.wallet.walletId || !prev.wallet.currency) {
-                        return prev;
+                        setEditedDriver((prev) =>
+                            prev
+                                ? {
+                                    ...prev,
+                                    wallet: {
+                                        ...prev.wallet,
+                                        balance: newBalance,
+                                    } as Driver["wallet"],
+                                }
+                                : prev
+                        );
                     }
+                },
 
-                    return {
-                        ...prev,
-                        wallet: {
-                            ...prev.wallet,
-                            balance: newBalance,
-                        },
-                    };
-                });
-            }
+                onError: (error: any) => {
+                    toast.error(
+                        error?.response?.data?.message || "Failed to adjust balance",
+                        {
+                            style: {
+                                backgroundColor: "#FF0000",
+                                color: "#fff",
+                            },
+                        }
+                    );
+                    setWalletMessage("");
+                    console.error("Wallet adjustment error:", error);
+                },
+            });
 
-            setWalletMessage("");
-            toast.success(
-                adjustmentType === "add" ? "Amount added successfully!" : "Amount subtracted successfully!",
-                {
-                    style: {
-                        backgroundColor: "#009F7F",
-                        color: "#fff",
-                    },
-                }
-            );
-            setAdjustmentAmount("");
-            setAdjustmentRemarks("");
-            setAdjustmentType("add");
-            setLocalError("");
-        } catch (err) {
-            setWalletMessage("");
-            toast.error(error || "Failed to adjust balance", {
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || "Failed to adjust balance", {
                 style: {
                     backgroundColor: "#FF0000",
                     color: "#fff",
                 },
             });
-            console.error("Submission error:", err);
+            console.error("Wallet adjustment error:", err);
+            setWalletMessage("");
         }
     };
 
@@ -404,7 +392,9 @@ export default function ViewDriverPage() {
                                 </Button>
                                 <h1 className="text-2xl font-bold text-gray-800">Driver Details</h1>
                             </div>
-
+                            <h3 className="text-xl font-bold">
+                                {capitalize(editedDriver.name)} - {editedDriver.phone}
+                            </h3>
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <span className="relative inline-flex w-12 h-12 group cursor-pointer">
@@ -457,17 +447,17 @@ export default function ViewDriverPage() {
                         </div>
 
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                            <TabsList className="grid w-full grid-cols-4 tabs-list">
-                                <TabsTrigger className="tabs-trigger" value="profile">
+                            <TabsList className="tabs-list">
+                                <TabsTrigger className="tabs-trigger mx-1" value="profile">
                                     Profile & Documents
                                 </TabsTrigger>
-                                <TabsTrigger className="tabs-trigger" value="vehicle">
+                                <TabsTrigger className="tabs-trigger mx-1" value="vehicle">
                                     Vehicle Details
                                 </TabsTrigger>
-                                <TabsTrigger className="tabs-trigger" value="transactions">
+                                <TabsTrigger className="tabs-trigger mx-1" value="transactions">
                                     Transactions
                                 </TabsTrigger>
-                                <TabsTrigger className="tabs-trigger" value="bookings">
+                                <TabsTrigger className="tabs-trigger mx-1" value="bookings">
                                     Booking History
                                 </TabsTrigger>
                             </TabsList>
@@ -519,18 +509,8 @@ export default function ViewDriverPage() {
                             </TabsContent>
                             <TabsContent value="transactions">
                                 <TransactionsTab
-                                    walletTransactions={walletTransactions}
-                                    handleSort={handleSort}
-                                    sortConfig={sortConfig}
-                                />
-                            </TabsContent>
-                            <TabsContent value="bookings">
-                                <BookingsTab
-                                    totalTrips={totalTrips}
                                     editedDriver={editedDriver}
-                                    bookingData={fData}
-                                    handleSort={handleSort}
-                                    sortConfig={sortConfig}
+                                    walletTransactions={driverTransactions}
                                     adjustmentAmount={adjustmentAmount}
                                     setAdjustmentAmount={setAdjustmentAmount}
                                     adjustmentRemarks={adjustmentRemarks}
@@ -544,6 +524,13 @@ export default function ViewDriverPage() {
                                     isLoading={isLoading}
                                     handleSubmit={handleSubmit}
                                     handleClose={handleClose}
+                                />
+                            </TabsContent>
+                            <TabsContent value="bookings">
+                                <BookingsTab
+                                    totalTrips={totalTrips}
+                                    editedDriver={editedDriver}
+                                    bookingData={fData}
                                 />
                             </TabsContent>
                         </Tabs>

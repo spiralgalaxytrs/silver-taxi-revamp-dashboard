@@ -27,7 +27,11 @@ import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";
 import Image from "next/image";
 import VerificationActionGroup, { VerificationField } from "components/driver/VerificationActionGroup";
-import { Driver, ExpiryStatus, useDriverStore } from "stores/-driverStore";
+import {
+    useToggleDriverStatus,
+} from 'hooks/react-query/useDriver';
+import { Driver, ExpiryStatus } from "types/react-query/driver";
+
 
 interface ProfileTabProps {
     editedDriver: Driver | null;
@@ -80,9 +84,10 @@ export default function ProfileTab({
     handleZoomOut,
     imageContainerRef,
 }: ProfileTabProps) {
-    const { toggleDriverStatus, fetchDrivers, drivers } = useDriverStore();
 
-    // extract current editedDriver directly from store
+    const { mutate: toggleDriverStatus } = useToggleDriverStatus();
+
+    // extract current editedDriver directly from
     // const editedDriver = drivers.find((d) => d.driverId === id);
 
 
@@ -90,30 +95,23 @@ export default function ProfileTab({
         if (!editedDriver?.driverId) return;
 
         try {
-            await toggleDriverStatus(editedDriver.driverId, newStatus);
+            toggleDriverStatus({ id: editedDriver?.driverId, status: newStatus }, {
+                onSuccess: () => {
+                    toast.success("Driver status updated successfully", {
+                        style: { backgroundColor: "#009F7F", color: "#fff" },
+                    });
+                },
+                onError: () => {
+                    toast.error("Failed to update status", {
+                        style: { backgroundColor: "#FF0000", color: "#fff" },
+                    });
+                },
+            });
 
-            const { statusCode, message } = useDriverStore.getState();
-
-            if (statusCode === 200 || statusCode === 201) {
-                toast.success("Driver status updated successfully", {
-                    style: { backgroundColor: "#009F7F", color: "#fff" },
-                });
-            } else {
-                toast.error(message || "Failed to update status", {
-                    style: { backgroundColor: "#FF0000", color: "#fff" },
-                });
-            }
         } catch (error) {
             toast.error("Failed to update status", {
                 style: { backgroundColor: "#FF0000", color: "#fff" },
             });
-        }
-
-        // optional: refresh driver list
-        try {
-            await fetchDrivers();
-        } catch (error) {
-            console.error("Failed to fetch drivers:", error);
         }
     };
 
@@ -256,7 +254,7 @@ export default function ProfileTab({
                                 <div className="flex justify-between items-center mb-3">
                                     <span className="font-medium capitalize">{doc.label}</span>
                                     <div className="flex items-center gap-2">
-                                        
+
 
                                         {doc.status === "accepted" ? (
                                             <Badge variant={"default"}>
@@ -393,33 +391,33 @@ export default function ProfileTab({
 
                                 {doc.expiry && (
                                     <div className="mt-2">
-                                        <p className="text-sm text-black-500">Expiry Status:  
-                                     
+                                        <p className="text-sm text-black-500">Expiry Status:
 
 
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger>
-                                                            <Badge
-                                                                variant={doc.isExpired ? "destructive" : "default"}
-                                                                className="text-xs"
-                                                            >
-                                                                {doc.isExpired ? "Expired" : "Valid"}
-                                                            </Badge>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent
-                                                            side="top"
-                                                            align="center"
-                                                            className="bg-gray-800 text-white p-2 rounded text-sm"
+
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <Badge
+                                                            variant={doc.isExpired ? "destructive" : "default"}
+                                                            className="text-xs"
                                                         >
-                                                            Document Expiry Status ({new Date(doc.expiry).toLocaleDateString()})
-                                                        </TooltipContent>
+                                                            {doc.isExpired ? "Expired" : "Valid"}
+                                                        </Badge>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent
+                                                        side="top"
+                                                        align="center"
+                                                        className="bg-gray-800 text-white p-2 rounded text-sm"
+                                                    >
+                                                        Document Expiry Status ({new Date(doc.expiry).toLocaleDateString()})
+                                                    </TooltipContent>
 
-                                                    </Tooltip>
-                                                </TooltipProvider>
+                                                </Tooltip>
+                                            </TooltipProvider>
 
-                                         
-                                     
+
+
                                         </p>
                                     </div>
                                 )}

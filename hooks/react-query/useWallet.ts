@@ -7,20 +7,20 @@ import {
 } from 'services/wallet';
 
 // Fetch transactions of a specific vendor by ID
-export const useVendorTransactions = (vendorId: string, enabled = true) => {
+export const useVendorTransactions = (vendorId: string) => {
   return useQuery({
     queryKey: ['wallet-transactions', 'vendor', vendorId],
     queryFn: () => fetchVendorTransactions(vendorId),
-    enabled: !!vendorId && enabled,
+    enabled: !!vendorId,
   });
 };
 
 // Fetch transactions of a specific driver by ID
-export const useDriverTransactions = (driverId: string, enabled = true) => {
+export const useDriverTransactions = (driverId: string) => {
   return useQuery({
     queryKey: ['wallet-transactions', 'driver', driverId],
     queryFn: () => fetchDriverTransactions(driverId),
-    enabled: !!driverId && enabled,
+    enabled: !!driverId,
   });
 };
 
