@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useCallback, useState } from "react"
 import { Button } from "components/ui/button"
 import { Edit, Eye, Trash, ChevronDown } from 'lucide-react'
 import {
@@ -11,7 +12,7 @@ import {
 import { useRouter } from "next/navigation"
 import { toast } from 'sonner';
 import { Badge } from "components/ui/badge"
-import React, { useCallback, useState } from "react"
+import TooltipProvider from "components/others/TooltipProvider"
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -23,6 +24,7 @@ import {
   AlertDialogCancel,
   AlertDialogFooter
 } from 'components/ui/alert-dialog'
+import Image from 'next/image'
 import {
   useDeleteDriver,
   useToggleDriverStatus
@@ -40,6 +42,7 @@ export type Driver = {
   driverId?: string;
   name: string;
   phone: string;
+  isOnline: boolean;
   license: string;
   licenseImage?: File | null;
   createdAt: string;
@@ -76,6 +79,40 @@ export const columns: MRT_ColumnDef<Driver>[] = [
   {
     accessorKey: "name",
     header: "Driver Name",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
+  {
+    accessorKey: "isOnline",
+    header: "Online Status",
+    Cell: ({ row }) => {
+      const status = row.getValue("isOnline") as string || "-"
+      console.log("status >> ", status)
+
+      return (
+        <div>
+          {status ? (
+            <TooltipProvider name={"Online"}>
+              <Image
+                src="/img/gif/online.gif"
+                alt="Online"
+                width={50}
+                height={50}
+              />
+            </TooltipProvider>
+          ) : (
+            <TooltipProvider name={"Offline"}>
+              <Image
+                src="/img/gif/offline.gif"
+                alt="Offline"
+                width={50}
+                height={50}
+              />
+            </TooltipProvider>
+          )}
+        </div>
+      )
+    },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
@@ -214,7 +251,7 @@ export const columns: MRT_ColumnDef<Driver>[] = [
               </Button>
 
               {/* Edit Button */}
-              <Button
+              {/* <Button
                 variant="ghost"
                 size="icon"
                 className="text-green-500 hover:text-green-800 tool-tip"
@@ -222,7 +259,7 @@ export const columns: MRT_ColumnDef<Driver>[] = [
                 onClick={() => handleEditDriver(driver.driverId || '')}
               >
                 <Edit className="h-5 w-5" />
-              </Button>
+              </Button> */}
 
               {/* Delete Button with Dialog */}
               <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

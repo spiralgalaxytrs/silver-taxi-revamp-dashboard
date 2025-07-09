@@ -10,10 +10,12 @@ import {
     DialogFooter,
 } from "components/ui/dialog";
 import { Button } from "components/ui/button";
-import { useDriverStore } from 'stores/-driverStore'; // Assuming you have a driver store
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Check, Loader2, Search } from 'lucide-react';
 import { Input } from 'components/ui/input';
+import {
+    useDrivers
+} from 'hooks/react-query/useDriver';
 
 interface DriverSelectionPopupProps {
     trigger: React.ReactNode;
@@ -32,52 +34,45 @@ export function DriverSelectionPopup({
     bookedDriverId,
     status,
 }: DriverSelectionPopupProps) {
-    const { drivers, fetchDrivers } = useDriverStore();
     const [open, setOpen] = useState(false);
     const [selectedDriverId, setSelectedDriverId] = useState<string>('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+
+    const {
+        data: drivers = [],
+        isLoading: loading,
+        isError: error,
+        refetch,
+    } = useDrivers({ enabled: false });
 
     useEffect(() => {
         if (open) {
-            fetchDriversList();
+            refetch(); // fetch drivers when popup opens
         }
-    }, [open]);
+    }, [open, refetch]);
 
-    const fetchDriversList = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            await fetchDrivers(); // Fetch drivers from the store or API
-        } catch (error: any) {
-            setError(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSelectDriver = (driverId: any) => {
+    const handleSelectDriver = (driverId: string) => {
         setSelectedDriverId(driverId);
     };
 
     const handleConfirm = () => {
         if (selectedDriverId) {
-            onSelectDriver(selectedDriverId); // Pass the selected driver back to the parent
-            setOpen(false); // Close the popup
+            onSelectDriver(selectedDriverId);
+            setOpen(false);
         }
     };
 
-    // Filter out the booked driver (if any)
+    // Remove already booked and assigned drivers
     const activeDrivers = drivers.filter(
-        (driver: any) => String(driver.driverId) !== String(bookedDriverId) && driver.assigned !== true
+        (driver: any) =>
+            String(driver.driverId) !== String(bookedDriverId) &&
+            driver.assigned !== true
     );
 
     const filteredDrivers = activeDrivers.filter((driver: any) =>
         driver.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         driver.phone.toLowerCase().includes(searchQuery.toLowerCase())
     );
-
     return (
         <Dialog open={open} onOpenChange={status !== "Completed" ? setOpen : undefined}>
             <DialogTrigger asChild className={status === "Completed" ? "pointer-events-none" : ""}>
@@ -117,7 +112,7 @@ export function DriverSelectionPopup({
                     {!loading && !error && status !== "Completed" && (
                         <div className="grid gap-3">
                             {activeDrivers.length > 0 ? (
-                                <>
+                                <React.Fragment>
                                     {/* Show assigned driver (if any) */}
                                     {assignedDriver && (
                                         <div
@@ -151,9 +146,8 @@ export function DriverSelectionPopup({
 
                                     {/* Show other active drivers */}
                                     {filteredDrivers.map((driver: any, index: number) => (
-                                        <>
-                                            <div
-                                                key={index}
+                                        <React.Fragment key={index}>
+                                            <div      
                                                 className={`p-4 border rounded-xl cursor-pointer transition-all duration-200 hover:border-primary/50
                                                 ${selectedDriverId === driver.driverId
                                                         ? 'bg-green-50 border-primary shadow-sm'
@@ -177,9 +171,9 @@ export function DriverSelectionPopup({
                                                     )}
                                                 </div>
                                             </div>
-                                        </>
+                                        </React.Fragment>
                                     ))}
-                                </>
+                                </React.Fragment>
                             ) : (
                                 <div className="text-center text-muted-foreground py-8 bg-muted/50 rounded-lg">
                                     No drivers available.
