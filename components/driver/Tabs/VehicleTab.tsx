@@ -20,7 +20,7 @@ import { Badge } from "components/ui/badge";
 import { Layout, Eye, ZoomIn, ZoomOut } from "lucide-react";
 import Image from "next/image";
 import VerificationActionGroup, { VerificationField } from "components/driver/VerificationActionGroup";
-import { Driver, ExpiryStatus } from "stores/-driverStore";
+import { Driver, ExpiryStatus } from "types/react-query/driver";
 
 interface VehicleTabProps {
   editedDriver: Driver | null;
@@ -89,19 +89,18 @@ export default function VehicleTab({
                           <TooltipTrigger asChild>
                             <span className="inline-flex items-center justify-center w-auto h-5 m-0 p-0 rounded-full">
                               <span
-                                className={`text-xs px-2 py-0.5 rounded-full ${
-                                  typeof vehicle.adminVerified === "string" &&
-                                
-                                 
-                                  vehicle.adminVerified === "Approved"
+                                className={`text-xs px-2 py-0.5 rounded-full ${typeof vehicle.adminVerified === "string" &&
+
+
+                                    vehicle.adminVerified === "Approved"
                                     ? "bg-green-100 text-green-800 border border-green-400"
                                     : "bg-red-100 text-red-800 border border-red-400"
-                                }`}
+                                  }`}
                               >
                                 {typeof vehicle.adminVerified === "string" &&
-                             
-                             
-                                vehicle.adminVerified === "Approved"
+
+
+                                  vehicle.adminVerified === "Approved"
                                   ? "Accepted"
                                   : "Rejected / Not Approved"}
                               </span>
@@ -113,9 +112,9 @@ export default function VehicleTab({
                             className="bg-gray-800 text-white p-2 rounded text-sm"
                           >
                             {typeof vehicle.adminVerified === "string" &&
-                          
-                            vehicle.adminVerified === "Approved"
-                          
+
+                              vehicle.adminVerified === "Approved"
+
                               ? "Vehicle Verified"
                               : "Vehicle not verified"}
                           </TooltipContent>
@@ -129,7 +128,7 @@ export default function VehicleTab({
                         <h3 className="text-md font-semibold">Vehicle Details</h3>
                         <div className="flex gap-2 items-center">
                           {typeof vehicle.profileVerified === "string" &&
-                          vehicle.profileVerified === "accepted" ? (
+                            vehicle.profileVerified === "accepted" ? (
                             <span className="inline-flex items-center px-3 py-1 text-sm font-medium text-green-800 bg-green-100 rounded-full">
                               Vehicle Profile Verified
                             </span>
@@ -182,8 +181,8 @@ export default function VehicleTab({
                               {vehicleExpiry?.rcBook?.expiry
                                 ? new Date(vehicleExpiry?.rcBook?.expiry).toLocaleDateString()
                                 : vehicle.rcExpiryDate
-                                ? new Date(vehicle.rcExpiryDate).toLocaleDateString()
-                                : "-"}
+                                  ? new Date(vehicle.rcExpiryDate).toLocaleDateString()
+                                  : "-"}
                             </p>
                           </div>
                         </div>
@@ -194,8 +193,8 @@ export default function VehicleTab({
                               {vehicleExpiry?.insurance?.expiry
                                 ? new Date(vehicleExpiry?.insurance?.expiry).toLocaleDateString()
                                 : vehicle.insuranceExpiryDate
-                                ? new Date(vehicle.insuranceExpiryDate).toLocaleDateString()
-                                : "-"}
+                                  ? new Date(vehicle.insuranceExpiryDate).toLocaleDateString()
+                                  : "-"}
                             </p>
                           </div>
                         </div>
@@ -206,8 +205,8 @@ export default function VehicleTab({
                               {vehicleExpiry?.pollution?.expiry
                                 ? new Date(vehicleExpiry?.pollution?.expiry).toLocaleDateString()
                                 : vehicle.pollutionExpiryDate
-                                ? new Date(vehicle.pollutionExpiryDate).toLocaleDateString()
-                                : "-"}
+                                  ? new Date(vehicle.pollutionExpiryDate).toLocaleDateString()
+                                  : "-"}
                             </p>
                           </div>
                         </div>
@@ -229,7 +228,7 @@ export default function VehicleTab({
                           vehicle.insuranceImage ||
                           vehicle.pollutionImage) ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             {[
+                            {[
                               {
                                 type: "rcFront" as VerificationField,
                                 url: vehicle.rcBookImageFront,
@@ -273,7 +272,7 @@ export default function VehicleTab({
                                   <div className="flex justify-between items-center mb-3">
                                     <span className="font-medium capitalize">{doc.label}</span>
                                     <div className="flex items-center gap-2">
-                                    
+
                                       {doc.status === "accepted" ? (
                                         <Badge variant="default" className="text-xs">
                                           Document Verified
@@ -412,21 +411,21 @@ export default function VehicleTab({
                                   {doc.expiry && (
                                     <div className="mt-2">
                                       <p className="text-sm text-black mr-2">
-                                        Expiry Status:   
-                                        
+                                        Expiry Status:
+
                                         <TooltipProvider>
-                                          <Tooltip>   
+                                          <Tooltip>
                                             <TooltipTrigger >
-                                        {/* <span className="text-sm text-gray-600">
+                                              {/* <span className="text-sm text-gray-600">
                                             {new Date(doc.expiry).toLocaleDateString()}
                                           </span> */}
-                                          <Badge
-                                            variant={doc.isExpired ? "destructive" : "default"}
-                                            className="text-xs"
-                                          >
-                                            {doc.isExpired ? "Expired" : "Valid"}
-                                          </Badge>
-                                          </TooltipTrigger>
+                                              <Badge
+                                                variant={doc.isExpired ? "destructive" : "default"}
+                                                className="text-xs"
+                                              >
+                                                {doc.isExpired ? "Expired" : "Valid"}
+                                              </Badge>
+                                            </TooltipTrigger>
                                             <TooltipContent
                                               side="top"
                                               align="center"
@@ -434,12 +433,12 @@ export default function VehicleTab({
                                             >
                                               Document Expiry Status ({new Date(doc.expiry).toLocaleDateString()})
                                             </TooltipContent>
-                                         
+
                                           </Tooltip>
                                         </TooltipProvider>
-                                          
-                                        
-                                    
+
+
+
                                       </p>
                                     </div>
                                   )}

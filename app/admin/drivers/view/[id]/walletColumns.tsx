@@ -1,7 +1,9 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "components/ui/badge";
+import {
+    MRT_ColumnDef,
+} from 'material-react-table'
 
 export type DriverTransaction = {
     transactionId: string;
@@ -16,14 +18,18 @@ export type DriverTransaction = {
     remark: string;
 };
 
-export const walletColumns: ColumnDef<DriverTransaction>[] = [
+export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
     {
         header: "S.No",
-        cell: ({ row }) => row.index + 1, // Assigns Serial Number dynamically
+        Cell: ({ row }) => row.index + 1, // Assigns Serial Number dynamically
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "transactionId",
         header: "Transaction ID",
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     // {
     //     accessorKey: "driverId",
@@ -32,15 +38,19 @@ export const walletColumns: ColumnDef<DriverTransaction>[] = [
     {
         accessorKey: "initiatedTo",
         header: "Name/Phone",
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "ownedBy",
         header: "Category",
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "type",
         header: "Transaction Type",
-        cell: ({ row }) => {
+        Cell: ({ row }) => {
             const type = row.getValue("type") as string;
             return (
                 <div>
@@ -50,11 +60,13 @@ export const walletColumns: ColumnDef<DriverTransaction>[] = [
                 </div>
             );
         },
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "amount",
         header: "Amount",
-        cell: ({ row }) => {
+        Cell: ({ row }) => {
             const amount = parseFloat(row.getValue("amount"));
             const type = row.getValue("type") as string;
             const prefix = type.toLowerCase() === "credit" ? "+" : "-";
@@ -65,15 +77,19 @@ export const walletColumns: ColumnDef<DriverTransaction>[] = [
 
             return <div>{prefix} {formatted}</div>
         },
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "remark",
         header: "Remarks",
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "createdAt",
         header: "Date/Time",
-        cell: ({ row }) => {
+        Cell: ({ row }) => {
             const createdAt: string = row.getValue("createdAt")
             const date = new Date(createdAt);
             const convertedDate = date.toLocaleDateString();
@@ -87,5 +103,7 @@ export const walletColumns: ColumnDef<DriverTransaction>[] = [
                 </div>
             )
         },
+        muiTableHeadCellProps: { align: 'center' },
+        muiTableBodyCellProps: { align: 'center' },
     },
 ];

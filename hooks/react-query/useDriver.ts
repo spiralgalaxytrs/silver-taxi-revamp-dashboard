@@ -19,10 +19,11 @@ import {
 } from "services/driver";
 
 // 🚚 Get all drivers
-export const useDrivers = () =>
+export const useDrivers = ({ enabled = true }) =>
   useQuery({
     queryKey: ["drivers"],
     queryFn: getDrivers,
+    enabled,
   });
 
 // 🚚 Get single driver by ID
