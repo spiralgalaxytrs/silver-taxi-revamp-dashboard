@@ -83,6 +83,11 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
     {
         accessorKey: "remark",
         header: "Remarks",
+        Cell: ({ row }) => {
+            const remark = row.getValue("remark") as string
+            if (!remark) return <div>-</div>
+            return <div>{remark}</div>
+        },
         muiTableHeadCellProps: { align: 'center' },
         muiTableBodyCellProps: { align: 'center' },
     },
