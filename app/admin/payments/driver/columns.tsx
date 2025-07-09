@@ -82,8 +82,13 @@ export const columns: MRT_ColumnDef<DriverTransaction>[] = [
         muiTableBodyCellProps: { align: 'center' },
     },
     {
-        accessorKey: "status",
-        header: "Status",
+        accessorKey: "remark",
+        header: "Remarks",
+        Cell: ({ row }) => {
+            const remark = row.getValue("remark") as string
+            if (!remark) return <div>-</div>
+            return <div>{remark}</div>
+        },
         muiTableHeadCellProps: { align: 'center' },
         muiTableBodyCellProps: { align: 'center' },
     },
