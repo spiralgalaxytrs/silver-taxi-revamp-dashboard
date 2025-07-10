@@ -54,7 +54,8 @@ export default function ViewDriverPage() {
     const { mutate: adjustDriverWallet } = useAdjustWallet();
     const {
         data: driver = null,
-        isError: error
+        isError: error,
+        refetch
     } = useDriverById(id as string || "");
     const {
         data: expiryStatus = null
@@ -461,6 +462,7 @@ export default function ViewDriverPage() {
                                     driverDocuments={driverDocuments as any[]}
                                     expiryStatus={expiryStatus}
                                     id={id as string}
+                                    refetch={refetch}
                                     handleImageClick={handleImageClick}
                                     selectedImage={selectedImage}
                                     selectedImageLabel={selectedImageLabel}
@@ -483,6 +485,7 @@ export default function ViewDriverPage() {
                                     editedDriver={editedDriver}
                                     expiryStatus={expiryStatus}
                                     id={id as string}
+                                    refetch={refetch}
                                     handleImageClick={handleImageClick}
                                     selectedImage={selectedImage}
                                     selectedImageLabel={selectedImageLabel}

@@ -66,6 +66,12 @@ export const assignDriver = async ({
   return response.data;
 };
 
+// Assign All drivers
+export const assignAllDriver = async ({ id }: { id: string; }) => {
+  const response = await axios.post(`/v1/bookings/${id}/assign-driver`);
+  return response.data;
+};
+
 // Toggle trip status
 export const toggleTripStatus = async (id: string, status: string) => {
   const response = await axios.post(`/v1/bookings/toggle-changes/${id}`, {

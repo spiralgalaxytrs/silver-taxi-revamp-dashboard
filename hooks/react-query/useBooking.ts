@@ -9,6 +9,7 @@ import {
   updateBooking,
   bulkDeleteBookings,
   assignDriver,
+  assignAllDriver,
   toggleTripStatus,
   togglePaymentStatus,
   togglePaymentMethod,
@@ -91,6 +92,16 @@ export const useAssignDriver = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: assignDriver,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    }
+  });
+};
+
+export const useAssignAllDriver = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: assignAllDriver,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
     }

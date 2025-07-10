@@ -73,16 +73,13 @@ export default function EnquiryPage() {
   const [manualEnquiries, setManualEnquiries] = useState(0)
   const [websiteEnquiries, setWebsiteEnquiries] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [enquiryData, setEnquiryData] = useState<any[]>([])
 
-  useEffect(() => {
-    setEnquiryData(
-      enquiries.map((enquiry) => ({
-        ...enquiry,
-        id: enquiry.enquiryId,
-        dropDate: enquiry.dropDate ? new Date(enquiry.dropDate) : null,
-      }))
-    )
+  const enquiryData = useMemo(() => {
+    return enquiries.map((enquiry) => ({
+      ...enquiry,
+      id: enquiry.enquiryId,
+      dropDate: enquiry.dropDate ? new Date(enquiry.dropDate) : null,
+    }))
   }, [enquiries])
 
 

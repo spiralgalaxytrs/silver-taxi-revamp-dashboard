@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { columns } from "./columns";
 import { Button } from "components/ui/button";
@@ -62,13 +62,6 @@ export default function DriversPage(): JSX.Element {
     direction: 'asc' | 'desc' | null;
   }>({ columnId: null, direction: null });
 
-  // Counter states for the three counter cards
-  const [totalDrivers, setTotalDrivers] = useState(0);
-  const [activeDrivers, setActiveDrivers] = useState(0);
-  const [inactiveDrivers, setInactiveDrivers] = useState(0);
-
-  const [driverData, setDriverData] = useState<any[]>([]);;
-
   // Filters state for search and created date range
   const [filters, setFilters] = useState({
     search: '',
@@ -77,14 +70,12 @@ export default function DriversPage(): JSX.Element {
     creationDateEnd: ''
   });
 
-  useEffect(() => {
-    if (drivers) {
-      setDriverData(drivers.map(driver => ({
-        ...driver,
-        id: driver?.driverId ?? '',
-        walletAmount: driver.wallet?.balance ?? 0
-      })));
-    }
+  const driverData = useMemo(() => {
+    return drivers.map(driver => ({
+      ...driver,
+      id: driver?.driverId ?? '',
+      walletAmount: driver.wallet?.balance ?? 0
+    }))
   }, [drivers]);
 
   const unFiltered = [...driverData].sort((a, b) => {
@@ -143,13 +134,13 @@ export default function DriversPage(): JSX.Element {
   const finalDrivers = applyFilters();
 
   // Calculate counters whenever the driver data changes
-  useEffect(() => {
-    const total = finalDrivers.length;
-    const activeCount = finalDrivers.filter((driver) => driver.isActive).length;
-    setTotalDrivers(total);
-    setActiveDrivers(activeCount);
-    setInactiveDrivers(total - activeCount);
-  }, [finalDrivers]);
+  const totalDrivers = finalDrivers.length;
+
+  const activeDrivers = useMemo(() => (
+    finalDrivers.filter(driver => driver.isActive).length
+  ), [finalDrivers]);
+
+  const inactiveDrivers = totalDrivers - activeDrivers;
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
