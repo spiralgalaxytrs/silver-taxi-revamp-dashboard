@@ -127,9 +127,6 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
     // const [filteredVehicles, setFilteredVehicles] = useState<any[]>([]);
 
-    const filteredVehicles = useMemo(() => {
-        return vehicles.filter((vehicle) => vehicle.isActive === true);
-    }, [vehicles, serviceType]);
 
     const [formData, setFormData] = useState<Booking>({
         name: '',
@@ -171,6 +168,19 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
     });
 
     let pastTimeToastShown = false;
+
+    const filteredVehicles = useMemo(() => {
+        return vehicles.filter(vehicle =>
+            vehicle.isActive &&
+            tariffs.some(
+                tariff =>
+                    tariff.vehicleId === vehicle.vehicleId &&
+                    tariff.price > 0 &&
+                    tariff.services?.name === formData.serviceType
+            )
+        );
+    }, [vehicles, tariffs, formData.serviceType]);
+
 
     const findServiceId = (serviceType: string) => {
         const foundService: any = services.find(service => service.name === serviceType);
