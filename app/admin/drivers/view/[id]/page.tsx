@@ -55,7 +55,7 @@ export default function ViewDriverPage() {
     const {
         data: driver = null,
         isError: error
-    } = useDriverById(id as string);
+    } = useDriverById(id as string || "");
     const {
         data: expiryStatus = null
     } = useDriverExpiryCheck(id as string);
@@ -76,7 +76,6 @@ export default function ViewDriverPage() {
         columnId: string | null;
         direction: "asc" | "desc" | null;
     }>({ columnId: null, direction: null });
-    const [bookingData, setBookingData] = useState<any[]>([]);
     const [adjustmentAmount, setAdjustmentAmount] = useState("");
     const [adjustmentRemarks, setAdjustmentRemarks] = useState("");
     const [adjustmentType, setAdjustmentType] = useState("add");
@@ -88,7 +87,6 @@ export default function ViewDriverPage() {
     useEffect(() => {
         if (driver) {
             setEditedDriver({ ...driver });
-            // Check if driver.vehicle exists and is not empty
             const lastVehicle = driver.vehicle && driver.vehicle.length > 0
                 ? driver.vehicle[driver.vehicle.length - 1]
                 : null;
@@ -101,17 +99,15 @@ export default function ViewDriverPage() {
         }
     }, [driver]);
 
-    useEffect(() => {
-        if (bookings && id) {
-            setBookingData(
-                bookings.map((booking: any) => ({
-                    ...booking,
-                    id: booking?.bookingId,
-                    pickupDate: booking?.pickupDate,
-                    dropDate: booking?.dropDate ? new Date(booking.dropDate).toLocaleDateString() : null,
-                }))
-            );
-        }
+    const bookingData = useMemo(() => {
+        if (!bookings || !id) return [];
+
+        return bookings.map((booking: any) => ({
+            ...booking,
+            id: booking?.bookingId,
+            pickupDate: booking?.pickupDate,
+            dropDate: booking?.dropDate ? new Date(booking.dropDate).toLocaleDateString() : null,
+        }));
     }, [bookings, id]);
 
 
@@ -376,9 +372,6 @@ export default function ViewDriverPage() {
             </div>
         );
     }
-
-
-
 
     return (
         <div className="relative rounded bg-white p-5 shadow">
