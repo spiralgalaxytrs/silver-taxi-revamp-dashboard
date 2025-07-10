@@ -93,7 +93,7 @@ export default function BookingsPage() {
       ...booking,
       id: booking.bookingId,
       pickupDate: booking.pickupDate,
-      dropDate: booking.dropDate ? new Date(booking.dropDate).toLocaleDateString() : null,
+      dropDate: booking.dropDate ? booking.dropDate : null,
     }))
   }, [bookings])
 

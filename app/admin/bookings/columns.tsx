@@ -225,6 +225,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     header: "Drop Date",
     Cell: ({ row }) => {
       const dropDate: string = row.getValue("dropDate");
+      
       if (!dropDate) {
         return <div>-</div>;
       }
@@ -236,12 +237,13 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
 
       // Format the corrected IST date
-      const formattedDate = istDate.toLocaleDateString("en-IN", {
+      const formattedDate = istDate.toLocaleString("en-IN", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
       });
-
+      
+      console.log("formattedDate ------> ",formattedDate);
       return <div>{formattedDate}</div>;
     },
     muiTableHeadCellProps: { align: 'center' },
@@ -766,7 +768,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       // Parse the stored UTC date
       const utcDate = new Date(bookingDate);
-      console.log("utcDate ===> ", utcDate.toLocaleTimeString());
+  
       // Adjust back to IST (Subtract 5.5 hours)
       const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
 
