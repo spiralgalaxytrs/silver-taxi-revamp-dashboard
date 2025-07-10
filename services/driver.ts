@@ -70,7 +70,7 @@ export const toggleDriverStatus = async ({
   id: string;
   status: boolean;
 }): Promise<any> => {
-  const res = await axios.post(`/v1/toggles-change/driver/${id}`, { status });
+  const res = await axios.post(`/v1/toggles-change/driver`, { id, status });
   return res.data.data;
 };
 

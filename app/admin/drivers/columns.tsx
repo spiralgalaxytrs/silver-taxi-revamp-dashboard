@@ -151,8 +151,8 @@ export const columns: MRT_ColumnDef<Driver>[] = [
                 },
               });
             },
-            onError: () => {
-              toast.error("Failed to update status", {
+            onError: (error:any) => {
+              toast.error(error?.response?.data?.message || "Failed to update status", {
                 style: {
                   backgroundColor: "#FF0000",
                   color: "#fff",
