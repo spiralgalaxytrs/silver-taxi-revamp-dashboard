@@ -247,7 +247,6 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
-
   {
     accessorKey: "serviceType",
     header: "Service Type",
