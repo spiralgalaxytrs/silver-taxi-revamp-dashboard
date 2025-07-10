@@ -320,7 +320,7 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
       const utcDate = new Date(createdAt);
 
       // Adjust back to IST (Subtract 5.5 hours)
-      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+      const istDate = new Date(utcDate.getTime());
 
       // Format the corrected IST time
       const options: Intl.DateTimeFormatOptions = {

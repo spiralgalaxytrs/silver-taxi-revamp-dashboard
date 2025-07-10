@@ -52,6 +52,7 @@ interface ProfileTabProps {
     zoomLevel: number;
     position: { x: number; y: number };
     isDragging: boolean;
+    refetch: () => void;
     handleMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
     handleMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
     handleMouseUp: () => void;
@@ -74,6 +75,7 @@ export default function ProfileTab({
     zoomLevel,
     position,
     isDragging,
+    refetch,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
@@ -100,6 +102,7 @@ export default function ProfileTab({
                     toast.success("Driver status updated successfully", {
                         style: { backgroundColor: "#009F7F", color: "#fff" },
                     });
+                    refetch();
                 },
                 onError: () => {
                     toast.error("Failed to update status", {
@@ -343,48 +346,46 @@ export default function ProfileTab({
                                             </div>
                                         </div>
                                         <div className="flex justify-center gap-4 mt-4">
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="icon"
-                                                            onClick={handleZoomOut}
-                                                            disabled={zoomLevel <= 0.5}
-                                                            className="p-2"
-                                                        >
-                                                            <ZoomOut className="w-5 h-5" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent
-                                                        side="top"
-                                                        align="center"
-                                                        className="bg-gray-800 text-white p-2 rounded text-sm"
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        onClick={handleZoomOut}
+                                                        disabled={zoomLevel <= 0.5}
+                                                        className="p-2"
                                                     >
-                                                        Tap to zoom out
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="icon"
-                                                            onClick={handleZoomIn}
-                                                            disabled={zoomLevel >= 3}
-                                                            className="p-2"
-                                                        >
-                                                            <ZoomIn className="w-5 h-5" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent
-                                                        side="top"
-                                                        align="center"
-                                                        className="bg-gray-800 text-white p-2 rounded text-sm"
+                                                        <ZoomOut className="w-5 h-5" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent
+                                                    side="top"
+                                                    align="center"
+                                                    className="bg-gray-800 text-white p-2 rounded text-sm"
+                                                >
+                                                    Tap to zoom out
+                                                </TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        onClick={handleZoomIn}
+                                                        disabled={zoomLevel >= 3}
+                                                        className="p-2"
                                                     >
-                                                        Tap to zoom in
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
+                                                        <ZoomIn className="w-5 h-5" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent
+                                                    side="top"
+                                                    align="center"
+                                                    className="bg-gray-800 text-white p-2 rounded text-sm"
+                                                >
+                                                    Tap to zoom in
+                                                </TooltipContent>
+                                            </Tooltip>
                                         </div>
                                     </DialogContent>
                                 </Dialog>
@@ -392,32 +393,23 @@ export default function ProfileTab({
                                 {doc.expiry && (
                                     <div className="mt-2">
                                         <p className="text-sm text-black-500">Expiry Status:
-
-
-
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger>
-                                                        <Badge
-                                                            variant={doc.isExpired ? "destructive" : "default"}
-                                                            className="text-xs"
-                                                        >
-                                                            {doc.isExpired ? "Expired" : "Valid"}
-                                                        </Badge>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent
-                                                        side="top"
-                                                        align="center"
-                                                        className="bg-gray-800 text-white p-2 rounded text-sm"
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <Badge
+                                                        variant={doc.isExpired ? "destructive" : "default"}
+                                                        className="text-xs"
                                                     >
-                                                        Document Expiry Status ({new Date(doc.expiry).toLocaleDateString()})
-                                                    </TooltipContent>
-
-                                                </Tooltip>
-                                            </TooltipProvider>
-
-
-
+                                                        {doc.isExpired ? "Expired" : "Valid"}
+                                                    </Badge>
+                                                </TooltipTrigger>
+                                                <TooltipContent
+                                                    side="top"
+                                                    align="center"
+                                                    className="bg-gray-800 text-white p-2 rounded text-sm"
+                                                >
+                                                    Document Expiry Status ({new Date(doc.expiry).toLocaleDateString()})
+                                                </TooltipContent>
+                                            </Tooltip>
                                         </p>
                                     </div>
                                 )}
