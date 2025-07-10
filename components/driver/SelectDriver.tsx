@@ -11,7 +11,7 @@ import {
 } from "components/ui/dialog";
 import { Button } from "components/ui/button";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Check, Loader2, Search } from 'lucide-react';
+import { Check, Loader2, Search, SquareChevronRight } from 'lucide-react';
 import { Input } from 'components/ui/input';
 import {
     useDrivers
@@ -20,6 +20,7 @@ import {
 interface DriverSelectionPopupProps {
     trigger: React.ReactNode;
     onSelectDriver: (driverId: string) => void; // Callback to handle selected driver
+    assignAllDriver: () => void;
     title?: string;
     assignedDriver?: any; // Currently assigned driver (if any)
     bookedDriverId?: string; // ID of the driver already booked (if any)
@@ -29,6 +30,7 @@ interface DriverSelectionPopupProps {
 export function DriverSelectionPopup({
     trigger,
     onSelectDriver,
+    assignAllDriver,
     title = 'Select Driver',
     assignedDriver,
     bookedDriverId,
@@ -113,6 +115,20 @@ export function DriverSelectionPopup({
                         <div className="grid gap-3">
                             {activeDrivers.length > 0 ? (
                                 <React.Fragment>
+                                    <div>
+                                        <div
+                                            className={`p-4 border rounded-xl cursor-pointer transition-all duration-200 hover:border-primary/50`}
+                                            onClick={assignAllDriver}>
+                                            <div>
+                                                <div className="flex items-center justify-between ">
+                                                    <Label className="font-medium text-base flex items-center gap-2">
+                                                        Assign All Drivers
+                                                    </Label>
+                                                    <SquareChevronRight className="text-muted-foreground" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     {/* Show assigned driver (if any) */}
                                     {assignedDriver && (
                                         <div
@@ -147,7 +163,7 @@ export function DriverSelectionPopup({
                                     {/* Show other active drivers */}
                                     {filteredDrivers.map((driver: any, index: number) => (
                                         <React.Fragment key={index}>
-                                            <div      
+                                            <div
                                                 className={`p-4 border rounded-xl cursor-pointer transition-all duration-200 hover:border-primary/50
                                                 ${selectedDriverId === driver.driverId
                                                         ? 'bg-green-50 border-primary shadow-sm'

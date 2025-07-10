@@ -32,6 +32,7 @@ interface VehicleTabProps {
   zoomLevel: number;
   position: { x: number; y: number };
   isDragging: boolean;
+  refetch: () => void;
   handleMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
   handleMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   handleMouseUp: () => void;
@@ -53,6 +54,7 @@ export default function VehicleTab({
   zoomLevel,
   position,
   isDragging,
+  refetch,
   handleMouseDown,
   handleMouseMove,
   handleMouseUp,
@@ -68,7 +70,7 @@ export default function VehicleTab({
       <div className="space-y-4">
         <h2 className="text-lg font-bold">Vehicle(s) Information</h2>
         {editedDriver?.vehicle && editedDriver.vehicle.length > 0 ? (
-          <Accordion type="single" collapsible className="space-y-4">
+          <Accordion type="single" collapsible className="space-y-4" defaultValue="vehicle-0">
             {editedDriver.vehicle.map((vehicle, index) => {
               const vehicleExpiry = expiryStatus?.vehicles?.find(
                 (v) => v.vehicleId === vehicle.vehicleId
@@ -79,7 +81,8 @@ export default function VehicleTab({
                   value={`vehicle-${index}`}
                   className="border rounded-lg"
                 >
-                  <AccordionTrigger className="px-6 py-4 text-left no-underline hover:no-underline hover:bg-slate-100">
+                  <AccordionTrigger
+                    className="px-6 py-4 text-left no-underline hover:no-underline hover:bg-slate-100">
                     <div className="flex justify-between items-center w-full">
                       <span className="font-semibold">
                         {vehicle.name || `Vehicle ${index + 1}`}
@@ -92,9 +95,9 @@ export default function VehicleTab({
                                 className={`text-xs px-2 py-0.5 rounded-full ${typeof vehicle.adminVerified === "string" &&
 
 
-                                    vehicle.adminVerified === "Approved"
-                                    ? "bg-green-100 text-green-800 border border-green-400"
-                                    : "bg-red-100 text-red-800 border border-red-400"
+                                  vehicle.adminVerified === "Approved"
+                                  ? "bg-green-100 text-green-800 border border-green-400"
+                                  : "bg-red-100 text-red-800 border border-red-400"
                                   }`}
                               >
                                 {typeof vehicle.adminVerified === "string" &&

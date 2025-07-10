@@ -29,6 +29,7 @@ import {
 import { toast } from "sonner";
 import {
   useAssignDriver,
+  useAssignAllDriver,
   useTogglePaymentMethod,
   useToggleTripStatus,
   useTogglePaymentStatus,
@@ -225,7 +226,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     header: "Drop Date",
     Cell: ({ row }) => {
       const dropDate: string = row.getValue("dropDate");
-      
+
       if (!dropDate) {
         return <div>-</div>;
       }
@@ -242,8 +243,8 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         month: "2-digit",
         year: "numeric",
       });
-      
-      console.log("formattedDate ------> ",formattedDate);
+
+      console.log("formattedDate ------> ", formattedDate);
       return <div>{formattedDate}</div>;
     },
     muiTableHeadCellProps: { align: 'center' },
@@ -367,9 +368,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       const status = row.getValue("status") as string;
       const { data: activeDrivers = [] } = useActiveDrivers();
       const { data: bookings = [] } = useFetchBookings();
-      const {
-        mutate: assignDriver,
-      } = useAssignDriver();
+      const { mutate: assignDriver } = useAssignDriver();
+      const { mutate: assignAllDriver } = useAssignAllDriver();
+
       const bookingId = row.original?.bookingId as string ?? "";
       const [isLoading, setIsLoading] = useState(false);
       // const [selectedDriverId, setSelectedDriverId] = useState<string>(''); // Keep this state for UI purposes
@@ -409,6 +410,39 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         }
       };
 
+      const handleAllDriverAssign = async () => {
+        try {
+          if (!bookingId) return;
+
+          // setSelectedDriverId(driverId);
+          assignAllDriver({ id: bookingId }, {
+            onSuccess: (data: any) => {
+              toast.success(data?.message || 'Notification sent to eligible drivers successfully', {
+                style: {
+                  backgroundColor: "#009F7F",
+                  color: "#fff",
+                },
+              });
+            },
+            onError: (error: any) => {
+              toast.error(error?.response?.data?.message || 'Assign All drivers failed', {
+                style: {
+                  backgroundColor: "#FF0000",
+                  color: "#fff",
+                },
+              });
+            }
+          });
+        } catch (error: any) {
+          toast.error(error?.response?.data?.message || 'Assign All drivers failed', {
+            style: {
+              backgroundColor: "#FF0000",
+              color: "#fff",
+            },
+          });
+        }
+      };
+
       const currentBooking = bookings.find((booking: any) => String(booking.bookingId) === String(bookingId));
       const bookedDriverId = currentBooking?.driverId;
       const assignedDriver = activeDrivers.find((driver: any) => String(driver.driverId) === String(bookedDriverId));
@@ -421,6 +455,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
             </Button>
           }
           onSelectDriver={handleDriverAssignment}
+          assignAllDriver={handleAllDriverAssign}
           assignedDriver={assignedDriver}
           bookedDriverId={bookedDriverId || ""}
           status={status}
@@ -768,7 +803,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       // Parse the stored UTC date
       const utcDate = new Date(bookingDate);
-  
+
       // Adjust back to IST (Subtract 5.5 hours)
       const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
 
