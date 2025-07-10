@@ -224,38 +224,29 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     accessorKey: "dropDate",
     header: "Drop Date",
     Cell: ({ row }) => {
-      const dropDateRaw = row.getValue("dropDate");
-      const dropTime = "00:00";
-
-      if (!dropDateRaw || dropDateRaw === "null") {
+      const dropDate: string = row.getValue("dropDate");
+      if (!dropDate) {
         return <div>-</div>;
       }
 
-      const dropDateStr = typeof dropDateRaw === "string" ? dropDateRaw : "";
-      const [day, month, year] = dropDateStr.split("/");
-      if (!day || !month || !year) {
-        return <div>Invalid Date</div>;
-      }
+      // Parse the stored UTC date
+      const utcDate = new Date(dropDate);
 
-      const isoDateStr = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${dropTime}`;
-      const date = new Date(isoDateStr);
+      // Adjust back to IST (Subtract 5.5 hours)
+      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
 
-      if (isNaN(date.getTime())) {
-        return <div>Invalid Date</div>;
-      }
-
-      const formatted = date.toLocaleDateString("en-IN", {
+      // Format the corrected IST date
+      const formattedDate = istDate.toLocaleDateString("en-IN", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
       });
 
-      return <div>{formatted}</div>;
+      return <div>{formattedDate}</div>;
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
-
   {
     accessorKey: "serviceType",
     header: "Service Type",
