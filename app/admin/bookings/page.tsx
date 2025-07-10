@@ -65,12 +65,6 @@ export default function BookingsPage() {
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [isSpinning, setIsSpinning] = useState(false)
-  const [totalBookings, setTotalBookings] = useState(0);
-  const [totalBookingValue, setTotalBookingValue] = useState(0);
-  const [yearlyBookings, setYearlyBookings] = useState(0);
-  const [completedBookings, setCompletedBookings] = useState(0);
-  const [manualBookings, setManualBookings] = useState(0);
-  const [vendorBookings, setVendorBookings] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
@@ -182,51 +176,34 @@ export default function BookingsPage() {
   const filteredData = applyFilters();
 
 
-  useEffect(() => {
-    const calculateBookingStats = () => {
+  const stats = useMemo(() => {
+    const currentYear = new Date().getFullYear();
 
-      const currentYear = new Date().getFullYear();
+    return filteredData.reduce(
+      (acc, booking) => {
+        const amount = Number(booking.finalAmount) || 0;
+        const bookingYear = new Date(booking.createdAt).getFullYear();
 
-      return filteredData.reduce((acc, booking) => {
-        // Total bookings count
-        acc.total++;
-
-        // Total booking value
-        acc.totalValue += Number(booking.finalAmount) || 0;
-
-        // This year's bookings
-        const bookingYear = new Date(booking.bookingDate).getFullYear();
-        if (bookingYear === currentYear) {
-          acc.yearly++;
-        }
-
-        // Completed bookings
-        if (booking.status === 'Completed') {
-          acc.completed++;
-        }
-
-        // Manual bookings
-        if (booking.type === 'Manual') {
-          acc.manual++;
-        }
-
-        // Vendor bookings
-        if (booking.createdBy === 'Vendor') {
-          acc.vendor++;
-        }
+        acc.totalBookings += 1;
+        acc.totalBookingValue += amount;
+        if (bookingYear === currentYear) acc.yearlyBookings += 1;
+        if (booking.status === 'Completed') acc.completedBookings += 1;
+        if (booking.type === 'Manual') acc.manualBookings += 1;
+        if (booking.createdBy === 'Vendor') acc.vendorBooking += 1;
 
         return acc;
-      }, { total: 0, totalValue: 0, yearly: 0, completed: 0, manual: 0, vendor: 0 });
-    };
-
-    const stats = calculateBookingStats();
-    setTotalBookings(stats.total);
-    setTotalBookingValue(stats.totalValue);
-    setYearlyBookings(stats.yearly);
-    setCompletedBookings(stats.completed);
-    setManualBookings(stats.manual);
-    setVendorBookings(stats.vendor);
+      },
+      {
+        totalBookings: 0,
+        totalBookingValue: 0,
+        yearlyBookings: 0,
+        completedBookings: 0,
+        manualBookings: 0,
+        vendorBookings: 0,
+      }
+    );
   }, [filteredData]);
+
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -393,7 +370,7 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-emerald-100"
                     icon={Activity}
-                    count={totalBookings.toLocaleString()}
+                    count={stats.totalBookings.toLocaleString()}
                     label="Total Bookings"
                     className="relative z-10 p-6"
                   //cardSize="w-[200px] h-[100px]"
@@ -407,7 +384,7 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-blue-100"
                     icon={Activity}
-                    count={totalBookingValue.toLocaleString()}
+                    count={stats.totalBookingValue.toLocaleString()}
                     label="Total Booking Value"
                     //cardSize="w-[200px] h-[100px]"
                     format="currency"
@@ -421,7 +398,7 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-purple-100"
                     icon={Activity}
-                    count={yearlyBookings.toLocaleString()}
+                    count={stats.yearlyBookings.toLocaleString()}
                     label="This Year's Bookings"
                   //cardSize="w-[200px] h-[100px]"
                   />
@@ -434,7 +411,7 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-emerald-100"
                     icon={Activity}
-                    count={completedBookings.toLocaleString()}
+                    count={stats.completedBookings.toLocaleString()}
                     label="Completed Bookings"
                   //cardSize="w-[200px] h-[100px]"
                   />
@@ -447,7 +424,7 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-blue-100"
                     icon={Activity}
-                    count={manualBookings.toLocaleString()}
+                    count={stats.manualBookings.toLocaleString()}
                     label="Manual Bookings"
                   //cardSize="w-[200px] h-[100px]"
                   />
@@ -460,7 +437,7 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-purple-100"
                     icon={Activity}
-                    count={vendorBookings.toLocaleString()}
+                    count={stats.vendorBookings.toLocaleString()}
                     label="Vendor Bookings"
                   />
                 </div>
