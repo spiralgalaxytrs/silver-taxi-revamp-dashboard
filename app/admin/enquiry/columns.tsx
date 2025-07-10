@@ -184,17 +184,30 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
     accessorKey: "dropDate",
     header: "Drop Date",
     Cell: ({ row }) => {
-      const dropDate = row.original.dropDate;
-      if (dropDate == null) {
+      const dropDate: string = row.getValue("dropDate");
+      if (!dropDate) {
         return <div>-</div>;
       }
-      const date = new Date(dropDate);
-      const convertedDate = date.toLocaleDateString();
-      return <div>{convertedDate}</div>;
+
+      // Parse the stored UTC date
+      const utcDate = new Date(dropDate);
+
+      // Adjust back to IST (Subtract 5.5 hours)
+      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+      // Format the corrected IST date
+      const formattedDate = istDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      return <div>{formattedDate}</div>;
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
+
   {
     accessorKey: "serviceType",
     header: "Service Name",
