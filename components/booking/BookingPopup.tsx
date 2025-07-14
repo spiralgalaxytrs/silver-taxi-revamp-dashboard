@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Label } from 'components/ui/label';
 import {
   Dialog,
@@ -8,38 +8,23 @@ import {
   DialogTrigger,
   DialogTitle
 } from "components/ui/dialog";
-import { Button } from "components/ui/button";
-import {
-  useFetchBookingById
-} from 'hooks/react-query/useBooking';
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Book } from 'lucide-react';
 
 interface BookingPopupProps {
   trigger: React.ReactNode;
-  id: string;
+  booking: Record<string, any> | null;
   title?: string;
   width?: string;
   size?: string;
 }
 
-interface BookingDetails {
-  [key: string]: any;
-}
 
 export function BookingPopup({
   trigger,
-  id,
+  booking,
   title = "Booking Details",
 }: BookingPopupProps) {
   const [open, setOpen] = useState(false);
-
-  const {
-    data: booking = null,
-    isPending: loading,
-    isError,
-    error: queryError,
-  } = useFetchBookingById(id);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -112,14 +97,6 @@ export function BookingPopup({
         <div className="grid gap-4">
           <h4 className="text-2xl font-semibold text-center mb-4">{title}</h4>
 
-          {loading && <div>Loading...</div>}
-
-          {isError && (
-            <div className="text-red-500">
-              {queryError?.message || "Failed to fetch booking details"}
-            </div>
-          )}
-
           {bookingDetails && (
             <div className="grid gap-4">
               {Object.entries(bookingDetails)
@@ -153,7 +130,7 @@ export function BookingPopup({
             </div>
           )}
 
-          {!bookingDetails && !loading && !isError && (
+          {bookingDetails === null && (
             <div className="text-center text-muted-foreground">
               No booking details found.
             </div>

@@ -224,7 +224,12 @@ export const columns: MRT_ColumnDef<Driver>[] = [
 
         deleteDriver(driver.driverId, {
           onSuccess: () => {
-            toast.success("Driver deleted successfully!");
+            toast.success("Driver deleted successfully!",{
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
           },
           onError: () => {
             toast.error("Failed to delete driver", {

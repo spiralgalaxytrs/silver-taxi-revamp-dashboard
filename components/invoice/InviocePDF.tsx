@@ -53,7 +53,7 @@ const Invoice = ({ id }: { id: string }) => {
     const scaledHeight = imgHeight * ratio;
 
     pdf.addImage(imgData, "PNG", 0, 0, scaledWidth, scaledHeight);
-    pdf.save("diamond-cabs-Invoice.pdf");
+    pdf.save(`${invoice?.invoiceNo}.pdf`);
     setIsGenerating(false);
   };
 
@@ -88,7 +88,7 @@ const Invoice = ({ id }: { id: string }) => {
         <div className="bg-gradient-to-r from-[#009879] to-[#00775F] text-white p-8 w-full">
           <div className="flex justify-between items-center flex-nowrap">
             <div className="flex flex-col justify-center">
-              <h1 className="text-4xl font-bold">Diamond Cabs</h1>
+              <h1 className="text-4xl font-bold">Silver Taxi</h1>
               <p className="text-sm mt-1 opacity-75">Your Luxury Ride Partner</p>
             </div>
             <div className="text-right">
@@ -162,7 +162,7 @@ const Invoice = ({ id }: { id: string }) => {
                   <tr className="border-b border-gray-200">
                     <td className="p-3">{invoice?.serviceType}</td>
                     <td className="p-3">{invoice?.vehicleType}</td>
-                    { invoice?.serviceType !== "Package" && <td className="p-3">{invoice?.pickup} to {invoice?.drop}</td>}
+                    {invoice?.serviceType !== "Package" && <td className="p-3">{invoice?.pickup} to {invoice?.drop}</td>}
                     {invoice?.serviceType === "Package" && <td className="p-3">{invoice?.pickup}</td>}
                     <td className="p-3">{invoice?.totalKm} km</td>
                     <td className="p-3">{invoice?.travelTime}</td>

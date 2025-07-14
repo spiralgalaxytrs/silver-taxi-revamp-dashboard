@@ -5,7 +5,6 @@ import { MRT_ColumnDef } from "material-react-table"
 import { Button } from "components/ui/button"
 import { Edit, MoreHorizontal, Trash, Eye, Loader2 } from 'lucide-react'
 import { Badge } from "components/ui/badge"
-import { Checkbox } from "components/ui/checkbox"
 import { EnquiryPopup } from "components/enquiry/EnquiryPopup"
 import { toast } from "sonner"
 import {
@@ -28,8 +27,12 @@ import {
   DropdownMenuTrigger,
 } from "components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
-import { Enquiry, useEnquiryStore } from "stores/-enquiryStore"
 import TooltipComponent from "components/others/TooltipComponent"
+import { Enquiry } from "types/react-query/enquiry"
+import {
+  useToggleStatus,
+  useDeleteEnquiry
+} from 'hooks/react-query/useEnquiry';
 
 export const columns: MRT_ColumnDef<Enquiry>[] = [
   // {
@@ -218,33 +221,29 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
     accessorKey: "status",
     header: "Status",
     Cell: ({ row }) => {
-      const id = row.original.enquiryId;
-      const { toggleChanges, fetchEnquiries, enquiries } = useEnquiryStore();
+      const id = row.original.enquiryId as string || "";
+      const status = row.original.status as string || "";
+      const { mutate: toggleChanges } = useToggleStatus();
 
-      // Get fresh status from store instead of row data
-      const currentEnquiry = enquiries.find(e => e.enquiryId === id);
-      const status = currentEnquiry?.status || row.original.status;
-
-      const handleToggleStatus = async (newStatus: string) => {
-        await toggleChanges(id, newStatus);
-        const statusCode = useEnquiryStore.getState().statusCode;
-        const message = useEnquiryStore.getState().message;
-        if (statusCode === 200 || statusCode === 201) {
-          toast.success("Enquiry type updated successfully", {
-            style: {
-              backgroundColor: "#009F7F",
-              color: "#fff",
-            },
-          });
-        } else {
-          toast.error(message || "Failed to update type", {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
-          });
-        }
-        await fetchEnquiries();
+      const handleToggleStatus = async (newStatus: "Current" | "Fake" | "Future" | "Booked") => {
+        toggleChanges({ id, status: newStatus }, {
+          onSuccess: () => {
+            toast.success("Enquiry type updated successfully", {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || "Failed to update type", {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          },
+        });
       };
 
       const getStatusColor = (status: string) => {
@@ -359,17 +358,26 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
 
       const handleEditEnquiry = useCallback(async (id: string | undefined) => {
         if (id) {
-          await router.push(`/admin/enquiry/edit/${id}`);
+          router.push(`/admin/enquiry/edit/${id}`);
         }
       }, [router]);
 
-      const { deleteEnquiry, fetchEnquiries } = useEnquiryStore();
+      const { mutate: deleteEnquiry } = useDeleteEnquiry();
       const handleDelete = async () => {
         try {
-          await deleteEnquiry(enquiry.enquiryId || "");
-          await fetchEnquiries();
-
-          toast.success("Enquiry deleted successfully");
+          deleteEnquiry(enquiry.enquiryId || "", {
+            onSuccess: () => {
+              toast.success("Enquiry deleted successfully");
+            },
+            onError: () => {
+              toast.error("An unexpected error occurred", {
+                style: {
+                  backgroundColor: "#FF0000",
+                  color: "#fff",
+                },
+              });
+            }
+          });
         } catch (error) {
           toast.error("An unexpected error occurred", {
             style: {
@@ -393,7 +401,7 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
                 <Eye className="h-5 w-5" />
               </Button>
             }
-            id={enquiry.enquiryId || ""}
+            enquiry={enquiry || null}
           />
           <Button
             variant="ghost"
