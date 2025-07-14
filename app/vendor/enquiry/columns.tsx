@@ -284,7 +284,7 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
                   <Eye className="h-5 w-5" />
                 </Button>
               }
-              id={enquiry.enquiryId || ""}
+              enquiry={enquiry}
             />
             <Button
               variant="ghost"

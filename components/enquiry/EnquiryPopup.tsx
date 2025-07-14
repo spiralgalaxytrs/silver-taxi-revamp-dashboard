@@ -9,11 +9,10 @@ import {
   DialogTitle,
 } from "components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { useEnquiryById } from "hooks/react-query/useEnquiry";
 
 interface EnquiryPopupProps {
   trigger: React.ReactNode;
-  id: string;
+  enquiry: Record<string, any> | null;
   title?: string;
   width?: string;
   size?: string;
@@ -21,17 +20,12 @@ interface EnquiryPopupProps {
 
 export function EnquiryPopup({
   trigger,
-  id,
+  enquiry,
   title = "Enquiry Details",
 }: EnquiryPopupProps) {
   const [open, setOpen] = useState(false);
 
-  const {
-    data: enquiry = null,
-    isPending: loading,
-    isError,
-    error,
-  } = useEnquiryById(id);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const year = date?.getFullYear();
@@ -85,13 +79,6 @@ export function EnquiryPopup({
         <div className="grid gap-4">
           <h4 className="text-2xl font-semibold text-center mb-4">{title}</h4>
 
-          {loading && <div>Loading...</div>}
-
-          {isError && (
-            <div className="text-red-500">
-              {error instanceof Error ? error.message : "Failed to load enquiry"}
-            </div>
-          )}
 
           {enquiryDetails && (
             <div className="grid gap-4">
@@ -125,7 +112,7 @@ export function EnquiryPopup({
             </div>
           )}
 
-          {!enquiryDetails && !loading && !isError && (
+          {enquiryDetails === null && (
             <div className="text-center text-muted-foreground">
               No enquiry details found.
             </div>

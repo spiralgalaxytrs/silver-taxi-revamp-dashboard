@@ -244,7 +244,6 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         year: "numeric",
       });
 
-      console.log("formattedDate ------> ", formattedDate);
       return <div>{formattedDate}</div>;
     },
     muiTableHeadCellProps: { align: 'center' },
@@ -897,7 +896,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
                   <Eye className="h-5 w-5" />
                 </Button>
               }
-              id={booking.bookingId || ""}
+              booking={booking || null}
             />
 
             {/* Edit Icon */}
@@ -940,15 +939,17 @@ export const columns: MRT_ColumnDef<Booking>[] = [
             </AlertDialog>
 
             {/* Convert to booking  */}
-            {booking.status === "Completed" && <Button
-              variant="ghost"
-              size="icon"
-              className="text-yellow-600 hover:text-yellow-800 tool-tip"
-              data-tooltip="Convert to Booking"
-              onClick={() => handleConvertBooking(booking.bookingId || "")}
-            >
-              <SendHorizontal className="h-6 w-6" />
-            </Button>}
+            {booking.status === "Completed" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-yellow-600 hover:text-yellow-800 tool-tip"
+                data-tooltip="Convert to Booking"
+                onClick={() => handleConvertBooking(booking.bookingId || "")}
+              >
+                <SendHorizontal className="h-6 w-6" />
+              </Button>
+            )}
           </div>
         </React.Fragment>
       )
