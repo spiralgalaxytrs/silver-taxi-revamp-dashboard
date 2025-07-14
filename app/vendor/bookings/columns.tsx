@@ -726,7 +726,7 @@ export const columns: ColumnDef<Booking>[] = [
                 <Eye className="h-5 w-5" />
               </Button>
             }
-            id={booking.bookingId || ""}
+            booking={booking}
           />
 
           {/* Edit Icon */}
