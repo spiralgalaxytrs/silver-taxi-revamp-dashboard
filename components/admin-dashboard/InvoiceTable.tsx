@@ -1,10 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { DataTable } from 'components/others/DataTable';
 import { columns } from 'app/admin/invoices/columns';
-import { useInvoiceStore } from 'stores/-invoiceStore'
-import { ColumnDef } from '@tanstack/react-table'
 import { Loader2, RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
@@ -13,19 +10,14 @@ import {
 } from 'material-react-table';
 import { Button } from 'components/ui/button';
 
-export const InvoiceTable: React.FC = () => {
+export const InvoiceTable: React.FC<{ invoices: any[], isLoading: boolean }> = ({ invoices = [], isLoading }) => {
     const router = useRouter();
     const [sortConfig, setSortConfig] = useState<{
         columnId: string | null;
         direction: 'asc' | 'desc' | null;
     }>({ columnId: null, direction: null });
 
-    const { invoices, fetchInvoices, isLoading, error } = useInvoiceStore()
     const [isSpinning, setIsSpinning] = useState(false)
-
-    useEffect(() => {
-        fetchInvoices()
-    }, [fetchInvoices])
 
     const applyFilters = () => {
         let filteredData = invoices;
@@ -87,11 +79,9 @@ export const InvoiceTable: React.FC = () => {
     };
 
     if (isLoading) {
-        <>
-            <div className="flex items-center justify-center h-screen bg-gray-50">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
-            </div>
-        </>
+        <div className="flex items-center justify-center h-screen bg-gray-50">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        </div>
     }
 
     return (
