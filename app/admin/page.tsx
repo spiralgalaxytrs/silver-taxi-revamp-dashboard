@@ -20,9 +20,9 @@ import ShortcutSection from "components/others/ShortCut"
 export default function AdminDashboard() {
 
   const { data: bookings = [], isPending: isLoading, refetch: refetchBookings } = useFetchBookings();
-  const { data: enquiries = [], isPending: enquiriesLoading, refetch: refetchEnquiries } = useEnquiries();
-  // const { data: drivers = [], isPending: driversLoading, refetch: refetchDrivers } = useDrivers({ enabled: true });
-  const { data: invoices = [], isPending: invoicesLoading } = useInvoices();
+  const { data: enquiries = [], isPending: isEnquiriesLoading, refetch: refetchEnquiries } = useEnquiries();
+  const { data: drivers = [], isPending: isDriversLoading, refetch: refetchDrivers } = useDrivers({ enabled: true });
+  const { data: invoices = [], isPending: isInvoicesLoading } = useInvoices();
 
   const { manualBookings, vendorBookings, websiteBookings } = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -63,6 +63,7 @@ export default function AdminDashboard() {
 
         {/* Overall shortcuts */}
         <ShortcutSection
+          col={4}
           shortcuts={[
             {
               title: "Create Invoice",
@@ -96,7 +97,7 @@ export default function AdminDashboard() {
         />
 
         {/* Invoice table */}
-        <InvoiceTable invoices={invoices} isLoading={invoicesLoading} />
+        <InvoiceTable invoices={invoices} isLoading={isInvoicesLoading} />
 
         {/* Counters */}
         <div className="grid gap-28 md:grid-cols-2 lg:grid-cols-3">
@@ -148,7 +149,7 @@ export default function AdminDashboard() {
         <BookingTable bookings={bookings} isLoading={isLoading} />
 
         {/* Extra charts */}
-        {/* <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card className="border-none bg-white shadow-md">
             <CardContent className="p-6">
               <BarChartComponent createdBy='Admin' bookings={bookings} isLoading={isLoading} enquiries={enquiries} />
@@ -156,13 +157,14 @@ export default function AdminDashboard() {
           </Card>
           <Card className="border-none bg-white shadow-md">
             <CardContent className="p-6">
-              <Overview drivers={drivers} isLoading={isLoading} />
+              <Overview drivers={drivers} isLoading={isDriversLoading} />
             </CardContent>
           </Card>
-        </div> */}
+        </div>
 
         {/* Second shortcuts section */}
         <ShortcutSection
+          col={4}
           shortcuts={[
             {
               title: "Create Drivers",
@@ -197,7 +199,7 @@ export default function AdminDashboard() {
 
         {/* Enquiries */}
 
-        <EnquiryTable enquiries={enquiries} refetch={refetchEnquiries} isLoading={isLoading} />
+        <EnquiryTable enquiries={enquiries} refetch={refetchEnquiries} isLoading={isEnquiriesLoading} />
       </div>
     </>
   )
