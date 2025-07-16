@@ -10,19 +10,12 @@ export default function CreateBookingPage() {
   const router = useRouter()
   const [createdBy, setCreatedBy] = useState("Vendor")
 
-  // const handleClose = () => {
-  //   router.push('/vendor/bookings')
-  // }
 
   return (
-    <>
-      <div className="space-y-6 bg-white p-5 rounded ">
-        {/* <h2 className="text-3xl font-bold tracking-tight flex justify-between">Create New Booking
-          <Button onClick={handleClose}>Close</Button>
-        </h2> */}
-        <VendorBookingForm createdBy={createdBy} />
-      </div>
-    </>)
+    <div className="space-y-6 bg-white p-5 rounded ">
+      <VendorBookingForm createdBy={createdBy} />
+    </div>
+  )
 }
 
 

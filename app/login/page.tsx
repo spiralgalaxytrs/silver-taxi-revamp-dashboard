@@ -59,13 +59,12 @@ export default function LoginPage() {
       return;
     }
 
-    await login(formData.email, formData.password);
+    login(formData.email, formData.password);
 
-    const status = useAuthStore.getState().statusCode; 
+    const status = useAuthStore.getState().statusCode;
     const message = useAuthStore.getState().message;
-    
-    if (status === 200 || status === 201) {
 
+    if (status === 200 || status === 201) {
       toast.success("You have successfully logged in.", {
         style: {
           backgroundColor: "#009F7F",
@@ -78,15 +77,22 @@ export default function LoginPage() {
       } else {
         router.push("/vendor");
       }
-      return;
+    } else if (status === 400) {
+      toast.info(message || "You are not authorized to login.", {
+        style: {
+          backgroundColor: "#00CAFF",
+          color: "#fff",
+        },
+      });
+    } else {
+      toast.error(message || "An unknown error occurred.", {
+        style: {
+          backgroundColor: "#FF0000",
+          color: "#fff",
+        },
+      });
     }
 
-    toast.error(message || "An unknown error occurred.", {
-      style: {
-        backgroundColor: "#FF0000",
-        color: "#fff",
-      },
-    });
   };
 
   return (
