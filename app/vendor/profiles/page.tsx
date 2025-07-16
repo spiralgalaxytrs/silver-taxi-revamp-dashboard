@@ -1,7 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
-import Link from "next/link"
+import React, { useEffect } from "react"
 import { BsWhatsapp } from "react-icons/bs";
 import { motion } from "framer-motion"
 import {
@@ -9,19 +8,10 @@ import {
   Phone,
   Mail,
   Globe,
-  MessageSquare,
-  UserRoundIcon,
-  Trash,
   Loader2,
 } from "lucide-react"
-
-import { Button } from "components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs"
-
-// Add type imports at the top
-import { CompanyProfile } from "types/profile"
+import { Tabs, TabsContent } from "components/ui/tabs"
 import { useProfileStore } from "stores/-profileStore"
 
 // Update the store hook with types

@@ -3,17 +3,18 @@
 import Link from "next/link"
 import { VehicleCard } from "components/vehicle/VehicleCard"
 import { Button } from "components/ui/button"
-import { useVehicleStore } from "stores/-vehicleStore"
-import { useEffect, useMemo } from "react"
-import PreLoader from "components/others/PreLoader"
+import { useMemo } from "react"
 import { Loader2 } from "lucide-react"
+import {
+  useVehiclesAdmin
+} from 'hooks/react-query/useVehicle';
 
 export default function Page() {
-  const { vehicles, isLoading, error, fetchVehicles } = useVehicleStore()
 
-  useEffect(() => {
-    fetchVehicles()
-  }, [fetchVehicles])
+  const {
+    data: vehicles = [],
+    isLoading,
+  } = useVehiclesAdmin()
 
   // Sort vehicles by createdAt in descending order
   const sortedVehicles = useMemo(() => {
@@ -35,20 +36,32 @@ export default function Page() {
     );
   }
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
   return (
     <>
       <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Vehicle Management</h1>
+          <Link href="/admin/vehicles/create">
+            <Button>Create Vehicle</Button>
+          </Link>
         </div>
         {sortedVehicles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedVehicles.map((vehicle, index) => (
-              <VehicleCard key={index} {...vehicle} createdBy="Vendor"/>
+              <VehicleCard
+                key={index}
+                vehicleId={vehicle.vehicleId || ""}
+                name={vehicle.name}
+                fuelType={vehicle.fuelType as 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid'}
+                isActive={vehicle.isActive}
+                type={vehicle.type}
+                seats={vehicle.seats ?? 0}
+                bags={vehicle.bags ?? 0}
+                permitCharge={vehicle.permitCharge ?? 0}
+                driverBeta={vehicle.driverBeta ?? 0}
+                imageUrl={vehicle.imageUrl as string}
+                createdBy={"Admin"}
+              />
             ))}
           </div>
         ) : (

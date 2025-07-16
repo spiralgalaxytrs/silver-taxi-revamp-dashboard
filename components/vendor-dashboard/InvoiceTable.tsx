@@ -1,30 +1,26 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { DataTable } from 'components/others/DataTable';
 import { columns } from 'app/admin/invoices/columns';
-import { useInvoiceStore } from 'stores/-invoiceStore'
-import { ColumnDef } from '@tanstack/react-table'
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import {
+    MaterialReactTable,
+    MRT_ColumnDef
+} from 'material-react-table';
+import { Button } from 'components/ui/button';
 
-export const InvoiceTable: React.FC = () => {
+export const InvoiceTable: React.FC<{ invoices: any[], isLoading: boolean }> = ({ invoices = [], isLoading }) => {
     const router = useRouter();
     const [sortConfig, setSortConfig] = useState<{
         columnId: string | null;
         direction: 'asc' | 'desc' | null;
     }>({ columnId: null, direction: null });
 
-    const { invoices, fetchVendorInvoices, isLoading, error } = useInvoiceStore()
-
-    useEffect(() => {
-        fetchVendorInvoices()
-    }, [fetchVendorInvoices])
+    const [isSpinning, setIsSpinning] = useState(false)
 
     const applyFilters = () => {
-
-        const filteredBookingData = invoices.filter(invoice => invoice.createdBy === 'Vendor');
-        let filteredData = filteredBookingData;
+        let filteredData = invoices;
 
         // Global sorting logic - Updated to handle different data types
         if (sortConfig.columnId && sortConfig.direction) {
@@ -50,6 +46,12 @@ export const InvoiceTable: React.FC = () => {
                 }
             });
         }
+
+        filteredData = [...filteredData].sort((a, b) => {
+            const aCreatedAt = new Date(a.createdAt || "").getTime();
+            const bCreatedAt = new Date(b.createdAt || "").getTime();
+            return bCreatedAt - aCreatedAt; // Descending order
+        });
         return filteredData
     };
 
@@ -63,15 +65,23 @@ export const InvoiceTable: React.FC = () => {
     };
 
     const handleRoute = () => {
-        router.push('/vendor/invoices');
+        router.push('/admin/invoices')
     }
 
+    const handleRefetch = async () => {
+        setIsSpinning(true);
+        try {
+            // await refetch(); // wait for the refetch to complete
+        } finally {
+            // stop spinning after short delay to allow animation to play out
+            setTimeout(() => setIsSpinning(false), 500);
+        }
+    };
+
     if (isLoading) {
-        <>
-            <div className="flex items-center justify-center h-screen bg-gray-50">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
-            </div>
-        </>
+        <div className="flex items-center justify-center h-screen bg-gray-50">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        </div>
     }
 
     return (
@@ -79,17 +89,51 @@ export const InvoiceTable: React.FC = () => {
             <div className="p-6 space-y-6">
                 <div className="rounded bg-white p-5 shadow md:p-5">
                     <div className="flex items-center justify-between ">
-                        <h1 className="text-2xl font-bold tracking-tight">Invoice Page</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">Recent Invoices</h1>
                         <div className="flex items-center gap-2">
                             <button onClick={handleRoute} className="btn bg-[#D5C7A3]">View Invoices</button>
                         </div>
                     </div>
                 </div>
-                <DataTable
-                    columns={columns.slice(1, columns.length - 1) as unknown as ColumnDef<{ id: string; amount: number; status: string; email: string; createdAt: string }, unknown>[]}
-                    data={filteredData as unknown as { id: string; amount: number; status: string; email: string; createdAt: string }[]}
-                    onSort={handleSort}
-                    sortConfig={sortConfig}
+                <MaterialReactTable
+                    columns={columns as MRT_ColumnDef<any>[]}
+                    data={filteredData}
+                    positionGlobalFilter="left"
+                    enableSorting
+                    enableHiding={false}
+                    enableDensityToggle={false}
+                    initialState={{
+                        density: 'compact',
+                        pagination: { pageIndex: 0, pageSize: 10 },
+                        showGlobalFilter: true,
+                    }}
+                    muiSearchTextFieldProps={{
+                        placeholder: 'Search enquiries...',
+                        variant: 'outlined',
+                        fullWidth: true, // 🔥 Makes the search bar take full width
+                        sx: {
+                            minWidth: '400px', // Adjust width as needed
+                            marginLeft: '16px',
+                        },
+                    }}
+                    muiToolbarAlertBannerProps={{
+                        sx: {
+                            justifyContent: 'flex-start', // Aligns search left
+                        },
+                    }}
+                    renderTopToolbarCustomActions={() => (
+                        <div className="flex flex-1 justify-end items-center">
+                            {/* 🔁 Refresh Button */}
+                            <Button
+                                variant={"ghost"}
+                                onClick={handleRefetch}
+                                className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                                title="Refresh Data"
+                            >
+                                <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                            </Button>
+                        </div>
+                    )}
                 />
             </div>
         </>

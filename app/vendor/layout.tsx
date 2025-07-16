@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import Unauthorized from 'components/others/UnAuthorized'
 import Loading from 'app/Loading'
 import { SocketProvider } from 'providers/websocket/SocketProvider'
+import { TooltipProvider } from 'components/ui/tooltip'
 
 type AuthState = {
   token: string | null,
@@ -59,7 +60,9 @@ export default function AdminLayout({
           </header>
           <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
             <div className="container mx-auto px-6 py-8">
-              {children}
+              <TooltipProvider>
+                {children}
+              </TooltipProvider>
             </div>
           </main>
         </div>

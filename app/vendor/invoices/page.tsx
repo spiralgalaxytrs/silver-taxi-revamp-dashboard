@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { DataTable } from 'components/others/DataTable';
 import { columns } from './columns';
 import { Button } from 'components/ui/button';
 import { Input } from 'components/ui/input';
 import { Label } from 'components/ui/label';
 import { Card } from 'components/ui/card';
 import CounterCard from 'components/cards/CounterCard';
-import {toast} from "sonner"
+import { toast } from "sonner"
 import {
   Select,
   SelectContent,
@@ -28,13 +27,32 @@ import {
   AlertDialogCancel,
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
-import { ArrowDown, ArrowUp, Activity, Trash } from 'lucide-react';
+import { ArrowDown, ArrowUp, Activity, Trash, RefreshCcw } from 'lucide-react';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
-import { useInvoiceStore } from 'stores/-invoiceStore';
+import {
+  MRT_ColumnDef,
+  MaterialReactTable
+} from 'material-react-table'
+import { useBackNavigation } from 'hooks/navigation/useBackNavigation';
+import {
+  useVendorInvoices,
+  useMultiDeleteInvoice
+} from 'hooks/react-query/useInvoice';
 
 export default function InvoicesPage() {
-  const { invoices, fetchVendorInvoices, multiDeleteInvoice } = useInvoiceStore();
   const router = useRouter();
+
+  const {
+    data: invoices = [],
+    refetch
+  } = useVendorInvoices();
+  const { mutate: multiDeleteInvoice } = useMultiDeleteInvoice();
+
+  const [lockBack, setLockBack] = useState(false);
+  useBackNavigation(lockBack);
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [isSpinning, setIsSpinning] = useState(false)
   const [totalInvoices, setTotalInvoices] = useState(0);
   const [partiallyPaidInvoices, setPartiallyPaidInvoices] = useState(0);
   const [paidInvoices, setPaidInvoices] = useState(0);
@@ -46,7 +64,6 @@ export default function InvoicesPage() {
     direction: 'asc' | 'desc' | null;
   }>({ columnId: null, direction: null });
 
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [filters, setFilters] = useState({
     search: '',
     status: '',
@@ -54,10 +71,6 @@ export default function InvoicesPage() {
     creationDateEnd: ''
   });
   const [showFilters, setShowFilters] = useState(false);
-
-  useEffect(() => {
-    fetchVendorInvoices();
-  }, [fetchVendorInvoices]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -77,20 +90,16 @@ export default function InvoicesPage() {
     }
   };
 
-  const [invoiceData, setInvoiceData] = useState(
-    invoices.map((invoice) => {
-      return {
-        ...invoice,
-        // id: invoice.invoiceId ? invoice.invoiceId : "",
-        invoiceId: invoice.invoiceId || "", // Ensure invoiceId is always a string
-        createdAt: invoice.createdAt ? invoice.createdAt : ""
-      }
-    })
-  );
+  const invoiceData = useMemo(() => {
+    return invoices.map(invoice => ({
+      ...invoice,
+      id: invoice.invoiceId ? invoice.invoiceId : "",
+      invoiceId: invoice.invoiceId || "",
+      createdAt: invoice.createdAt ? invoice.createdAt : ""
+    }));
+  }, [invoices]);
 
-  const filteredInvoiceData = invoiceData.filter((invoice) => invoice.createdBy === 'Vendor');
-
-  const unFilteredData = [...filteredInvoiceData].sort((a, b) => {
+  const unFilteredData = [...invoiceData].sort((a, b) => {
     const aCreatedAt = new Date(a.createdAt || "").getTime();
     const bCreatedAt = new Date(b.createdAt || "").getTime();
     return bCreatedAt - aCreatedAt; // Descending order
@@ -213,31 +222,43 @@ export default function InvoicesPage() {
   };
 
   const confirmBulkDelete = async () => {
-    const selectedIds = Object.keys(rowSelection);
-    await multiDeleteInvoice(selectedIds);
-    const newData = invoiceData.filter(invoice => !selectedIds.includes(invoice.invoiceId ?? ''));
-    setInvoiceData(newData);
-    setRowSelection({});
-    const status = useInvoiceStore.getState().statusCode
-    const message = useInvoiceStore.getState().message
-    if (status === 200 || status === 201) {
-      toast.success("Invoices deleted successfully", {
-        style: {
+    const selectedIndices = Object.keys(rowSelection)
+    const selectedIds = selectedIndices.map(index => {
+      const invoiceId = filteredData[parseInt(index)]?.invoiceId
+      return invoiceId !== undefined ? invoiceId : null
+    }).filter(id => id !== null)
+    multiDeleteInvoice(selectedIds, {
+      onSuccess: () => {
+        toast.success("Invoices deleted successfully", {
+          style: {
             backgroundColor: "#009F7F",
             color: "#fff",
-        },
-    });
-      router.push("/vendor/invoices");
-    } else {
-      toast.error(message || "Error deleting Invoices", {
-        style: {
+          },
+        });
+        setIsDialogOpen(false);
+        router.refresh();
+      },
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.message || "Error deleting Invoices", {
+          style: {
             backgroundColor: "#FF0000",
             color: "#fff",
-        },
+          },
+        });
+        setIsDialogOpen(false);
+      }
     });
-    }
-    setIsDialogOpen(false);
   }
+
+  const handleRefetch = async () => {
+    setIsSpinning(true);
+    try {
+      await refetch(); // wait for the refetch to complete
+    } finally {
+      // stop spinning after short delay to allow animation to play out
+      setTimeout(() => setIsSpinning(false), 500);
+    }
+  };
 
   const cancelBulkDelete = () => {
     setIsDialogOpen(false);
@@ -248,7 +269,7 @@ export default function InvoicesPage() {
   };
 
   return (
-    <>
+    <React.Fragment>
       <div className="space-y-6">
         <div className="rounded bg-white p-5 shadow">
           <div className="flex flex-col">
@@ -413,16 +434,50 @@ export default function InvoicesPage() {
           )}
         </div>
         <div className="rounded bg-white shadow">
-          <DataTable
-            columns={columns}
-            data={applyFilters()}
-            onSort={handleSort}
-            sortConfig={sortConfig}
-            rowSelection={rowSelection}
+          <MaterialReactTable
+            columns={columns as MRT_ColumnDef<any>[]}
+            data={filteredData}
+            enableRowSelection
+            positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
+            state={{ rowSelection, sorting }}
+            onSortingChange={setSorting}
+            enableSorting
+            initialState={{
+              density: 'compact',
+              pagination: { pageIndex: 0, pageSize: 10 },
+              showGlobalFilter: true,
+            }}
+            muiSearchTextFieldProps={{
+              placeholder: 'Search Invoices...',
+              variant: 'outlined',
+              fullWidth: true, // 🔥 Makes the search bar take full width
+              sx: {
+                minWidth: '600px', // Adjust width as needed
+                marginLeft: '16px',
+              },
+            }}
+            muiToolbarAlertBannerProps={{
+              sx: {
+                justifyContent: 'flex-start', // Aligns search left
+              },
+            }}
+            renderTopToolbarCustomActions={() => (
+              <div className="flex flex-1 justify-end items-center">
+                {/* 🔁 Refresh Button */}
+                <Button
+                  variant={"ghost"}
+                  onClick={handleRefetch}
+                  className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                  title="Refresh Data"
+                >
+                  <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                </Button>
+              </div>
+            )}
           />
         </div>
       </div>
-    </>
+    </React.Fragment>
   );
 }

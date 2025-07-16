@@ -10,12 +10,13 @@ type ShortcutItem = {
 }
 
 type ShortcutSectionProps = {
+  col: number
   shortcuts: ShortcutItem[]
 }
 
-export default function ShortcutSection({ shortcuts }: ShortcutSectionProps) {
+export default function ShortcutSection({ shortcuts , col }: ShortcutSectionProps) {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div className={`grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-${col}`}>
       {shortcuts.map((shortcut) => {
         const Icon = shortcut.icon
         return (
