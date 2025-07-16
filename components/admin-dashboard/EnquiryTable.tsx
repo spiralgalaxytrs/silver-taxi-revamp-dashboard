@@ -1,25 +1,16 @@
 'use client'
-import React, { useState, useEffect } from 'react';
-import Loading from 'app/Loading';
+import React, { useState } from 'react';
 import { columns } from 'app/admin/enquiry/columns';
-import { DataTable } from 'components/others/DataTable';
 import { Loader2, RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
     MaterialReactTable,
     MRT_ColumnDef
 } from 'material-react-table';
-import { useEnquiries } from 'hooks/react-query/useEnquiry';
 import { Button } from 'components/ui/button';
 
-export const EnquiryTable: React.FC = () => {
+export const EnquiryTable: React.FC<{ enquiries: any[], refetch: any, isLoading: boolean }> = ({ enquiries = [], refetch, isLoading }) => {
     const router = useRouter();
-    
-    const {
-        data: enquiries = [],
-        isLoading,
-        refetch
-    } = useEnquiries();
 
     // Global sorting state
     const [sortConfig, setSortConfig] = useState<{
@@ -30,7 +21,7 @@ export const EnquiryTable: React.FC = () => {
 
     const applyFilters = () => {
 
-        const ChangedEnquiries = enquiries.map((enquiry) => {
+        const ChangedEnquiries = enquiries.map((enquiry: any) => {
             if (enquiry) { // Check if enquiry is not null or undefined
                 return {
                     ...enquiry,
