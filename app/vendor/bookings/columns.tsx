@@ -1,13 +1,12 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
+import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "components/ui/button"
-import { useOfferStore } from "stores/-offerStore"
-import { Edit, SendHorizontal, Copy, Trash, Eye, Link, CheckCircle } from "lucide-react"
+import { Edit, SendHorizontal, Trash, Eye, ChevronDown } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "components/ui/badge"
-import { Checkbox } from "components/ui/checkbox";
 import { BookingPopup } from "components/booking/BookingPopup"
+import { DriverSelectionPopup } from "components/driver/SelectDriver"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,9 +15,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "components/ui/dropdown-menu"
-import { useCallback, useEffect, useState } from "react"
-import { useBookingStore } from "stores/bookingStore"
-import { useDriverStore } from "stores/-driverStore"
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -29,16 +25,26 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogFooter
-} from 'components/ui/alert-dialog'
-import { toast } from "sonner"
+} from 'components/ui/alert-dialog';
+import { toast } from "sonner";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "components/ui/select"
-import { useVendorStore } from "stores/-vendorStore"
+  useAssignDriver,
+  useAssignAllDriver,
+  useTogglePaymentMethod,
+  useToggleTripStatus,
+  useTogglePaymentStatus,
+  useDeleteBooking,
+} from "hooks/react-query/useBooking";
+import {
+  useDrivers
+} from 'hooks/react-query/useDriver';
+import {
+  useOffers
+} from 'hooks/react-query/useOffers';
+import {
+  MRT_ColumnDef
+} from 'material-react-table';
+import TooltipComponent from "components/others/TooltipComponent";
 
 export type Booking = {
   bookingId?: string;
@@ -55,6 +61,7 @@ export type Booking = {
   discountAmount: number | null;
   tariffId: string;
   estimatedAmount: number | null;
+  upPaidAmount: number | null;
   finalAmount: number | null;
   createdBy: "Admin" | "Vendor";
   createdAt?: string | null;
@@ -62,7 +69,7 @@ export type Booking = {
   offerName?: string;
   paymentMethod: "UPI" | "Bank" | "Cash" | "Card";
   type: "Website" | "App" | "Manual";
-  paymentStatus: "Pending" | "Paid" | "Partially Paid";
+  paymentStatus: "Unpaid" | "Paid" | "Partial Paid";
   serviceType: "One way" | "Round trip" | "Hourly Package" | "Day Package" | "Airport";
   vehicleName: string;
   distance: number | null;
@@ -72,66 +79,122 @@ export type Booking = {
   advanceAmount: number | null;
 }
 
-export const columns: ColumnDef<Booking>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-      />
-    ),
-  },
+export const columns: MRT_ColumnDef<Booking>[] = [
+  // {
+  //   id: "select",
+  //   header:'select',
+  //   Header: ({ table }) => (
+  //     <Checkbox
+  //       checked={table.getIsAllPageRowsSelected()}
+  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //     />
+  //   ),
+  //   Cell: ({ row }) => (
+  //     <Checkbox
+  //       checked={row.getIsSelected()}
+  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //     />
+  //   ),
+  // },
   {
     header: "S.No",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       return <div>{row.index + 1}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "bookingId",
     header: "Booking ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
+
 
   {
     accessorKey: "name",
     header: "Customer Name",
+    Cell: ({ row }) => {
+      const name = row.getValue("name");
+      return <div>{!name || name === "null" ? "-" : String(name)}</div>;
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "phone",
     header: "Mobile Number",
+    Cell: ({ row }) => {
+      const phone = row.original.phone
+      return <div>+{phone}</div>;
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "pickup",
     header: "From",
+    Cell: ({ row }) => {
+      const pickup = row.getValue("pickup") as string;
+      if (!pickup) return <div>-</div>;
+      return (
+        <TooltipComponent name={pickup}>
+          <div>{pickup.slice(0, 15)}...</div>
+        </TooltipComponent>
+      )
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "drop",
     header: "To",
-  },
-  {
-    accessorKey: "pickupDate",
-    header: "PickUp Date",
-    cell: ({ row }) => {
-      const pickupDate: string = row.getValue("pickupDate")
-      if (pickupDate === null) {
-        return <div>-</div>
-      }
-      const date = new Date(pickupDate);
-      const convertedDate = date.toLocaleDateString();
-      return <div>{convertedDate}</div>
+    Cell: ({ row }) => {
+      const drop = row.getValue("drop") as string;
+      if (!drop) return <div>-</div>;
+      return (
+        <TooltipComponent name={drop}>
+          <div>{drop.slice(0, 15)}...</div>
+        </TooltipComponent>
+      )
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "pickupTime",
+    accessorKey: "pickupDateTime",
+    id: "pickupDate",
+    header: "PickUp Date",
+    Cell: ({ row }) => {
+      const pickupDate: string = row.getValue("pickupDate");
+      if (!pickupDate) {
+        return <div>-</div>;
+      }
+
+      // Parse the stored UTC date
+      const utcDate = new Date(pickupDate);
+
+      // Adjust back to IST (Subtract 5.5 hours)
+      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+      // Format the corrected IST date
+      const formattedDate = istDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      return <div>{formattedDate}</div>;
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
+  {
+    accessorKey: "pickupDateTime",
+    id: "pickupTime",
     header: "PickUp Time",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const pickupTime: string = row.getValue("pickupTime");
       if (!pickupTime) {
         return <div>-</div>;
@@ -154,42 +217,57 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{amPmTime}</div>;
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "dropDate",
     header: "Drop Date",
-    cell: ({ row }) => {
-      const dropDate: string = row.getValue("dropDate")
+    Cell: ({ row }) => {
+      const dropDate: string = row.getValue("dropDate");
+
       if (!dropDate) {
-        return <div>-</div>
+        return <div>-</div>;
       }
-      const date = new Date(dropDate);
-      const convertedDate = date.toLocaleDateString();
 
-      return (
-        <div>
-          <div>{convertedDate}</div>
-        </div>
-      )
-    }
+      // Parse the stored UTC date
+      const utcDate = new Date(dropDate);
+
+      // Adjust back to IST (Subtract 5.5 hours)
+      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+      // Format the corrected IST date
+      const formattedDate = istDate.toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      return <div>{formattedDate}</div>;
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
-
   {
     accessorKey: "serviceType",
     header: "Service Type",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "distance",
     header: "Distance",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const distance = parseFloat(row.getValue("distance"));
       return <div>{`${distance} Km`}</div>;
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "estimatedAmount",
     header: "Estimated Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("estimatedAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -198,11 +276,13 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "discountAmount",
     header: "Discount Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("discountAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -211,14 +291,16 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "offerId",
     header: "Offer Details",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const offerId = row.getValue("offerId")
-      const { offers } = useOfferStore();
-      const offer = offers.find((offer) => offer.offerId === offerId);
+      const { data: offers = [] } = useOffers();
+      const offer = offers.find((offer: any) => offer.offerId === offerId);
       if (!offer) {
         return <div>-</div>
       }
@@ -229,24 +311,13 @@ export const columns: ColumnDef<Booking>[] = [
         </div>
       )
     },
-  },
-  {
-    accessorKey: "advanceAmount",
-    header: "Advance Amount",
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("advanceAmount"))
-      const formatted = new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: "INR",
-      }).format(amount)
-
-      return <div>{formatted}</div>
-    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "finalAmount",
     header: "Total Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("finalAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -255,134 +326,176 @@ export const columns: ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
+  {
+    accessorKey: "advanceAmount",
+    header: "Advance Amount",
+    Cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("advanceAmount"))
+      const formatted = new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+      }).format(amount)
+
+      return <div>{formatted}</div>
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
+  {
+    accessorKey: "upPaidAmount",
+    header: "Remaining Amount",
+    Cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("upPaidAmount"))
+      const formatted = new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+      }).format(amount)
+
+      return <div>{formatted}</div>
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: 'driverId',
-    header: 'Driver Assign',
-    cell: ({ row }) => {
-      const { getActiveDrivers, activeDrivers } = useDriverStore();
-      const { assignDriver, fetchBookings, bookings } = useBookingStore();
-      const bookingId = row.original.bookingId;
-      const [selectedDriverId, setSelectedDriverId] = useState<string>(''); // Keep this state for UI purposes
+    header: 'Driver Assigned',
+    Cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      const booking = row.original;
+      const { data: drivers = [], isPending: isLoading, isError } = useDrivers({ enabled: true });
+      const { mutate: assignDriver } = useAssignDriver();
+      const { mutate: assignAllDriver } = useAssignAllDriver();
 
-      // Fetch active drivers only when the component mounts or when the driver list is empty
-      useEffect(() => {
-        if (activeDrivers.length === 0) {
-          getActiveDrivers();
-        }
-      }, [activeDrivers.length, getActiveDrivers]);
+      const bookingId = row.original?.bookingId as string ?? "";
+      // const [selectedDriverId, setSelectedDriverId] = useState<string>(''); // Keep this state for UI purposes
 
       const handleDriverAssignment = async (driverId: string) => {
         try {
           if (!bookingId) return;
 
-          setSelectedDriverId(driverId); // Update local state for UI feedback
-          await assignDriver(bookingId, driverId);
+          // setSelectedDriverId(driverId);
+          assignDriver({ bookingId, driverId }, {
+            onSuccess: (data: any) => {
+              toast.success(data?.message || 'Driver assigned successfully', {
+                style: {
+                  backgroundColor: "#009F7F",
+                  color: "#fff",
+                },
+              });
+            },
+            onError: (error: any) => {
+              toast.error(error?.response?.data?.message || 'Assignment failed', {
+                style: {
+                  backgroundColor: "#FF0000",
+                  color: "#fff",
+                },
+              });
+              // setSelectedDriverId('');
+            }
+          });
 
-          const { statusCode, message } = useBookingStore.getState();
-
-          if (statusCode === 200 || statusCode === 201) {
-            toast.success('Driver assigned successfully', {
-              style: {
-                backgroundColor: "#009F7F",
-                color: "#fff",
-              },
-            });
-            setTimeout(async () => {
-              await fetchBookings(); // Refresh bookings list
-              getActiveDrivers(); // Refresh drivers without awaiting
-            }, 1000);
-          } else {
-            toast.error(message, {
-              style: {
-                backgroundColor: "#FF0000",
-                color: "#fff",
-              },
-            });
-            setSelectedDriverId(''); // Reset selection on failure
-          }
-        } catch (error) {
-          const { message } = useBookingStore.getState();
-          toast.error(message, {
+        } catch (error: any) {
+          toast.error(error?.response?.data?.message || 'Assignment failed', {
             style: {
               backgroundColor: "#FF0000",
               color: "#fff",
             },
           });
-          setSelectedDriverId('');
         }
       };
 
-      const currentBooking = bookings.find((booking: any) => String(booking.bookingId) === String(bookingId));
+      const handleAllDriverAssign = async () => {
+        try {
+          if (!bookingId) return;
+
+          // setSelectedDriverId(driverId);
+          assignAllDriver({ id: bookingId }, {
+            onSuccess: (data: any) => {
+              toast.success(data?.message || 'Notification sent to eligible drivers successfully', {
+                style: {
+                  backgroundColor: "#009F7F",
+                  color: "#fff",
+                },
+              });
+            },
+            onError: (error: any) => {
+              toast.error(error?.response?.data?.message || 'Assign All drivers failed', {
+                style: {
+                  backgroundColor: "#FF0000",
+                  color: "#fff",
+                },
+              });
+            }
+          });
+        } catch (error: any) {
+          toast.error(error?.response?.data?.message || 'Assign All drivers failed', {
+            style: {
+              backgroundColor: "#FF0000",
+              color: "#fff",
+            },
+          });
+        }
+      };
+
+      const currentBooking = booking
       const bookedDriverId = currentBooking?.driverId;
-      const assignedDriver = activeDrivers.find((driver: any) => String(driver.driverId) === String(bookedDriverId));
+      const assignedDriver = drivers.find((driver: any) => String(driver.driverId) === String(bookedDriverId));
 
       return (
-        <Select
-          value={selectedDriverId || bookedDriverId || ''} // ✅ Prioritize selectedDriverId for immediate feedback
-          onValueChange={handleDriverAssignment}
-        >
-          <SelectTrigger className="h-7">
-            <SelectValue placeholder="Assign Driver">
-              {assignedDriver ? assignedDriver.name : 'Assign Driver'}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {activeDrivers.length > 0 ? (
-              <>
-                {assignedDriver && (
-                  <SelectItem key={assignedDriver.driverId} value={String(assignedDriver.driverId)}>
-                    {assignedDriver.name} (Assigned)
-                  </SelectItem>
-                )}
-                {activeDrivers
-                  .filter((driver: any) => String(driver.driverId) !== String(bookedDriverId))
-                  .map((driver: any) => (
-                    <SelectItem key={driver.driverId} value={String(driver.driverId)}>
-                      {driver.name}
-                    </SelectItem>
-                  ))
-                }
-              </>
-            ) : (
-              <SelectItem value="loading" disabled>
-                No drivers available
-              </SelectItem>
-            )}
-          </SelectContent>
-        </Select>
+        <DriverSelectionPopup
+          trigger={
+            <Button variant="outline" size="sm" disabled={isLoading}>
+              {assignedDriver ? assignedDriver.name : "Assign Driver"}
+            </Button>
+          }
+          onSelectDriver={handleDriverAssignment}
+          assignAllDriver={handleAllDriverAssign}
+          assignedDriver={assignedDriver}
+          bookedDriverId={bookedDriverId || ""}
+          status={status}
+          drivers={drivers}
+          isLoading={isLoading}
+          isError={isError}
+        />
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
 
   {
     accessorKey: "paymentMethod",
     header: "Payment Type",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const status = row.getValue("paymentMethod") as string;
-      const { togglePaymentType, fetchBookings, isLoading } = useBookingStore();
-      const id = row.original.bookingId;
+      const {
+        mutate: togglePaymentType,
+        isPending: isLoading
+      } = useTogglePaymentMethod();
+      const id = row.original?.bookingId as string ?? "";
 
       const handlePmethodToggleStatus = async (newStatus: string) => {
-        await togglePaymentType(id, newStatus);
-        const statusCode = useBookingStore.getState().statusCode;
-        const message = useBookingStore.getState().message;
-        if (statusCode === 200 || statusCode === 201) {
-          toast.success("Payment type updated successfully", {
-            style: {
+        togglePaymentType({ id, method: newStatus }, {
+          onSuccess: (data: any) => {
+            toast.success(data?.message || 'Payment type updated successfully', {
+              style: {
                 backgroundColor: "#009F7F",
                 color: "#fff",
-            },
-        });
-          await fetchBookings();
-        } else {
-          toast.error(message, {
-            style: {
+              },
+            });
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Payment type update failed', {
+              style: {
                 backgroundColor: "#FF0000",
                 color: "#fff",
-            },
+              },
+            });
+          }
         });
-        }
       };
 
       return (
@@ -393,7 +506,10 @@ export const columns: ColumnDef<Booking>[] = [
                 variant="ghost"
                 className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               >
-                <Badge variant="outline">{status}</Badge> {/* Display current status */}
+                <Badge variant="outline">
+                  {status}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Badge> {/* Display current status */}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -427,44 +543,48 @@ export const columns: ColumnDef<Booking>[] = [
         </div>
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "paymentStatus",
     header: "Payment Status",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const status = row.getValue("paymentStatus") as string;
-      const { togglePaymentStatus, fetchBookings, isLoading } = useBookingStore();
-      const id = row.original.bookingId;
+      const {
+        mutate: togglePaymentStatus,
+        isPending: isLoading
+      } = useTogglePaymentStatus();
+      const id = row.original?.bookingId as string ?? "";
 
-      const handlePSatusToggle = async (newStatus: string) => {
-        await togglePaymentStatus(id, newStatus);
-        const statusCode = useBookingStore.getState().statusCode;
-        const message = useBookingStore.getState().message;
-        if (statusCode === 200 || statusCode === 201) {
-          toast.success("Payment status updated successfully", {
-            style: {
+      const handlePStatusToggle = async (newStatus: string) => {
+        togglePaymentStatus({ id, status: newStatus }, {
+          onSuccess: (data: any) => {
+            toast.success(data?.message || 'Payment status updated successfully', {
+              style: {
                 backgroundColor: "#009F7F",
                 color: "#fff",
-            },
-        });
-          await fetchBookings();
-        } else {
-          toast.error(message, {
-            style: {
+              },
+            });
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Payment status update failed', {
+              style: {
                 backgroundColor: "#FF0000",
                 color: "#fff",
-            },
+              },
+            });
+          }
         });
-        }
       };
 
       const getStatusColor = (status: string) => {
         switch (status) {
           case "Paid":
             return "bg-[#009F7F] text-white";
-          case "Pending":
+          case "Unpaid":
             return "bg-[#D89216] text-white";
-          case "Partially Paid":
+          case "Partial Paid":
             return "bg-[#327bf0] text-white";
           default:
             return "bg-gray-100";
@@ -479,25 +599,28 @@ export const columns: ColumnDef<Booking>[] = [
                 variant="ghost"
                 className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               >
-                <Badge variant="outline" className={getStatusColor(status)}>{status}</Badge>
+                <Badge variant="outline" className={getStatusColor(status)}>
+                  {status}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Badge>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               {/* Dropdown options for updating the status */}
               <DropdownMenuItem
-                onClick={() => handlePSatusToggle("Pending")}
+                onClick={() => handlePStatusToggle("Unpaid")}
                 disabled={isLoading}
               >
                 Pending
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handlePSatusToggle("Paid")}
+                onClick={() => handlePStatusToggle("Paid")}
                 disabled={isLoading}
               >
                 Paid
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handlePSatusToggle("Partially Paid")}
+                onClick={() => handlePStatusToggle("Partial Paid")}
                 disabled={isLoading}
               >
                 Partially Paid
@@ -507,38 +630,26 @@ export const columns: ColumnDef<Booking>[] = [
         </div>
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "type",
     header: "Booking Type",
-  },
-
-  {
-    accessorKey: "bookingDate",
-    header: "Bookings At",
-    cell: ({ row }) => {
-      const bookingDate: string = row.getValue("bookingDate")
-      const date = new Date(bookingDate);
-      const convertedDate = date.toLocaleDateString();
-      const options: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
-      const amPmTime = date.toLocaleTimeString('en-IN', options);
-
-      return (
-        <div>
-          <div>{convertedDate}</div>
-          <div>{amPmTime}</div>
-        </div>
-      )
-    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "status",
     header: "Trip Status",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const [isDialogOpen, setIsDialogOpen] = useState(false);
-      const { toggleTripStatus, fetchBookings, isLoading } = useBookingStore();
-      const id = row.original.bookingId;
+      const {
+        mutate: toggleTripStatus,
+        isPending: isLoading
+      } = useToggleTripStatus();
+      const id = row.original?.bookingId as string ?? "";
       const booking = row.original;
 
       const getStatusColor = (status: string) => {
@@ -559,29 +670,33 @@ export const columns: ColumnDef<Booking>[] = [
       const handleToggleTripStatus = async (newStatus: string) => {
         if (newStatus === "Started" || newStatus === "Completed") {
           if (booking.driverId === null) {
-            toast.error("Please assign a driver to the booking");
+            toast.error("Please assign a driver to the booking", {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
             return;
           }
         }
-        await toggleTripStatus(id, newStatus);
-        const statusCode = useBookingStore.getState().statusCode;
-        const message = useBookingStore.getState().message;
-        if (statusCode === 200 || statusCode === 201) {
-          toast.success("Trip status updated successfully", {
-            style: {
+        toggleTripStatus({ id, status: newStatus }, {
+          onSuccess: (data: any) => {
+            toast.success(data?.message || 'Trip status updated successfully', {
+              style: {
                 backgroundColor: "#009F7F",
                 color: "#fff",
-            },
-        });
-          await fetchBookings();
-        } else {
-          toast.error(message, {
-            style: {
+              },
+            });
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Trip status update failed', {
+              style: {
                 backgroundColor: "#FF0000",
                 color: "#fff",
-            },
+              },
+            });
+          }
         });
-        }
       };
 
       return (
@@ -592,7 +707,10 @@ export const columns: ColumnDef<Booking>[] = [
                 variant="ghost"
                 className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
               >
-                <Badge variant="outline" className={getStatusColor(status)}>{status}</Badge>
+                <Badge variant="outline" className={getStatusColor(status)}>
+                  {status}
+                  {status !== "Completed" && <ChevronDown className="ml-2 h-4 w-4" aria-hidden="true" />}
+                </Badge>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -664,122 +782,180 @@ export const columns: ColumnDef<Booking>[] = [
         </div >
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "createdBy",
     header: "Created By",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
+
+  {
+    accessorKey: "createdAt",
+    header: "Bookings At",
+    Cell: ({ row }) => {
+      const bookingDate: string = row.getValue("createdAt");
+      if (!bookingDate) {
+        return <div>-</div>;
+      }
+
+      // Parse the stored UTC date
+      const utcDate = new Date(bookingDate);
+
+      // Adjust back to IST (Subtract 5.5 hours)
+      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+      // Format the corrected IST time
+      const options: Intl.DateTimeFormatOptions = {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      };
+
+      const formattedDate = istDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      const amPmTime = new Intl.DateTimeFormat("en-IN", options).format(utcDate);
+
+      return (
+        <div>
+          <div>{formattedDate}</div>
+          <div>{amPmTime}</div>
+        </div>
+      )
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const booking = row.original
       const [isDialogOpen, setIsDialogOpen] = useState(false);
       const router = useRouter()
 
       const handleEditBooking = useCallback(async (id: string | undefined) => {
-        await router.push(`/vendor/bookings/edit/${id}`)
+        router.push(`/admin/bookings/edit/${id}`)
       }, [router])
 
-      const { deleteBooking } = useBookingStore();
+      const {
+        mutate: deleteBooking,
+      } = useDeleteBooking();
       const handleDelete = async (id: string) => {
         try {
-          await deleteBooking(id); // Wait for deletion to complete
-          await useBookingStore.getState().fetchBookings();
-          toast.success("Booking deleted successfully");
-        } catch (error) {
-          toast.error("Failed to booking driver", {
-            style: {
-                backgroundColor: "#FF0000",
-                color: "#fff",
+          deleteBooking(id, {
+            onSuccess: () => {
+              toast.success("Booking deleted successfully");
             },
-        });
+            onError: () => {
+              toast.error("Failed to delete booking");
+            },
+          }); // Wait for deletion to complete
+        } catch (error: any) {
+          toast.error(error?.response?.data?.message || "Failed to booking driver", {
+            style: {
+              backgroundColor: "#FF0000",
+              color: "#fff",
+            },
+          });
         }
       };
 
       const handleConvertBooking = async (id: string) => {
         try {
-          router.push(`/vendor/invoices/create?bookingId=${id}`);
+          router.push(`/admin/invoices/create?bookingId=${id}`);
         } catch (error) {
           toast.error("Failed to convert booking", {
             style: {
-                backgroundColor: "#FF0000",
-                color: "#fff",
+              backgroundColor: "#FF0000",
+              color: "#fff",
             },
-        });
+          });
         }
       }
 
       return (
-        <div className="flex items-center gap-3">
-          {/* Convert to Booking Icon */}
+        <React.Fragment>
+          <div className="flex items-center gap-3">
+            {/* Convert to Booking Icon */}
 
-          {/*View Icon*/}
-          <BookingPopup
-            trigger={
+            {/*View Icon*/}
+            <BookingPopup
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-blue-600 hover:text-blue-800 tool-tip"
+                  data-tooltip="View Details"
+                >
+                  <Eye className="h-5 w-5" />
+                </Button>
+              }
+              booking={booking || null}
+            />
+
+            {/* Edit Icon */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-green-600 hover:text-green-800 tool-tip"
+              data-tooltip="Edit Booking"
+              disabled={booking.status === "Completed"}
+              onClick={() => handleEditBooking(booking.bookingId)}
+            >
+              <Edit className="h-5 w-5" />
+            </Button>
+
+            {/* Delete Icon */}
+            <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-600 hover:text-red-800 tool-tip"
+                  data-tooltip="Delete Driver"
+                  onClick={() => setIsDialogOpen(true)}
+                >
+                  <Trash className="h-5 w-5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete these bookings?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setIsDialogOpen(false)}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => { handleDelete(booking.bookingId || ""); setIsDialogOpen(false); }}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Convert to booking  */}
+            {booking.status === "Completed" && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-blue-600 hover:text-blue-800 tool-tip"
-                data-tooltip="View Details"
+                className="text-yellow-600 hover:text-yellow-800 tool-tip"
+                data-tooltip="Convert to Booking"
+                onClick={() => handleConvertBooking(booking.bookingId || "")}
               >
-                <Eye className="h-5 w-5" />
+                <SendHorizontal className="h-6 w-6" />
               </Button>
-            }
-            booking={booking}
-          />
-
-          {/* Edit Icon */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-green-600 hover:text-green-800 tool-tip"
-            data-tooltip="Edit Booking"
-            disabled={booking.status === "Completed"}
-            onClick={() => handleEditBooking(booking.bookingId)}
-          >
-            <Edit className="h-5 w-5" />
-          </Button>
-
-          {/* Delete Icon */}
-          <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-red-600 hover:text-red-800 tool-tip"
-                data-tooltip="Delete Driver"
-                onClick={() => setIsDialogOpen(true)}
-              >
-                <Trash className="h-5 w-5" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete these bookings?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setIsDialogOpen(false)}>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => { handleDelete(booking.bookingId || ""); setIsDialogOpen(false); }}>Delete</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          {/* Convert to booking  */}
-          {booking.status === "Completed" && <Button
-            variant="ghost"
-            size="icon"
-            className="text-yellow-600 hover:text-yellow-800 tool-tip"
-            data-tooltip="Convert to Booking"
-            onClick={() => handleConvertBooking(booking.bookingId || "")}
-          >
-            <SendHorizontal className="h-6 w-6" />
-          </Button>}
-        </div>
+            )}
+          </div>
+        </React.Fragment>
       )
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
 ]

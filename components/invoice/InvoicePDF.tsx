@@ -9,7 +9,7 @@ import { useInvoiceStore } from "stores/-invoiceStore"
 import { useProfileStore } from "stores/-profileStore"
 import { Profile } from "types/profile"
 
-const Invoice = ({ id }: { id: string }) => {
+const InvoicePDF = ({ id }: { id: string }) => {
   const pdfRef = useRef<HTMLDivElement>(null)
   const { invoice, fetchInvoiceById } = useInvoiceStore()
   const { profile, fetchProfile } = useProfileStore()
@@ -213,4 +213,4 @@ const Invoice = ({ id }: { id: string }) => {
   )
 }
 
-export default Invoice
+export default InvoicePDF

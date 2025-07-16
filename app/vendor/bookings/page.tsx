@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DataTable } from 'components/others/DataTable';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { columns } from './columns';
 import { Button } from 'components/ui/button';
 import { Card } from 'components/ui/card';
 import CounterCard from 'components/cards/CounterCard';
 import { Input } from 'components/ui/input';
-import { Booking, useBookingStore } from 'stores/bookingStore';
-import { ArrowDown, ArrowUp, Activity, Trash } from 'lucide-react';
+import { ArrowDown, ArrowUp, Activity, Trash, RefreshCcw } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { Label } from 'components/ui/label';
 import { toast } from "sonner"
@@ -20,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from 'components/ui/select';
-import Loading from 'app/Loading';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -33,16 +31,40 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
+import {
+  useBackNavigation
+} from 'hooks/navigation/useBackNavigation'
+import { useNavigationStore } from 'stores/navigationStore';
+import {
+  useFetchVendorBookings,
+  useBulkDeleteBookings
+} from 'hooks/react-query/useBooking'
+import {
+  MaterialReactTable,
+  type MRT_ColumnDef
+} from 'material-react-table'
 
 export default function BookingsPage() {
   const router = useRouter();
-  const { bookings, fetchVendorBookings, isLoading, error, bulkDeleteBookings } = useBookingStore();
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [totalBookings, setTotalBookings] = useState(0);
-  const [totalBookingValue, setTotalBookingValue] = useState(0);
-  const [yearlyBookings, setYearlyBookings] = useState(0);
-  const [completedBookings, setCompletedBookings] = useState(0);
-  const [todayBookings, setTodayBookings] = useState(0);
+  const pathname = usePathname();
+  const { previousPath } = useNavigationStore()
+
+  // const { bookings, fetchBookings, isLoading, error, bulkDeleteBookings } = useBookingStore();
+
+  const {
+    data: bookings = [],
+    isLoading,
+    refetch
+  } = useFetchVendorBookings();
+
+  const {
+    mutate: bulkDeleteBookings
+  } = useBulkDeleteBookings()
+
+
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [isSpinning, setIsSpinning] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
@@ -60,34 +82,16 @@ export default function BookingsPage() {
   });
   const [showFilters, setShowFilters] = useState(false);
 
-  const [sortConfig, setSortConfig] = useState<{
-    columnId: string | null;
-    direction: 'asc' | 'desc' | null;
-  }>({ columnId: null, direction: null });
-
-  const [bookingData, setBookingData] = useState(
-    bookings.map(booking => ({
+  const bookingData = useMemo(() => {
+    return bookings.map((booking: any) => ({
       ...booking,
       id: booking.bookingId,
       pickupDate: booking.pickupDate,
-      dropDate: booking.dropDate ? new Date(booking.dropDate).toLocaleDateString() : null,
+      dropDate: booking.dropDate ? booking.dropDate : null,
     }))
-  );
-
-  useEffect(() => {
-    setBookingData(
-      bookings.map(booking => ({
-        ...booking,
-        id: booking.bookingId,
-        pickupDate: booking.pickupDate,
-        dropDate: booking.dropDate ? new Date(booking.dropDate).toLocaleDateString() : null,
-      }))
-    );
   }, [bookings])
 
-  const filteredBookingData = bookingData.filter(booking => booking.createdBy === 'Vendor');
-
-  const unFilteredData = [...filteredBookingData].sort((a, b) => {
+  const unFilteredData = [...bookingData].sort((a, b) => {
     const abookingDate = new Date(a.bookingDate || "").getTime();
     const bbookingDate = new Date(b.bookingDate || "").getTime();
     return bbookingDate - abookingDate; // Descending order
@@ -166,83 +170,40 @@ export default function BookingsPage() {
       );
     }
 
-    // Global sorting logic
-    if (sortConfig.columnId && sortConfig.direction) {
-      filteredData.sort((a, b) => {
-        const columnKey = sortConfig.columnId as keyof typeof a;
-        const aValue = a[columnKey];
-        const bValue = b[columnKey];
-
-        // Handle null/undefined cases
-        if (aValue == null) return sortConfig.direction === 'asc' ? 1 : -1;
-        if (bValue == null) return sortConfig.direction === 'asc' ? -1 : 1;
-
-        // Date comparison for date fields
-        if (['startDate', 'endDate', 'createdAt'].includes(columnKey)) {
-          const dateA = new Date(aValue as string).getTime();
-          const dateB = new Date(bValue as string).getTime();
-          return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
-        }
-
-        // Numeric comparison for numeric fields
-        if (typeof aValue === 'number' && typeof bValue === 'number') {
-          return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
-        }
-
-        // Boolean comparison for status
-        if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
-          return sortConfig.direction === 'asc'
-            ? (aValue === bValue ? 0 : aValue ? -1 : 1)
-            : (aValue === bValue ? 0 : aValue ? 1 : -1);
-        }
-
-        // String comparison for other fields
-        const strA = String(aValue).toLowerCase();
-        const strB = String(bValue).toLowerCase();
-        return sortConfig.direction === 'asc'
-          ? strA.localeCompare(strB)
-          : strB.localeCompare(strA);
-      });
-    }
-
     return filteredData;
   };
 
-  const filteredData: Booking[] = applyFilters();
+  const filteredData = applyFilters();
 
 
-  useEffect(() => {
-    const calculateBookingStats = () => {
+  const stats = useMemo(() => {
+    const currentYear = new Date().getFullYear();
 
-      const currentYear = new Date().getFullYear();
+    return filteredData.reduce(
+      (acc, booking) => {
+        const amount = Number(booking.finalAmount) || 0;
+        const bookingYear = new Date(booking.createdAt).getFullYear();
 
-      return filteredData.reduce((acc, booking) => {
-        // Total bookings count
-        acc.total++;
+        acc.totalBookings += 1;
+        acc.totalBookingValue += amount;
+        if (bookingYear === currentYear) acc.yearlyBookings += 1;
+        if (booking.status === 'Completed') acc.completedBookings += 1;
+        if (booking.type === 'Manual') acc.manualBookings += 1;
+        if (booking.createdBy === 'Vendor') acc.vendorBooking += 1;
 
-        // Total booking value
-        acc.totalValue += Number(booking.finalAmount) || 0;
-
-        // This year's bookings
-        const bookingYear = new Date(booking.bookingDate).getFullYear();
-        if (bookingYear === currentYear) {
-          acc.yearly++;
-        }
-
-        // Completed bookings
-        if (booking.status === 'Completed') {
-          acc.completed++;
-        }
         return acc;
-      }, { total: 0, totalValue: 0, yearly: 0, completed: 0, manual: 0, vendor: 0 });
-    };
-
-    const stats = calculateBookingStats();
-    setTotalBookings(stats.total);
-    setTotalBookingValue(stats.totalValue);
-    setYearlyBookings(stats.yearly);
-    setCompletedBookings(stats.completed);
+      },
+      {
+        totalBookings: 0,
+        totalBookingValue: 0,
+        yearlyBookings: 0,
+        completedBookings: 0,
+        manualBookings: 0,
+        vendorBookings: 0,
+      }
+    );
   }, [filteredData]);
+
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -264,52 +225,15 @@ export default function BookingsPage() {
         amount: '',
         serviceType: ''
       });
-      setSortConfig({ columnId: null, direction: null }); // Reset sorting
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
   };
 
-  useEffect(() => {
-    fetchVendorBookings();
-  }, [fetchVendorBookings]);
-
-  const handleSort = (columnId: string) => {
-    setSortConfig(prev => ({
-      columnId,
-      direction: prev.columnId === columnId && prev.direction === 'asc' ? 'desc' : 'asc',
-    }));
-  };
-
-  useEffect(() => {
-    fetchVendorBookings();
-    const intervalId = setInterval(() => {
-      applyFilters();
-    }, 180000);
-
-    return () => clearInterval(intervalId);
-  }, [fetchVendorBookings]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-      </div>
-    )
-  }
-
-  // if (error) {
-  //   return <div>Error: {error}</div>;
-  // }
 
   const handleCreateBooking = () => {
     router.push('/vendor/bookings/create');
   };
-
-  // const handleRefresh = async () => {
-  //   await handleClear();
-  //   await fetchVendorBookings();
-  // };
 
   const getFormattedBookingDateRange = () => {
     const start = filters.bookingStartDate ? new Date(filters.bookingStartDate).toLocaleDateString() : '';
@@ -336,40 +260,58 @@ export default function BookingsPage() {
   };
 
   const confirmBulkDelete = async () => {
-    const selectedIds = Object.keys(rowSelection);
-    await bulkDeleteBookings(selectedIds);
-    const newData = filteredData
-      .filter(booking => !selectedIds.includes(booking.bookingId || ''))
-      .map(booking => ({ ...booking, id: booking.bookingId }));
-    setBookingData(newData);
-    setRowSelection({});
-    const status = useBookingStore.getState().statusCode
-    const message = useBookingStore.getState().message
-    if (status === 200 || status === 201) {
-      toast.success("Bookings deleted successfully!", {
-        style: {
-          backgroundColor: "#009F7F",
-          color: "#fff",
-        },
-      });
-      router.push("/vendor/bookings");
-    } else {
-      toast.error(message || "Error deleting Bookings!", {
-        style: {
-          backgroundColor: "#FF0000",
-          color: "#fff",
-        },
-      });
-    }
-    setIsDialogOpen(false);
+    const selectedIndices = Object.keys(rowSelection)
+    const selectedIds = selectedIndices.map(index => {
+      const bookingId = filteredData[parseInt(index)]?.bookingId
+      return bookingId !== undefined ? bookingId : null
+    }).filter(id => id !== null)
+    bulkDeleteBookings(selectedIds, {
+      onSuccess: (data: any) => {
+        setIsDialogOpen(false);
+        toast.success(data?.message || "Bookings deleted successfully!", {
+          style: {
+            backgroundColor: "#009F7F",
+            color: "#fff",
+          },
+        });
+        setRowSelection({});
+        setTimeout(() => router.push("/vendor/bookings"), 500);
+      },
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.message || "Error deleting Bookings!", {
+          style: {
+            backgroundColor: "#FF0000",
+            color: "#fff",
+          },
+        })
+      }
+    });
   };
 
   const cancelBulkDelete = () => {
     setIsDialogOpen(false);
   };
 
+  const handleRefetch = async () => {
+    setIsSpinning(true);
+    try {
+      await refetch(); // wait for the refetch to complete
+    } finally {
+      // stop spinning after short delay to allow animation to play out
+      setTimeout(() => setIsSpinning(false), 500);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
-    <>
+    <React.Fragment>
       <div className="p-6 space-y-6">
         <div className="rounded bg-white p-5 shadow">
           <div className="flex flex-col">
@@ -382,21 +324,6 @@ export default function BookingsPage() {
                 >
                   Create Booking
                 </Button>
-                {/* {showFilters && <Button
-                  className='border-none hover:underline-offset-1 hover:bg-none'
-                  variant="outline"
-                  onClick={handleClear}
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Refreshing..." : "Clear"}
-                </Button>} */}
-                {/* <Button
-                variant="outline"
-                onClick={handleRefresh}
-                disabled={isLoading}
-              >
-                {isLoading ? (<RotateCcw />) : (<ListRestart />)}
-              </Button> */}
                 <Button
                   variant="none"
                   className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
@@ -436,14 +363,14 @@ export default function BookingsPage() {
                 </div>
               </div>
             </div>
-            <div className="grid gap-5 md:grid-cols-4 lg:grid-cols-4">
+            <div className="grid ml-10 gap-5 md:grid-cols-3 lg:grid-cols-3">
               <Card className="relative overflow-hidden border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 w-full" />
                 <div className="h-[150PX] w-full">
                   <CounterCard
                     color="bg-emerald-100"
                     icon={Activity}
-                    count={totalBookings.toLocaleString()}
+                    count={stats.totalBookings.toLocaleString()}
                     label="Total Bookings"
                     className="relative z-10 p-6"
                   //cardSize="w-[200px] h-[100px]"
@@ -457,7 +384,7 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-blue-100"
                     icon={Activity}
-                    count={totalBookingValue.toLocaleString()}
+                    count={stats.totalBookingValue.toLocaleString()}
                     label="Total Booking Value"
                     //cardSize="w-[200px] h-[100px]"
                     format="currency"
@@ -471,7 +398,7 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-purple-100"
                     icon={Activity}
-                    count={yearlyBookings.toLocaleString()}
+                    count={stats.yearlyBookings.toLocaleString()}
                     label="This Year's Bookings"
                   //cardSize="w-[200px] h-[100px]"
                   />
@@ -482,14 +409,39 @@ export default function BookingsPage() {
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 w-full" />
                 <div className="h-[150PX] w-full">
                   <CounterCard
-                    color="bg-orange-100"
+                    color="bg-emerald-100"
                     icon={Activity}
-                    count={completedBookings.toLocaleString()}
+                    count={stats.completedBookings.toLocaleString()}
                     label="Completed Bookings"
                   //cardSize="w-[200px] h-[100px]"
                   />
                 </div>
-                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-orange-500 to-red-500 transform scale-x-100" />
+                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500 transform scale-x-100" />
+              </Card>
+              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 opacity-0 w-full" />
+                <div className="h-[150PX] w-full">
+                  <CounterCard
+                    color="bg-blue-100"
+                    icon={Activity}
+                    count={stats.manualBookings.toLocaleString()}
+                    label="Manual Bookings"
+                  //cardSize="w-[200px] h-[100px]"
+                  />
+                </div>
+                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500 transform scale-x-100" />
+              </Card>
+              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-100 w-full" />
+                <div className="h-[150px] w-full">
+                  <CounterCard
+                    color="bg-purple-100"
+                    icon={Activity}
+                    count={stats.vendorBookings.toLocaleString()}
+                    label="Vendor Bookings"
+                  />
+                </div>
+                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500 transform scale-x-100" />
               </Card>
             </div>
           </div>
@@ -571,6 +523,7 @@ export default function BookingsPage() {
                   onEndDateChange={(date: any) => handleFilterChange('dropEndDate', date)}
                 />
               </div>
+
               <div className='flex justify-start items-center'>
                 <Button
                   className='mt-5 p-1 border-none bg-[#009F87] flex justify-center items-center w-28'
@@ -585,16 +538,50 @@ export default function BookingsPage() {
           )}
         </div>
         <div className="rounded bg-white shadow">
-          <DataTable
-            columns={columns}
-            data={filteredData as any}
-            onSort={handleSort}
-            sortConfig={sortConfig}
-            rowSelection={rowSelection}
+          <MaterialReactTable
+            columns={columns as MRT_ColumnDef<any>[]}
+            data={filteredData}
+            enableRowSelection
+            positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
+            state={{ rowSelection, sorting }}
+            onSortingChange={setSorting}
+            enableSorting
+            initialState={{
+              density: 'compact',
+              pagination: { pageIndex: 0, pageSize: 10 },
+              showGlobalFilter: true,
+            }}
+            muiSearchTextFieldProps={{
+              placeholder: 'Search enquiries...',
+              variant: 'outlined',
+              fullWidth: true, // 🔥 Makes the search bar take full width
+              sx: {
+                minWidth: '600px', // Adjust width as needed
+                marginLeft: '16px',
+              },
+            }}
+            muiToolbarAlertBannerProps={{
+              sx: {
+                justifyContent: 'flex-start', // Aligns search left
+              },
+            }}
+            renderTopToolbarCustomActions={() => (
+              <div className="flex flex-1 justify-end items-center">
+                {/* 🔁 Refresh Button */}
+                <Button
+                  variant={"ghost"}
+                  onClick={handleRefetch}
+                  className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                  title="Refresh Data"
+                >
+                  <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                </Button>
+              </div>
+            )}
           />
         </div>
       </div>
-    </>
+    </React.Fragment>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import {
+  MRT_ColumnDef
+} from 'material-react-table'
 
 export type Booking = {
   bookingId: string;
@@ -12,27 +14,35 @@ export type Booking = {
   finalAmount: number;
 };
 
-export const bookingColumns: ColumnDef<Booking>[] = [
+export const bookingColumns: MRT_ColumnDef<Booking>[] = [
   {
     accessorKey: "bookingId",
     header: "Booking ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "pickup",
     header: "From",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "drop",
     header: "To",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "serviceType",
     header: "Booking Type",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "finalAmount",
     header: "Total Amount",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("finalAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -41,11 +51,13 @@ export const bookingColumns: ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "pickupDate",
     header: "Pickup Date",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const pickupDate: string = row.getValue("pickupDate")
       if (pickupDate === null) {
         return <div>-</div>
@@ -54,11 +66,13 @@ export const bookingColumns: ColumnDef<Booking>[] = [
       const convertedDate = date.toLocaleDateString();
       return <div>{convertedDate}</div>
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "dropDate",
     header: "Drop Date",
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const dropDate: string = row.getValue("dropDate")
       if (dropDate === null) {
         return <div>-</div>
@@ -68,9 +82,11 @@ export const bookingColumns: ColumnDef<Booking>[] = [
 
       return (
         <div>
-          <div>{convertedDate}</div>
+          <p>{convertedDate}</p>
         </div>
       )
-    }
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   }
 ];

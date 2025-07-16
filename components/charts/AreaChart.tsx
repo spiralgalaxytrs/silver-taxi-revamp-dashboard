@@ -80,7 +80,7 @@ export function AreaChart({ createdBy, bookings, isLoading }: AreaChartProps) {
       { service: "One way", bookings: 0, fill: colorMap["One way"] },
       { service: "Round trip", bookings: 0, fill: colorMap["Round trip"] },
       { service: "Package", bookings: 0, fill: colorMap["Package"] },
-      { service: "Airport", bookings: 0, fill: colorMap["Airport"] },
+      // { service: "Airport", bookings: 0, fill: colorMap["Airport"] },
     ];
 
     const filteredBookings =
