@@ -13,9 +13,6 @@ import { Button } from "components/ui/button";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Check, Loader2, Search, SquareChevronRight } from 'lucide-react';
 import { Input } from 'components/ui/input';
-import {
-    useDrivers
-} from 'hooks/react-query/useDriver';
 
 interface DriverSelectionPopupProps {
     trigger: React.ReactNode;
@@ -25,6 +22,9 @@ interface DriverSelectionPopupProps {
     assignedDriver?: any; // Currently assigned driver (if any)
     bookedDriverId?: string; // ID of the driver already booked (if any)
     status: string; // Status of the booking
+    drivers: any[];
+    isLoading: boolean;
+    isError: boolean;
 }
 
 export function DriverSelectionPopup({
@@ -35,23 +35,13 @@ export function DriverSelectionPopup({
     assignedDriver,
     bookedDriverId,
     status,
+    drivers = [],
+    isLoading,
+    isError
 }: DriverSelectionPopupProps) {
     const [open, setOpen] = useState(false);
     const [selectedDriverId, setSelectedDriverId] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState('');
-
-    const {
-        data: drivers = [],
-        isLoading: loading,
-        isError: error,
-        refetch,
-    } = useDrivers({ enabled: false });
-
-    useEffect(() => {
-        if (open) {
-            refetch(); // fetch drivers when popup opens
-        }
-    }, [open, refetch]);
 
     const handleSelectDriver = (driverId: string) => {
         setSelectedDriverId(driverId);
@@ -68,7 +58,7 @@ export function DriverSelectionPopup({
     const activeDrivers = drivers.filter(
         (driver: any) =>
             String(driver.driverId) !== String(bookedDriverId) &&
-            driver.assigned !== true
+            driver.assigned !== true && driver.isActive === true
     );
 
     const filteredDrivers = activeDrivers.filter((driver: any) =>
@@ -103,15 +93,13 @@ export function DriverSelectionPopup({
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                     </div>
 
-                    {loading && (
+                    {isLoading && (
                         <div className="flex justify-center items-center py-8">
                             <Loader2 className="h-6 w-6 animate-spin" />
                         </div>
                     )}
 
-                    {error && <div className="bg-destructive/10 text-destructive p-4 rounded-lg text-center">{error}</div>}
-
-                    {!loading && !error && status !== "Completed" && (
+                    {!isLoading && !isError && status !== "Completed" && (
                         <div className="grid gap-3">
                             {activeDrivers.length > 0 ? (
                                 <React.Fragment>

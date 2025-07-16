@@ -1,10 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
-import Loading from 'app/Loading';
+import React, { useState } from 'react';
 import { columns } from 'app/admin/bookings/columns';
-import { useBookingStore } from 'stores/bookingStore';
-import { DataTable } from 'components/others/DataTable';
 import { Loader2, RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
@@ -13,9 +10,8 @@ import {
 } from 'material-react-table';
 import { Button } from 'components/ui/button';
 
-export const BookingTable: React.FC = () => {
+export const BookingTable: React.FC<{ bookings: any[], isLoading: boolean }> = ({ bookings, isLoading }) => {
     const router = useRouter();
-    const { bookings, fetchBookings, isLoading, error } = useBookingStore();
 
     // Global sorting state
     const [isSpinning, setIsSpinning] = useState(false)
@@ -23,11 +19,6 @@ export const BookingTable: React.FC = () => {
         columnId: string | null;
         direction: 'asc' | 'desc' | null;
     }>({ columnId: null, direction: null });
-
-
-    useEffect(() => {
-        fetchBookings();
-    }, [fetchBookings]);
 
 
     const applyFilters = () => {
@@ -75,16 +66,6 @@ export const BookingTable: React.FC = () => {
             direction: prev.columnId === columnId && prev.direction === 'asc' ? 'desc' : 'asc',
         }));
     };
-
-    useEffect(() => {
-        fetchBookings();
-
-        const intervalId = setInterval(() => {
-            applyFilters();
-        }, 180000);
-
-        return () => clearInterval(intervalId);
-    }, [fetchBookings]);
 
     const handleRoute = () => {
         router.push('/admin/bookings')

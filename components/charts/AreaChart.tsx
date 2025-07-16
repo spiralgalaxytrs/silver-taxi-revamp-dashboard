@@ -1,137 +1,6 @@
-// "use client"
-
-
-// import { Bar, BarChart, XAxis, YAxis, Legend } from "recharts";
-// import {
-//   Card,
-//   CardContent,
-//   CardDescription,
-//   CardFooter,
-//   CardHeader,
-//   CardTitle,
-// } from "components/ui/card";
-// import {
-//   ChartConfig,
-//   ChartContainer,
-//   ChartTooltip,
-//   ChartTooltipContent,
-// } from "components/ui/chart";
-// import { useBookingStore } from "stores/bookingStore";
-// import { useEffect, useState } from "react";
-
-// const chartConfig = {
-//   count: {
-//     label: "Count",
-//     color: "hsl(var(--chart-1))",
-//   },
-// } satisfies ChartConfig;
-
-// const colorMap: { [key: string]: string } = {
-//   "One way": "blue",
-//   "Round trip": "green",
-//   "Airport": "purple",
-//   "Package": "yellow"
-// };
-
-// export function AreaChart({ createdBy }: { createdBy: string }) {
-//   const { fetchBookings, bookings, fetchVendorBookings } = useBookingStore();
-//   const [chartData, setChartData] = useState([
-//     { service: "One way", "One way_bookings": 0 },
-//     { service: "Round trip", "Round trip_bookings": 0 },
-//     { service: "Package", Package_bookings: 0 },
-//     { service: "Airport", Airport_bookings: 0 },
-//   ]);
-
-//   useEffect(() => {
-//     const fetchAndSetBookings = async () => {
-//       const initialChartData = [
-//         { service: "One way", "One way_bookings": 0 },
-//         { service: "Round trip", "Round trip_bookings": 0 },
-//         { service: "Package", Package_bookings: 0 },
-//         { service: "Airport", Airport_bookings: 0 },
-//       ]
-
-//       if (createdBy === "Vendor") {
-//         fetchVendorBookings()
-//         const updatedData = [...initialChartData]
-//         bookings
-//           .filter((booking) => booking.createdBy === "Vendor")
-//           .forEach((booking) => {
-//             const index = updatedData.findIndex((item) => item.service === booking.serviceType)
-//             if (index !== -1 && booking.serviceType) {
-//               updatedData[index][`${booking.serviceType}_bookings`] =
-//                 (updatedData[index][`${booking.serviceType}_bookings`] || 0) + 1
-//             }
-//           })
-//         setChartData(updatedData)
-//       }
-
-//       if (createdBy === "Admin") {
-//         fetchBookings()
-//         const updatedData = [...initialChartData]
-//         bookings.forEach((booking) => {
-//           const index = updatedData.findIndex((item) => item.service === booking.serviceType)
-//           if (index !== -1 && booking.serviceType) {
-//             updatedData[index][`${booking.serviceType}_bookings`] =
-//               (updatedData[index][`${booking.serviceType}_bookings`] || 0) + 1
-//           }
-//         })
-//         setChartData(updatedData)
-//       }
-//     }
-
-//     fetchAndSetBookings();
-//   }, [bookings, createdBy, fetchBookings, fetchVendorBookings]);
-
-//   return (
-//     <Card>
-//       <CardHeader>
-//         <CardTitle>Services</CardTitle>
-//         <CardDescription>Showing total services per Bookings</CardDescription>
-//       </CardHeader>
-//       <CardContent>
-//         <ChartContainer config={chartConfig}>
-//           <BarChart
-//             accessibilityLayer
-//             data={chartData}
-//             layout="vertical"
-//             width={600} // Set the width of the chart
-//             height={400} // Set the height of the chart
-//             margin={{ top: 20, right: 30, left: 20, bottom: 5 }} // Adjust margins if needed
-//           >
-//             <XAxis type="number" hide />
-//             <YAxis
-//               dataKey="service"
-//               type="category"
-//               tickLine={false}
-//               tickMargin={5}
-//               axisLine={false}
-//             />
-//             <ChartTooltip
-//               cursor={false}
-//               content={<ChartTooltipContent hideLabel />}
-//             />
-//             {/* <Legend  className=" mt-4"/> */}
-//             {chartData.map((item) => (
-//               <Bar
-//                 key={item.service} // Use the service name as the unique key
-//                 dataKey={`${item.service}_bookings`} // Unique dataKey for each service
-//                 fill={colorMap[item.service]} // Dynamically set the fill color
-//                 radius={[0, 4, 4, 0]}
-//                 barSize={30}
-//                 width={100}
-//               />
-//             ))}
-//           </BarChart>
-//         </ChartContainer>
-//       </CardContent>
-//     </Card>
-//   );
-// }
-
 "use client"
 
-import { TrendingUp } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis } from "recharts";
 import {
   Card,
@@ -147,8 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "components/ui/chart";
-import { useBookingStore } from "stores/bookingStore";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 const colorMap: { [key: string]: string } = {
   "One way": "hsl(var(--chart-1))",      // Set color for One way
@@ -199,44 +67,42 @@ const ChartLegend = ({ config }: { config: ChartConfig }) => {
   );
 };
 
-export function AreaChart({ createdBy }: { createdBy: string }) {
-  const { fetchBookings, bookings, fetchVendorBookings } = useBookingStore();
-  const [chartData, setChartData] = useState([
-    { service: "One way", bookings: 0, fill: colorMap["One way"] },
-    { service: "Round trip", bookings: 0, fill: colorMap["Round trip"] },
-    { service: "Package", bookings: 0, fill: colorMap["Package"] },
-    { service: "Airport", bookings: 0, fill: colorMap["Airport"] },
-  ]);
+interface AreaChartProps {
+  createdBy: string;
+  bookings: any[];
+  isLoading: boolean
+}
 
-  useEffect(() => {
-    const fetchAndSetBookings = async () => {
-      const updatedChartData = chartData.map((item) => ({ ...item, bookings: 0 }));
+export function AreaChart({ createdBy, bookings, isLoading }: AreaChartProps) {
 
-      if (createdBy === "Vendor") {
-        fetchVendorBookings();
-        bookings
-          .filter((booking) => booking.createdBy === "Vendor")
-          .forEach((booking) => {
-            const index = updatedChartData.findIndex(
-              (item) => item.service === booking.serviceType
-            );
-            if (index !== -1) updatedChartData[index].bookings++;
-          });
-      }
+  const chartData = useMemo(() => {
+    const initial = [
+      { service: "One way", bookings: 0, fill: colorMap["One way"] },
+      { service: "Round trip", bookings: 0, fill: colorMap["Round trip"] },
+      { service: "Package", bookings: 0, fill: colorMap["Package"] },
+      { service: "Airport", bookings: 0, fill: colorMap["Airport"] },
+    ];
 
-      if (createdBy === "Admin") {
-        fetchBookings();
-        bookings.forEach((booking) => {
-          const index = updatedChartData.findIndex(
-            (item) => item.service === booking.serviceType
-          );
-          if (index !== -1) updatedChartData[index].bookings++;
-        });
-      }
-      setChartData(updatedChartData);
-    };
-    fetchAndSetBookings();
-  }, [createdBy]);
+    const filteredBookings =
+      createdBy === "Vendor"
+        ? bookings.filter((b) => b.createdBy === "Vendor")
+        : bookings;
+
+    filteredBookings.forEach((booking) => {
+      const index = initial.findIndex((item) => item.service === booking.serviceType);
+      if (index !== -1) initial[index].bookings++;
+    });
+
+    return initial;
+  }, [bookings, createdBy]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <Card>

@@ -8,17 +8,18 @@ import { Button } from "../ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Loader2 } from "lucide-react";
 
-export function Overview() {
-    const { drivers, fetchDrivers, isLoading, error } = useDriverStore();
+interface DriverProps {
+    drivers: any[];
+    isLoading: boolean;
+}
+
+export function Overview({ drivers = [], isLoading }: DriverProps) {
+
     const [filteredDrivers, setFilteredDrivers] = useState<any[]>([]);
     const [timeFilter, setTimeFilter] = useState<string>("year"); // Default filter: year
 
     useEffect(() => {
-        fetchDrivers();
-    }, []);
-
-    useEffect(() => {
-            if (drivers && drivers.length > 0) {
+        if (drivers && drivers.length > 0) {
             // Filter drivers based on the selected time filter
             const now = dayjs();
             let filtered = [...drivers];
@@ -69,7 +70,7 @@ export function Overview() {
 
             setFilteredDrivers(chartData);
         }
-    }, [ timeFilter]);
+    }, [timeFilter]);
 
     if (isLoading) {
         return (
@@ -79,13 +80,6 @@ export function Overview() {
         );
     }
 
-    if (error) {
-        return (
-            <div className="flex items-center justify-center h-[350px] text-red-500">
-                Error: {error}
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-4 mt-3">
