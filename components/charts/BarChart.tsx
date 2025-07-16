@@ -17,11 +17,8 @@ import {
   ChartTooltipContent,
 } from "../ui/chart"
 import dayjs from "dayjs"
-import { useBookingStore } from "stores/bookingStore"
-import { useEnquiryStore } from "stores/-enquiryStore"
 import { useEffect, useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { aw } from "node_modules/framer-motion/dist/types.d-6pKw1mTI"
 
 const chartConfig = {
   Booking: {
@@ -52,22 +49,16 @@ const ChartLegend = ({ config }: { config: ChartConfig }) => {
   )
 }
 
-export function BarChartComponent({ createdBy }: { createdBy: string }) {
-  const { fetchBookings, fetchVendorBookings, bookings } = useBookingStore()
-  const { fetchEnquiries, fetchVendorEnquiries, enquiries } = useEnquiryStore()
+interface BarChartProps {
+  createdBy: string
+  bookings: any[],
+  enquiries: any[],
+  isLoading: boolean
+}
+
+export function BarChartComponent({ createdBy, bookings, enquiries, isLoading }: BarChartProps) {
   const [data, setData] = useState<{ category: string; Booking: number; Enquiry: number }[]>([])
   const [filter, setFilter] = useState<TimeFilter>('week')
-
-  // Separate useEffect for data fetching
-  useEffect(() => {
-    if (createdBy === "Vendor") {
-      fetchVendorBookings()
-      fetchVendorEnquiries()
-    } else {
-      fetchBookings()
-      fetchEnquiries()
-    }
-  }, [createdBy]) // Only run when createdBy changes
 
   const formatHourToAMPM = (hour: number) => {
     const formattedHour = hour % 12 || 12; // Convert 0-23 to 12-12-11
@@ -142,7 +133,7 @@ export function BarChartComponent({ createdBy }: { createdBy: string }) {
       }
 
       if (createdBy === "Admin") {
-        bookings.forEach((booking:any) => {
+        bookings.forEach((booking: any) => {
           const date = dayjs(booking.bookingDate)
           if (!date.isAfter(startDate)) return
 
@@ -223,7 +214,7 @@ export function BarChartComponent({ createdBy }: { createdBy: string }) {
             <Bar dataKey="Enquiry" fill="var(--color-Enquiry)" radius={4} />
           </BarChart>
         </ChartContainer>
-        <ChartLegend config={chartConfig}/>
+        <ChartLegend config={chartConfig} />
       </CardContent>
     </Card>
   )
