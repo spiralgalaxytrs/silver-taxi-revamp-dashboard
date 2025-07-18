@@ -175,6 +175,8 @@ export default function BookingsPage() {
 
   const filteredData = applyFilters();
 
+  
+
 
   const stats = useMemo(() => {
     const currentYear = new Date().getFullYear();
