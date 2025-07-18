@@ -6,10 +6,9 @@ import { Label } from 'components/ui/label';
 import { Button } from 'components/ui/button';
 import { Input } from 'components/ui/input';
 import { Dialog, DialogContent, DialogTrigger } from 'components/ui/dialog';
-import { Eye, Edit, X , Loader2} from 'lucide-react';
+import { Eye, Edit, X, Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useBookingStore, Booking } from 'stores/bookingStore';
-import { useFetchBookingById } from 'hooks/react-query/useBooking';
 import { toast } from 'sonner';
 
 // Formatters
@@ -56,13 +55,17 @@ export default function BookingDetailsPage() {
   const { booking, isLoading, fetchBookingById, updateBooking } = useBookingStore();
   const [editMode, setEditMode] = useState<'before' | 'after' | null>(null);
   const [formData, setFormData] = useState<Booking | null>(null);
+  const [driverCharges, setDriverCharges] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (bookingId) fetchBookingById(bookingId as string);
   }, [bookingId, fetchBookingById]);
 
   useEffect(() => {
-    if (booking) setFormData(booking);
+    if (booking) {
+      setFormData(booking);
+      setDriverCharges(booking?.driverCharges || {});
+    }
   }, [booking]);
 
   // Field groupings
@@ -81,13 +84,13 @@ export default function BookingDetailsPage() {
     { key: 'createdBy', label: 'Created By' },
     { key: 'createdAt', label: 'Created Date & Time', format: formatDateTime },
     { key: 'status', label: 'Trip Status' },
-    { key: 'taxPercentage', label: 'Tax Percentage', suffix: '%' }
+    { key: 'taxPercentage', label: 'Tax Percentage', suffix: '%' },
   ];
 
   const beforeTripFields = [
     { key: 'distance', label: 'Total Km', format: formatDistance },
     { key: 'pricePerKm', label: 'Per Km', format: formatCurrency },
-    { key: 'driverBeta', label: 'Driver Betta', format: formatCurrency },
+    { key: 'driverBeta', label: 'Driver Beta', format: formatCurrency },
     { key: 'duration', label: 'Total Duration' },
     { key: 'estimatedAmount', label: 'Estimation Fare', format: formatCurrency },
     { key: 'price', label: 'Tax Amount', format: formatCurrency },
@@ -96,7 +99,7 @@ export default function BookingDetailsPage() {
     { key: 'statePermit', label: 'State Permit', format: formatCurrency, optional: true },
     { key: 'tollCharges', label: 'Toll Charges', format: formatCurrency, optional: true },
     { key: 'hillCharges', label: 'Hill Charges', format: formatCurrency, optional: true },
-    { key: 'finalAmount', label: 'Total Amount', format: formatCurrency }
+    { key: 'finalAmount', label: 'Total Amount', format: formatCurrency },
   ];
 
   const afterTripFields = [
@@ -104,30 +107,37 @@ export default function BookingDetailsPage() {
     { key: 'pricePerKm', label: 'Per Km', format: formatCurrency },
     { key: 'tripCompletedDuration', label: 'Total Duration' },
     { key: 'tripCompletedEstimatedAmount', label: 'Estimation Fare', format: formatCurrency },
-    { key: 'advanceAmount', label: 'Advance Amount', format: formatCurrency },
     { key: 'statePermit', label: 'State Permit', format: formatCurrency, optional: true },
     { key: 'tollCharges', label: 'Toll Charges', format: formatCurrency, optional: true },
     { key: 'hillCharges', label: 'Hill Charges', format: formatCurrency, optional: true },
     { key: 'tripCompletedFinalAmount', label: 'Total Amount', format: formatCurrency },
   ];
 
-  const tripCalculationFields = [
-    { key: 'distance', label: 'Total Km', format: formatDistance },
-    { key: 'pricePerKm', label: 'Price Per Km', format: formatCurrency },
-    { key: 'baseFare', label: 'Base Fare', format: formatCurrency },
-    { key: 'driverBeta', label: 'Driver Beta', format: formatCurrency },
-    { key: 'gstAmount', label: 'GST Amount', format: formatCurrency },
-    { key: 'adminCommission', label: 'Admin Commission', format: formatCurrency },
-    { key: 'adminCommissionTax', label: 'Admin Commission Tax', format: formatCurrency },
-    { key: 'additionalCharges', label: 'Additional Charges', format: formatCurrency, optional: true },
-  ];
+  const nonEditableAfterFields = ['pricePerKm', 'tripCompletedDuration', 'tripCompletedEstimatedAmount', 'tripCompletedFinalAmount'];
+
+  const calculateEstimatedFare = (distance: number) => {
+    if (!formData) return 0;
+    return distance * (formData.pricePerKm || 0);
+  };
+
+  let previousEstimatedFare: number | null = null;
+
+
+  const calculateTotalAmount = (estimatedFare: number, charges = driverCharges) => {
+    const chargesSum = Object.values(charges).reduce(
+      (sum, charge) => sum + (parseFloat(charge) || 0),
+      0
+    );
+
+    return estimatedFare + chargesSum;
+  };
+
+
+  console.log("Final Amount", calculateTotalAmount);
 
   const calculateTotalDeductions = () => {
     if (!booking) return 0;
-    return (
-      (booking?.taxAmount || 0) +
-      (booking?.driverDeductionAmount || 0)
-    );
+    return (booking?.taxAmount || 0) + (booking?.driverDeductionAmount || 0);
   };
 
   const calculateTotalEarnings = () => {
@@ -142,62 +152,73 @@ export default function BookingDetailsPage() {
   const handleSave = async () => {
     try {
       if (formData && bookingId) {
-        await updateBooking(bookingId as string, formData);
-        setEditMode(null);
-        toast.success("Details updated successfully", {
-          style: {
-            backgroundColor: "#009F7F",
-            color: "#fff",
-          },
+        await updateBooking(bookingId as string, {
+          ...formData,
+          driverCharges,
+          tripCompletedFinalAmount: Number(formData.tripCompletedFinalAmount) || 0,
         });
+        setEditMode(null);
+        toast.success('Details updated successfully');
       }
     } catch (error) {
       console.error('Error updating booking:', error);
-      toast.error("Failed to update details", {
-        style: {
-          backgroundColor: "#FF0000",
-          color: "#fff",
-        },
-      });
+      toast.error('Failed to update details');
     }
   };
 
   const handleCancel = () => {
     if (booking) {
       setFormData(booking);
+      setDriverCharges(booking?.driverCharges || {});
     }
     setEditMode(null);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
     if (!formData) return;
-    setFormData({
-      ...formData,
-      [field]: e.target.value,
-    } as Booking);
+
+    const value = e.target.value;
+    const parsedValue =
+      field.includes('Distance') || field.includes('Amount') || field.includes('Charge')
+        ? parseFloat(value) || 0
+        : value;
+
+    setFormData((prev) => {
+      if (!prev) return prev;
+
+      const updated = { ...prev, [field]: parsedValue };
+
+      if (editMode === 'after') {
+        // If tripCompletedDistance is updated:
+        const distance = field === 'tripCompletedDistance' ? parsedValue : updated.tripCompletedDistance;
+        const estimatedFare = Number(distance) * (updated.pricePerKm || 0);
+
+        // Always recalculate tripCompletedEstimatedAmount if distance changes:
+        updated.tripCompletedEstimatedAmount = estimatedFare;
+
+        // Always recalculate tripCompletedFinalAmount fresh:
+        const totalFinal = calculateTotalAmount(estimatedFare);
+        updated.tripCompletedFinalAmount = totalFinal;
+      }
+
+      return updated;
+    });
   };
 
-  const handleDriverChargeChange = (e: React.ChangeEvent<HTMLInputElement>, chargeKey: string) => {
-    if (!formData) return;
-    setFormData({
-      ...formData,
-      driverCharges: {
-        ...formData?.driverCharges,
-        [chargeKey]: e.target.value,
-      },
-    } as Booking);
+
+  const handleDriverChargeChange = (key: string, value: string) => {
+    const parsedValue = parseFloat(value) || 0;
+    const newCharges = { ...driverCharges, [key]: parsedValue.toString() };
+    setDriverCharges(newCharges);
+
+    if (formData) {
+      const estimatedFare = formData.tripCompletedEstimatedAmount || calculateEstimatedFare(formData.tripCompletedDistance || 0);
+      const totalFinal = calculateTotalAmount(estimatedFare, newCharges);
+
+      setFormData(prev => prev ? { ...prev, tripCompletedFinalAmount: totalFinal } : prev);
+    }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-      </div>
-    )
-  }  if (!booking) return <div className="text-center py-8">Booking not found</div>;
-
-  const isBeforeDisabled = booking?.status === "Started" || booking?.status === "Completed";
-  const isAfterDisabled = booking?.endOdometerValue === 0 || booking?.endOdometerValue === null || booking?.status === "Completed";
 
   const renderField = (field: any, section: 'basic' | 'before' | 'after' | 'calculation') => {
     const value = formData?.[field.key as keyof Booking] ?? booking?.[field.key as keyof Booking];
@@ -213,14 +234,21 @@ export default function BookingDetailsPage() {
       );
     }
 
+    const isEditable = !(
+      section === 'after' &&
+      editMode === 'after' &&
+      nonEditableAfterFields.includes(field.key)
+    );
+
     return (
       <div key={field.key} className="space-y-1">
         <Label className="text-sm text-gray-600">{field.label}</Label>
-        {(section === 'before' || section === 'after') && editMode === section ? (
+        {(section === 'before' || section === 'after') && editMode === section && isEditable ? (
           <Input
             value={value || ''}
             onChange={(e) => handleChange(e, field.key)}
-            type={field.key.includes('Amount') || field.key.includes('Charge') ? 'number' : 'text'}
+            type={field.key.includes('Amount') || field.key.includes('Charge') || field.key.includes('Distance') ? 'number' : 'text'}
+            min={field.key.includes('Distance') || field.key.includes('Amount') || field.key.includes('Charge') ? 0 : undefined}
           />
         ) : (
           <div className="font-medium">
@@ -231,6 +259,19 @@ export default function BookingDetailsPage() {
       </div>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!booking) return <div className="text-center py-8">Booking not found</div>;
+
+  const isBeforeDisabled = booking?.status === 'Started' || booking?.status === 'Completed';
+  const isAfterDisabled = booking?.endOdometerValue === 0 || booking?.endOdometerValue === null || booking?.status === 'Completed';
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -243,8 +284,12 @@ export default function BookingDetailsPage() {
 
       <Tabs defaultValue="details">
         <TabsList className="grid grid-cols-2 gap-2 mb-6">
-          <TabsTrigger className='tabs-trigger' value="details">Trip Details</TabsTrigger>
-          <TabsTrigger className='tabs-trigger' value="activity">Activity</TabsTrigger>
+          <TabsTrigger className="tabs-trigger" value="details">
+            Trip Details
+          </TabsTrigger>
+          <TabsTrigger className="tabs-trigger" value="activity">
+            Activity
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="details">
@@ -291,13 +336,16 @@ export default function BookingDetailsPage() {
 
                 {editMode === 'before' && (
                   <div className="flex justify-end space-x-2 pt-4">
-                    <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                    <Button variant="outline" onClick={handleCancel}>
+                      Cancel
+                    </Button>
                     <Button onClick={handleSave}>Save Changes</Button>
                   </div>
                 )}
               </CardContent>
             </Card>
 
+            {/* After Trip Card */}
             <Card className="bg-white rounded-lg border border-gray-200">
               <div className="flex justify-between items-center p-4 border-b">
                 <h2 className="text-lg font-semibold text-gray-800">After Trip Details</h2>
@@ -324,8 +372,30 @@ export default function BookingDetailsPage() {
                 </div>
               </div>
               <CardContent className="p-4 space-y-4">
-                {afterTripFields?.map((field) => renderField(field, 'after'))}
+                {afterTripFields.map((field) => renderField(field, 'after'))}
 
+                {/* Driver Charges Section */}
+                {editMode === 'after' && (
+                  <div className="space-y-2">
+                    <Label className="text-sm text-gray-600">Driver Charges</Label>
+                    {Object.entries(driverCharges).map(([key, value]) => (
+                      <div key={key} className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
+
+                        <Input
+                          value={value}
+                          onChange={(e) => handleDriverChargeChange(key, e.target.value)}
+                          type="number"
+                          placeholder="Amount"
+                          className="flex-1"
+                          min={0}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* OTP and Odometer Sections */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label className="text-sm text-gray-600">Start OTP</Label>
@@ -350,7 +420,9 @@ export default function BookingDetailsPage() {
 
                 {editMode === 'after' && (
                   <div className="flex justify-end space-x-2 pt-4">
-                    <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                    <Button variant="outline" onClick={handleCancel}>
+                      Cancel
+                    </Button>
                     <Button onClick={handleSave}>Save Changes</Button>
                   </div>
                 )}
@@ -369,19 +441,20 @@ export default function BookingDetailsPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>Total Distance</span>
-                      <span>{formatDistance(booking?.tripCompletedDistance)}</span>
+                      <span>{formatDistance(formData?.tripCompletedDistance || booking?.tripCompletedDistance)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Per KM Price</span>
-                      <span>{formatCurrency(booking?.pricePerKm)}</span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span>Base Fare:</span>
-                      <span>{formatCurrency(booking?.tripCompletedEstimatedAmount)}</span>
+                      <span>{formatCurrency(formData?.pricePerKm || booking?.pricePerKm)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Driver Beta:</span>
+                      <span>Base Fare</span>
+                      <span>
+                        {formatCurrency(formData?.tripCompletedEstimatedAmount || booking?.tripCompletedEstimatedAmount)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Driver Beta</span>
                       <span>{formatCurrency(booking?.driverBeta)}</span>
                     </div>
                     <div className="flex justify-between">
@@ -389,23 +462,24 @@ export default function BookingDetailsPage() {
                       <span>{formatCurrency(0)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>GST ({booking?.taxPercentage || 0}%):</span>
+                      <span>GST ({booking?.taxPercentage || 0}%)</span>
                       <span>{formatCurrency(booking?.taxAmount)}</span>
                     </div>
-                    <div className="space-y-2">
-                      {booking?.driverCharges && Object.entries(booking.driverCharges).map(([key, value]) => (
-                        <div key={key} className="flex justify-between">
-                          <span>{capitalizeLabel(key)}:</span>
-                          <div className='text-red-60'>
-                            <span>{formatCurrency(Number(value))}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+
+                    {/* Driver Charges Display */}
+                    {Object.entries(driverCharges).map(([key, value]) => (
+                      <div key={key} className="flex justify-between">
+                        <span>{capitalizeLabel(key)}</span>
+                        <span>{formatCurrency(parseFloat(value) || 0)}</span>
+                      </div>
+                    ))}
+
                     <div className="border-t border-gray-200 pt-2">
                       <div className="flex justify-between font-bold">
-                        <span>Total Amount:</span>
-                        <span>{formatCurrency(booking?.tripCompletedFinalAmount)}</span>
+                        <span>Total Amount</span>
+                        <span>
+                          {formatCurrency(formData?.tripCompletedFinalAmount || booking?.tripCompletedFinalAmount || 0)}
+                        </span>
                       </div>
                     </div>
 
@@ -414,55 +488,50 @@ export default function BookingDetailsPage() {
                       <h4 className="font-semibold mb-1">Admin Amount</h4>
                       <div className="space-y-1">
                         <div className="flex justify-between">
-                          <span>GST ({booking?.taxPercentage || 0}%)%:</span>
+                          <span>GST ({booking?.taxPercentage || 0}%)</span>
                           <span>{formatCurrency(booking?.taxAmount)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Admin Commission:</span>
+                          <span>Admin Commission</span>
                           <span>{formatCurrency(booking?.driverDeductionAmount)}</span>
                         </div>
                         <div className="border-t border-b border-gray-200 pt-2">
                           <div className="flex justify-between font-bold">
-                            <span>Total Amount:</span>
+                            <span>Total Amount</span>
                             <span>{formatCurrency(calculateTotalEarnings())}</span>
                           </div>
                         </div>
+                      </div>
 
-                        <br />
+                      <br />
 
-                        <h4 className="font-semibold mb-1">Driver Amount</h4>
+                      <h4 className="font-semibold mb-1">Driver Amount</h4>
+                      <div className="space-y-1">
                         <div className="flex justify-between">
-                          <span>Driver Beta:</span>
+                          <span>Driver Beta</span>
                           <span>{formatCurrency(booking?.driverBeta)}</span>
                         </div>
 
-                        {booking?.driverCharges && (
-                          <div className="space-y-2">
-                            {Object.entries(booking.driverCharges).map(([key, value]) => (
-                              <div key={key} className="flex justify-between">
-                                <span>{capitalizeLabel(key)}:</span>
-                                <div className='text-red-60'>
-                                  <span>{formatCurrency(Number(value))}</span>
-                                </div>
-                              </div>
-                            ))}
+                        {Object.entries(driverCharges).map(([key, value]) => (
+                          <div key={key} className="flex justify-between">
+                            <span>{capitalizeLabel(key)}</span>
+                            <span>{formatCurrency(parseFloat(value) || 0)}</span>
                           </div>
-                        )}
-                      </div>
-                    </div>
+                        ))}
 
-                    <div className="border-t border-gray-200 pt-2">
-                      <div className="flex justify-between font-bold">
-                        <span>Total Amount:</span>
-                        <span>
-                          {formatCurrency(
-                            booking?.driverCharges ? 
-                            Object.values(booking.driverCharges)
-                              .map(Number)
-                              .reduce((total, amount) => total + amount, 0)
-                            : 0
-                          )}
-                        </span>
+                        <div className="border-t border-gray-200 pt-2">
+                          <div className="flex justify-between font-bold">
+                            <span>Driver Total</span>
+                            <span>
+                              {formatCurrency(
+                                (parseFloat(booking?.driverBeta as any) || 0) +
+                                Object.values(driverCharges)
+                                  .reduce((sum, charge) => sum + (parseFloat(charge) || 0), 0)
+                              )}
+
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
