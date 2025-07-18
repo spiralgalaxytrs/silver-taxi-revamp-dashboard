@@ -841,7 +841,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       const router = useRouter()
 
       const handleEditBooking = useCallback(async (id: string | undefined) => {
-        router.push(`/admin/bookings/edit/${id}`)
+        router.push(`/vendor/bookings/edit/${id}`)
       }, [router])
 
       const {
@@ -869,7 +869,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       const handleConvertBooking = async (id: string) => {
         try {
-          router.push(`/admin/invoices/create?bookingId=${id}`);
+          router.push(`/vendor/invoices/create?bookingId=${id}`);
         } catch (error) {
           toast.error("Failed to convert booking", {
             style: {

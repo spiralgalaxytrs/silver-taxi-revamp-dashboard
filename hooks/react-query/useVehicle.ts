@@ -7,7 +7,9 @@ import {
   toggleVehicleStatus,
   createVehicle,
   updateVehicle,
-  deleteVehicle
+  deleteVehicle,
+  getVehicleTypes,
+  createVehicleTypes
 } from "services/vehicle";
 
 // 🚘 All vehicles
@@ -15,6 +17,12 @@ export const useVehicles = () =>
   useQuery({
     queryKey: ["vehicles"],
     queryFn: getVehicles,
+  });
+
+export const useVehicleTypes = () =>
+  useQuery({
+    queryKey: ["vehicleTypes"],
+    queryFn: getVehicleTypes,
   });
 
 // 🚘 Admin vehicles
@@ -58,6 +66,16 @@ export const useCreateVehicle = () => {
     mutationFn: createVehicle,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+    },
+  });
+};
+
+export const useCreateVehicleTypes = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createVehicleTypes,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vehicleTypes"] });
     },
   });
 };

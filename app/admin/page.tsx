@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card'
-import { Overview } from 'components/others/Overview'
+import { Overview } from 'components/charts/Overview'
 import { Activity, Users, ArrowBigRight, Calendar, MessageSquare, Car, FileText, User, BadgePercent, Route } from 'lucide-react'
 import CounterCard from 'components/cards/CounterCard'
 import { BarChartComponent } from 'components/charts/BarChart'

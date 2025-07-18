@@ -41,9 +41,9 @@ export default function Page() {
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Vehicle Management</h1>
-          <Link href="/admin/vehicles/create">
+          {/* <Link href="/admin/vehicles/create">
             <Button>Create Vehicle</Button>
-          </Link>
+          </Link> */}
         </div>
         {sortedVehicles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -60,7 +60,7 @@ export default function Page() {
                 permitCharge={vehicle.permitCharge ?? 0}
                 driverBeta={vehicle.driverBeta ?? 0}
                 imageUrl={vehicle.imageUrl as string}
-                createdBy={"Admin"}
+                createdBy={"Vendor"}
               />
             ))}
           </div>
