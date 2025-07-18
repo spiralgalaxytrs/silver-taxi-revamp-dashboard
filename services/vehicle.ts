@@ -7,6 +7,11 @@ export const getVehicles = async (): Promise<Vehicle[]> => {
   return res.data.data;
 };
 
+export const getVehicleTypes = async (): Promise<any[]> => {
+  const res = await axios.get("/v1/vehicles/types");
+  return res.data.data;
+};
+
 export const getVehiclesAdmin = async (): Promise<Vehicle[]> => {
   const res = await axios.get("/v1/vehicles/admin");
   return res.data.data;
@@ -46,6 +51,13 @@ export const createVehicle = async (vehicleData: Partial<Vehicle>) => {
   const res = await axios.post("/v1/vehicles", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return res.data.data;
+};
+
+// ➕ Create a new vehicle
+export const createVehicleTypes = async (name: string) => {
+  const data = { name: name.trim().toLowerCase() };
+  const res = await axios.post("/v1/vehicles/types/add", data);
   return res.data.data;
 };
 

@@ -47,8 +47,14 @@ const LocationAutocomplete: React.FC<Props> = ({ onSelect, onChange, getValue })
                 type="text"
                 value={value}
                 onChange={(e) => {
-                    setValue(e.target.value);
-                    onChange(e);
+                    const inputValue = e.target.value;
+                    if (inputValue.length >= 3) {
+                        setValue(inputValue);
+                        onChange(e);
+                    } else {
+                        setValue("");
+                        onChange(e);
+                    }
                 }}
                 disabled={!ready}
                 placeholder="Enter a location"

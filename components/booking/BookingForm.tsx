@@ -419,6 +419,10 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                 }
             }
 
+            if (name === "advanceAmount") {
+                newState.paymentStatus = newState.advanceAmount > 0 ? "Partial Paid" : "Unpaid";
+            }
+
             // Ensure `finalAmount` is always correctly calculated
             newState.upPaidAmount =
                 Number(newState.finalAmount || 0) -
