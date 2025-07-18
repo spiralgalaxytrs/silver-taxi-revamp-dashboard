@@ -123,14 +123,14 @@ export default function BookingDetailsPage() {
   let previousEstimatedFare: number | null = null;
 
 
-const calculateTotalAmount = (estimatedFare: number, charges = driverCharges) => {
-  const chargesSum = Object.values(charges).reduce(
-    (sum, charge) => sum + (parseFloat(charge) || 0),
-    0
-  );
+  const calculateTotalAmount = (estimatedFare: number, charges = driverCharges) => {
+    const chargesSum = Object.values(charges).reduce(
+      (sum, charge) => sum + (parseFloat(charge) || 0),
+      0
+    );
 
-  return estimatedFare + chargesSum;
-};
+    return estimatedFare + chargesSum;
+  };
 
 
   console.log("Final Amount", calculateTotalAmount);
@@ -523,11 +523,11 @@ const calculateTotalAmount = (estimatedFare: number, charges = driverCharges) =>
                             <span>Driver Total</span>
                             <span>
                               {formatCurrency(
-                                (booking?.driverBeta || 0) +
+                                (parseFloat(booking?.driverBeta as any) || 0) +
                                 Object.values(driverCharges)
-                                  .map((v) => parseFloat(v) || 0)
-                                  .reduce((sum, charge) => sum + charge, 0)
+                                  .reduce((sum, charge) => sum + (parseFloat(charge) || 0), 0)
                               )}
+
                             </span>
                           </div>
                         </div>
