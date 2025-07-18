@@ -281,7 +281,7 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
         });
     }, [formData]);
 
-    const fetchDistance = async (pickup: string, drop: string) => {
+    const fetchDistance = async (pickup: string, drop: string, tariff: any) => {
         if (pickup && drop) {
             setLocalLoading(true);
             try {
@@ -292,73 +292,17 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                 setFormData(prev => ({
                     ...prev,
                     distance: distance,
-                    duration: duration
+                    duration: duration,
+                    pricePerKm: tariff.price,
+                    estimatedAmount: distance * tariff.price,
+                    finalAmount: distance * tariff.price
                 }));
 
-
-                if (distance > 0) {
-                    await handleFairCalculation(
-                        formData.serviceType,
-                        formData.vehicleId,
-                        distance,
-                        formData.pickupDateTime,
-                        formData.dropDate || ''
-                    );
-                }
                 setLocalLoading(false);
             } catch (error) {
                 toast.error('Failed to calculate distance');
                 setLocalLoading(false);
             }
-        }
-    };
-
-
-    const handleFairCalculation = async (serviceType: string, vehicleId: string, distance: number, pickupDateTime: string, dropDate: string) => {
-        setLocalLoading(true);
-        try {
-            // Start with base payload
-            const payload: any = {
-                serviceType,
-                vehicleId,
-                distance,
-                pickupDateTime,
-                dropDate,
-                createdBy: formData.createdBy
-            };
-
-            // Add package-related fields only for Day/Hourly Packages
-            if (formData.serviceType === 'Day Packages' || formData.serviceType === 'Hourly Packages') {
-                if (!formData.packageId) {
-                    toast.error('Please select a package first');
-                    setLocalLoading(false);
-                    return;
-                }
-
-                payload.packageId = formData.packageId;
-                payload.packageType = formData.serviceType === 'Day Packages' ? 'Day Package' : 'Hourly Package';
-                payload.createdBy = formData.createdBy;
-            }
-
-            const response = await axios.post(`/v1/bookings/fair-calculation`, payload);
-            let { basePrice, driverBeta, pricePerKm, finalPrice, taxAmount, taxPercentage } = response.data.data;
-
-            setFormData(prev => ({
-                ...prev,
-                estimatedAmount: basePrice,
-                finalAmount: finalPrice,
-                driverBeta: driverBeta,
-                pricePerKm: pricePerKm,
-                taxAmount: taxAmount,
-                taxPercentage: taxPercentage,
-                price: basePrice,
-                extraPrice: pricePerKm || 0,
-                upPaidAmount: finalPrice
-            }));
-            setLocalLoading(false);
-        } catch (err) {
-            toast.error('Failed to calculate fare');
-            setLocalLoading(false);
         }
     };
 
@@ -396,7 +340,7 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                 }
             }
 
-            if (["distance", "estimatedAmount", "upPaidAmount", "discountAmount", "advanceAmount"].includes(name)) {
+            if (["estimatedAmount", "upPaidAmount", "discountAmount", "advanceAmount", "driverBeta"].includes(name)) {
                 newValue = value.replace(/[^0-9.]/g, "");
             }
 
@@ -419,11 +363,19 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                 }
             }
 
+            if (name === "pricePerKm" || name === "distance") {
+                newState.estimatedAmount = newState.distance * (newState.pricePerKm || 0);
+                newState.finalAmount = newState.estimatedAmount;
+            }
+
+            if(name === "advanceAmount") {
+              newState.paymentStatus = newState.advanceAmount > 0 ? "Partial Paid" : "Unpaid";
+            }
+
             // Ensure `finalAmount` is always correctly calculated
             newState.upPaidAmount =
-                Number(newState.finalAmount || 0) -
-                Number(newState.discountAmount || 0) -
-                Number(newState.advanceAmount || 0);
+                (Number(newState.finalAmount || 0) + Number(newState.driverBeta || 0)) -
+                (Number(newState.discountAmount || 0) + Number(newState.advanceAmount || 0));
 
             // console.log('Form data updated:', { name, value, newState });
             return newState;
@@ -462,11 +414,12 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
             return;
         }
 
+        const tariff = tariffs.find((tariff) => tariff.vehicleId === formData.vehicleId && tariff.serviceId === serviceId);
+
         // Only calculate distance for non-package bookings
         if (formData.serviceType !== 'Day Packages' && formData.serviceType !== 'Hourly Packages') {
-            await fetchDistance(formData.pickup, formData.drop);
+            await fetchDistance(formData.pickup, formData.drop, tariff);
         }
-
         setCurrentStep(2);
     };
 
@@ -830,8 +783,17 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         <Label>Distance (km) <span className='text-red-500'>*</span></Label>
                                         <Input
                                             value={formData.distance}
-                                            readOnly
+                                            onChange={e => handleInputChange('distance', e.target.value)}
                                             className="h-12 bg-muted"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>Price Per KM <span className='text-red-500'>*</span></Label>
+                                        <Input
+                                            value={formData.pricePerKm || ''}
+                                            className="h-12 bg-muted"
+                                            onChange={e => handleInputChange('pricePerKm', e.target.value)}
                                         />
                                     </div>
 
@@ -840,11 +802,20 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         <Input
                                             value={formData.estimatedAmount}
                                             className="h-12 bg-muted"
-                                            onChange={e => handleInputChange('estimatedAmount', e.target.value)}
+                                            readOnly
                                         />
                                     </div>
 
                                     <div className="space-y-2">
+                                        <Label>Driver Beta <span className='text-[10px]'>(Optional)</span></Label>
+                                        <Input
+                                            value={formData.driverBeta || ''}
+                                            className="h-12 bg-muted"
+                                            onChange={e => handleInputChange('driverBeta', e.target.value)}
+                                        />
+                                    </div>
+
+                                    {/* <div className="space-y-2">
                                         <Label>Offer <span className='text-red-500'>*</span></Label>
                                         <Select
                                             value={formData.offerId || ""}
@@ -869,9 +840,9 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 <SelectItem value="None">None</SelectItem>
                                             </SelectContent>
                                         </Select>
-                                    </div>
+                                    </div> */}
 
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <Label>Discount Amount <span className='text-red-500'>*</span></Label>
                                         <Input
                                             id="discountAmount"
@@ -880,7 +851,7 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                                             readOnly// Make read-only when an offer is selected
                                             className="h-12"
                                         />
-                                    </div>
+                                    </div> */}
 
                                     <div className="space-y-2">
                                         <Label>Advance Amount <span className='text-red-500'>*</span></Label>
@@ -907,7 +878,7 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                                             onValueChange={v => handleInputChange('paymentMethod', v)}
                                         >
                                             <SelectTrigger className="h-12">
-                                                <SelectValue />
+                                                <SelectValue placeholder="Select Payment Method" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {['Cash', 'UPI', 'Bank', 'Card'].map(method => (
