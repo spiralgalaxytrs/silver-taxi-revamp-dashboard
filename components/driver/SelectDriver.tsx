@@ -66,8 +66,8 @@ export function DriverSelectionPopup({
         driver.phone.toLowerCase().includes(searchQuery.toLowerCase())
     );
     return (
-        <Dialog open={open} onOpenChange={status !== "Completed" ? setOpen : undefined}>
-            <DialogTrigger asChild className={status === "Completed" ? "pointer-events-none" : ""}>
+        <Dialog open={open} onOpenChange={status === "Not-Started" ? setOpen : undefined}>
+            <DialogTrigger asChild className={status === "Not-Started" ? "" : "pointer-events-none"}>
                 {trigger}
             </DialogTrigger>
             <DialogContent
