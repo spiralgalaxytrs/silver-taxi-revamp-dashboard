@@ -652,26 +652,6 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                                     </div>
                                 )} */}
 
-                                {/* Package Type (Conditional) */}
-                                {/* {formData.serviceType === 'Airport' && (
-                                    <div className="space-y-2">
-                                        <Label>Type<span className='text-red-500'>*</span></Label>
-                                        <Select
-                                            onValueChange={(value) => setSubServiceType(value)}
-                                            value={subServiceType}
-                                        >
-                                            <SelectTrigger className="h-12">
-                                                <SelectValue placeholder="Select package type" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="pickup">Pickup</SelectItem>
-                                                <SelectItem value="drop">Drop</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )} */}
-
-
                                 <div className="space-y-2">
                                     <Label>Vehicle Type <span className='text-red-500'>*</span></Label>
                                     <Select

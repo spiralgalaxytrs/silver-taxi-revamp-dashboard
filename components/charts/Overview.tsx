@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
-import { useDriverStore } from "stores/-driverStore";
 import dayjs from "dayjs";
-import { Button } from "../ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Loader2 } from "lucide-react";
 
@@ -14,63 +12,56 @@ interface DriverProps {
 }
 
 export function Overview({ drivers = [], isLoading }: DriverProps) {
-
-    const [filteredDrivers, setFilteredDrivers] = useState<any[]>([]);
     const [timeFilter, setTimeFilter] = useState<string>("year"); // Default filter: year
 
-    useEffect(() => {
-        if (drivers && drivers.length > 0) {
-            // Filter drivers based on the selected time filter
-            const now = dayjs();
-            let filtered = [...drivers];
+    const filteredDrivers = useMemo(() => {
+        if (!drivers || drivers.length === 0) return [];
 
-            switch (timeFilter) {
-                case "day":
-                    filtered = drivers.filter((driver) =>
-                        dayjs(driver.createdAt).isSame(now, "day")
+        const now = dayjs();
+        let filtered = [...drivers];
+
+        switch (timeFilter) {
+            case "day":
+                filtered = drivers.filter((driver) =>
+                    dayjs(driver.createdAt).isSame(now, "day")
+                );
+                break;
+            case "month":
+                filtered = drivers.filter((driver) =>
+                    dayjs(driver.createdAt).isSame(now, "month")
+                );
+                break;
+            case "year":
+                filtered = drivers.filter((driver) =>
+                    dayjs(driver.createdAt).isSame(now, "year")
+                );
+                break;
+            case "lastYear":
+                filtered = drivers.filter((driver) => {
+                    const driverDate = dayjs(driver.createdAt);
+                    const startOfLastYear = now.subtract(1, "year").startOf("year");
+                    const endOfLastYear = now.subtract(1, "year").endOf("year");
+                    return (
+                        driverDate.isAfter(startOfLastYear) &&
+                        driverDate.isBefore(endOfLastYear) ||
+                        driverDate.isSame(startOfLastYear, "day") ||
+                        driverDate.isSame(endOfLastYear, "day")
                     );
-                    break;
-                case "month":
-                    filtered = drivers.filter((driver) =>
-                        dayjs(driver.createdAt).isSame(now, "month")
-                    );
-                    break;
-                case "year":
-                    filtered = drivers.filter((driver) =>
-                        dayjs(driver.createdAt).isSame(now, "year")
-                    );
-                    break;
-                case "lastYear":
-                    filtered = drivers.filter((driver) => {
-                        const driverDate = dayjs(driver.createdAt);
-                        const startOfLastYear = now.subtract(1, "year").startOf("year");
-                        const endOfLastYear = now.endOf("year");
-                        return (
-                            driverDate.isAfter(startOfLastYear) &&
-                            driverDate.isBefore(endOfLastYear) ||
-                            driverDate.isSame(startOfLastYear, "day") ||
-                            driverDate.isSame(endOfLastYear, "day")
-                        );
-                    });
-                    break;
-                default:
-                    break;
-            }
-
-            // Sort by bookingCount in descending order and get top 5
-            const top5Drivers = filtered
-                .sort((a, b) => (b.bookingCount || 0) - (a.bookingCount || 0))
-                .slice(0, 5);
-
-            // Format data for the bar chart
-            const chartData = top5Drivers.map((driver) => ({
-                name: driver.name || "Unknown",
-                total: driver.bookingCount || 0,
-            }));
-
-            setFilteredDrivers(chartData);
+                });
+                break;
+            default:
+                break;
         }
-    }, [timeFilter]);
+
+        const top5Drivers = filtered
+            .sort((a, b) => (b.bookingCount || 0) - (a.bookingCount || 0))
+            .slice(0, 5);
+
+        return top5Drivers.map((driver) => ({
+            name: driver.name || "Unknown",
+            total: driver.bookingCount || 0,
+        }));
+    }, [drivers, timeFilter]);
 
     if (isLoading) {
         return (
