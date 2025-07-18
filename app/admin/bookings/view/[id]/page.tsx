@@ -380,6 +380,8 @@ export default function BookingDetailsPage() {
                     <Label className="text-sm text-gray-600">Driver Charges</Label>
                     {Object.entries(driverCharges).map(([key, value]) => (
                       <div key={key} className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
+
                         <Input
                           value={value}
                           onChange={(e) => handleDriverChargeChange(key, e.target.value)}
@@ -388,7 +390,6 @@ export default function BookingDetailsPage() {
                           className="flex-1"
                           min={0}
                         />
-                        <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
                       </div>
                     ))}
                   </div>
