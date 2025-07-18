@@ -58,7 +58,7 @@ export function DriverSelectionPopup({
     const activeDrivers = drivers.filter(
         (driver: any) =>
             String(driver.driverId) !== String(bookedDriverId) &&
-            driver.assigned !== true && driver.isActive === true
+            driver.isActive === true
     );
 
     const filteredDrivers = activeDrivers.filter((driver: any) =>
