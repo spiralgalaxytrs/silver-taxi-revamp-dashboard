@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { Label } from 'components/ui/label';
 import {
   Dialog,
@@ -9,7 +10,8 @@ import {
   DialogTitle
 } from "components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-
+import { Button } from 'components/ui/button';
+import { useRouter } from 'next/navigation';
 interface BookingPopupProps {
   trigger: React.ReactNode;
   booking: Record<string, any> | null;
@@ -25,6 +27,8 @@ export function BookingPopup({
   title = "Booking Details",
 }: BookingPopupProps) {
   const [open, setOpen] = useState(false);
+
+  const router = useRouter();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -99,6 +103,29 @@ export function BookingPopup({
 
           {bookingDetails && (
             <div className="grid gap-4">
+
+
+              {/* {booking?.bookingId && (
+                <Link
+                  href={`/admin/bookings/view/${booking.bookingId}`}
+                  className="absolute top-20 right-4 text-blue-600 hover:text-blue-800 font-medium text-sm underline transition-colors duration-200"
+                >
+                  More Info
+                </Link>
+              )} */}
+
+              {booking?.bookingId && (
+                <Button
+                  onClick={() => router.push(`/admin/bookings/view/${booking.bookingId}`)}
+                  className="absolute top-20 right-4  font-medium text-sm  transition-colors duration-200"
+                >
+                  More Info
+                </Button>
+              )}
+
+
+
+
               {Object.entries(bookingDetails)
                 .filter(([_, value]) => {
                   if (value === null || value === undefined) return false;
@@ -135,6 +162,7 @@ export function BookingPopup({
               No booking details found.
             </div>
           )}
+
         </div>
       </DialogContent>
     </Dialog>
