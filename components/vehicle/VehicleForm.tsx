@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "components/ui/card"
 import CustomInputCreate from '../customer/CustomInputCreate';
@@ -18,9 +18,12 @@ import { toast } from 'sonner';
 import {
     useVehicleById,
     useCreateVehicle,
-    useUpdateVehicle
+    useUpdateVehicle,
+    useVehicleTypes,
+    useCreateVehicleTypes
 } from 'hooks/react-query/useVehicle';
 import { Vehicle } from 'types/react-query/vehicle'
+import { capitalize } from 'lib/capitalize';
 
 interface FormDataType {
     name: string;
@@ -40,15 +43,19 @@ const VehicleForm = ({ id }: { id?: string }) => {
         data: vehicle = null as Vehicle | null,
         isLoading,
     } = useVehicleById(id ?? "")
+    const { data: fetchedTypes = [], refetch } = useVehicleTypes();
+    const { mutate: createVehicleTypes } = useCreateVehicleTypes();
     const { mutate: createVehicle } = useCreateVehicle()
     const { mutate: updateVehicle } = useUpdateVehicle()
 
-    const vehicleTypeData: any[] = [
-        { label: "Suv", value: "Suv" },
-        { label: "Sedan", value: "Sedan" },
-        { label: "Innova", value: "Innova" }
-    ];
-    const [vehicleTypes, setVehicleTypes] = useState<any[]>(vehicleTypeData)
+
+    const vehicleTypes = useMemo(() => {
+        return fetchedTypes.map((type) => ({
+            value: capitalize(type.name),
+            label: capitalize(type.name),
+        }))
+    }, [fetchedTypes])
+
     const [formData, setFormData] = useState<FormDataType>({
         name: '',
         type: '',
@@ -232,12 +239,25 @@ const VehicleForm = ({ id }: { id?: string }) => {
                                         data={vehicleTypes}
                                         onChange={(value) => setFormData({ ...formData, type: value })}
                                         onCreate={(value) => {
-                                            const newData: any = {
-                                                label: String(value),
-                                                value: String(value)
-                                            };
-                                            setFormData(prev => ({ ...prev, type: value }))
-                                            setVehicleTypes(prev => [...prev, newData]);
+                                            createVehicleTypes(value, {
+                                                onSuccess: () => {
+                                                    refetch();
+                                                    toast.success("Vehicle type created successfully", {
+                                                        style: {
+                                                            backgroundColor: "#0065F8",
+                                                            color: "#fff",
+                                                        },
+                                                    })
+                                                },
+                                                onError: (error: any) => {
+                                                    toast.error(error?.response?.data?.message || "Failed to create vehicle type", {
+                                                        style: {
+                                                            backgroundColor: "#FF0000",
+                                                            color: "#fff",
+                                                        },
+                                                    })
+                                                },
+                                            })
                                         }}
                                     />
 

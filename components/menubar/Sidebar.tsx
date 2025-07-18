@@ -269,9 +269,9 @@ const VendorSidebarItems: {
     //     },
     //   ],
     // },
-    // {
-    //   name: "Vehicles", href: "/vendor/vehicles", icon: SquareChevronRight
-    // },
+    {
+      name: "Vehicles", href: "/vendor/vehicles", icon: SquareChevronRight
+    },
     {
       name: "Invoices",
       icon: FileText,
