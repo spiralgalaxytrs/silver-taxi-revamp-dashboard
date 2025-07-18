@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from 'components/ui/button'
-import InviocePDF from 'components/invoice/InviocePDF'  
+import InvoicePDF from 'components/invoice/InvoicePDF'  
 
 const page = () => {
   const router = useRouter()
@@ -21,7 +21,7 @@ const page = () => {
           <Button onClick={handleClose}>Close</Button>
         </h2>
       </div>
-      <InviocePDF id={invoiceId}/>
+      <InvoicePDF id={invoiceId}/>
     </div>
     </>
   )

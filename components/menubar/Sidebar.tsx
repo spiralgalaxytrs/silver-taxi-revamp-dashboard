@@ -239,39 +239,39 @@ const VendorSidebarItems: {
       ],
     },
     { name: "Customers", href: "/vendor/customers", icon: Users },
-    {
-      name: "Services",
-      icon: Settings,
-      dropdown: [
-        {
-          name: "Outstation",
-          icon: SquareChevronDown,
-          subDropdown: [
-            { name: "One Way", href: "/vendor/services/one-way", icon: SquareChevronRight },
-            { name: "Round Trip", href: "/vendor/services/round-trip", icon: SquareChevronRight },
-          ],
-        },
-        {
-          name: "Packages",
-          icon: SquareChevronDown,
-          subDropdown: [
-            // { name: "Day Packages", href: "/vendor/services/packages/days", icon: SquareChevronRight },
-            { name: "Hourly Packages", href: "/vendor/services/packages/hourly", icon: SquareChevronRight },
-          ],
-        },
-        {
-          name: "Airport",
-          icon: SquareChevronDown,
-          subDropdown: [
-            { name: "Pickup ", href: "/vendor/services/airport/pickup", icon: SquareChevronRight },
-            { name: "Drop", href: "/vendor/services/airport/drop", icon: SquareChevronRight },
-          ],
-        },
-      ],
-    },
-    {
-      name: "Vehicles", href: "/vendor/vehicles", icon: SquareChevronRight
-    },
+    // {
+    //   name: "Services",
+    //   icon: Settings,
+    //   dropdown: [
+    //     {
+    //       name: "Outstation",
+    //       icon: SquareChevronDown,
+    //       subDropdown: [
+    //         { name: "One Way", href: "/vendor/services/one-way", icon: SquareChevronRight },
+    //         { name: "Round Trip", href: "/vendor/services/round-trip", icon: SquareChevronRight },
+    //       ],
+    //     },
+    //     {
+    //       name: "Packages",
+    //       icon: SquareChevronDown,
+    //       subDropdown: [
+    //         // { name: "Day Packages", href: "/vendor/services/packages/days", icon: SquareChevronRight },
+    //         { name: "Hourly Packages", href: "/vendor/services/packages/hourly", icon: SquareChevronRight },
+    //       ],
+    //     },
+    //     {
+    //       name: "Airport",
+    //       icon: SquareChevronDown,
+    //       subDropdown: [
+    //         { name: "Pickup ", href: "/vendor/services/airport/pickup", icon: SquareChevronRight },
+    //         { name: "Drop", href: "/vendor/services/airport/drop", icon: SquareChevronRight },
+    //       ],
+    //     },
+    //   ],
+    // },
+    // {
+    //   name: "Vehicles", href: "/vendor/vehicles", icon: SquareChevronRight
+    // },
     {
       name: "Invoices",
       icon: FileText,

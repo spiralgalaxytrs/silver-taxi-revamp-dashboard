@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card'
 import { Overview } from 'components/others/Overview'
@@ -10,45 +10,37 @@ import { PaymentComponent } from 'components/charts/PaymentChart'
 import { InvoiceTable } from 'components/admin-dashboard/InvoiceTable'
 import { BookingTable } from 'components/admin-dashboard/BookingTable'
 import { EnquiryTable } from 'components/admin-dashboard/EnquiryTable'
-import { useBookingStore } from 'stores/bookingStore'
 import { AreaChart } from 'components/charts/AreaChart'
+import { useFetchBookings } from 'hooks/react-query/useBooking'
+import { useEnquiries } from 'hooks/react-query/useEnquiry';
+import { useDrivers } from 'hooks/react-query/useDriver';
+import { useInvoices } from 'hooks/react-query/useInvoice';
 import ShortcutSection from "components/others/ShortCut"
 
 export default function AdminDashboard() {
-  const { bookings } = useBookingStore();
-  const [manualBookings, setManualBookings] = useState(0);
-  const [vendorBookings, setVendorBookings] = useState(0);
-  const [websiteBookings, setWebsiteBookings] = useState(0);
 
-  useEffect(() => {
-    const calculateBookingStats = () => {
+  const { data: bookings = [], isPending: isLoading, refetch: refetchBookings } = useFetchBookings();
+  const { data: enquiries = [], isPending: isEnquiriesLoading, refetch: refetchEnquiries } = useEnquiries();
+  const { data: drivers = [], isPending: isDriversLoading, refetch: refetchDrivers } = useDrivers({ enabled: true });
+  const { data: invoices = [], isPending: isInvoicesLoading } = useInvoices();
 
-      const currentYear = new Date().getFullYear();
+  const { manualBookings, vendorBookings, websiteBookings } = useMemo(() => {
+    const currentYear = new Date().getFullYear();
 
-      return bookings.reduce((acc, booking) => {
-        // Manual bookings
-        if (booking.type === 'Manual') {
-          acc.manual++;
-        }
+    return bookings.reduce(
+      (acc: any, booking: any) => {
+        const bookingYear = new Date(booking.createdAt).getFullYear();
+        if (bookingYear !== currentYear) return acc;
 
-        if (booking.type === "Website") {
-          acc.website++;
-        }
-
-        // Vendor bookings
-        if (booking.createdBy === 'Vendor') {
-          acc.vendor++;
-        }
-
+        if (booking.type === 'Manual') acc.manualBookings++;
+        if (booking.type === 'Website') acc.websiteBookings++;
+        if (booking.createdBy === 'Vendor') acc.vendorBookings++;
         return acc;
-      }, { website: 0, manual: 0, vendor: 0 });
-    };
-
-    const stats = calculateBookingStats();
-    setWebsiteBookings(stats.website)
-    setManualBookings(stats.manual);
-    setVendorBookings(stats.vendor);
+      },
+      { manualBookings: 0, vendorBookings: 0, websiteBookings: 0 }
+    );
   }, [bookings]);
+
 
   return (
     <>
@@ -59,18 +51,19 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card className="overflow-hidden border-none bg-white shadow-md">
             <CardContent className="p-6">
-              <AreaChart createdBy="Admin" />
+              <AreaChart createdBy="Admin" bookings={bookings} isLoading={isLoading} />
             </CardContent>
           </Card>
           <Card className="overflow-hidden border-none bg-white shadow-md">
             <CardContent className="p-6">
-              <PaymentComponent createdBy="Admin" />
+              <PaymentComponent createdBy="Admin" bookings={bookings} isLoading={isLoading} />
             </CardContent>
           </Card>
         </div>
 
         {/* Overall shortcuts */}
         <ShortcutSection
+          col={4}
           shortcuts={[
             {
               title: "Create Invoice",
@@ -104,7 +97,7 @@ export default function AdminDashboard() {
         />
 
         {/* Invoice table */}
-        <InvoiceTable />
+        <InvoiceTable invoices={invoices} isLoading={isInvoicesLoading} />
 
         {/* Counters */}
         <div className="grid gap-28 md:grid-cols-2 lg:grid-cols-3">
@@ -114,7 +107,7 @@ export default function AdminDashboard() {
               <CounterCard
                 color="bg-emerald-100"
                 icon={Users}
-                count={websiteBookings.toLocaleString()}
+                count={websiteBookings}
                 label="Website Bookings"
                 className="relative z-10 p-6"
               />
@@ -128,7 +121,7 @@ export default function AdminDashboard() {
               <CounterCard
                 color="bg-blue-100"
                 icon={Activity}
-                count={manualBookings.toLocaleString()}
+                count={manualBookings}
                 label="Manual Bookings"
                 className="relative z-10 p-6"
               />
@@ -142,7 +135,7 @@ export default function AdminDashboard() {
               <CounterCard
                 color="bg-purple-100"
                 icon={Activity}
-                count={vendorBookings.toLocaleString()}
+                count={vendorBookings}
                 label="Vendor Bookings"
                 className="relative z-10 p-6"
               />
@@ -153,24 +146,25 @@ export default function AdminDashboard() {
 
 
         {/* Booking Table */}
-        <BookingTable />
+        <BookingTable bookings={bookings} isLoading={isLoading} />
 
         {/* Extra charts */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card className="border-none bg-white shadow-md">
             <CardContent className="p-6">
-              <BarChartComponent createdBy='Admin' />
+              <BarChartComponent createdBy='Admin' bookings={bookings} isLoading={isLoading} enquiries={enquiries} />
             </CardContent>
           </Card>
           <Card className="border-none bg-white shadow-md">
             <CardContent className="p-6">
-              <Overview />
+              <Overview drivers={drivers} isLoading={isDriversLoading} />
             </CardContent>
           </Card>
         </div>
 
         {/* Second shortcuts section */}
         <ShortcutSection
+          col={4}
           shortcuts={[
             {
               title: "Create Drivers",
@@ -205,7 +199,7 @@ export default function AdminDashboard() {
 
         {/* Enquiries */}
 
-        <EnquiryTable />
+        <EnquiryTable enquiries={enquiries} refetch={refetchEnquiries} isLoading={isEnquiriesLoading} />
       </div>
     </>
   )

@@ -1,11 +1,10 @@
 'use client'
 
 import React, { useState, useCallback } from "react"
-import { ColumnDef } from "@tanstack/react-table"
+import { MRT_ColumnDef } from "material-react-table"
 import { Button } from "components/ui/button"
 import { Edit, MoreHorizontal, Trash, Eye, Loader2 } from 'lucide-react'
 import { Badge } from "components/ui/badge"
-import { Checkbox } from "components/ui/checkbox";
 import { EnquiryPopup } from "components/enquiry/EnquiryPopup"
 import { toast } from "sonner"
 import {
@@ -28,61 +27,138 @@ import {
   DropdownMenuTrigger,
 } from "components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
-import { Enquiry, useEnquiryStore } from "stores/-enquiryStore"
+import TooltipComponent from "components/others/TooltipComponent"
+import { Enquiry } from "types/react-query/enquiry"
+import {
+  useToggleStatus,
+  useDeleteEnquiry
+} from 'hooks/react-query/useEnquiry';
 
-
-export const columns: ColumnDef<Enquiry, unknown>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-      />
-    ),
-  },
+export const columns: MRT_ColumnDef<Enquiry>[] = [
+  // {
+  //   id: "select",
+  //   header: 'Select',
+  //   Header: ({ table }: { table: any }) => (
+  //     <Checkbox
+  //       checked={table.getIsAllRowsSelected()}
+  //       onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
+  //     />
+  //   ) as React.ReactNode,
+  //   Cell: ({ row }) => (
+  //     <Checkbox
+  //       checked={row.getIsSelected()}
+  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //     />
+  //   ),
+  //   enableSorting: false,
+  //   enableColumnFilter: false,
+  //   muiTableHeadCellProps: { align: 'center' },
+  //   muiTableBodyCellProps: { align: 'center' },
+  // },
   {
     header: "S.No",
-    cell: ({ row }) => {
-      return <div>{row.index + 1}</div>
-    },
+    Cell: ({ row }) => (
+      <div>{row.index + 1}</div>
+    ),
+    enableSorting: false,
+    enableColumnFilter: false,
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "enquiryId",
     header: "Enquiry ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
+  {
+    accessorKey: "name",
+    header: "Customer Name",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+    Cell: ({ row }) => {
+      const name: string = row.original.name;
+      if (!name) {
+        return <div>-</div>;
+      }
+      return <div>{name}</div>;
+    }
+  },
+  {
+    accessorKey: "phone",
+    header: "Phone Number",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+    Cell: ({ row }) => {
+      const phone: string = row.original.phone;
+      if (!phone) {
+        return <div>-</div>;
+      }
+      return <div>+{phone}</div>;
+    }
   },
   {
     accessorKey: "pickup",
     header: "From",
+    Cell: ({ row }) => {
+      const pickup = row.getValue("pickup") as string
+      if (!pickup) return <div>-</div>
+      return (
+        <TooltipComponent name={pickup}>
+          <div>{pickup.slice(0, 15)}...</div>
+        </TooltipComponent>
+      )
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "drop",
     header: "To",
+    Cell: ({ row }) => {
+      const drop = row.getValue("drop") as string
+      if (!drop) return <div>-</div>
+      return (
+        <TooltipComponent name={drop}>
+          <div>{drop.slice(0, 15)}...</div>
+        </TooltipComponent>
+      )
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "pickupDate",
     header: "PickUp Date",
-    cell: ({ row }) => {
-      const pickupDate: string = row.getValue("pickupDate")
-      if (pickupDate === null) {
-        return <div>-</div>
+    Cell: ({ row }) => {
+      const pickupDate: string = row.original.pickupDateTime;
+      if (!pickupDate) {
+        return <div>-</div>;
       }
-      const date = new Date(pickupDate);
-      const convertedDate = date.toLocaleDateString();
-      return <div>{convertedDate}</div>
+
+      // Parse the stored UTC date
+      const utcDate = new Date(pickupDate);
+
+      // Adjust back to IST (Subtract 5.5 hours)
+      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+      // Format the corrected IST date
+      const formattedDate = istDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      return <div>{formattedDate}</div>;
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "pickupTime",
     header: "PickUp Time",
-    cell: ({ row }) => {
-      const pickupTime: string = row.getValue("pickupTime");
+    Cell: ({ row }) => {
+      const pickupTime: string = row.original.pickupDateTime;
       if (!pickupTime) {
         return <div>-</div>;
       }
@@ -103,56 +179,71 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
       const amPmTime = new Intl.DateTimeFormat("en-IN", options).format(istDate);
 
       return <div>{amPmTime}</div>;
-    }
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "dropDate",
     header: "Drop Date",
-    cell: ({ row }) => {
-      const dropDate: string = row.getValue("dropDate")
-      if (dropDate == null) {
-        return <div>-</div>
+    Cell: ({ row }) => {
+      const dropDate: string = row.getValue("dropDate");
+      if (!dropDate) {
+        return <div>-</div>;
       }
-      const date = new Date(dropDate);
-      const convertedDate = date.toLocaleDateString();
-      return <div>{convertedDate}</div>
+
+      // Parse the stored UTC date
+      const utcDate = new Date(dropDate);
+
+      // Adjust back to IST (Subtract 5.5 hours)
+      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+      // Format the corrected IST date
+      const formattedDate = istDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      return <div>{formattedDate}</div>;
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
+
   {
-    accessorKey: "serviceName",
+    accessorKey: "serviceType",
     header: "Service Name",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => {
-      const id = row.original.enquiryId;
-      const { toggleChanges, fetchEnquiries, enquiries } = useEnquiryStore();
+    Cell: ({ row }) => {
+      const id = row.original.enquiryId as string || "";
+      const status = row.original.status as string || "";
+      const { mutate: toggleChanges } = useToggleStatus();
 
-      // Get fresh status from store instead of row data
-      const currentEnquiry = enquiries.find(e => e.enquiryId === id);
-      const status = currentEnquiry?.status || row.getValue("status");
-
-      const handleToggleStatus = async (newStatus: string) => {
-        await toggleChanges(id, newStatus);
-        const statusCode = useEnquiryStore.getState().statusCode;
-        const message = useEnquiryStore.getState().message;
-        if (statusCode === 200 || statusCode === 201) {
-          toast.success("Enquiry type updated successfully", {
-            style: {
-              backgroundColor: "#009F7F",
-              color: "#fff",
-            },
-          });
-        } else {
-          toast.error(message || "Failed to update type", {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
-          });
-        }
-        await fetchEnquiries();
+      const handleToggleStatus = async (newStatus: "Current" | "Fake" | "Future" | "Booked") => {
+        toggleChanges({ id, status: newStatus }, {
+          onSuccess: () => {
+            toast.success("Enquiry type updated successfully", {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || "Failed to update type", {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          },
+        });
       };
 
       const getStatusColor = (status: string) => {
@@ -181,84 +272,112 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
                 <Badge variant="outline" className={getStatusColor(status || "")}>{status}</Badge>
               </Button>
             </DropdownMenuTrigger>
-            {status !== "Booked" && <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={async () => {
-                await handleToggleStatus("Fake");
-                // await fetchEnquiries();
-              }}>
-                Fake
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={async () => {
-                await handleToggleStatus("Current");
-                // await fetchEnquiries();
-              }}>
-                Current
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={async () => {
-                await handleToggleStatus("Future");
-                // await fetchEnquiries();
-              }}>
-                Future
-              </DropdownMenuItem>
-            </DropdownMenuContent>}
+            {status !== "Booked" && (
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleToggleStatus("Fake")}>
+                  Fake
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleToggleStatus("Current")}>
+                  Current
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleToggleStatus("Future")}>
+                  Future
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            )}
           </DropdownMenu>
         </div>
       );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "type",
     header: "Source",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "createdBy",
     header: "Created By",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     accessorKey: "createdAt",
     header: "Created At",
-    cell: ({ row }) => {
-      const createdAt: string = row.getValue("createdAt")
+    Cell: ({ row }) => {
+      const createdAt: string = row.original.createdAt;
       if (!createdAt) {
         return <div>-</div>;
       }
-      const date = new Date(createdAt);
-      const convertedDate = date.toLocaleDateString();
-      const options: Intl.DateTimeFormatOptions = { timeZone: "Asia/Kolkata", hour: 'numeric', minute: 'numeric', hour12: true };
-      const amPmTime = date.toLocaleTimeString('en-IN', options);
+
+      // Parse the stored UTC date
+      const utcDate = new Date(createdAt);
+
+      // Adjust back to IST (Subtract 5.5 hours)
+      const istDate = new Date(utcDate.getTime());
+
+      // Format the corrected IST time
+      const options: Intl.DateTimeFormatOptions = {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      };
+
+      const formattedDate = istDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      const amPmTime = new Intl.DateTimeFormat("en-IN", options).format(istDate);
 
       return (
         <div>
-          <div>{convertedDate}</div>
+          <div>{formattedDate}</div>
           <div>{amPmTime}</div>
         </div>
-      )
+      );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+    filterFn: "dateRange",
   },
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
-      const enquiry = row.original
+    Cell: ({ row }) => {
+      const enquiry = row.original;
       const [showConvertDialog, setShowConvertDialog] = useState(false);
       const [isDialogOpen, setIsDialogOpen] = useState(false);
       const router = useRouter();
 
       const handleEditEnquiry = useCallback(async (id: string | undefined) => {
         if (id) {
-          await router.push(`/vendor/enquiry/edit/${id}`)
+          router.push(`/vendor/enquiry/edit/${id}`);
         }
-      }, [router])
+      }, [router]);
 
-      const { deleteEnquiry, fetchEnquiries } = useEnquiryStore();
+      const { mutate: deleteEnquiry } = useDeleteEnquiry();
       const handleDelete = async () => {
         try {
-          await deleteEnquiry(enquiry.enquiryId || "");
-          await fetchEnquiries(); // Use the fetched enquiries from store directly
-
-          toast.success("Enquiry deleted successfully");
+          deleteEnquiry(enquiry.enquiryId || "", {
+            onSuccess: () => {
+              toast.success("Enquiry deleted successfully");
+            },
+            onError: () => {
+              toast.error("An unexpected error occurred", {
+                style: {
+                  backgroundColor: "#FF0000",
+                  color: "#fff",
+                },
+              });
+            }
+          });
         } catch (error) {
           toast.error("An unexpected error occurred", {
             style: {
@@ -266,64 +385,60 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
               color: "#fff",
             },
           });
-          console.error("Delete Error:", error);
         }
       };
 
       return (
-        <React.Fragment>
-          <div className="flex items-center gap-3">
-            <EnquiryPopup
-              trigger={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-blue-600 hover:text-blue-800 tool-tip"
-                  data-tooltip="View Details"
-                >
-                  <Eye className="h-5 w-5" />
-                </Button>
-              }
-              enquiry={enquiry}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-green-600 hover:text-green-800 tool-tip"
-              data-tooltip="Edit Enquiry"
-              onClick={() => handleEditEnquiry(enquiry.enquiryId)}
-            >
-              <Edit className="h-5 w-5" />
-            </Button>
-
-            <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-600 hover:text-red-800 tool-tip"
-                  data-tooltip="Delete Enquiry"
-                  onClick={() => setIsDialogOpen(true)}
-                >
-                  <Trash className="h-5 w-5" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete this Enquiry?
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setIsDialogOpen(false)}>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => { handleDelete(); setIsDialogOpen(false); }}>Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-
-            {/*Convert to booking*/}
-            {enquiry.status !== "Booked" && <DropdownMenu>
+        <div className="flex items-center gap-3">
+          <EnquiryPopup
+            trigger={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-blue-600 hover:text-blue-800 tool-tip"
+                data-tooltip="View Details"
+              >
+                <Eye className="h-5 w-5" />
+              </Button>
+            }
+            enquiry={enquiry || null}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-green-600 hover:text-green-800 tool-tip"
+            data-tooltip="Edit Enquiry"
+            onClick={() => handleEditEnquiry(enquiry.enquiryId)}
+          >
+            <Edit className="h-5 w-5" />
+          </Button>
+          <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-red-600 hover:text-red-800 tool-tip"
+                data-tooltip="Delete Enquiry"
+                onClick={() => setIsDialogOpen(true)}
+              >
+                <Trash className="h-5 w-5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this Enquiry?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setIsDialogOpen(false)}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => { handleDelete(); setIsDialogOpen(false); }}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          {enquiry.status !== "Booked" && (
+            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
                   <span className="sr-only">Open menu</span>
@@ -337,12 +452,14 @@ export const columns: ColumnDef<Enquiry, unknown>[] = [
                   Convert To Booking
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>}
-          </div>
-        </React.Fragment>
-      )
+            </DropdownMenu>
+          )}
+        </div>
+      );
     },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+    enableSorting: false,
+    enableColumnFilter: false,
   },
-]
-
-
+];

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Label, Pie, PieChart, Sector } from "recharts"
 import { PieSectorDataItem } from "recharts/types/polar/Pie"
+import { Loader2 } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -25,7 +26,8 @@ import {
   SelectValue,
 } from "../ui/select"
 import { useBookingStore } from "stores/bookingStore"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo } from "react"
+
 const desktopData = [
   { paymentMethod: "UPI", count: 186, fill: "var(--color-UPI)" },
   { paymentMethod: "Bank", count: 305, fill: "var(--color-Bank)" },
@@ -33,53 +35,39 @@ const desktopData = [
   { paymentMethod: "Card", count: 173, fill: "var(--color-Card)" },
 ]
 
+interface PaymentChartProps {
+  createdBy: string;
+  bookings: any[];
+  isLoading: boolean
+}
 
-export function PaymentComponent({ createdBy }: { createdBy: string }) {
+export function PaymentComponent({ createdBy, bookings, isLoading }: PaymentChartProps) {
 
-  const { fetchBookings, fetchVendorBookings, bookings } = useBookingStore();
-  const [chartData, setChartData] = useState<{ paymentMethod: string; count: number; fill: string }[]>([
-    { paymentMethod: "UPI", count: 0, fill: "var(--color-UPI)" },
-    { paymentMethod: "Bank", count: 0, fill: "var(--color-Bank)" },
-    { paymentMethod: "Cash", count: 0, fill: "var(--color-Cash)" },
-    { paymentMethod: "Card", count: 0, fill: "var(--color-Card)" },
-  ]);
+  const chartData = useMemo(() => {
+    const base = [
+      { paymentMethod: "UPI", count: 0, fill: "var(--color-UPI)" },
+      { paymentMethod: "Bank", count: 0, fill: "var(--color-Bank)" },
+      { paymentMethod: "Cash", count: 0, fill: "var(--color-Cash)" },
+      { paymentMethod: "Card", count: 0, fill: "var(--color-Card)" },
+    ];
 
-  useEffect(() => {
+    const filteredBookings =
+      createdBy === "Vendor"
+        ? bookings.filter((b) => b.createdBy === "Vendor")
+        : bookings;
 
-    const updatedChartData = chartData.map(item => ({ ...item, count: 0 }));
+    filteredBookings.forEach((booking) => {
+      const index = base.findIndex(
+        (item) => item.paymentMethod === booking.paymentMethod
+      );
+      if (index !== -1) {
+        base[index].count++;
+      }
+    });
 
-    if (createdBy === "Vendor") {
-      fetchVendorBookings();
-      const filteredBookings = bookings.filter(booking => booking.createdBy === 'Vendor');
-      filteredBookings.forEach((booking) => {
-        if (booking.paymentMethod === "UPI") {
-          updatedChartData[0].count++;
-        } else if (booking.paymentMethod === "Bank") {
-          updatedChartData[1].count++;
-        } else if (booking.paymentMethod === "Cash") {
-          updatedChartData[2].count++;
-        } else if (booking.paymentMethod === "Card") {
-          updatedChartData[3].count++;
-        }
-      });
-    }
+    return base;
+  }, [bookings, createdBy]);
 
-    if (createdBy === "Admin") {
-      fetchBookings();
-      bookings.forEach((booking) => {
-        if (booking.paymentMethod === "UPI") {
-          updatedChartData[0].count++;
-        } else if (booking.paymentMethod === "Bank") {
-          updatedChartData[1].count++;
-        } else if (booking.paymentMethod === "Cash") {
-          updatedChartData[2].count++;
-        } else if (booking.paymentMethod === "Card") {
-          updatedChartData[3].count++;
-        }
-      });
-    }
-    setChartData(updatedChartData);
-  }, []);
 
   const chartConfig = {
 
@@ -110,6 +98,14 @@ export function PaymentComponent({ createdBy }: { createdBy: string }) {
   )
   const months = React.useMemo(() => chartData.map((item) => item.paymentMethod), [])
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   const ChartLegend = ({ config }: { config: ChartConfig }) => {
     return (
       <div className="flex justify-center gap-4 mt-4 flex-wrap">
@@ -125,7 +121,7 @@ export function PaymentComponent({ createdBy }: { createdBy: string }) {
       </div>
     );
   };
-  
+
 
   return (
     <Card data-chart={id} className="flex flex-col">

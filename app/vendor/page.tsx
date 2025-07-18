@@ -1,50 +1,40 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card'
-import { Activity, ArrowBigRight } from 'lucide-react'
+import { Activity, Users, ArrowBigRight, Calendar, MessageSquare, Car, FileText, User, BadgePercent, Route } from 'lucide-react'
 import CounterCard from 'components/cards/CounterCard'
 import { AreaChart } from 'components/charts/AreaChart'
 import { BarChartComponent } from 'components/charts/BarChart'
 import { PaymentComponent } from 'components/charts/PaymentChart'
-import { InvoiceTable } from 'components/vendor-dashboard/InvoiceTable'
-import { BookingTable } from 'components/vendor-dashboard/BookingTable'
-import { EnquiryTable } from 'components/vendor-dashboard/EnquiryTable'
-import { useBookingStore } from 'stores/bookingStore'
+import { useFetchVendorBookings } from 'hooks/react-query/useBooking'
+import { useVendorEnquiries } from 'hooks/react-query/useEnquiry';
+import { useDrivers } from 'hooks/react-query/useDriver';
+import { useVendorInvoices } from 'hooks/react-query/useInvoice';
+import { InvoiceTable } from 'components/admin-dashboard/InvoiceTable'
+import { BookingTable } from 'components/admin-dashboard/BookingTable'
+import { EnquiryTable } from 'components/admin-dashboard/EnquiryTable'
+import ShortcutSection from 'components/others/ShortCut'
 
 export default function VendorDashboard() {
-  const { bookings } = useBookingStore();
-  const [totalBookings, setTotalBookings] = useState(0);
-  const [totalBookingValue, setTotalBookingValue] = useState(0);
-  const [bookingData, setBookingData] = useState(
-    bookings.map(booking => ({
-      ...booking,
-      id: booking.bookingId,
-      pickupDate: booking.pickupDate,
-      dropDate: booking.dropDate ? new Date(booking.dropDate).toLocaleDateString() : null,
-    }))
-  );
 
-  useEffect(() => {
-    const calculateBookingStats = () => {
+  const { data: bookings = [], isPending: isLoading, refetch: refetchBookings } = useFetchVendorBookings();
+  const { data: enquiries = [], isPending: isEnquiriesLoading, refetch: refetchEnquiries } = useVendorEnquiries();
+  const { data: drivers = [], isPending: isDriversLoading, refetch: refetchDrivers } = useDrivers({ enabled: true });
+  const { data: invoices = [], isPending: isInvoicesLoading } = useVendorInvoices();
 
-      const filteredBookingData = bookings.filter(booking => booking.createdBy === 'Vendor');
 
-      const currentYear = new Date().getFullYear();
-
-      return filteredBookingData.reduce((acc, filteredBookingData) => {
+  const { totalBookings, totalBookingValue } = useMemo(() => {
+    return bookings.reduce(
+      (acc: any, booking: any) => {
         acc.total++;
-
-        acc.totalValue += Number(filteredBookingData.finalAmount) || 0;
-
+        acc.totalValue += Number(booking.finalAmount) || 0;
         return acc;
-      }, { total: 0, totalValue: 0 });
-    };
+      },
+      { totalBookings: 0, totalBookingValue: 0 }
+    );
+  }, [bookings]);
 
-    const stats = calculateBookingStats();
-    setTotalBookings(stats.total);
-    setTotalBookingValue(stats.totalValue);
-  }, [bookingData]);
 
   return (
     <>
@@ -55,54 +45,46 @@ export default function VendorDashboard() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card className="overflow-hidden border-none bg-white shadow-md">
             <CardContent className="p-6">
-              <AreaChart createdBy="Vendor"/>
+              <AreaChart createdBy="Vendor" bookings={bookings} isLoading={isLoading} />
             </CardContent>
           </Card>
           <Card className="overflow-hidden border-none bg-white shadow-md">
             <CardContent className="p-6">
-              <PaymentComponent createdBy="Vendor" />
+              <PaymentComponent createdBy="Vendor" bookings={bookings} isLoading={isLoading} />
             </CardContent>
           </Card>
         </div>
 
         {/* Overall shortcuts */}
-        <div className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 p-6 shadow-lg">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <Link href="/vendor/invoices/create">
-              <Card className="border-none bg-white/90 backdrop-blur transition-all hover:scale-105 hover:bg-white hover:shadow-lg">
-                <CardHeader className="space-y-1 p-4">
-                  <div className="flex items-center gap-3">
-                    <CardTitle className="text-sm font-medium text-blue-900">Create Invoice</CardTitle>
-                    <ArrowBigRight className='text-blue-900 ' />
-                  </div>
-                </CardHeader>
-              </Card>
-            </Link>
-            <Link href="/vendor/bookings/create">
-              <Card className="border-none bg-white/90 backdrop-blur transition-all hover:scale-105 hover:bg-white hover:shadow-lg">
-                <CardHeader className="space-y-1 p-4">
-                  <div className="flex items-center gap-3">
-                    <CardTitle className="text-sm font-medium text-blue-900">Create Booking</CardTitle>
-                    <ArrowBigRight className='text-blue-900' />
-                  </div>
-                </CardHeader>
-              </Card>
-            </Link>
-            <Link href="/vendor/enquiry/create">
-              <Card className="border-none bg-white/90 backdrop-blur transition-all hover:scale-105 hover:bg-white hover:shadow-lg">
-                <CardHeader className="space-y-1 p-4">
-                  <div className="flex items-center gap-3">
-                    <CardTitle className="text-sm font-medium text-blue-900">Create Enquiry</CardTitle>
-                    <ArrowBigRight className='text-blue-900' />
-                  </div>
-                </CardHeader>
-              </Card>
-            </Link>
-          </div>
-        </div>
+          <ShortcutSection
+            col={3}
+            shortcuts={[
+              {
+                title: "Create Invoice",
+                href: "/admin/invoices/create",
+                icon: FileText,
+                color: "from-blue-500 to-indigo-600",
+                hoverColor: "group-hover:from-blue-600 group-hover:to-indigo-700",
+              },
+              {
+                title: "Create Booking",
+                href: "/admin/bookings/create",
+                icon: Calendar,
+                color: "from-emerald-500 to-teal-600",
+                hoverColor: "group-hover:from-emerald-600 group-hover:to-teal-700",
+              },
+              {
+                title: "Create Enquiry",
+                href: "/admin/enquiry/create",
+                icon: MessageSquare,
+                color: "from-amber-500 to-orange-600",
+                hoverColor: "group-hover:from-amber-600 group-hover:to-orange-700",
+              }
+            ]}
+          />
 
         {/* Invoice table */}
-        <InvoiceTable />
+        <InvoiceTable invoices={invoices} isLoading={isInvoicesLoading} />
 
         {/* Counters */}
         <div className="flex justify-center gap-8">
@@ -139,19 +121,19 @@ export default function VendorDashboard() {
 
 
         {/* Booking Table */}
-        <BookingTable />
+        <BookingTable bookings={bookings} isLoading={isLoading} />
 
         {/* Extra charts */}
         <div className="flex justify-center w-full gap-8">
           <Card className="border-none bg-white shadow-md w-[60%]">
             <CardContent className="p-6">
-              <BarChartComponent createdBy="Vendor" />
+              <BarChartComponent createdBy="Vendor" bookings={bookings} enquiries={enquiries} isLoading={isLoading} />
             </CardContent>
           </Card>
         </div>
 
         {/* Enquiries */}
-        <EnquiryTable />
+        <EnquiryTable enquiries={enquiries} refetch={refetchEnquiries} isLoading={isEnquiriesLoading} />
       </div>
     </>
   )

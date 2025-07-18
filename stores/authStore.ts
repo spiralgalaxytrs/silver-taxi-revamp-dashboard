@@ -44,7 +44,6 @@ export const useAuthStore = create<AuthState>()(
 
         } catch (error) {
           const axiosError = error as AxiosError<ErrorResponse>;
-          // console.error("Login Error:", axiosError);
           set({
             message: axiosError.response?.data?.message || "An error occurred.",
             statusCode: axiosError.response?.status || 500,

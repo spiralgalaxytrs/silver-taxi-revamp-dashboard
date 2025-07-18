@@ -37,7 +37,7 @@ import {
   useFetchBookings
 } from "hooks/react-query/useBooking";
 import {
-  useActiveDrivers
+  useDrivers
 } from 'hooks/react-query/useDriver';
 import {
   useOffers
@@ -392,13 +392,12 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     header: 'Driver Assigned',
     Cell: ({ row }) => {
       const status = row.getValue("status") as string;
-      const { data: activeDrivers = [] } = useActiveDrivers();
-      const { data: bookings = [] } = useFetchBookings();
+      const booking = row.original;
+      const { data: drivers = [], isPending: isLoading, isError } = useDrivers({ enabled: true });
       const { mutate: assignDriver } = useAssignDriver();
       const { mutate: assignAllDriver } = useAssignAllDriver();
 
       const bookingId = row.original?.bookingId as string ?? "";
-      const [isLoading, setIsLoading] = useState(false);
       // const [selectedDriverId, setSelectedDriverId] = useState<string>(''); // Keep this state for UI purposes
 
       const handleDriverAssignment = async (driverId: string) => {
@@ -469,9 +468,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         }
       };
 
-      const currentBooking = bookings.find((booking: any) => String(booking.bookingId) === String(bookingId));
+      const currentBooking = booking
       const bookedDriverId = currentBooking?.driverId;
-      const assignedDriver = activeDrivers.find((driver: any) => String(driver.driverId) === String(bookedDriverId));
+      const assignedDriver = drivers.find((driver: any) => String(driver.driverId) === String(bookedDriverId));
 
       return (
         <DriverSelectionPopup
@@ -485,6 +484,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
           assignedDriver={assignedDriver}
           bookedDriverId={bookedDriverId || ""}
           status={status}
+          drivers={drivers}
+          isLoading={isLoading}
+          isError={isError}
         />
       );
     },

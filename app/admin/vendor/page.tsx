@@ -70,15 +70,11 @@ export default function VendorPage() {
   const [activeVendors, setActiveVendors] = useState(0);
   const [inactiveVendors, setInactiveVendors] = useState(0);
 
-  const [vendorData, setVendorData] = useState<any[]>([]);
-
-  useEffect(() => {
-    setVendorData(
-      vendors.map(vendor => ({
-        ...vendor,
-        id: vendor.vendorId
-      }))
-    );
+  const vendorData = useMemo(() => {
+    return vendors.map(vendor => ({
+      ...vendor,
+      id: vendor.vendorId
+    }))
   }, [vendors])
 
   const unFiltered = [...vendorData].sort((a, b) => {

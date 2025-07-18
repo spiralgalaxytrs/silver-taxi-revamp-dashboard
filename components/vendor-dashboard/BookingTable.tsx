@@ -1,37 +1,34 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import Loading from 'app/Loading';
-import { columns } from 'app/vendor/bookings/columns';
-import { useBookingStore } from 'stores/bookingStore';
-import { DataTable } from 'components/others/DataTable';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { columns } from 'app/admin/bookings/columns';
+import { Loader2, RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import {
+    MaterialReactTable,
+    MRT_ColumnDef
+} from 'material-react-table';
+import { Button } from 'components/ui/button';
 
-export const BookingTable: React.FC = () => {
+export const BookingTable: React.FC<{ bookings: any[], isLoading: boolean }> = ({ bookings, isLoading }) => {
     const router = useRouter();
-    const { bookings, fetchVendorBookings, isLoading, error } = useBookingStore();
 
     // Global sorting state
+    const [isSpinning, setIsSpinning] = useState(false)
     const [sortConfig, setSortConfig] = useState<{
         columnId: string | null;
         direction: 'asc' | 'desc' | null;
     }>({ columnId: null, direction: null });
 
-    useEffect(() => {
-        fetchVendorBookings();
-    }, []);
 
     const applyFilters = () => {
 
-        const filteredBookingData = bookings.filter(booking => booking.createdBy === 'Vendor');
-
-        const ChangedBookings = filteredBookingData.map((booking) => ({
+        const ChangedBookings = bookings.map((booking) => ({
             ...booking,
             pickupDate: booking.pickupDate,
             dropDate: booking.dropDate ? new Date(booking.dropDate).toLocaleDateString() : null,
         }));
-    
+
         let filteredData = [...ChangedBookings];
 
         // Global sorting logic
@@ -56,7 +53,7 @@ export const BookingTable: React.FC = () => {
             const abookingDate = new Date(a.bookingDate || "").getTime();
             const bbookingDate = new Date(b.bookingDate || "").getTime();
             return bbookingDate - abookingDate; // Descending order
-          });
+        });
 
         return filteredData;
     };
@@ -70,52 +67,80 @@ export const BookingTable: React.FC = () => {
         }));
     };
 
-    useEffect(() => {
-        fetchVendorBookings();
-        console.log("8")
-        const intervalId = setInterval(() => {
-            applyFilters();
-        }, 180000);
-
-        return () => clearInterval(intervalId);
-    }, [fetchVendorBookings]);
-
     const handleRoute = () => {
-        router.push("/vendor/bookings")
+        router.push('/admin/bookings')
     }
+
+    const handleRefetch = async () => {
+        setIsSpinning(true);
+        try {
+            // await refetch(); // wait for the refetch to complete
+        } finally {
+            // stop spinning after short delay to allow animation to play out
+            setTimeout(() => setIsSpinning(false), 500);
+        }
+    };
 
     if (isLoading) {
-        <>
-            <div className="flex items-center justify-center h-screen bg-gray-50">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
-            </div>
-        </> 
+        <div className="flex items-center justify-center h-screen bg-gray-50">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        </div>
     }
 
-    // if (error) {
-    //   return <div>Error: {error}</div>;
-    // }
-
     return (
-        <>
+        <React.Fragment>
             <div className="p-6 space-y-6">
                 <div className="rounded bg-white p-5 shadow md:p-5">
                     <div className="flex items-center justify-between border-b-1">
-                        <h1 className="text-2xl font-bold tracking-tight">Booking Page</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">Recent Booking</h1>
                         <div className="flex items-center gap-2">
-                        <button onClick={handleRoute} className="btn bg-[#D5C7A3]">View Bookings</button>
+                            <button onClick={handleRoute} className="btn bg-[#D5C7A3]">View Bookings</button>
                         </div>
                     </div>
                 </div>
                 <div className="rounded bg-white shadow">
-                    <DataTable
+                    <MaterialReactTable
                         columns={columns.slice(1, columns.length - 1)}
                         data={filteredData as any}
-                        onSort={handleSort}
-                        sortConfig={sortConfig}
+                        positionGlobalFilter="left"
+                        enableSorting
+                        enableHiding={false}
+                        enableDensityToggle={false}
+                        initialState={{
+                            density: 'compact',
+                            pagination: { pageIndex: 0, pageSize: 10 },
+                            showGlobalFilter: true
+                        }}
+                        muiSearchTextFieldProps={{
+                            placeholder: 'Search bookings...',
+                            variant: 'outlined',
+                            fullWidth: true, // 🔥 Makes the search bar take full width
+                            sx: {
+                                minWidth: '600px', // Adjust width as needed
+                                marginLeft: '16px',
+                            },
+                        }}
+                        muiToolbarAlertBannerProps={{
+                            sx: {
+                                justifyContent: 'flex-start', // Aligns search left
+                            },
+                        }}
+                        renderTopToolbarCustomActions={() => (
+                            <div className="flex flex-1 justify-end items-center">
+                                {/* 🔁 Refresh Button */}
+                                <Button
+                                    variant={"ghost"}
+                                    onClick={handleRefetch}
+                                    className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                                    title="Refresh Data"
+                                >
+                                    <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                                </Button>
+                            </div>
+                        )}
                     />
                 </div>
             </div>
-        </>
+        </React.Fragment>
     )
 }

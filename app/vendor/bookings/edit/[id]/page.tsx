@@ -23,18 +23,9 @@ export default function EditBookingPage({ params }: { params: Promise<{ id: stri
   }, [params])
 
 
-
-  // const handleClose = () => {
-  //   router.push('/admin/bookings')
-  // }
-
-
   return (
     <>
       <div className="space-y-6 bg-white rounded-lg p-4">
-        {/* <h2 className="text-3xl font-bold tracking-tight flex justify-between">Edit Booking
-          <Button onClick={handleClose}>Close</Button>
-        </h2> */}
         <VendorBookingForm id={id} createdBy={createdBy} />
       </div>
     </>)

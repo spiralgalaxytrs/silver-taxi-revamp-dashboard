@@ -1,36 +1,27 @@
 'use client'
-import { useState, useEffect } from 'react';
-import Loading from 'app/Loading';
+import React, { useState } from 'react';
 import { columns } from 'app/admin/enquiry/columns';
-import { useEnquiryStore } from 'stores/-enquiryStore';
-import { DataTable } from 'components/others/DataTable';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
     MaterialReactTable,
     MRT_ColumnDef
 } from 'material-react-table';
+import { Button } from 'components/ui/button';
 
-
-export const EnquiryTable: React.FC = () => {
+export const EnquiryTable: React.FC<{ enquiries: any[], refetch: any, isLoading: boolean }> = ({ enquiries = [], refetch, isLoading }) => {
     const router = useRouter();
-    const { enquiries, fetchVendorEnquiries, isLoading, error } = useEnquiryStore()
 
     // Global sorting state
     const [sortConfig, setSortConfig] = useState<{
         columnId: string | null;
         direction: 'asc' | 'desc' | null;
     }>({ columnId: null, direction: null });
-
-    useEffect(() => {
-        fetchVendorEnquiries()
-    }, [])
+    const [isSpinning, setIsSpinning] = useState(false)
 
     const applyFilters = () => {
 
-        const filteredBookingData = enquiries.filter(enquiry => enquiry.createdBy === 'Vendor');
-
-        const ChangedEnquiries = filteredBookingData.map((enquiry) => {
+        const ChangedEnquiries = enquiries.map((enquiry: any) => {
             if (enquiry) { // Check if enquiry is not null or undefined
                 return {
                     ...enquiry,
@@ -41,7 +32,7 @@ export const EnquiryTable: React.FC = () => {
         }).filter(enquiry => enquiry !== null);
 
 
-        let filteredData = ChangedEnquiries
+        let filteredData = [...ChangedEnquiries]
 
         // Global sorting logic
         if (sortConfig.columnId && sortConfig.direction) {
@@ -72,63 +63,83 @@ export const EnquiryTable: React.FC = () => {
 
     const enquiryFilteredData = applyFilters()
 
-    const handleSort = (columnId: string) => {
-        setSortConfig(prev => ({
-            columnId,
-            direction: prev.columnId === columnId && prev.direction === 'asc' ? 'desc' : 'asc',
-        }));
-    };
 
     const handleRoute = () => {
-        router.push('/vendor/enquiry')
+        router.push('/admin/enquiry')
     }
 
+    const handleRefetch = async () => {
+        setIsSpinning(true);
+        try {
+            await refetch(); // wait for the refetch to complete
+        } finally {
+            // stop spinning after short delay to allow animation to play out
+            setTimeout(() => setIsSpinning(false), 500);
+        }
+    };
+
     if (isLoading) {
-        <>
+        return (
             <div className="flex items-center justify-center h-screen bg-gray-50">
                 <Loader2 className="w-12 h-12 animate-spin text-primary" />
             </div>
-        </>
+        )
     }
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="rounded bg-white p-5 shadow md:p-5">
-                <div className="flex items-center justify-between ">
-                    <h1 className="text-2xl font-bold tracking-tight">Enquiry Page</h1>
-                    <div className="flex items-center gap-2">
-                        <button onClick={handleRoute} className="btn bg-[#D5C7A3]">View Enquiries</button>
+        <React.Fragment>
+            <div className="p-6 space-y-6">
+                <div className="rounded bg-white p-5 shadow md:p-5">
+                    <div className="flex items-center justify-between ">
+                        <h1 className="text-2xl font-bold tracking-tight">Recent Enquiries</h1>
+                        <div className="flex items-center gap-2">
+                            <button onClick={handleRoute} className="btn bg-[#D5C7A3]">View Enquiries</button>
+                        </div>
                     </div>
                 </div>
+                <div className="rounded bg-white shadow ">
+                    <MaterialReactTable
+                        columns={columns as MRT_ColumnDef<any>[]}
+                        data={enquiryFilteredData}
+                        positionGlobalFilter="left"
+                        enableSorting
+                        enableHiding={false}
+                        enableDensityToggle={false}
+                        initialState={{
+                            density: 'compact',
+                            pagination: { pageIndex: 0, pageSize: 10 },
+                            showGlobalFilter: true,
+                        }}
+                        muiSearchTextFieldProps={{
+                            placeholder: 'Search enquiries...',
+                            variant: 'outlined',
+                            fullWidth: true, // 🔥 Makes the search bar take full width
+                            sx: {
+                                minWidth: '400px', // Adjust width as needed
+                                marginLeft: '16px',
+                            },
+                        }}
+                        muiToolbarAlertBannerProps={{
+                            sx: {
+                                justifyContent: 'flex-start', // Aligns search left
+                            },
+                        }}
+                        renderTopToolbarCustomActions={() => (
+                            <div className="flex flex-1 justify-end items-center">
+                                {/* 🔁 Refresh Button */}
+                                <Button
+                                    variant={"ghost"}
+                                    onClick={handleRefetch}
+                                    className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                                    title="Refresh Data"
+                                >
+                                    <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                                </Button>
+                            </div>
+                        )}
+                    />
+                </div>
             </div>
-            <div className="rounded bg-white shadow ">
-                 <MaterialReactTable
-                    columns={columns as MRT_ColumnDef<any>[]}
-                    data={enquiryFilteredData}
-                    enableRowSelection
-                    positionGlobalFilter="left"
-                    enableSorting
-                    initialState={{
-                        density: 'compact',
-                        pagination: { pageIndex: 0, pageSize: 10 },
-                        showGlobalFilter: true,
-                    }}
-                    muiSearchTextFieldProps={{
-                        placeholder: 'Search enquiries...',
-                        variant: 'outlined',
-                        fullWidth: true, // 🔥 Makes the search bar take full width
-                        sx: {
-                            minWidth: '400px', // Adjust width as needed
-                            marginLeft: '16px',
-                        },
-                    }}
-                    muiToolbarAlertBannerProps={{
-                        sx: {
-                            justifyContent: 'flex-start', // Aligns search left
-                        },
-                    }}
-                />
-            </div>
-        </div>
+        </React.Fragment>
     )
 }
