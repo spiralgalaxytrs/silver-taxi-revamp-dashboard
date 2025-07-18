@@ -5,14 +5,14 @@ import { ErrorResponse } from "types/auth";
 
 
 interface Booking {
-  bookingId?:string;
+  bookingId?: string;
   name: string;
   phone: string;
   email: string;
   pickup: string;
   drop: string;
-  pickupDate: string;
-  pickupTime: string;
+  pickupDateTime: string;
+  pickupTime?: string;
   vehicleType: string;
   discountAmount: number | null;
   dropDate: string | null;
@@ -21,15 +21,16 @@ interface Booking {
   vendorId: string;
   vehicleId: string | null;
   serviceId: string;
-  packageId:string;
+  packageId?: string;
   driverBeta: number | null;
   toll: number | null;
   hill: number | null;
   permitCharge: number | null;
-  taxPercentage: number| null;
-  price: number | null;
-  extraPrice: number | null;
-  distanceLimit: number | null;
+  taxPercentage: number | null;
+  taxAmount: number | null;
+  price?: number | null;
+  extraPrice?: number | null;
+  distanceLimit?: number | null;
   distance: number | null;
   estimatedAmount: number | null;
   finalAmount: number | null;
@@ -41,7 +42,7 @@ interface Booking {
   duration: string | null;
   paymentMethod: "UPI" | "Bank" | "Cash" | "Card";
   type: "Website" | "App" | "Manual";
-  paymentStatus:  "Unpaid" | "Paid" | "Partial Paid";
+  paymentStatus: "Unpaid" | "Paid" | "Partial Paid";
   serviceType: "One way" | "Round trip" | "Airport Pickup" | "Airport Drop" | "Day Packages" | "Hourly Packages";
   vehicleName: string;
   amount: number | null;
@@ -50,8 +51,32 @@ interface Booking {
   createdBy: "Admin" | "Vendor";
   createdAt?: string | null;
   offers: Record<string, any>;
-  vehicles: Record<string, any>;  
+  vehicles: Record<string, any>;
   driver: Record<string, any>;
+
+
+  startOtp: string;
+  endOtp: string;
+  tripStartedTime?: Date;
+  tripCompletedTime?: Date;
+  startOdometerImage?: string | null;
+  endOdometerImage?: string | null;
+  startOdometerValue?: number;
+  endOdometerValue?: number;
+  driverCharges?: any;
+  driverAccepted?: "accepted" | "rejected" | "pending";
+  tripCompletedPrice?: number;
+  tripCompletedDuration?: string;
+  tripCompletedFinalAmount?: number;
+  tripCompletedDistance?: number;
+  tripCompletedEstimatedAmount?: number;
+  driverDeductionAmount?: number;
+  vendorDeductionAmount?: number;
+  bookingOrderId?: string;
+  bookingPaymentId?: string;
+  acceptTime?: Date;
+  requestSentTime?: Date;
+
 }
 
 interface BookingState {
@@ -137,7 +162,7 @@ export const useBookingStore = create<BookingState>()(
             status: booking.status,
             tariff: booking.tariff,
             pricePerKm: booking.pricePerKm,
-            duration : booking.duration,
+            duration: booking.duration,
             offers: booking.offers,
             vehicles: booking.vehicles,
             driver: booking.driver,
@@ -151,11 +176,11 @@ export const useBookingStore = create<BookingState>()(
             statusCode: response.status
           });
 
-          
+
         } catch (error) {
           const axiosError = error as AxiosError<ErrorResponse>;
           set({
-            bookings:[],
+            bookings: [],
             error: axiosError.response?.data?.message,
             isLoading: false,
             message: axiosError.response?.data?.message
@@ -207,7 +232,7 @@ export const useBookingStore = create<BookingState>()(
             status: booking.status,
             tariff: booking.tariff,
             pricePerKm: booking.pricePerKm,
-            duration : booking.duration,
+            duration: booking.duration,
             offers: booking.offers,
             vehicles: booking.vehicles,
             driver: booking.driver,
@@ -221,7 +246,7 @@ export const useBookingStore = create<BookingState>()(
             statusCode: response.status
           });
 
-          
+
         } catch (error) {
           const axiosError = error as AxiosError<ErrorResponse>;
           set({
@@ -233,19 +258,90 @@ export const useBookingStore = create<BookingState>()(
         }
       },
 
+      // fetchBookingById: async (id) => {
+      //   console.log("Hiiiiiiiiii"); 
+      //   set({ isLoading: true, error: null });
+      //   try {
+      //     const response = await axios.get(`/v1/bookings/${id}`);
+      //     const transformedData = response.data.data.map((booking: any) => ({
+      //       bookingId: booking.bookingId || booking.id,
+      //       name: booking.name || '-',
+      //       phone: booking.phone || '-',
+      //       email: booking.email || '-',
+      //       pickup: booking.pickup || '',
+      //       drop: booking.drop || '',
+      //       pickupDate: booking.pickupDateTime,
+      //       pickupTime: booking.pickupDateTime,
+      //       dropDate: booking.dropDate,
+      //       tariffId: booking.tariffId,
+      //       driverId: booking.driverId,
+      //       vendorId: booking.vendorId,
+      //       vehicleId: booking.vehicleId,
+      //       serviceId: booking.serviceId,
+      //       driverBeta: booking.driverBeta || 0,
+      //       toll: booking.toll || 0,
+      //       hill: booking.hill || 0,
+      //       permitCharge: booking.permitCharge || 0,
+      //       taxPercentage: booking.taxPercentage || 0,
+      //       createdBy: booking.createdBy,
+      //       offerId: booking.offerId,
+      //       offerName: booking.offerName,
+      //       paymentMethod: booking.paymentMethod,
+      //       paymentStatus: booking.paymentStatus,
+      //       serviceType: booking.serviceType,
+      //       type: booking.type,
+      //       vehicleType: booking.vehicleType,
+      //       estimatedAmount: booking.estimatedAmount || 0,
+      //       finalAmount: booking.finalAmount || 0,
+      //       discountAmount: booking.discountAmount || 0,
+      //       advanceAmount: booking.advanceAmount || 0,
+      //       upPaidAmount: booking.upPaidAmount || 0,
+      //       vehicleName: booking.vehicleName,
+      //       distance: booking.distance,
+      //       amount: booking.amount,
+      //       bookingDate: booking.createdAt,
+      //       status: booking.status,
+      //       tariff: booking.tariff,
+      //       pricePerKm: booking.pricePerKm,
+      //       duration : booking.duration,
+      //       offers: booking.offers,
+      //       vehicles: booking.vehicles,
+      //       driver: booking.driver,
+      //       createdAt: booking.createdAt,
+      //     }));
+
+      //     set({
+      //       booking: transformedData,
+      //       isLoading: false,
+      //       message: response.data.message,
+      //       statusCode: response.status
+      //     });
+      //   } catch (error) {
+      //     const axiosError = error as AxiosError<ErrorResponse>;
+      //               console.log("Errro", error)
+
+      //     set({
+      //       booking: null,
+      //       message: axiosError.response?.data?.message,
+      //       error: axiosError.response?.data?.message,
+      //       isLoading: false
+      //     });
+      //   }
+      // },
       fetchBookingById: async (id) => {
         set({ isLoading: true, error: null });
         try {
           const response = await axios.get(`/v1/bookings/${id}`);
-          const transformedData = response.data.data.map((booking: any) => ({
+          const booking = response.data.data; // Assuming response.data.data is a single booking object
+          const transformedData = {
             bookingId: booking.bookingId || booking.id,
             name: booking.name || '-',
             phone: booking.phone || '-',
             email: booking.email || '-',
             pickup: booking.pickup || '',
             drop: booking.drop || '',
-            pickupDate: booking.pickupDateTime,
-            pickupTime: booking.pickupDateTime,
+            pickupDateTime: booking.pickupDateTime,
+            // pickupTime: booking.pickupDateTime,
             dropDate: booking.dropDate,
             tariffId: booking.tariffId,
             driverId: booking.driverId,
@@ -257,6 +353,7 @@ export const useBookingStore = create<BookingState>()(
             hill: booking.hill || 0,
             permitCharge: booking.permitCharge || 0,
             taxPercentage: booking.taxPercentage || 0,
+            taxAmount: booking.taxAmount || 0,
             createdBy: booking.createdBy,
             offerId: booking.offerId,
             offerName: booking.offerName,
@@ -277,18 +374,39 @@ export const useBookingStore = create<BookingState>()(
             status: booking.status,
             tariff: booking.tariff,
             pricePerKm: booking.pricePerKm,
-            duration : booking.duration,
+            duration: booking.duration,
             offers: booking.offers,
             vehicles: booking.vehicles,
             driver: booking.driver,
+            startOtp: booking.startOtp,
+            endOtp: booking.endOtp,
+            tripStartedTime: booking.tripStartedTime,
+            tripCompletedTime: booking.tripCompletedTime,
+            startOdometerImage: booking.startOdometerImage,
+            endOdometerImage: booking.endOdometerImage,
+            startOdometerValue: booking.startOdometerValue,
+            endOdometerValue: booking.endOdometerValue,
+            driverCharges: booking.driverCharges,
+            driverAccepted: booking.driverAccepted,
+            tripCompletedPrice: booking.tripCompletedPrice,
+            tripCompletedDuration: booking.tripCompletedDuration,
+            tripCompletedFinalAmount: booking.tripCompletedFinalAmount,
+            tripCompletedDistance: booking.tripCompletedDistance,
+            tripCompletedEstimatedAmount: booking.tripCompletedEstimatedAmount,
+            driverDeductionAmount: booking.driverDeductionAmount,
+            vendorDeductionAmount: booking.vendorDeductionAmount,
+            bookingOrderId: booking.bookingOrderId,
+            bookingPaymentId: booking.bookingPaymentId,
+            acceptTime: booking.acceptTime,
+            requestSentTime: booking.requestSentTime,
             createdAt: booking.createdAt,
-          }));
+          };
 
           set({
             booking: transformedData,
             isLoading: false,
             message: response.data.message,
-            statusCode: response.status
+            statusCode: response.status,
           });
         } catch (error) {
           const axiosError = error as AxiosError<ErrorResponse>;
@@ -296,11 +414,10 @@ export const useBookingStore = create<BookingState>()(
             booking: null,
             message: axiosError.response?.data?.message,
             error: axiosError.response?.data?.message,
-            isLoading: false
+            isLoading: false,
           });
         }
       },
-
       createBooking: async (bookingData) => {
         set({ isLoading: true, error: null });
         try {
@@ -374,111 +491,111 @@ export const useBookingStore = create<BookingState>()(
       togglePaymentType: async (id, status) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post(`/v1/bookings/toggle-changes/${id}`, { paymentMethod: status });
-            set((state) => ({
-                bookings: state.bookings.map((booking) =>
-                  booking.bookingId === id ? { ...booking, isActive: status } : booking
-                ),
-                isLoading: false,
-                message: response.data.message,
-                statusCode: response.status
-            }));
+          const response = await axios.post(`/v1/bookings/toggle-changes/${id}`, { paymentMethod: status });
+          set((state) => ({
+            bookings: state.bookings.map((booking) =>
+              booking.bookingId === id ? { ...booking, isActive: status } : booking
+            ),
+            isLoading: false,
+            message: response.data.message,
+            statusCode: response.status
+          }));
         } catch (error) {
-            const axiosError = error as AxiosError<ErrorResponse>;
-            set({
-                error: axiosError.response?.data?.message,
-                isLoading: false,
-                message: axiosError.response?.data?.message
-            });
+          const axiosError = error as AxiosError<ErrorResponse>;
+          set({
+            error: axiosError.response?.data?.message,
+            isLoading: false,
+            message: axiosError.response?.data?.message
+          });
         }
-    },
-    
+      },
+
       toggleTripStatus: async (id, status) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post(`/v1/bookings/toggle-changes/${id}`, { status });
-            set((state) => ({
-                bookings: state.bookings.map((booking) =>
-                  booking.bookingId === id ? { ...booking, isActive: status } : booking
-                ),
-                isLoading: false,
-                message: response.data.message,
-                statusCode: response.status
-            }));
+          const response = await axios.post(`/v1/bookings/toggle-changes/${id}`, { status });
+          set((state) => ({
+            bookings: state.bookings.map((booking) =>
+              booking.bookingId === id ? { ...booking, isActive: status } : booking
+            ),
+            isLoading: false,
+            message: response.data.message,
+            statusCode: response.status
+          }));
         } catch (error) {
-            const axiosError = error as AxiosError<ErrorResponse>;
-            set({
-                error: axiosError.response?.data?.message,
-                isLoading: false,
-                message: axiosError.response?.data?.message
-            });
+          const axiosError = error as AxiosError<ErrorResponse>;
+          set({
+            error: axiosError.response?.data?.message,
+            isLoading: false,
+            message: axiosError.response?.data?.message
+          });
         }
-    },
+      },
       togglePaymentStatus: async (id, status) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post(`/v1/bookings/toggle-changes/${id}`, { paymentStatus: status });
-            set((state) => ({
-                bookings: state.bookings.map((booking) =>
-                  booking.bookingId === id ? { ...booking, isActive: status } : booking
-                ),
-                isLoading: false,
-                message: response.data.message,
-                statusCode: response.status
-            }));
+          const response = await axios.post(`/v1/bookings/toggle-changes/${id}`, { paymentStatus: status });
+          set((state) => ({
+            bookings: state.bookings.map((booking) =>
+              booking.bookingId === id ? { ...booking, isActive: status } : booking
+            ),
+            isLoading: false,
+            message: response.data.message,
+            statusCode: response.status
+          }));
         } catch (error) {
-            const axiosError = error as AxiosError<ErrorResponse>;
-            set({
-                error: axiosError.response?.data?.message,
-                isLoading: false,
-                message: axiosError.response?.data?.message
-            });
+          const axiosError = error as AxiosError<ErrorResponse>;
+          set({
+            error: axiosError.response?.data?.message,
+            isLoading: false,
+            message: axiosError.response?.data?.message
+          });
         }
-    },
-     // New bulk delete function using the multiDeleteBookings controller on the backend
-     bulkDeleteBookings: async (bookingIds: string[]) => {
-      set({ isLoading: true, error: null });
-      try {
-        // Adjust the endpoint if necessary so that it maps to the correct backend route.
-        const response = await axios.delete(`/v1/bookings/`, { data: { bookingIds } });
-        set((state) => ({
-          bookings: state.bookings.filter(
-            (booking) => !booking.bookingId || !bookingIds.includes(booking.bookingId)
-          ),
-          isLoading: false,
-          message: response.data.message,
-          statusCode: response.status,
-        }));
-      } catch (error) {
-        const axiosError = error as AxiosError<ErrorResponse>;
-        set({
-          message: axiosError.response?.data?.message,
-          error: axiosError.response?.data?.message,
-          isLoading: false,
-          statusCode: axiosError.response?.status,
-        });
-      }
-    },
+      },
+      // New bulk delete function using the multiDeleteBookings controller on the backend
+      bulkDeleteBookings: async (bookingIds: string[]) => {
+        set({ isLoading: true, error: null });
+        try {
+          // Adjust the endpoint if necessary so that it maps to the correct backend route.
+          const response = await axios.delete(`/v1/bookings/`, { data: { bookingIds } });
+          set((state) => ({
+            bookings: state.bookings.filter(
+              (booking) => !booking.bookingId || !bookingIds.includes(booking.bookingId)
+            ),
+            isLoading: false,
+            message: response.data.message,
+            statusCode: response.status,
+          }));
+        } catch (error) {
+          const axiosError = error as AxiosError<ErrorResponse>;
+          set({
+            message: axiosError.response?.data?.message,
+            error: axiosError.response?.data?.message,
+            isLoading: false,
+            statusCode: axiosError.response?.status,
+          });
+        }
+      },
 
-    assignDriver: async (bookingId: string, driverId: string) => {
-      set({ isLoading: true, error: null });
-      try {
-        const response = await axios.post(`/v1/bookings/assign-driver`, { bookingId, driverId });
-        set({ 
-          isLoading: false,
-          message: response.data.message,
-          statusCode: response.status
-        });
-      } catch (error) {
-        const axiosError = error as AxiosError<ErrorResponse>;
-        set({
-          message: axiosError.response?.data?.message,
-          isLoading: false,
-          statusCode: axiosError.response?.status
-        });
+      assignDriver: async (bookingId: string, driverId: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await axios.post(`/v1/bookings/assign-driver`, { bookingId, driverId });
+          set({
+            isLoading: false,
+            message: response.data.message,
+            statusCode: response.status
+          });
+        } catch (error) {
+          const axiosError = error as AxiosError<ErrorResponse>;
+          set({
+            message: axiosError.response?.data?.message,
+            isLoading: false,
+            statusCode: axiosError.response?.status
+          });
+        }
       }
-    }
-    
+
     }),
     { name: "booking-store" }
   )
