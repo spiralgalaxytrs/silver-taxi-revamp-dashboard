@@ -88,7 +88,7 @@ const InputPicker: React.FC<InputPickerProps> = ({
       )}
 
       {/* Create new value */}
-      {inputValue && !data.find((option) => option.value === inputValue) && !isCreateMode && (
+      {inputValue.toLowerCase() && !data.find((option) => option.value.toLowerCase() === inputValue.toLowerCase()) && !isCreateMode && (
         <button
           onClick={() => setIsCreateMode(true)}
           className="text-blue-500 mt-2"
