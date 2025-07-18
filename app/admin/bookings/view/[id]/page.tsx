@@ -8,7 +8,7 @@ import { Input } from 'components/ui/input';
 import { Dialog, DialogContent, DialogTrigger } from 'components/ui/dialog';
 import { Eye, Edit, X, Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useFetchBookingById, useUpdateBooking } from 'hooks/react-query/useBooking';
+import { useBookingStore, Booking } from 'stores/bookingStore';
 import { toast } from 'sonner';
 
 // Formatters
@@ -51,15 +51,22 @@ const capitalizeLabel = (key: string) => {
 };
 
 export default function BookingDetailsPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id: bookingId } = useParams();
+  const { booking, isLoading, fetchBookingById, updateBooking } = useBookingStore();
   const [editMode, setEditMode] = useState<'before' | 'after' | null>(null);
   const [formData, setFormData] = useState<Booking | null>(null);
   const [driverCharges, setDriverCharges] = useState<Record<string, string>>({});
 
-  const {
-    data: booking = null
-  } = useFetchBookingById(id ?? "")
-  const { mutate: updateBooking } = useUpdateBooking();
+  useEffect(() => {
+    if (bookingId) fetchBookingById(bookingId as string);
+  }, [bookingId, fetchBookingById]);
+
+  useEffect(() => {
+    if (booking) {
+      setFormData(booking);
+      setDriverCharges(booking?.driverCharges || {});
+    }
+  }, [booking]);
 
   // Field groupings
   const basicInfoFields = [
@@ -116,20 +123,14 @@ export default function BookingDetailsPage() {
   let previousEstimatedFare: number | null = null;
 
 
-  const calculateTotalAmount = (estimatedFare: number) => {
-    console.log("Previous Estimated Fare:", previousEstimatedFare);
+const calculateTotalAmount = (estimatedFare: number, charges = driverCharges) => {
+  const chargesSum = Object.values(charges).reduce(
+    (sum, charge) => sum + (parseFloat(charge) || 0),
+    0
+  );
 
-    previousEstimatedFare = estimatedFare; // Store the new one for next time
-
-    const chargesSum = Object.values(driverCharges).reduce(
-      (sum, charge) => sum + (parseFloat(charge) || 0),
-      0
-    );
-
-    console.log("Charges Sum:", chargesSum);
-
-    return estimatedFare + chargesSum;
-  };
+  return estimatedFare + chargesSum;
+};
 
 
   console.log("Final Amount", calculateTotalAmount);
@@ -150,11 +151,11 @@ export default function BookingDetailsPage() {
 
   const handleSave = async () => {
     try {
-      if (formData && id) {
-        updateBooking(id,formData,{
-          onSuccess:{
-            
-          }
+      if (formData && bookingId) {
+        await updateBooking(bookingId as string, {
+          ...formData,
+          driverCharges,
+          tripCompletedFinalAmount: Number(formData.tripCompletedFinalAmount) || 0,
         });
         setEditMode(null);
         toast.success('Details updated successfully');
@@ -192,25 +193,17 @@ export default function BookingDetailsPage() {
         const distance = field === 'tripCompletedDistance' ? parsedValue : updated.tripCompletedDistance;
         const estimatedFare = Number(distance) * (updated.pricePerKm || 0);
 
-        const chargesSum = Object.values(driverCharges).reduce(
-          (sum, charge) => sum + (parseFloat(charge) || 0),
-          0
-        );
-
         // Always recalculate tripCompletedEstimatedAmount if distance changes:
         updated.tripCompletedEstimatedAmount = estimatedFare;
 
         // Always recalculate tripCompletedFinalAmount fresh:
-        const totalFinal = estimatedFare + chargesSum;
+        const totalFinal = calculateTotalAmount(estimatedFare);
         updated.tripCompletedFinalAmount = totalFinal;
       }
 
       return updated;
     });
   };
-
-
-
 
 
   const handleDriverChargeChange = (key: string, value: string) => {
@@ -220,12 +213,12 @@ export default function BookingDetailsPage() {
 
     if (formData) {
       const estimatedFare = formData.tripCompletedEstimatedAmount || calculateEstimatedFare(formData.tripCompletedDistance || 0);
-      setFormData({
-        ...formData,
-        tripCompletedFinalAmount: calculateTotalAmount(estimatedFare),
-      });
+      const totalFinal = calculateTotalAmount(estimatedFare, newCharges);
+
+      setFormData(prev => prev ? { ...prev, tripCompletedFinalAmount: totalFinal } : prev);
     }
   };
+
 
   const renderField = (field: any, section: 'basic' | 'before' | 'after' | 'calculation') => {
     const value = formData?.[field.key as keyof Booking] ?? booking?.[field.key as keyof Booking];
