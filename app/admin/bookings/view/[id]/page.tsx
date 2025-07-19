@@ -97,7 +97,7 @@ export default function BookingDetailsPage() {
     { key: 'driverBeta', label: 'Driver Beta', format: formatCurrency },
     { key: 'duration', label: 'Total Duration' },
     { key: 'estimatedAmount', label: 'Estimation Fare', format: formatCurrency },
-    { key: 'price', label: 'Tax Amount', format: formatCurrency },
+    { key: 'taxAmount', label: 'Tax Amount', format: formatCurrency },
     { key: 'discountAmount', label: 'Discount Amount', format: formatCurrency },
     { key: 'advanceAmount', label: 'Advance Amount', format: formatCurrency },
     { key: 'statePermit', label: 'State Permit', format: formatCurrency, optional: true },
@@ -109,15 +109,22 @@ export default function BookingDetailsPage() {
   const afterTripFields = [
     { key: 'tripCompletedDistance', label: 'Total Km', format: formatDistance },
     { key: 'pricePerKm', label: 'Per Km', format: formatCurrency },
+    { key: 'driverBeta', label: 'Driver Beta', format: formatCurrency },
     { key: 'tripCompletedDuration', label: 'Total Duration' },
     { key: 'tripCompletedEstimatedAmount', label: 'Estimation Fare', format: formatCurrency },
+    { key: 'tripCompletedTaxAmount', label: 'Tax Amount', format: formatCurrency },
     { key: 'statePermit', label: 'State Permit', format: formatCurrency, optional: true },
     { key: 'tollCharges', label: 'Toll Charges', format: formatCurrency, optional: true },
     { key: 'hillCharges', label: 'Hill Charges', format: formatCurrency, optional: true },
     { key: 'tripCompletedFinalAmount', label: 'Total Amount', format: formatCurrency },
   ];
 
-  const nonEditableAfterFields = ['pricePerKm', 'tripCompletedDuration', 'tripCompletedEstimatedAmount', 'tripCompletedFinalAmount'];
+  const nonEditableAfterFields = [
+    'pricePerKm', 'tripCompletedDuration',
+    'tripCompletedEstimatedAmount',
+    "driverBeta",
+    'tripCompletedFinalAmount', 'tripCompletedTaxAmount'
+  ];
 
   const calculateEstimatedFare = (distance: number) => {
     if (!formData) return 0;
@@ -127,13 +134,13 @@ export default function BookingDetailsPage() {
   let previousEstimatedFare: number | null = null;
 
 
-  const calculateTotalAmount = (estimatedFare: number, charges = driverCharges) => {
+  const calculateTotalAmount = (estimatedFare: number, taxAmount: number, driverBeta: number, charges = driverCharges) => {
     const chargesSum = Object.values(charges).reduce(
       (sum, charge) => sum + (parseFloat(charge) || 0),
       0
     );
 
-    return estimatedFare + chargesSum;
+    return estimatedFare + chargesSum + taxAmount + driverBeta;
   };
 
 
@@ -146,7 +153,7 @@ export default function BookingDetailsPage() {
 
   const calculateTotalEarnings = () => {
     if (!booking) return 0;
-    return (booking?.tripCompletedTaxAmount || 0) + (booking?.driverDeductionAmount || 0);
+    return (booking?.tripCompletedTaxAmount || booking.taxAmount || 0) + (booking?.driverDeductionAmount || 0);
   };
 
   const handleEdit = (section: 'before' | 'after') => {
@@ -196,12 +203,15 @@ export default function BookingDetailsPage() {
         // If tripCompletedDistance is updated:
         const distance = field === 'tripCompletedDistance' ? parsedValue : updated.tripCompletedDistance;
         const estimatedFare = Number(distance) * (updated.pricePerKm || 0);
+        const taxAmount = Number(((estimatedFare * Number(updated.taxPercentage || 0)) / 100).toFixed(0));
 
         // Always recalculate tripCompletedEstimatedAmount if distance changes:
         updated.tripCompletedEstimatedAmount = estimatedFare;
+        updated.tripCompletedTaxAmount = taxAmount > 0 ? taxAmount : updated.tripCompletedTaxAmount || 0;
+        const driverBeta = Number(updated.driverBeta) || 0;
 
         // Always recalculate tripCompletedFinalAmount fresh:
-        const totalFinal = calculateTotalAmount(estimatedFare);
+        const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta || 0, driverCharges);
         updated.tripCompletedFinalAmount = totalFinal;
       }
 
@@ -217,7 +227,9 @@ export default function BookingDetailsPage() {
 
     if (formData) {
       const estimatedFare = formData.tripCompletedEstimatedAmount || calculateEstimatedFare(formData.tripCompletedDistance || 0);
-      const totalFinal = calculateTotalAmount(estimatedFare, newCharges);
+      const taxAmount = Number(((estimatedFare * Number(formData.taxPercentage || 0)) / 100).toFixed(0));
+      const driverBeta = Number(formData.driverBeta) || 0;
+      const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta, driverCharges);
 
       setFormData(prev => prev ? { ...prev, tripCompletedFinalAmount: totalFinal } : prev);
     }
@@ -547,7 +559,7 @@ export default function BookingDetailsPage() {
                           <span>{formatCurrency((booking?.tripCompletedFinalAmount || 0))}</span>
                         </div>
 
-                         <div className="flex justify-between text-red-500">
+                        <div className="flex justify-between text-red-500">
                           <span>Admin Commission Amount</span>
                           <span>-{formatCurrency(calculateTotalEarnings())}</span>
                         </div>
@@ -563,7 +575,7 @@ export default function BookingDetailsPage() {
                           <div className="flex justify-between font-bold">
                             <span>Driver Total</span>
                             <span>
-                              {formatCurrency( (booking?.tripCompletedFinalAmount || 0) - (calculateTotalEarnings() || 0 ))}
+                              {formatCurrency((booking?.tripCompletedFinalAmount || 0) - (calculateTotalEarnings() || 0))}
 
                             </span>
                           </div>
