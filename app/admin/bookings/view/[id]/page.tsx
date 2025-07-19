@@ -6,10 +6,13 @@ import { Label } from 'components/ui/label';
 import { Button } from 'components/ui/button';
 import { Input } from 'components/ui/input';
 import { Dialog, DialogContent, DialogTrigger } from 'components/ui/dialog';
-import { Eye, Edit, X, Loader2 } from 'lucide-react';
+import { Eye, Edit, X, Loader2, Info, BookOpen } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useBookingStore, Booking } from 'stores/bookingStore';
 import { toast } from 'sonner';
+import TooltipComponent from 'components/others/TooltipComponent';
+import { Service } from 'types/service';
+import { useServiceById } from 'hooks/react-query/useServices';
 
 // Formatters
 const formatCurrency = (value: number | null | undefined) => `₹${value?.toLocaleString() || '0'}`;
@@ -56,6 +59,7 @@ export default function BookingDetailsPage() {
   const [editMode, setEditMode] = useState<'before' | 'after' | null>(null);
   const [formData, setFormData] = useState<Booking | null>(null);
   const [driverCharges, setDriverCharges] = useState<Record<string, string>>({});
+  const [serviceId, setServiceId] = useState<string | undefined>();
 
   useEffect(() => {
     if (bookingId) fetchBookingById(bookingId as string);
@@ -142,7 +146,7 @@ export default function BookingDetailsPage() {
 
   const calculateTotalEarnings = () => {
     if (!booking) return 0;
-    return (booking?.amount || 0) + calculateTotalDeductions();
+    return (booking?.tripCompletedTaxAmount || 0) + (booking?.driverDeductionAmount || 0);
   };
 
   const handleEdit = (section: 'before' | 'after') => {
@@ -218,6 +222,30 @@ export default function BookingDetailsPage() {
       setFormData(prev => prev ? { ...prev, tripCompletedFinalAmount: totalFinal } : prev);
     }
   };
+
+
+  const {
+    data: service = null,
+    isError: error,
+    refetch
+  } = useServiceById(booking?.serviceId as string || "");
+
+  // if (service) {
+  //   setServiceId(service?.serviceId ?? undefined);
+  // }
+
+
+
+  const calculateCommisionTax = () => {
+
+    const commissionRate = service?.driverCommission || 0;
+    const baseAmount = (booking?.tripCompletedEstimatedAmount || 0) - (booking?.discountAmount || 0);
+    const adminCommission = Math.ceil((commissionRate * baseAmount) / 100);
+    const gst = (booking?.tripCompletedTaxAmount || 0);
+    const commissionTax = (adminCommission * 18) / 100;
+
+    return commissionTax;
+  }
 
 
   const renderField = (field: any, section: 'basic' | 'before' | 'after' | 'calculation') => {
@@ -463,7 +491,7 @@ export default function BookingDetailsPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>GST ({booking?.taxPercentage || 0}%)</span>
-                      <span>{formatCurrency(booking?.taxAmount)}</span>
+                      <span>{formatCurrency(booking?.tripCompletedTaxAmount)}</span>
                     </div>
 
                     {/* Driver Charges Display */}
@@ -489,12 +517,19 @@ export default function BookingDetailsPage() {
                       <div className="space-y-1">
                         <div className="flex justify-between">
                           <span>GST ({booking?.taxPercentage || 0}%)</span>
-                          <span>{formatCurrency(booking?.taxAmount)}</span>
+                          <span>{formatCurrency(booking?.tripCompletedTaxAmount)}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Admin Commission</span>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-1">
+                            <span>Admin Commission</span>
+                            <TooltipComponent name={`Commission Tax Amount = ${calculateCommisionTax()} `}>
+
+                              <Info className="w-4 h-4" />
+                            </TooltipComponent>
+                          </div>
                           <span>{formatCurrency(booking?.driverDeductionAmount)}</span>
                         </div>
+
                         <div className="border-t border-b border-gray-200 pt-2">
                           <div className="flex justify-between font-bold">
                             <span>Total Amount</span>
@@ -508,26 +543,27 @@ export default function BookingDetailsPage() {
                       <h4 className="font-semibold mb-1">Driver Amount</h4>
                       <div className="space-y-1">
                         <div className="flex justify-between">
-                          <span>Driver Beta</span>
-                          <span>{formatCurrency(booking?.driverBeta)}</span>
+                          <span>Trip Total Amount</span>
+                          <span>{formatCurrency((booking?.tripCompletedFinalAmount || 0))}</span>
                         </div>
 
-                        {Object.entries(driverCharges).map(([key, value]) => (
+                         <div className="flex justify-between text-red-500">
+                          <span>Admin Commission Amount</span>
+                          <span>-{formatCurrency(calculateTotalEarnings())}</span>
+                        </div>
+
+                        {/* {Object.entries(driverCharges).map(([key, value]) => (
                           <div key={key} className="flex justify-between">
                             <span>{capitalizeLabel(key)}</span>
                             <span>{formatCurrency(parseFloat(value) || 0)}</span>
                           </div>
-                        ))}
+                        ))} */}
 
                         <div className="border-t border-gray-200 pt-2">
                           <div className="flex justify-between font-bold">
                             <span>Driver Total</span>
                             <span>
-                              {formatCurrency(
-                                (parseFloat(booking?.driverBeta as any) || 0) +
-                                Object.values(driverCharges)
-                                  .reduce((sum, charge) => sum + (parseFloat(charge) || 0), 0)
-                              )}
+                              {formatCurrency( (booking?.tripCompletedFinalAmount || 0) - (calculateTotalEarnings() || 0 ))}
 
                             </span>
                           </div>
