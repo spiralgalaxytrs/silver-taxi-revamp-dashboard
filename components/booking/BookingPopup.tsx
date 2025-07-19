@@ -12,6 +12,22 @@ import {
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from 'components/ui/button';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import {
+  useAssignDriver,
+  useAssignAllDriver,
+  useTogglePaymentMethod,
+  useToggleTripStatus,
+  useTogglePaymentStatus,
+  useDeleteBooking,
+  useFetchBookings
+} from "hooks/react-query/useBooking";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "components/ui/dropdown-menu";
 interface BookingPopupProps {
   trigger: React.ReactNode;
   booking: Record<string, any> | null;
@@ -87,6 +103,32 @@ export function BookingPopup({
     };
   }, [booking, open]);
 
+
+ 
+   const {
+          mutate: deleteBooking,
+        } = useDeleteBooking();
+
+        const handleDelete = async (id: string) => {
+        try {
+          deleteBooking(id, {
+            onSuccess: () => {
+              toast.success("Booking deleted successfully");
+            },
+            onError: () => {
+              toast.error("Failed to delete booking");
+            },
+          }); // Wait for deletion to complete
+        } catch (error: any) {
+          toast.error(error?.response?.data?.message || "Failed to booking driver", {
+            style: {
+              backgroundColor: "#FF0000",
+              color: "#fff",
+            },
+          });
+        }
+      };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -115,14 +157,33 @@ export function BookingPopup({
               )} */}
 
               {booking?.bookingId && (
-                <Button
-                  onClick={() => router.push(`/admin/bookings/view/${booking.bookingId}`)}
-                  className="absolute top-20 right-4  font-medium text-sm  transition-colors duration-200"
-                >
-                  More Info
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      className="absolute top-20 right-4 font-medium text-sm transition-colors duration-200"
+                    >
+                      More Info
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-36">
+                    <DropdownMenuItem onClick={() => router.push(`/admin/bookings/view/${booking.bookingId}`)}>
+                      View
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push(`/admin/bookings/edit/${booking.bookingId}`)}>
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        // You can add a confirm dialog here before deleting
+                        handleDelete(booking.bookingId);
+                      }}
+                      className="text-red-600"
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
-
 
 
 
