@@ -13,6 +13,7 @@ import {
   toggleTripStatus,
   togglePaymentStatus,
   togglePaymentMethod,
+  fetchVendorBookingsById,
 } from "services/booking";
 import type { Booking } from "types/react-query/booking";
 
@@ -28,6 +29,14 @@ export const useFetchVendorBookings = () => {
   return useQuery({
     queryKey: ["vendor-bookings"],
     queryFn: fetchVendorBookings,
+  });
+};
+
+export const useFetchVendorBookingsById = (id: string) => {
+  return useQuery({
+    queryKey: ["vendor-bookings", id],
+    queryFn: () => fetchVendorBookingsById(id),
+    enabled: !!id
   });
 };
 

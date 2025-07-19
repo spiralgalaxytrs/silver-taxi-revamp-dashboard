@@ -23,8 +23,7 @@ import {
 import {
     useCreateVendor,
     useUpdateVendor,
-    useAddVendorWallet,
-    useMinusVendorWallet,
+    useAdjustWallet,
     useVendorById
 } from "hooks/react-query/useVendor";
 
@@ -45,15 +44,14 @@ type VendorFormData = {
 
 export function VendorForm({ id }: VendorFormProps) {
     const router = useRouter();
-    
+
     const {
         data: vendor = null,
         isLoading,
     } = useVendorById(id ?? "");
     const { mutate: createVendor } = useCreateVendor();
     const { mutate: updateVendor } = useUpdateVendor();
-    const { mutate: addVendorWallet } = useAddVendorWallet();
-    const { mutate: minusVendorWallet } = useMinusVendorWallet();
+    const { mutate: adjustVendorWallet } = useAdjustWallet();
 
     // Initialize form data with default values to prevent uncontrolled input errors
     const [formData, setFormData] = useState<VendorFormData>({
@@ -115,7 +113,7 @@ export function VendorForm({ id }: VendorFormProps) {
 
     const handleAddVendorWallet = async (id: string, amount: number, remark: string) => {
         try {
-            addVendorWallet({ id, amount, remark }, {
+            adjustVendorWallet({ id, amount, remark, adjustmentReason: "", type: "add" as "add" | "minus" }, {
                 onSuccess: (data: any) => {
                     toast.success(data.message || "Wallet amount added successfully!", {
                         style: {
@@ -123,6 +121,7 @@ export function VendorForm({ id }: VendorFormProps) {
                             color: "#fff",
                         },
                     });
+                    setAdjustmentAmount('');
                     setFormData({
                         ...formData,
                         walletAmount: formData.walletAmount + amount
@@ -135,6 +134,7 @@ export function VendorForm({ id }: VendorFormProps) {
                             color: "#fff",
                         },
                     });
+                    setAdjustmentAmount('');
                 }
             });
         } catch (error) {
@@ -151,7 +151,7 @@ export function VendorForm({ id }: VendorFormProps) {
 
     const handleMinusVendorWallet = async (id: string, amount: number, remark: string) => {
         try {
-            minusVendorWallet({ id, amount, remark }, {
+            adjustVendorWallet({ id, amount, remark, adjustmentReason: "", type: "minus" as "add" | "minus" }, {
                 onSuccess: (data: any) => {
                     toast.success(data.message || "Wallet amount deducted successfully!", {
                         style: {
@@ -163,6 +163,7 @@ export function VendorForm({ id }: VendorFormProps) {
                         ...formData,
                         walletAmount: formData.walletAmount - amount
                     })
+                    setAdjustmentAmount('');
                 },
                 onError: (error: any) => {
                     toast.error(error?.response?.data?.message || "Error deducting wallet amount!", {
@@ -171,6 +172,7 @@ export function VendorForm({ id }: VendorFormProps) {
                             color: "#fff",
                         },
                     });
+                    setAdjustmentAmount('');
                 }
             });
         } catch (error) {

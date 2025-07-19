@@ -42,12 +42,12 @@ export const columns: MRT_ColumnDef<DriverTransaction>[] = [
         muiTableHeadCellProps: { align: 'center' },
         muiTableBodyCellProps: { align: 'center' },
     },
-    {
-        accessorKey: "ownedBy",
-        header: "Category",
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
-    },
+    // {
+    //     accessorKey: "ownedBy",
+    //     header: "Category",
+    //     muiTableHeadCellProps: { align: 'center' },
+    //     muiTableBodyCellProps: { align: 'center' },
+    // },
     {
         accessorKey: "type",
         header: "Transaction Type",

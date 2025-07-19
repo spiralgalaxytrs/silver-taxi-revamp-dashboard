@@ -59,7 +59,7 @@ export default function LoginPage() {
       return;
     }
 
-    login(formData.email, formData.password);
+    await login(formData.email, formData.password);
 
     const status = useAuthStore.getState().statusCode;
     const message = useAuthStore.getState().message;
