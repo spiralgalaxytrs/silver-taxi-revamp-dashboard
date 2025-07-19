@@ -8,8 +8,7 @@ import {
     deleteVendor,
     bulkDeleteVendors,
     toggleVendorStatus,
-    addVendorWallet,
-    minusVendorWallet,
+    adjustVendorWallet,
 } from 'services/vendor';
 import type { Vendor } from 'types/react-query/vendor';
 
@@ -88,26 +87,15 @@ export const useToggleVendorStatus = () => {
     });
 };
 
-export const useAddVendorWallet = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, amount, remark }: { id: string; amount: number; remark: string }) =>
-            addVendorWallet({ id, amount, remark }),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['vendors'] });
-            queryClient.invalidateQueries({ queryKey: ['vendor-wallet-amount'] });
-        },
-    });
+// ➕➖ Adjust Wallet (add or minus)
+export const useAdjustWallet = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adjustVendorWallet,
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["vendors"] });
+      queryClient.invalidateQueries({ queryKey: ["vendor-wallet", id] });
+    },
+  });
 };
 
-export const useMinusVendorWallet = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, amount, remark }: { id: string; amount: number; remark: string }) =>
-            minusVendorWallet({ id, amount, remark }),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['vendors'] });
-            queryClient.invalidateQueries({ queryKey: ['vendor-wallet-amount'] });
-        },
-    });
-};
