@@ -21,3 +21,16 @@ export interface Vendor {
   };
   createdAt: string;
 }
+
+export interface wallet {
+    transactionId: string;
+    initiatedBy: string;
+    initiatedTo: string;
+    type: string;
+    date: string;
+    vendorId: string;
+    // driverId: string;
+    amount: number;
+    createdAt: string;
+    updatedAt: string;
+}
