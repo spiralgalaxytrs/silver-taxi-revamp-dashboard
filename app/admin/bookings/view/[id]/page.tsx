@@ -222,17 +222,30 @@ export default function BookingDetailsPage() {
 
   const handleDriverChargeChange = (key: string, value: string) => {
     const parsedValue = parseFloat(value) || 0;
-    const newCharges = { ...driverCharges, [key]: parsedValue.toString() };
-    setDriverCharges(newCharges);
 
-    if (formData) {
-      const estimatedFare = formData.tripCompletedEstimatedAmount || calculateEstimatedFare(formData.tripCompletedDistance || 0);
-      const taxAmount = Number(((estimatedFare * Number(formData.taxPercentage || 0)) / 100).toFixed(0));
-      const driverBeta = Number(formData.driverBeta) || 0;
-      const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta, driverCharges);
+    // Update driverCharges first
+    setDriverCharges(prev => {
+      const newCharges = { ...prev, [key]: parsedValue.toString() };
 
-      setFormData(prev => prev ? { ...prev, tripCompletedFinalAmount: totalFinal } : prev);
-    }
+      // Then update formData based on the new charges
+      setFormData(prevForm => {
+        if (!prevForm) return prevForm;
+
+        const estimatedFare = prevForm.tripCompletedEstimatedAmount ||
+          calculateEstimatedFare(prevForm.tripCompletedDistance || 0);
+        const taxAmount = Number(((estimatedFare * Number(prevForm.taxPercentage || 0)) / 100).toFixed(0));
+        const driverBeta = Number(prevForm.driverBeta) || 0;
+        const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta, newCharges);
+
+        return {
+          ...prevForm,
+          driverCharges: newCharges,
+          tripCompletedFinalAmount: totalFinal
+        };
+      });
+
+      return newCharges;
+    });
   };
 
 
@@ -576,7 +589,6 @@ export default function BookingDetailsPage() {
                             <span>Driver Total</span>
                             <span>
                               {formatCurrency((booking?.tripCompletedFinalAmount || 0) - (Number(booking?.driverDeductionAmount) || 0))}
-
                             </span>
                           </div>
                         </div>
