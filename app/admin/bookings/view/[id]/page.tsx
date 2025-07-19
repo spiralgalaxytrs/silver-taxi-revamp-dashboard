@@ -153,7 +153,7 @@ export default function BookingDetailsPage() {
 
   const calculateTotalEarnings = () => {
     if (!booking) return 0;
-    return (booking?.tripCompletedTaxAmount || booking.taxAmount || 0) + (booking?.driverDeductionAmount || 0);
+    return (booking?.tripCompletedTaxAmount || 0) + (booking?.driverDeductionAmount || 0);
   };
 
   const handleEdit = (section: 'before' | 'after') => {
@@ -251,7 +251,7 @@ export default function BookingDetailsPage() {
   const calculateCommisionTax = () => {
 
     const commissionRate = service?.driverCommission || 0;
-    const baseAmount = (booking?.tripCompletedEstimatedAmount || 0) - (booking?.discountAmount || 0);
+    const baseAmount = booking?.tripCompletedEstimatedAmount || 0;
     const adminCommission = Math.ceil((commissionRate * baseAmount) / 100);
     const gst = (booking?.tripCompletedTaxAmount || 0);
     const commissionTax = (adminCommission * 18) / 100;
@@ -539,13 +539,13 @@ export default function BookingDetailsPage() {
                               <Info className="w-4 h-4" />
                             </TooltipComponent>
                           </div>
-                          <span>{formatCurrency(booking?.driverDeductionAmount)}</span>
+                          <span>{formatCurrency(Number(booking?.driverDeductionAmount) - Number(booking?.tripCompletedTaxAmount))}</span>
                         </div>
 
                         <div className="border-t border-b border-gray-200 pt-2">
                           <div className="flex justify-between font-bold">
                             <span>Total Amount</span>
-                            <span>{formatCurrency(calculateTotalEarnings())}</span>
+                            <span>{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
                           </div>
                         </div>
                       </div>
@@ -561,7 +561,7 @@ export default function BookingDetailsPage() {
 
                         <div className="flex justify-between text-red-500">
                           <span>Admin Commission Amount</span>
-                          <span>-{formatCurrency(calculateTotalEarnings())}</span>
+                          <span>-{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
                         </div>
 
                         {/* {Object.entries(driverCharges).map(([key, value]) => (
@@ -575,7 +575,7 @@ export default function BookingDetailsPage() {
                           <div className="flex justify-between font-bold">
                             <span>Driver Total</span>
                             <span>
-                              {formatCurrency((booking?.tripCompletedFinalAmount || 0) - (calculateTotalEarnings() || 0))}
+                              {formatCurrency((booking?.tripCompletedFinalAmount || 0) - (Number(booking?.driverDeductionAmount) || 0))}
 
                             </span>
                           </div>
