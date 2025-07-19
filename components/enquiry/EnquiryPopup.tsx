@@ -9,6 +9,9 @@ import {
   DialogTitle,
 } from "components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import ActionDropdown from "components/others/ActionComponent";
+import { useEnquiryById, useDeleteEnquiry } from "hooks/react-query/useEnquiry";
+import { toast } from 'sonner';
 
 interface EnquiryPopupProps {
   trigger: React.ReactNode;
@@ -65,6 +68,39 @@ export function EnquiryPopup({
     };
   }, [enquiry]);
 
+
+  const { mutate: deleteEnquiry } = useDeleteEnquiry();
+  const handleDelete = async () => {
+    try {
+      deleteEnquiry(enquiry?.enquiryId || "", {
+        onSuccess: () => {
+          toast.success("Enquiry deleted successfully", {
+            style: {
+              backgroundColor: "#009F7F", // Tailwind green-500
+              color: "#fff",
+            },
+          });
+          setOpen(false);
+        },
+        onError: () => {
+          toast.error("An unexpected error occurred", {
+            style: {
+              backgroundColor: "#FF0000",
+              color: "#fff",
+            },
+          });
+        }
+      });
+    } catch (error) {
+      toast.error("An unexpected error occurred", {
+        style: {
+          backgroundColor: "#FF0000",
+          color: "#fff",
+        },
+      });
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -80,8 +116,20 @@ export function EnquiryPopup({
           <h4 className="text-2xl font-semibold text-center mb-4">{title}</h4>
 
 
+
+
           {enquiryDetails && (
             <div className="grid gap-4">
+
+              <ActionDropdown
+                id={enquiry?.enquiryId}
+                type="booking"
+                onDelete={handleDelete}
+                // viewPath="/admin/enquiries/view"
+                editPath="/admin/enquiry/edit"
+                className="absolute top-20 right-4"
+                disableView
+              />
               {Object.entries(enquiryDetails)
                 .filter(([_, value]) => {
                   if (value === null || value === undefined) return false;
