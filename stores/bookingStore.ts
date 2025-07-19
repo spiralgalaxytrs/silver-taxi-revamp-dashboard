@@ -68,6 +68,7 @@ interface Booking {
   tripCompletedPrice?: number;
   tripCompletedDuration?: string;
   tripCompletedFinalAmount?: number;
+  tripCompletedTaxAmount?: number;
   tripCompletedDistance?: number;
   tripCompletedEstimatedAmount?: number;
   driverDeductionAmount?: number;
@@ -391,6 +392,7 @@ export const useBookingStore = create<BookingState>()(
             tripCompletedPrice: booking.tripCompletedPrice,
             tripCompletedDuration: booking.tripCompletedDuration,
             tripCompletedFinalAmount: booking.tripCompletedFinalAmount,
+            tripCompletedTaxAmount: booking.tripCompletedTaxAmount,
             tripCompletedDistance: booking.tripCompletedDistance,
             tripCompletedEstimatedAmount: booking.tripCompletedEstimatedAmount,
             driverDeductionAmount: booking.driverDeductionAmount,
