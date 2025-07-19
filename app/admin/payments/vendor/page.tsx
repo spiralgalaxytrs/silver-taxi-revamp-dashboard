@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { columns, VendorTransaction } from './columns';
 import { Button } from 'components/ui/button';
@@ -9,7 +9,6 @@ import CounterCard from 'components/cards/CounterCard';
 import { Card } from 'components/ui/card';
 import { Input } from 'components/ui/input';
 import { Label } from 'components/ui/label';
-import { toast } from "sonner"
 import {
   Select,
   SelectContent,
@@ -17,19 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from 'components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogFooter
-} from 'components/ui/alert-dialog';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
-import { useWalletTransactionStore } from "stores/-walletTransactionStore";
+import { useAllVendorTransactions } from 'hooks/react-query/useWallet';
 import {
   MRT_ColumnDef,
   MaterialReactTable
@@ -38,7 +26,13 @@ import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
 
 export default function VendorPaymentPage() {
   const router = useRouter();
-  const { fetchAllVendorTransactions, vendorTransactions } = useWalletTransactionStore();
+
+  const {
+    data: vendorTransactions = [],
+    isPending: isLoading,
+    refetch
+  } = useAllVendorTransactions();
+  console.log(vendorTransactions)
 
   const [sortConfig, setSortConfig] = useState<{
     columnId: string | null;
@@ -58,30 +52,20 @@ export default function VendorPaymentPage() {
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [showFilters, setShowFilters] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false)
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [totalPayments, setTotalPayments] = useState(0);
   const [todayPayments, setTodayPayments] = useState(0);
-  const [transactionData, setTransactionData] = useState(
-    vendorTransactions.map(transaction => ({
+
+  const transactionData = useMemo(() => {
+    return vendorTransactions.map((transaction) => ({
       ...transaction,
       id: transaction.transactionId,
-    }))
-  );
-
-  useEffect(() => {
-    fetchAllVendorTransactions()
-  }, [transactionData])
-
-
-  const unFiltered = [...transactionData].sort((a, b) => {
-    const aCreatedAt = new Date(a.createdAt || "").getTime();
-    const bCreatedAt = new Date(b.createdAt || "").getTime();
-    return bCreatedAt - aCreatedAt; // Descending order
-  });
+      createdAt: transaction.createdAt
+    }));
+  }, [vendorTransactions])
 
   // Apply filters to the data.
   const applyFilters = () => {
-    let filteredData = [...unFiltered];
+    let filteredData = [...transactionData];
 
     if (filters.search) {
       filteredData = filteredData.filter(
@@ -216,7 +200,7 @@ export default function VendorPaymentPage() {
   const handleRefetch = async () => {
     setIsSpinning(true);
     try {
-      // await refetch(); // wait for the refetch to complete
+      await refetch(); // wait for the refetch to complete
     } finally {
       // stop spinning after short delay to allow animation to play out
       setTimeout(() => setIsSpinning(false), 500);
