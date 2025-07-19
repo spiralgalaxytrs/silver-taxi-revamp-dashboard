@@ -17,6 +17,7 @@ import {
 } from 'components/ui/alert-dialog';
 import { useRouter } from "next/navigation"
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   MRT_ColumnDef
 } from 'material-react-table'
@@ -62,6 +63,24 @@ export const columns: MRT_ColumnDef<Customer>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
+  {
+  accessorKey: "customerId",
+  header: "Customer ID",
+  muiTableHeadCellProps: { align: 'center' },
+  muiTableBodyCellProps: { align: 'center' },
+  Cell: ({ row }) => {
+    const customer = row.original;
+
+    return (
+      <Link
+        href={`/admin/customers/view/${customer.customerId}`}
+        className="text-blue-600 hover:underline"
+      >
+        {customer.customerId}
+      </Link>
+    );
+  },
+},
   {
     accessorKey: "name",
     header: "Name",

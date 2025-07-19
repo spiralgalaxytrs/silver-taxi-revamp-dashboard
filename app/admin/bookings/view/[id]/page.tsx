@@ -97,7 +97,7 @@ export default function BookingDetailsPage() {
     { key: 'driverBeta', label: 'Driver Beta', format: formatCurrency },
     { key: 'duration', label: 'Total Duration' },
     { key: 'estimatedAmount', label: 'Estimation Fare', format: formatCurrency },
-    { key: 'price', label: 'Tax Amount', format: formatCurrency },
+    { key: 'taxAmount', label: 'Tax Amount', format: formatCurrency },
     { key: 'discountAmount', label: 'Discount Amount', format: formatCurrency },
     { key: 'advanceAmount', label: 'Advance Amount', format: formatCurrency },
     { key: 'statePermit', label: 'State Permit', format: formatCurrency, optional: true },

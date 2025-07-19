@@ -16,16 +16,18 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   MRT_ColumnDef,
 } from 'material-react-table'
-import{
+import {
   useDeleteInvoice
 } from 'hooks/react-query/useInvoice';
 
 export type Invoice = {
   // id: string ;
   invoiceId: string | "";
+  invoiceNo: string | "";
   totalAmount: number;
   status: string;
   email: string;
@@ -64,6 +66,18 @@ export const columns: MRT_ColumnDef<Invoice>[] = [
     header: "Invoice ID",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    Cell: ({ row }) => {
+      const invoice = row.original;
+
+      return (
+        <Link
+          href={`/admin/invoices/view/${invoice.invoiceNo}`}
+          className="text-blue-600 hover:underline"
+        >
+          {invoice.invoiceNo}
+        </Link>
+      );
+    },
   },
   {
     accessorKey: "email",
