@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogFooter, A
 import {
   MRT_ColumnDef,
 } from 'material-react-table'
+import Link from "next/link";
 import { Vendor } from 'types/react-query/vendor'
 import {
   useToggleVendorStatus,
@@ -51,6 +52,24 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
+  {
+  accessorKey: "vendorId",
+  header: "Vendor ID",
+  muiTableHeadCellProps: { align: 'center' },
+  muiTableBodyCellProps: { align: 'center' },
+  Cell: ({ row }) => {
+    const vendor = row.original;
+
+    return (
+      <Link
+        href={`/admin/vendor/view/${vendor?.vendorId}`}
+        className="text-blue-600 hover:underline"
+      >
+        {vendor?.vendorId}
+      </Link>
+    );
+  },
+},
   // {
   //   accessorKey: "vendorId",
   //   header: "Vendor ID",

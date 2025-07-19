@@ -33,6 +33,8 @@ import {
   useToggleStatus,
   useDeleteEnquiry
 } from 'hooks/react-query/useEnquiry';
+import { Row } from "rsuite"
+import { ro } from "date-fns/locale"
 
 export const columns: MRT_ColumnDef<Enquiry>[] = [
   // {
@@ -70,7 +72,26 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
     header: "Enquiry ID",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    Cell: ({ row }) => {
+      const enquiry = row.original;
+       return(
+        <EnquiryPopup
+        trigger = {
+          <span
+          style={{  color: 'blue',
+                textDecoration: 'underline',
+                cursor: 'pointer',}}>
+                  {enquiry.enquiryId}
+          </span>
+        }
+        enquiry={enquiry}
+        />
+
+       )
+    }
   },
+  
+
   {
     accessorKey: "name",
     header: "Customer Name",

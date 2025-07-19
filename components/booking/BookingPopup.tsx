@@ -14,6 +14,17 @@ import { Button } from 'components/ui/button';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "components/ui/alert-dialog";
+import {
   useAssignDriver,
   useAssignAllDriver,
   useTogglePaymentMethod,
@@ -28,6 +39,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "components/ui/dropdown-menu";
+import { Eye, Pencil, Trash } from 'lucide-react';
+import ActionDropdown from 'components/others/ActionComponent';
 interface BookingPopupProps {
   trigger: React.ReactNode;
   booking: Record<string, any> | null;
@@ -43,6 +56,8 @@ export function BookingPopup({
   title = "Booking Details",
 }: BookingPopupProps) {
   const [open, setOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const router = useRouter();
 
@@ -104,30 +119,32 @@ export function BookingPopup({
   }, [booking, open]);
 
 
- 
-   const {
-          mutate: deleteBooking,
-        } = useDeleteBooking();
 
-        const handleDelete = async (id: string) => {
-        try {
-          deleteBooking(id, {
-            onSuccess: () => {
-              toast.success("Booking deleted successfully");
-            },
-            onError: () => {
-              toast.error("Failed to delete booking");
-            },
-          }); // Wait for deletion to complete
-        } catch (error: any) {
-          toast.error(error?.response?.data?.message || "Failed to booking driver", {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
-          });
-        }
-      };
+  const {
+    mutate: deleteBooking,
+  } = useDeleteBooking();
+
+  const handleDelete = async (id: string) => {
+    try {
+      deleteBooking(id, {
+        onSuccess: () => {
+          toast.success("Booking deleted successfully");
+          // router.push("/admin/bookings");
+          setOpen(false);
+        },
+        onError: () => {
+          toast.error("Failed to delete booking");
+        },
+      }); // Wait for deletion to complete
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to booking driver", {
+        style: {
+          backgroundColor: "#FF0000",
+          color: "#fff",
+        },
+      });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -145,45 +162,18 @@ export function BookingPopup({
 
           {bookingDetails && (
             <div className="grid gap-4">
+              <ActionDropdown
+                id={booking?.bookingId}
+                type="booking"
+                onDelete={handleDelete}
+                viewPath="/admin/bookings/view"
+                editPath="/admin/bookings/edit"
+                className="absolute top-20 right-4"
+                disableEdit={booking?.status === "Completed"}
+
+              />
 
 
-              {/* {booking?.bookingId && (
-                <Link
-                  href={`/admin/bookings/view/${booking.bookingId}`}
-                  className="absolute top-20 right-4 text-blue-600 hover:text-blue-800 font-medium text-sm underline transition-colors duration-200"
-                >
-                  More Info
-                </Link>
-              )} */}
-
-              {booking?.bookingId && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      className="absolute top-20 right-4 font-medium text-sm transition-colors duration-200"
-                    >
-                      More Info
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-36">
-                    <DropdownMenuItem onClick={() => router.push(`/admin/bookings/view/${booking.bookingId}`)}>
-                      View
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push(`/admin/bookings/edit/${booking.bookingId}`)}>
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        // You can add a confirm dialog here before deleting
-                        handleDelete(booking.bookingId);
-                      }}
-                      className="text-red-600"
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
 
 
 
@@ -226,6 +216,6 @@ export function BookingPopup({
 
         </div>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

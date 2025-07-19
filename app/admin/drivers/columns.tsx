@@ -25,6 +25,7 @@ import {
   AlertDialogFooter
 } from 'components/ui/alert-dialog'
 import Image from 'next/image'
+import Link from "next/link"
 import {
   useDeleteDriver,
   useToggleDriverStatus
@@ -76,6 +77,24 @@ export const columns: MRT_ColumnDef<Driver>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
+  {
+  accessorKey: "driverId",
+  header: "Driver ID",
+  muiTableHeadCellProps: { align: 'center' },
+  muiTableBodyCellProps: { align: 'center' },
+  Cell: ({ row }) => {
+    const driver = row.original;
+
+    return (
+      <Link
+        href={`/admin/drivers/view/${driver.driverId}`}
+        className="text-blue-600 hover:underline"
+      >
+        {driver.driverId}
+      </Link>
+    );
+  },
+},
   {
     accessorKey: "name",
     header: "Driver Name",
