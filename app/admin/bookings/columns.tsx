@@ -879,10 +879,22 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         try {
           deleteBooking(id, {
             onSuccess: () => {
-              toast.success("Booking deleted successfully");
+              toast.success("Booking deleted successfully", {
+                style: {
+                  backgroundColor: "#009F7F",
+                  color: "#fff",
+                },
+              });
             },
             onError: () => {
-              toast.error("Failed to delete booking");
+              toast.error("Failed to delete booking",
+                {
+                  style: {
+                    backgroundColor: "#FF0000",
+                    color: "#fff",
+                  },
+                }
+              );
             },
           }); // Wait for deletion to complete
         } catch (error: any) {
@@ -897,7 +909,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       const handleConvertBooking = async (id: string) => {
         try {
-          router.push(`/admin/invoices/create?bookingId=${id}`);
+          router.push(`/admin/invoices`);
         } catch (error) {
           toast.error("Failed to convert booking", {
             style: {
