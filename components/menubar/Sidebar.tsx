@@ -71,7 +71,7 @@ const AdminSidebarItems: {
       icon: UserCheck,
       dropdown: [
         { name: "Driver", href: "/admin/drivers", icon: SquareChevronRight },
-        { name: "Create Driver", href: "/admin/drivers/create", icon: SquareChevronRight },
+        // { name: "Create Driver", href: "/admin/drivers/create", icon: SquareChevronRight },
       ],
     },
     {
@@ -94,14 +94,14 @@ const AdminSidebarItems: {
             { name: "Round Trip", href: "/admin/services/round-trip", icon: SquareChevronRight },
           ],
         },
-        {
-          name: "Packages",
-          icon: SquareChevronDown,
-          subDropdown: [
-            // { name: "Day Packages", href: "/admin/services/packages/days", icon: SquareChevronRight },
-            { name: "Hourly Packages", href: "/admin/services/packages/hourly", icon: SquareChevronRight },
-          ],
-        },
+        // {
+        //   name: "Packages",
+        //   icon: SquareChevronDown,
+        //   subDropdown: [
+        //     { name: "Day Packages", href: "/admin/services/packages/days", icon: SquareChevronRight },
+        //     { name: "Hourly Packages", href: "/admin/services/packages/hourly", icon: SquareChevronRight },
+        //   ],
+        // },
         // {
         //   name: "Airport",
         //   icon: SquareChevronDown,
@@ -112,28 +112,28 @@ const AdminSidebarItems: {
         // },
       ],
     },
-    {
-      name: "Services Pricing",
-      icon: HandCoins,
-      dropdown: [
-        {
-          name: "Outstation Pricing",
-          icon: SquareChevronDown,
-          subDropdown: [
-            { name: "One Way", href: "/admin/price-changes/outStation/oneway-pricing", icon: SquareChevronRight },
-            { name: "Round Trip", href: "/admin/price-changes/outStation/roundtrip-pricing", icon: SquareChevronRight },
-          ],
-        },
-        // {
-        //   name: "Airport Pricing",
-        //   icon: SquareChevronDown,
-        //   subDropdown: [
-        //     { name: "Pickup ", href: "/admin/price-changes/airport/pickup-pricing", icon: SquareChevronRight },
-        //     { name: "Drop", href: "/admin/price-changes/airport/drop-pricing", icon: SquareChevronRight },
-        //   ],
-        // },
-      ],
-    },
+    // {
+    //   name: "Services Pricing",
+    //   icon: HandCoins,
+    //   dropdown: [
+    //     {
+    //       name: "Outstation Pricing",
+    //       icon: SquareChevronDown,
+    //       subDropdown: [
+    //         { name: "One Way", href: "/admin/price-changes/outStation/oneway-pricing", icon: SquareChevronRight },
+    //         { name: "Round Trip", href: "/admin/price-changes/outStation/roundtrip-pricing", icon: SquareChevronRight },
+    //       ],
+    //     },
+    //     // {
+    //     //   name: "Airport Pricing",
+    //     //   icon: SquareChevronDown,
+    //     //   subDropdown: [
+    //     //     { name: "Pickup ", href: "/admin/price-changes/airport/pickup-pricing", icon: SquareChevronRight },
+    //     //     { name: "Drop", href: "/admin/price-changes/airport/drop-pricing", icon: SquareChevronRight },
+    //     //   ],
+    //     // },
+    //   ],
+    // },
     {
       name: "Vehicles",
       icon: Truck,
@@ -183,23 +183,23 @@ const AdminSidebarItems: {
     //     { name: "Create Popular Route", href: "/admin/popular-routes/create", icon: SquareChevronRight },
     //   ]
     // },
-    {
-      name: "Offers",
-      icon: BadgePercent,
-      dropdown: [
-        { name: "Offers", href: "/admin/offers", icon: SquareChevronRight },
-        { name: "Create Offers", href: "/admin/offers/create", icon: SquareChevronRight },
-      ],
-    },
+    // {
+    //   name: "Offers",
+    //   icon: BadgePercent,
+    //   dropdown: [
+    //     { name: "Offers", href: "/admin/offers", icon: SquareChevronRight },
+    //     { name: "Create Offers", href: "/admin/offers/create", icon: SquareChevronRight },
+    //   ],
+    // },
 
-    {
-      name: "Promo Code",
-      icon: TicketPercent,
-      dropdown: [
-        { name: "Promo Codes", href: "/admin/promo-codes", icon: SquareChevronRight },
-        { name: "Create Promo Codes", href: "/admin/promo-codes/create", icon: SquareChevronRight },
-      ],
-    },
+    // {
+    //   name: "Promo Code",
+    //   icon: TicketPercent,
+    //   dropdown: [
+    //     { name: "Promo Codes", href: "/admin/promo-codes", icon: SquareChevronRight },
+    //     { name: "Create Promo Codes", href: "/admin/promo-codes/create", icon: SquareChevronRight },
+    //   ],
+    // },
 
     {
       name: "Payments",
