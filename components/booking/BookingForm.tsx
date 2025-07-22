@@ -486,7 +486,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                 color: "#fff",
                             },
                         });
-                        setTimeout(() => router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/bookings`), 500);
+                        setTimeout(() => router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/bookings`), 100);
                     },
                     onError: (error: any) => {
                         toast.error(error?.response?.data?.message || 'Failed to update booking', {
@@ -506,7 +506,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                 color: "#fff",
                             },
                         });
-                        setTimeout(() => router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/bookings`), 500);
+                        setTimeout(() => router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/bookings`), 100);
                     },
                     onError: (error: any) => {
                         toast.error(error?.response?.data?.message || 'Failed to create booking', {
@@ -868,7 +868,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         />
                                     </div>
 
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <Label>Offer <span className='text-red-500'>*</span></Label>
                                         <Select
                                             value={formData.offerId || ""}
@@ -893,9 +893,9 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 <SelectItem value="None">None</SelectItem>
                                             </SelectContent>
                                         </Select>
-                                    </div>
+                                    </div> */}
 
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <Label>Discount Amount <span className='text-red-500'>*</span></Label>
                                         <Input
                                             id="discountAmount"
@@ -904,7 +904,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                             readOnly// Make read-only when an offer is selected
                                             className="h-12"
                                         />
-                                    </div>
+                                    </div> */}
 
                                     <div className="space-y-2">
                                         <Label>Advance Amount <span className='text-red-500'>*</span></Label>
@@ -931,7 +931,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                             onValueChange={v => handleInputChange('paymentMethod', v)}
                                         >
                                             <SelectTrigger className="h-12">
-                                                <SelectValue />
+                                                <SelectValue placeholder="Select Payment Method" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {['Cash', 'UPI', 'Bank', 'Card'].map(method => (
