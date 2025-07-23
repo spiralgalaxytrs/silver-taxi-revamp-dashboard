@@ -52,35 +52,27 @@ const AdminSidebarItems: {
     {
       name: "Enquiries",
       icon: Calendar,
-      dropdown: [
-        { name: "Enquiry", href: "/admin/enquiry", icon: SquareChevronRight },
-        { name: "Manual Enquiry", href: "/admin/enquiry/create", icon: SquareChevronRight },
-      ],
+      href: "/admin/enquiry",
+      // dropdown: [
+      //   { name: "Enquiry", href: "/admin/enquiry", icon: SquareChevronRight },
+      //   { name: "Manual Enquiry", href: "/admin/enquiry/create", icon: SquareChevronRight },
+      // ],
     },
     {
       name: "Bookings",
       icon: Calendar,
-      dropdown: [
-        { name: "Booking", href: "/admin/bookings", icon: SquareChevronRight },
-        { name: "Manual Booking", href: "/admin/bookings/create", icon: SquareChevronRight },
-      ],
+      href: "/admin/bookings",
     },
     { name: "Customers", href: "/admin/customers", icon: Users },
     {
       name: "Drivers",
       icon: UserCheck,
-      dropdown: [
-        { name: "Driver", href: "/admin/drivers", icon: SquareChevronRight },
-        // { name: "Create Driver", href: "/admin/drivers/create", icon: SquareChevronRight },
-      ],
+      href: "/admin/drivers",
     },
     {
       name: "Vendors",
       icon: User,
-      dropdown: [
-        { name: "Vendor", href: "/admin/vendor", icon: SquareChevronRight },
-        { name: "Create Vendor", href: "/admin/vendor/create", icon: SquareChevronRight },
-      ],
+      href: "/admin/vendor",
     },
     {
       name: "Services",
@@ -137,10 +129,7 @@ const AdminSidebarItems: {
     {
       name: "Vehicles",
       icon: Truck,
-      dropdown: [
-        { name: "Vehicle", href: "/admin/vehicles", icon: SquareChevronRight },
-        { name: "Create Vehicle", href: "/admin/vehicles/create", icon: SquareChevronRight },
-      ],
+      href: "/admin/vehicles",
     },
     // {
     //   name: "Special Packages",
@@ -153,10 +142,7 @@ const AdminSidebarItems: {
     {
       name: "Invoices",
       icon: FileText,
-      dropdown: [
-        { name: "Invoices", href: "/admin/invoices", icon: SquareChevronRight },
-        { name: "Create Invoice", href: "/admin/invoices/create", icon: SquareChevronRight },
-      ],
+      href: "/admin/invoices",
     },
     // { name: "Site Analytics", href: "/admin/iptracking", icon: ChartColumnIncreasing },
     // {

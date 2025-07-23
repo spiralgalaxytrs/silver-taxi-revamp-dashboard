@@ -16,6 +16,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "components/ui/tooltip";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
+import { useDriverVerification } from "hooks/react-query/useDriver";
 
 export type VerificationField =
   | "profileVerified"
@@ -57,16 +58,19 @@ export default function VerificationActionGroup({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
 
-  const { verificationStatus, fetchDriverById } = useDriverStore((state) => state);
+
+  
+
+  const { mutate: driverVerification } = useDriverVerification();
 
   const updateVerificationStatus = async (
     status: "verified" | "rejected",
     fieldType: VerificationField,
     remarks?: string
   ) => {
-    const payload: Record<string, any> = { 
+    const payload: Record<string, any> = {
       status, // Include status field as required by verificationStatus
-      vehicleId 
+      vehicleId
     };
 
     const verifiedValue = status === "verified" ? "accepted" : "rejected";
@@ -104,9 +108,11 @@ export default function VerificationActionGroup({
     }
 
     try {
-      const message = await verificationStatus(driverId, payload);
-      toast.success(message);
-      await fetchDriverById(driverId);
+      // const message = await verificationStatus(driverId, payload);
+      const message = driverVerification({ id: driverId, data: payload });
+      toast.success("Verification status updated successfully: " + message);
+      
+      
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     }
