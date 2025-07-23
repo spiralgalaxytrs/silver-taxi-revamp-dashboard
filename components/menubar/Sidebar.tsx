@@ -69,10 +69,7 @@ const AdminSidebarItems: {
     {
       name: "Drivers",
       icon: UserCheck,
-      dropdown: [
-        { name: "Driver", href: "/admin/drivers", icon: SquareChevronRight },
-        // { name: "Create Driver", href: "/admin/drivers/create", icon: SquareChevronRight },
-      ],
+      href: "/admin/drivers",
     },
     {
       name: "Vendors",

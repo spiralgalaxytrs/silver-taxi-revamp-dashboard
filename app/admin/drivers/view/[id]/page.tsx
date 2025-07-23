@@ -51,7 +51,7 @@ export default function ViewDriverPage() {
         data: driverTransactions = [],
         isPending: isLoadingTransactions
     } = useDriverTransactions(id as string || "");
-    const { mutate: adjustDriverWallet } = useAdjustWallet();
+    const { mutate: adjustDriverWallet, isPending: isWalletAdjustmenting } = useAdjustWallet();
     const {
         data: driver = null,
         isError: error,
@@ -221,6 +221,7 @@ export default function ViewDriverPage() {
     };
 
     const handleSubmit = async () => {
+        
         const amount = Number(adjustmentAmount);
         const id = editedDriver?.driverId;
 
@@ -358,7 +359,7 @@ export default function ViewDriverPage() {
         return sorted;
     }, [bookingData, sortConfig]);
 
-    if (isLoading) {
+    if (isLoading || isWalletAdjustmenting) {
         return (
             <div className="flex items-center justify-center h-screen bg-gray-50">
                 <Loader2 className="w-12 h-12 animate-spin text-primary" />
