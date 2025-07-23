@@ -48,7 +48,6 @@ interface InvoiceItem {
 interface StaticCharges {
   discount: number;
   advanceAmount: number;
-  driverBeta: number;
   toll: number;
   hill: number;
   permitCharge: number;
@@ -99,7 +98,6 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
   const [staticCharges, setStaticCharges] = useState<StaticCharges>({
     discount: 0,
     advanceAmount: 0,
-    driverBeta: 0,
     toll: 0,
     hill: 0,
     permitCharge: 0,
@@ -148,7 +146,7 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
     fetchInvoices();
   }, [fetchServices, fetchOffers, fetchInvoices]);
 
-  
+
 
   // Fetch invoice data if invoiceId is provided (Edit mode)
   useEffect(() => {
@@ -191,7 +189,6 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
           hill: otherCharges["Hill Charges"] || 0,
           permitCharge: otherCharges["Permit Charges"] || 0,
           advanceAmount: otherCharges["Advance Amount"] || 0,
-          driverBeta: otherCharges["Driver Betta"] || 0,
           discount: otherCharges["Discount"] || 0
         });
         setIsTollFilled(!!otherCharges["Toll Charges"]);
@@ -332,84 +329,83 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
     await fetchBookings();
     if (bookings.length > 0) {
       const booking = bookings.filter((b: any) => b.bookingId === bookingId);
-       setBookingStatus(booking[0].paymentStatus);
+      setBookingStatus(booking[0].paymentStatus);
       // console.log("Status", booking);
       booking.forEach((b: any) => {
-      // Check if invoice already has name, email, phone (from edit mode)
-      if (
-        !shippingAddress.name &&
-        !shippingAddress.email &&
-        !shippingAddress.phone
-      ) {
-        setShippingAddress({
-        ...shippingAddress,
-        name: b.name || "",
-        phone: b.phone || "",
-        email: b.email || "",
+        // Check if invoice already has name, email, phone (from edit mode)
+        if (
+          !shippingAddress.name &&
+          !shippingAddress.email &&
+          !shippingAddress.phone
+        ) {
+          setShippingAddress({
+            ...shippingAddress,
+            name: b.name || "",
+            phone: b.phone || "",
+            email: b.email || "",
+          });
+        }
+        setPickupDrop({
+          pickup: b.pickup || "",
+          drop: b.drop || "",
         });
-      }
-      setPickupDrop({
-        pickup: b.pickup || "",
-        drop: b.drop || "",
-      });
-      setSelectedServiceName(b.serviceType as string);
+        setSelectedServiceName(b.serviceType as string);
 
-      setKm({ km: b.distance || 0 });
+        setKm({ km: b.distance || 0 });
 
-      const newDetails = `${b.pickup || ""} - ${b.drop || ""}`;
-      setItems((prevItems) => {
-        const newItems = [...prevItems];
-        if (newItems.length > 0) {
-        newItems[0] = {
-          ...newItems[0],
-          details: newDetails,
-          service: b.serviceType || "",
-          vehicleType: b.vehicles?.type || "",
-          km: b.distance || 0,
-          price: b.pricePerKm || 0,
-          amount: b.estimatedAmount || 0,
-          finalAmount: b.finalAmount || 0,
-          time: b.duration || ""
+        const newDetails = `${b.pickup || ""} - ${b.drop || ""}`;
+        setItems((prevItems) => {
+          const newItems = [...prevItems];
+          if (newItems.length > 0) {
+            newItems[0] = {
+              ...newItems[0],
+              details: newDetails,
+              service: b.serviceType || "",
+              vehicleType: b.vehicles?.type || "",
+              km: b.distance || 0,
+              price: b.pricePerKm || 0,
+              amount: b.estimatedAmount || 0,
+              finalAmount: b.finalAmount || 0,
+              time: b.duration || ""
+            };
+          }
+          return newItems;
+        });
+
+        // Only set static charges if they are not 0
+        const staticChargesData = {
+          discount: b.discountAmount || 0,
+          advanceAmount: b.advanceAmount || 0,
+          toll: b.toll || 0,
+          hill: b.hill || 0,
+          permitCharge: b.permitCharge || 0,
         };
-        }
-        return newItems;
-      });
+        setStaticCharges(staticChargesData);
 
-      // Only set static charges if they are not 0
-      const staticChargesData = {
-        discount: b.discountAmount || 0,
-        advanceAmount: b.advanceAmount || 0,
-        driverBeta: b.driverBeta || 0,
-        toll: b.toll || 0,
-        hill: b.hill || 0,
-        permitCharge: b.permitCharge || 0,
-      };
-      setStaticCharges(staticChargesData);
+        setIsDiscountPrefilled(!!b.discountAmount);
+        setIsDriverBetaPrefilled(!!b.driverBeta);
+        setIsAdvanceFilled(!!b.advanceAmount);
+        setIsTollFilled(!!b.toll);
+        setIsHillFilled(!!b.hill);
+        setIsPermitChargeFilled(!!b.permitCharge);
 
-      setIsDiscountPrefilled(!!b.discountAmount);
-      setIsDriverBetaPrefilled(!!b.driverBeta);
-      setIsAdvanceFilled(!!b.advanceAmount);
-      setIsTollFilled(!!b.toll);
-      setIsHillFilled(!!b.hill);
-      setIsPermitChargeFilled(!!b.permitCharge);
-
-      if (b.offerId) {
-        const offer = offers.find((o: any) => o.offerId === b.offerId);
-        if (offer) {
-        setSelectedOffer(offer);
-        setIsOfferPrefilled(true);
-        if (offer.type === "Flat") {
-          setOfferAmount(offer.value);
-        } else if (offer?.type === "Percentage") {
-          const itemTotal = items[0].amount || 0;
-          const discountAmount = (itemTotal * offer.value) / 100;
-          setOfferAmount(discountAmount);
+        if (b.offerId) {
+          const offer = offers.find((o: any) => o.offerId === b.offerId);
+          if (offer) {
+            setSelectedOffer(offer);
+            setIsOfferPrefilled(true);
+            if (offer.type === "Flat") {
+              setOfferAmount(offer.value);
+            } else if (offer?.type === "Percentage") {
+              const itemTotal = items[0].amount || 0;
+              const discountAmount = (itemTotal * offer.value) / 100;
+              setOfferAmount(discountAmount);
+            }
+          }
+        } else {
+          handleServiceBasedOffer(b.serviceType || "");
         }
-        }
-      } else {
-        handleServiceBasedOffer(b.serviceType || "");
-      }
-      // setTimeout(() => fetchDistance(0, newDetails), 0);
+        // setTimeout(() => fetchDistance(0, newDetails), 0);
       });
     }
     setLoadingBooking(false);
@@ -508,7 +504,6 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
     if (staticCharges.hill !== 0) chargesObject["Hill Charges"] = staticCharges.hill;
     if (staticCharges.permitCharge !== 0) chargesObject["Permit Charges"] = staticCharges.permitCharge;
     if (staticCharges.advanceAmount !== 0) chargesObject["Advance Amount"] = staticCharges.advanceAmount;
-    if (staticCharges.driverBeta !== 0) chargesObject["Driver Betta"] = staticCharges.driverBeta;
     if (offerAmount !== 0) chargesObject["Discount"] = offerAmount;
 
     const invoiceData = {
@@ -612,6 +607,8 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
   };
 
 
+  console.log("Items >> :", items);
+
 
   const handleConfirmNavigation = () => {
     setIsFormDirty(false);
@@ -653,14 +650,10 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
           <div className="mt-1 border-gray-900">
             <Label>Payment Status</Label>
             <Select
-              value={
-              (bookingStatus === "Pending"
-                ? "Unpaid"
-                : bookingStatus) || paymentStatus
-              }
+              value={paymentStatus}
               onValueChange={(value) => {
-              setPaymentStatus(value);
-              setBookingStatus(value);
+                setPaymentStatus(value);
+                setBookingStatus(value);
               }}
             >
               <SelectTrigger id="paymentStatus" className="py-3 border-grey">
@@ -688,7 +681,7 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                   onChange={(e) => setShippingAddress({ ...shippingAddress, name: e.target.value })}
                 />
               </div>
-                <div>
+              <div>
                 <Label>Phone</Label>
 
                 <Input
@@ -696,20 +689,20 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                   placeholder="Phone"
                   value={shippingAddress?.phone}
                   onChange={(e) => {
-                  // Allow only numbers and optional leading +
-                  let value = e.target.value.replace(/[^0-9+]/g, '');
-                  // Remove leading zeros, allow optional +
-                  if (value.startsWith('+')) {
-                    value = '+' + value.slice(1).replace(/^0+/, '');
-                  } else {
-                    value = value.replace(/^0+/, '');
-                  }
-                  // Limit to 15 chars (E.164 max)
-                  value = value.slice(0, 15);
-                  setShippingAddress({ ...shippingAddress, phone: value });
+                    // Allow only numbers and optional leading +
+                    let value = e.target.value.replace(/[^0-9+]/g, '');
+                    // Remove leading zeros, allow optional +
+                    if (value.startsWith('+')) {
+                      value = '+' + value.slice(1).replace(/^0+/, '');
+                    } else {
+                      value = value.replace(/^0+/, '');
+                    }
+                    // Limit to 15 chars (E.164 max)
+                    value = value.slice(0, 15);
+                    setShippingAddress({ ...shippingAddress, phone: value });
                   }}
                 />
-                </div>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -763,28 +756,36 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
               {items.map((item, index) => (
                 <tr key={index}>
                   <td className="px-4 py-2 border">
-                    <Select
-                      value={item.service}
-                      onValueChange={(value) => handleItemChange(index, "service", value)}
-                    >
-                      <SelectTrigger className="border-none shadow-none">
-                        <SelectValue placeholder="Select Service" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {services.map((service: any) => (
-                          <SelectItem key={service.name} value={service.name}>
-                            {service.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {paymentStatus === "Paid" ? (
+                      <div className="text-sm text-gray-700">
+                        {item.service || "No Service Selected"}
+                      </div>
+                    ) : (
+                      <Select
+                        value={item.service}
+                        onValueChange={(value) => handleItemChange(index, "service", value)}
+                      >
+                        <SelectTrigger className="border-none shadow-none">
+                          <SelectValue placeholder="Select Service" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {services.map((service: any) => (
+                            <SelectItem key={service.name} value={service.name}>
+                              {service.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+
                   </td>
                   <td className="px-2 py-2 border">
                     <Input
                       type="text"
+                      readOnly={paymentStatus === "Paid"}
                       className="border-none shadow-none"
                       placeholder="Vehicle Category"
-                      value={item.vehicleType}
+                      value={item.vehicleType || ""}
                       onChange={(e) => handleItemChange(index, "vehicleType", e.target.value)}
                     />
                   </td>
@@ -794,16 +795,22 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                       <Input
                         className="border-none shadow-none"
                         placeholder="Pickup - Drop"
-                        value={item.details}
-                        onChange={(e) => handleItemChange(index, "details", e.target.value)}
+                        readOnly={paymentStatus === "Paid"}
+                        value={item.details || ""}
                         onBlur={(e) => {
                           const value = e.target.value;
+
+                          // Update the item details when input loses focus
+                          handleItemChange(index, "details", value);
+
+                          // Parse and set pickup/drop if "-" is present
                           if (value.includes("-")) {
-                            const [newPickup, newDrop] = value.split("-").map(s => s.trim());
+                            const [newPickup, newDrop] = value.split("-").map((s) => s.trim());
                             setPickupDrop({ pickup: newPickup, drop: newDrop });
                           }
                         }}
                       />
+
                     </td>
                   }
                   {
@@ -812,7 +819,7 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                       <Input
                         className="border-none shadow-none"
                         placeholder="Pickup - Drop"
-                        value={item.details.split("-")[0]}
+                        value={item.details.split("-")[0] || ""}
                         onChange={(e) => handleItemChange(index, "details", e.target.value)}
                         onBlur={(e) => {
                           const newPickup = e.target.value;
@@ -826,7 +833,8 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
                       type="text"
                       placeholder="Km"
-                      value={item.km}
+                      readOnly={paymentStatus === "Paid"}
+                      value={item.km || 0}
                       onChange={(e) => {
                         const numericValue = e.target.value.replace(/[^0-9]/g, '')
                         handleItemChange(index, "km", Number(numericValue))
@@ -838,7 +846,8 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
                       type="text"
                       placeholder="Price"
-                      value={item.price}
+                      readOnly={paymentStatus === "Paid"}
+                      value={item.price || 0}
                       onChange={(e) => {
                         const numericValue = e.target.value.replace(/[^0-9]/g, '')
                         handleItemChange(index, "price", Number(numericValue))
@@ -849,8 +858,9 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                     <Input
                       type="text"
                       className="border-none shadow-none"
+                      readOnly={paymentStatus === "Paid"}
                       placeholder={selectedServiceName === "Package" ? "Day / Hour" : "Time"}
-                      value={item.time}
+                      value={item.time || ""}
                       onChange={(e) => handleItemChange(index, "time", e.target.value)}
                     />
                   </td>
@@ -858,9 +868,9 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                     <Input
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
                       type="text"
+                      readOnly={paymentStatus === "Paid"}
                       placeholder="Amount"
-                      value={item.amount}
-                      readOnly
+                      value={item.amount || 0}
                     />
                   </td>
                 </tr>
@@ -943,24 +953,7 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                   />
                 </div>
               )}
-              {staticCharges.driverBeta !== 0 && (
-                <div className="flex flex-row gap-2 items-center">
-                  <Input
-                    type="text"
-                    value="Driver Betta"
-                    readOnly
-                    className="w-32 bg-white border border-gray-300 text-gray-600"
-                  />
-                  <Input
-                    type="number"
-                    className={`w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isDriverBetaPrefilled ? ' cursor-not-allowed' : ''}`}
-                    value={staticCharges.driverBeta}
-                    onChange={(e) => !isDriverBetaPrefilled && handleStaticChargeChange("driverBeta", e.target.value)}
-                    readOnly={isDriverBetaPrefilled}
-                    placeholder="0"
-                  />
-                </div>
-              )}
+          
               {offerAmount !== 0 && (
                 <div className="flex flex-row gap-2 items-center">
                   <Input
