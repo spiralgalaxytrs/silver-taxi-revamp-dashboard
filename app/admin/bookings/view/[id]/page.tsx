@@ -6,7 +6,7 @@ import { Label } from 'components/ui/label';
 import { Button } from 'components/ui/button';
 import { Input } from 'components/ui/input';
 import { Dialog, DialogContent, DialogTrigger } from 'components/ui/dialog';
-import { Eye, Edit, X, Loader2, Info, BookOpen } from 'lucide-react';
+import { Eye, Edit, X, Loader2, Info, BookOpen, Plus } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useFetchBookingById, useUpdateBooking } from 'hooks/react-query/useBooking';
 import { toast } from 'sonner';
@@ -57,7 +57,11 @@ export default function BookingDetailsPage() {
   const [editMode, setEditMode] = useState<'before' | 'after' | null>(null);
   const [formData, setFormData] = useState<Booking | null>(null);
   const [driverCharges, setDriverCharges] = useState<Record<string, string>>({});
-  const [serviceId, setServiceId] = useState<string | undefined>();
+  const [extraCharges, setExtraCharges] = useState<Record<string, string>>({});
+
+  const [newChargeKey, setNewChargeKey] = useState('');
+  const [newChargeValue, setNewChargeValue] = useState('');
+
 
   const { data: booking, isLoading } = useFetchBookingById(bookingId || "");
   const { mutateAsync: updateBooking } = useUpdateBooking();
@@ -70,6 +74,9 @@ export default function BookingDetailsPage() {
 
     // Ensure driverCharges is an object
     setDriverCharges(booking.driverCharges ?? {});
+
+    // Ensure extraCharges is an object
+    setExtraCharges(booking.extraCharges ?? {});
   }, [booking]);
 
   // Field groupings
@@ -104,6 +111,7 @@ export default function BookingDetailsPage() {
     { key: 'tollCharges', label: 'Toll Charges', format: formatCurrency, optional: true },
     { key: 'hillCharges', label: 'Hill Charges', format: formatCurrency, optional: true },
     { key: 'finalAmount', label: 'Total Amount', format: formatCurrency },
+    { key: 'remainingAmount', label: 'Remaining Amount', format: formatCurrency },
   ];
 
   const afterTripFields = [
@@ -131,29 +139,19 @@ export default function BookingDetailsPage() {
     return distance * (formData.pricePerKm || 0);
   };
 
-  let previousEstimatedFare: number | null = null;
 
-
-  const calculateTotalAmount = (estimatedFare: number, taxAmount: number, driverBeta: number, charges = driverCharges) => {
+  const calculateTotalAmount = (estimatedFare: number, taxAmount: number, driverBeta: number, charges = driverCharges, extraCharge = extraCharges) => {
     const chargesSum = Object.values(charges).reduce(
       (sum, charge) => sum + (parseFloat(charge) || 0),
       0
     );
 
-    return estimatedFare + chargesSum + taxAmount + driverBeta;
-  };
+    const extraChargesSum = Object.values(extraCharge).reduce(
+      (sum, charge) => sum + (parseFloat(charge) || 0),
+      0
+    );
 
-
-  console.log("Final Amount", calculateTotalAmount);
-
-  const calculateTotalDeductions = () => {
-    if (!booking) return 0;
-    return (booking?.taxAmount || 0) + (booking?.driverDeductionAmount || 0);
-  };
-
-  const calculateTotalEarnings = () => {
-    if (!booking) return 0;
-    return (booking?.tripCompletedTaxAmount || 0) + (booking?.driverDeductionAmount || 0);
+    return estimatedFare + chargesSum + taxAmount + driverBeta + extraChargesSum;
   };
 
   const handleEdit = (section: 'before' | 'after') => {
@@ -162,6 +160,7 @@ export default function BookingDetailsPage() {
 
   const handleSave = async () => {
     try {
+      console.log('Extra charges:', extraCharges);
       if (formData && bookingId) {
         const data = {
           ...formData,
@@ -171,13 +170,13 @@ export default function BookingDetailsPage() {
 
         updateBooking({ id: bookingId, data }, {
           onSuccess: () => {
-            setEditMode(null);
             toast.success('Details updated successfully', {
               style: {
                 backgroundColor: "#009F7F",
                 color: "#fff",
               },
             });
+            setEditMode(null);
           },
           onError: (error: any) => {
             toast.error(error?.response?.data?.message || 'Failed to update details', {
@@ -245,7 +244,8 @@ export default function BookingDetailsPage() {
 
 
   const handleDriverChargeChange = (key: string, value: string) => {
-    const parsedValue = parseFloat(value) || 0;
+    const newValue = value.replace(/[^0-9.]/g, ''); // Allow only numbers and decimal point
+    const parsedValue = parseFloat(newValue) || 0;
 
     // Update driverCharges first
     setDriverCharges(prev => {
@@ -259,7 +259,7 @@ export default function BookingDetailsPage() {
           calculateEstimatedFare(prevForm.tripCompletedDistance || 0);
         const taxAmount = Number(((estimatedFare * Number(prevForm.taxPercentage || 0)) / 100).toFixed(0));
         const driverBeta = Number(prevForm.driverBeta) || 0;
-        const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta, newCharges);
+        const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta, newCharges, extraCharges);
 
         return {
           ...prevForm,
@@ -273,6 +273,121 @@ export default function BookingDetailsPage() {
   };
 
 
+  const handleExtraChargeChange = (key: string, value: string) => {
+    const newValue = value.replace(/[^0-9.]/g, ''); // Allow only numbers and decimal point
+    const parsedValue = parseFloat(newValue) || 0;
+
+    // Update driverCharges first
+    setExtraCharges(prev => {
+      const newCharges = { ...prev, [key]: parsedValue.toString() };
+
+      // Then update formData based on the new charges
+      setFormData(prevForm => {
+        if (!prevForm) return prevForm;
+
+        const estimatedFare = prevForm.tripCompletedEstimatedAmount ||
+          calculateEstimatedFare(prevForm.tripCompletedDistance || 0);
+        const taxAmount = Number(((estimatedFare * Number(prevForm.taxPercentage || 0)) / 100).toFixed(0));
+        const driverBeta = Number(prevForm.driverBeta) || 0;
+        const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta, driverCharges, newCharges);
+
+        return {
+          ...prevForm,
+          extraCharges: newCharges,
+          tripCompletedFinalAmount: totalFinal
+        };
+      });
+
+      return newCharges;
+    });
+  };
+
+  const handleAddExtraCharge = () => {
+    if (!newChargeKey.trim()) return;
+
+    const value = newChargeValue.replace(/[^0-9.]/g, ''); // Allow only numbers and decimal point
+    const parsedValue = parseFloat(value) || 0;
+
+    setExtraCharges(prev => {
+      const newCharges = {
+        ...prev,
+        [newChargeKey]: parsedValue.toString(),
+      };
+
+      // Update formData
+      setFormData(prevForm => {
+        if (!prevForm) return prevForm;
+
+        const estimatedFare =
+          prevForm.tripCompletedEstimatedAmount ||
+          calculateEstimatedFare(prevForm.tripCompletedDistance || 0);
+        const taxAmount = Number(
+          ((estimatedFare * Number(prevForm.taxPercentage || 0)) / 100).toFixed(0)
+        );
+        const driverBeta = Number(prevForm.driverBeta) || 0;
+        const totalFinal = calculateTotalAmount(
+          estimatedFare,
+          taxAmount,
+          driverBeta,
+          driverCharges,
+          newCharges
+        );
+
+        return {
+          ...prevForm,
+          extraCharges: newCharges,
+          tripCompletedFinalAmount: totalFinal,
+        };
+      });
+
+      return newCharges;
+    });
+
+    // Reset the input fields
+    setNewChargeKey('');
+    setNewChargeValue('');
+  };
+
+  const handleDeleteExtraCharge = (key: string) => {
+    setExtraCharges((prev) => {
+      const newCharges = { ...prev };
+      delete newCharges[key];
+
+      // Update formData after deletion
+      setFormData((prevForm) => {
+        if (!prevForm) return prevForm;
+
+        const estimatedFare =
+          prevForm.tripCompletedEstimatedAmount ||
+          calculateEstimatedFare(prevForm.tripCompletedDistance || 0);
+
+        const taxAmount = Number(
+          ((estimatedFare * Number(prevForm.taxPercentage || 0)) / 100).toFixed(0)
+        );
+
+        const driverBeta = Number(prevForm.driverBeta) || 0;
+
+        const totalFinal = calculateTotalAmount(
+          estimatedFare,
+          taxAmount,
+          driverBeta,
+          driverCharges,
+          newCharges
+        );
+
+        return {
+          ...prevForm,
+          extraCharges: newCharges,
+          tripCompletedFinalAmount: totalFinal,
+        };
+      });
+
+      return newCharges;
+    });
+  };
+
+
+
   const calculateCommisionTax = () => {
 
     const adminCommission = booking?.adminCommission || 0;
@@ -283,6 +398,18 @@ export default function BookingDetailsPage() {
 
 
   const renderField = (field: any, section: 'basic' | 'before' | 'after' | 'calculation') => {
+
+    if (field.key === "remainingAmount" && section === 'before') {
+      return (
+        <div key={field.key} className="space-y-1">
+          <Label className="text-sm text-gray-600">{field.label}</Label>
+          <div className="font-medium">
+            {formatCurrency((booking?.finalAmount || 0) - (booking?.advanceAmount || 0))}
+          </div>
+        </div>
+      )
+    }
+
     const value = formData?.[field.key as keyof Booking] ?? booking?.[field.key as keyof Booking];
 
     if (field.optional && !value) return null;
@@ -437,17 +564,16 @@ export default function BookingDetailsPage() {
                 {afterTripFields.map((field) => renderField(field, 'after'))}
 
                 {/* Driver Charges Section */}
-                {editMode === 'after' && (
-                  <div className="space-y-2">
+                {editMode === 'after' ? (
+                  <div className="space-y-2 w-1/2">
                     <Label className="text-sm text-gray-600">Driver Charges</Label>
                     {Object.entries(driverCharges).map(([key, value]) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
-
+                      <div key={key} className="flex justify-center items-center gap-2">
+                        <span className="text-sm font-medium w-1/2">{capitalizeLabel(key)}</span>
                         <Input
                           value={value}
                           onChange={(e) => handleDriverChargeChange(key, e.target.value)}
-                          type="number"
+                          type="text"
                           placeholder="Amount"
                           className="flex-1"
                           min={0}
@@ -455,10 +581,96 @@ export default function BookingDetailsPage() {
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <>
+                    {Object.keys(driverCharges).length > 0 && (
+                      <div className="space-y-2 w-1/2">
+                        <Label className="text-sm"><span className=' text-sm font-semibold'> Driver Charges : </span></Label>
+                        {Object.entries(driverCharges).map(([key, value]) => (
+                          <div key={key} className="flex justify-between items-center gap-2 ">
+                            <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
+                            <span className="text-sm font-medium">
+                              {formatCurrency(parseFloat(value) || 0)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
 
+                {editMode === 'after' ? (
+                  <div className="space-y-2 w-2/3">
+                    <Label className="text-sm text-gray-600">Extra Charges</Label>
+
+                    {/* Add New Extra Charge Inputs */}
+                    <div className="flex gap-2 mb-2">
+                      <Input
+                        value={newChargeKey}
+                        onChange={(e) => setNewChargeKey(e.target.value)}
+                        placeholder="Label"
+                        className="w-1/2"
+                      />
+                      <Input
+                        value={newChargeValue}
+                        onChange={(e) => setNewChargeValue(e.target.value)}
+                        type="text"
+                        placeholder="Amount"
+                        className="w-1/3"
+                        min={0}
+                      />
+                      <Button
+                        variant="secondary"
+                        onClick={handleAddExtraCharge}
+                      >
+                        <Plus className="w-4 h-4 text-white" />
+                      </Button>
+                    </div>
+
+                    {/* Existing Extra Charges List */}
+                    {Object.entries(extraCharges).map(([key, value]) => (
+                      <div key={key} className="flex justify-center items-center gap-2">
+                        <span className="text-sm font-medium w-1/2">{capitalizeLabel(key)}</span>
+                        <Input
+                          value={value}
+                          onChange={(e) => handleExtraChargeChange(key, e.target.value)}
+                          type="text"
+                          placeholder="Amount"
+                          className="flex-1"
+                          min={0}
+                        />
+                        <Button
+                          variant="destructive"
+                          onClick={() => handleDeleteExtraCharge(key)}
+                        >
+                          <X className="w-4 h-4 text-white" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    {Object.keys(extraCharges).length > 0 && (
+                      <div className="space-y-2 w-1/2">
+                        <Label className="text-sm">
+                          <span className="text-sm font-semibold">Extra Charges:</span>
+                        </Label>
+                        {Object.entries(extraCharges).map(([key, value]) => (
+                          <div key={key} className="flex justify-between items-center gap-2">
+                            <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
+                            <span className="text-sm font-medium">
+                              {formatCurrency(parseFloat(value) || 0)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+
                 {/* OTP and Odometer Sections */}
-                <div className="grid grid-cols-2 gap-4">
+                < div className="grid grid-cols-2 gap-4" >
                   <div className="space-y-1">
                     <Label className="text-sm text-gray-600">Start OTP</Label>
                     <div className="font-medium">{booking?.startOtp || '-'}</div>
@@ -466,6 +678,17 @@ export default function BookingDetailsPage() {
                   <div className="space-y-1">
                     <Label className="text-sm text-gray-600">End OTP</Label>
                     <div className="font-medium">{booking?.endOtp || '-'}</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-sm text-gray-600">Start Odometer Value</Label>
+                    <div className="font-medium">{booking?.startOdometerValue || '-'}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm text-gray-600">End Odometer Value</Label>
+                    <div className="font-medium">{booking?.endOdometerValue || '-'}</div>
                   </div>
                 </div>
 
@@ -493,120 +716,145 @@ export default function BookingDetailsPage() {
           </div>
 
           {/* Trip Calculation Card (Full Width) */}
-          <Card className="bg-white rounded-lg border border-gray-200">
-            <CardHeader className="pb-4 border-b text-center">
-              <h2 className="text-lg font-semibold text-gray-800">Trip Summary</h2>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-center">
-                <div className="w-full md:w-1/2 bg-gray-50 p-4 rounded-lg">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Total Distance</span>
-                      <span>{formatDistance(formData?.tripCompletedDistance || booking?.tripCompletedDistance)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Per KM Price</span>
-                      <span>{formatCurrency(formData?.pricePerKm || booking?.pricePerKm)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Base Fare</span>
-                      <span>
-                        {formatCurrency(formData?.tripCompletedEstimatedAmount || booking?.tripCompletedEstimatedAmount)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Driver Beta</span>
-                      <span>{formatCurrency(booking?.driverBeta)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Offer Amount</span>
-                      <span>{formatCurrency(0)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>GST ({booking?.taxPercentage || 0}%)</span>
-                      <span>{formatCurrency(booking?.tripCompletedTaxAmount)}</span>
-                    </div>
-
-                    {/* Driver Charges Display */}
-                    {Object.entries(driverCharges).map(([key, value]) => (
-                      <div key={key} className="flex justify-between">
-                        <span>{capitalizeLabel(key)}</span>
-                        <span>{formatCurrency(parseFloat(value) || 0)}</span>
+          {booking.tripCompletedFinalAmount > 0 && (
+            <Card className="bg-white rounded-lg border border-gray-200">
+              <CardHeader className="pb-4 border-b text-center">
+                <h2 className="text-lg font-semibold text-gray-800">Trip Summary</h2>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-center">
+                  <div className="w-full md:w-1/2 bg-gray-50 p-4 rounded-lg">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Total Distance</span>
+                        <span>{formatDistance(formData?.tripCompletedDistance || booking?.tripCompletedDistance)}</span>
                       </div>
-                    ))}
-
-                    <div className="border-t border-gray-200 pt-2">
-                      <div className="flex justify-between font-bold">
-                        <span>Total Amount</span>
+                      <div className="flex justify-between">
+                        <span>Per KM Price</span>
+                        <span>{formatCurrency(formData?.pricePerKm || booking?.pricePerKm)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Base Fare</span>
                         <span>
-                          {formatCurrency(formData?.tripCompletedFinalAmount || booking?.tripCompletedFinalAmount || 0)}
+                          {formatCurrency(formData?.tripCompletedEstimatedAmount || booking?.tripCompletedEstimatedAmount)}
                         </span>
                       </div>
-                    </div>
+                      <div className="flex justify-between">
+                        <span>Driver Beta</span>
+                        <span>{formatCurrency(booking?.driverBeta)}</span>
+                      </div>
+                      {/* <div className="flex justify-between">
+                        <span>Offer Amount</span>
+                        <span>{formatCurrency(0)}</span>
+                      </div> */}
+                      <div className="flex justify-between">
+                        <span>GST ({booking?.taxPercentage || 0}%)</span>
+                        <span>{formatCurrency(booking?.tripCompletedTaxAmount)}</span>
+                      </div>
 
-                    <div className="border-t border-gray-200 pt-2">
-                      <br />
-                      <h4 className="font-semibold mb-1">Admin Amount</h4>
-                      <div className="space-y-1">
-                        <div className="flex justify-between">
-                          <span>GST ({booking?.taxPercentage || 0}%)</span>
-                          <span>{formatCurrency(booking?.tripCompletedTaxAmount)}</span>
+                      {/* Driver Charges Display */}
+                      {Object.entries(driverCharges).map(([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <span>{capitalizeLabel(key)}</span>
+                          <span>{formatCurrency(parseFloat(value) || 0)}</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-1">
-                            <span>Admin Commission</span>
-                            <TooltipComponent name={`Commission Tax Amount = ${calculateCommisionTax()} `}>
-                              <Info className="w-4 h-4" />
-                            </TooltipComponent>
-                          </div>
-                          <span>{formatCurrency(Number(booking?.driverDeductionAmount) - Number(booking?.tripCompletedTaxAmount))}</span>
+                      ))}
+                      
+                      {Object.entries(extraCharges).map(([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <span>{capitalizeLabel(key)}</span>
+                          <span>{formatCurrency(parseFloat(value) || 0)}</span>
                         </div>
+                      ))}
 
-                        <div className="border-t border-b border-gray-200 pt-2">
-                          <div className="flex justify-between font-bold">
-                            <span>Total Amount</span>
-                            <span>{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
-                          </div>
+                      <div className="border-y border-gray-200 pt-2">
+                        <div className="flex justify-between font-bold">
+                          <span>Total Amount</span>
+                          <span>
+                            {formatCurrency(formData?.tripCompletedFinalAmount || booking?.tripCompletedFinalAmount || 0)}
+                          </span>
                         </div>
                       </div>
 
-                      <br />
-
-                      <h4 className="font-semibold mb-1">Driver Amount</h4>
-                      <div className="space-y-1">
+                      {booking?.advanceAmount > 0 && (
                         <div className="flex justify-between">
-                          <span>Trip Total Amount</span>
-                          <span>{formatCurrency((booking?.tripCompletedFinalAmount || 0))}</span>
+                          <span>Advance Amount</span>
+                          <span className='text-red-500'> {"-"} {formatCurrency(booking?.advanceAmount)}</span>
+                        </div>
+                      )}
+
+                      {booking?.advanceAmount > 0 && (
+                        <div className="flex justify-between font-bold">
+                          <span>Remaining Amount</span>
+                          <span>
+                            {formatCurrency(((booking?.tripCompletedFinalAmount || 0) - (booking?.advanceAmount || 0)))}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="border-t border-gray-200 pt-2">
+                        <br />
+                        <h4 className="font-semibold mb-1">Admin Amount</h4>
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>GST ({booking?.taxPercentage || 0}%)</span>
+                            <span>{formatCurrency(booking?.tripCompletedTaxAmount)}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-1">
+                              <span>Admin Commission</span>
+                              <TooltipComponent name={`Commission Tax Amount = ${calculateCommisionTax()} `}>
+                                <Info className="w-4 h-4" />
+                              </TooltipComponent>
+                            </div>
+                            <span>{formatCurrency(Number(booking?.driverDeductionAmount) - Number(booking?.tripCompletedTaxAmount))}</span>
+                          </div>
+
+                          <div className="border-t border-b border-gray-200 pt-2">
+                            <div className="flex justify-between font-bold">
+                              <span>Total Amount</span>
+                              <span>{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="flex justify-between text-red-500">
-                          <span>Admin Commission Amount</span>
-                          <span>-{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
-                        </div>
+                        <br />
 
-                        {/* {Object.entries(driverCharges).map(([key, value]) => (
+                        <h4 className="font-semibold mb-1">Driver Amount</h4>
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Trip Total Amount</span>
+                            <span>{formatCurrency((booking?.tripCompletedFinalAmount || 0))}</span>
+                          </div>
+
+                          <div className="flex justify-between text-red-500">
+                            <span>Admin Commission Amount</span>
+                            <span>-{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
+                          </div>
+
+                          {/* {Object.entries(driverCharges).map(([key, value]) => (
                           <div key={key} className="flex justify-between">
                             <span>{capitalizeLabel(key)}</span>
                             <span>{formatCurrency(parseFloat(value) || 0)}</span>
                           </div>
                         ))} */}
 
-                        <div className="border-t border-gray-200 pt-2">
-                          <div className="flex justify-between font-bold">
-                            <span>Driver Total</span>
-                            <span>
-                              {formatCurrency((booking?.tripCompletedFinalAmount || 0) - (Number(booking?.driverDeductionAmount) || 0))}
-                            </span>
+                          <div className="border-t border-gray-200 pt-2">
+                            <div className="flex justify-between font-bold">
+                              <span>Driver Total</span>
+                              <span>
+                                {formatCurrency((booking?.tripCompletedFinalAmount || 0) - (Number(booking?.driverDeductionAmount) || 0))}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="activity">
@@ -620,6 +868,6 @@ export default function BookingDetailsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </div >
   );
 }
