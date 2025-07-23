@@ -1,5 +1,5 @@
 export interface Booking {
-  bookingId?:string;
+  bookingId?: string;
   name: string;
   phone: string;
   email: string;
@@ -15,12 +15,12 @@ export interface Booking {
   vendorId: string;
   vehicleId: string | null;
   serviceId: string;
-  packageId:string;
+  packageId: string;
   driverBeta: number | null;
   toll: number | null;
   hill: number | null;
   permitCharge: number | null;
-  taxPercentage: number| null;
+  taxPercentage: number | null;
   price: number | null;
   extraPrice: number | null;
   distanceLimit: number | null;
@@ -35,7 +35,7 @@ export interface Booking {
   duration: string | null;
   paymentMethod: "UPI" | "Bank" | "Cash" | "Card";
   type: "Website" | "App" | "Manual";
-  paymentStatus:  "Unpaid" | "Paid" | "Partial Paid";
+  paymentStatus: "Unpaid" | "Paid" | "Partial Paid";
   serviceType: "One way" | "Round trip" | "Airport Pickup" | "Airport Drop" | "Day Packages" | "Hourly Packages";
   vehicleName: string;
   amount: number | null;
@@ -44,6 +44,33 @@ export interface Booking {
   createdBy: "Admin" | "Vendor";
   createdAt?: string | null;
   offers: Record<string, any>;
-  vehicles: Record<string, any>;  
+  vehicles: Record<string, any>;
   driver: Record<string, any>;
+
+  startOtp: string;
+  endOtp: string;
+  tripStartedTime?: Date;
+  tripCompletedTime?: Date;
+  startOdometerImage?: string | null;
+  endOdometerImage?: string | null;
+  startOdometerValue?: number;
+  endOdometerValue?: number;
+  driverCharges?: any;
+  driverAccepted?: "accepted" | "rejected" | "pending";
+  tripCompletedPrice?: number;
+  tripCompletedDuration?: string;
+  tripCompletedFinalAmount?: number;
+  tripCompletedTaxAmount?: number;
+  tripCompletedDistance?: number;
+  tripCompletedEstimatedAmount?: number;
+  driverDeductionAmount?: number;
+  vendorDeductionAmount?: number;
+  bookingOrderId?: string;
+  bookingPaymentId?: string;
+  acceptTime?: Date;
+  requestSentTime?: Date;
+
+  adminCommission?: number;
+  vendorCommission?: number;
 }
+

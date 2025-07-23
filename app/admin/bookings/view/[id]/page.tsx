@@ -8,11 +8,10 @@ import { Input } from 'components/ui/input';
 import { Dialog, DialogContent, DialogTrigger } from 'components/ui/dialog';
 import { Eye, Edit, X, Loader2, Info, BookOpen } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useBookingStore, Booking } from 'stores/bookingStore';
+import { useFetchBookingById, useUpdateBooking } from 'hooks/react-query/useBooking';
 import { toast } from 'sonner';
 import TooltipComponent from 'components/others/TooltipComponent';
-import { Service } from 'types/service';
-import { useServiceById } from 'hooks/react-query/useServices';
+import { Booking } from 'types/react-query/booking';
 
 // Formatters
 const formatCurrency = (value: number | null | undefined) => `₹${value?.toLocaleString() || '0'}`;
@@ -54,22 +53,23 @@ const capitalizeLabel = (key: string) => {
 };
 
 export default function BookingDetailsPage() {
-  const { id: bookingId } = useParams();
-  const { booking, isLoading, fetchBookingById, updateBooking } = useBookingStore();
+  const { id: bookingId } = useParams<{ id: string }>();
   const [editMode, setEditMode] = useState<'before' | 'after' | null>(null);
   const [formData, setFormData] = useState<Booking | null>(null);
   const [driverCharges, setDriverCharges] = useState<Record<string, string>>({});
   const [serviceId, setServiceId] = useState<string | undefined>();
 
-  useEffect(() => {
-    if (bookingId) fetchBookingById(bookingId as string);
-  }, [bookingId, fetchBookingById]);
+  const { data: booking, isLoading } = useFetchBookingById(bookingId || "");
+  const { mutateAsync: updateBooking } = useUpdateBooking();
 
   useEffect(() => {
-    if (booking) {
-      setFormData(booking);
-      setDriverCharges(booking?.driverCharges || {});
-    }
+    if (!booking) return;
+
+    // Defensive copying to avoid mutating query cache
+    setFormData({ ...booking });
+
+    // Ensure driverCharges is an object
+    setDriverCharges(booking.driverCharges ?? {});
   }, [booking]);
 
   // Field groupings
@@ -109,15 +109,22 @@ export default function BookingDetailsPage() {
   const afterTripFields = [
     { key: 'tripCompletedDistance', label: 'Total Km', format: formatDistance },
     { key: 'pricePerKm', label: 'Per Km', format: formatCurrency },
+    { key: 'driverBeta', label: 'Driver Beta', format: formatCurrency },
     { key: 'tripCompletedDuration', label: 'Total Duration' },
     { key: 'tripCompletedEstimatedAmount', label: 'Estimation Fare', format: formatCurrency },
+    { key: 'tripCompletedTaxAmount', label: 'Tax Amount', format: formatCurrency },
     { key: 'statePermit', label: 'State Permit', format: formatCurrency, optional: true },
     { key: 'tollCharges', label: 'Toll Charges', format: formatCurrency, optional: true },
     { key: 'hillCharges', label: 'Hill Charges', format: formatCurrency, optional: true },
     { key: 'tripCompletedFinalAmount', label: 'Total Amount', format: formatCurrency },
   ];
 
-  const nonEditableAfterFields = ['pricePerKm', 'tripCompletedDuration', 'tripCompletedEstimatedAmount', 'tripCompletedFinalAmount'];
+  const nonEditableAfterFields = [
+    'pricePerKm', 'tripCompletedDuration',
+    'tripCompletedEstimatedAmount',
+    "driverBeta",
+    'tripCompletedFinalAmount', 'tripCompletedTaxAmount'
+  ];
 
   const calculateEstimatedFare = (distance: number) => {
     if (!formData) return 0;
@@ -127,13 +134,13 @@ export default function BookingDetailsPage() {
   let previousEstimatedFare: number | null = null;
 
 
-  const calculateTotalAmount = (estimatedFare: number, charges = driverCharges) => {
+  const calculateTotalAmount = (estimatedFare: number, taxAmount: number, driverBeta: number, charges = driverCharges) => {
     const chargesSum = Object.values(charges).reduce(
       (sum, charge) => sum + (parseFloat(charge) || 0),
       0
     );
 
-    return estimatedFare + chargesSum;
+    return estimatedFare + chargesSum + taxAmount + driverBeta;
   };
 
 
@@ -156,17 +163,41 @@ export default function BookingDetailsPage() {
   const handleSave = async () => {
     try {
       if (formData && bookingId) {
-        await updateBooking(bookingId as string, {
+        const data = {
           ...formData,
           driverCharges,
           tripCompletedFinalAmount: Number(formData.tripCompletedFinalAmount) || 0,
+        }
+
+        updateBooking({ id: bookingId, data }, {
+          onSuccess: () => {
+            setEditMode(null);
+            toast.success('Details updated successfully', {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Failed to update details', {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          }
         });
-        setEditMode(null);
-        toast.success('Details updated successfully');
+
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating booking:', error);
-      toast.error('Failed to update details');
+      toast.error(error?.response?.data?.message || 'Failed to update details', {
+        style: {
+          backgroundColor: "#FF0000",
+          color: "#fff",
+        },
+      });
     }
   };
 
@@ -196,12 +227,15 @@ export default function BookingDetailsPage() {
         // If tripCompletedDistance is updated:
         const distance = field === 'tripCompletedDistance' ? parsedValue : updated.tripCompletedDistance;
         const estimatedFare = Number(distance) * (updated.pricePerKm || 0);
+        const taxAmount = Number(((estimatedFare * Number(updated.taxPercentage || 0)) / 100).toFixed(0));
 
         // Always recalculate tripCompletedEstimatedAmount if distance changes:
         updated.tripCompletedEstimatedAmount = estimatedFare;
+        updated.tripCompletedTaxAmount = taxAmount > 0 ? taxAmount : updated.tripCompletedTaxAmount || 0;
+        const driverBeta = Number(updated.driverBeta) || 0;
 
         // Always recalculate tripCompletedFinalAmount fresh:
-        const totalFinal = calculateTotalAmount(estimatedFare);
+        const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta || 0, driverCharges);
         updated.tripCompletedFinalAmount = totalFinal;
       }
 
@@ -212,36 +246,36 @@ export default function BookingDetailsPage() {
 
   const handleDriverChargeChange = (key: string, value: string) => {
     const parsedValue = parseFloat(value) || 0;
-    const newCharges = { ...driverCharges, [key]: parsedValue.toString() };
-    setDriverCharges(newCharges);
 
-    if (formData) {
-      const estimatedFare = formData.tripCompletedEstimatedAmount || calculateEstimatedFare(formData.tripCompletedDistance || 0);
-      const totalFinal = calculateTotalAmount(estimatedFare, newCharges);
+    // Update driverCharges first
+    setDriverCharges(prev => {
+      const newCharges = { ...prev, [key]: parsedValue.toString() };
 
-      setFormData(prev => prev ? { ...prev, tripCompletedFinalAmount: totalFinal } : prev);
-    }
+      // Then update formData based on the new charges
+      setFormData(prevForm => {
+        if (!prevForm) return prevForm;
+
+        const estimatedFare = prevForm.tripCompletedEstimatedAmount ||
+          calculateEstimatedFare(prevForm.tripCompletedDistance || 0);
+        const taxAmount = Number(((estimatedFare * Number(prevForm.taxPercentage || 0)) / 100).toFixed(0));
+        const driverBeta = Number(prevForm.driverBeta) || 0;
+        const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta, newCharges);
+
+        return {
+          ...prevForm,
+          driverCharges: newCharges,
+          tripCompletedFinalAmount: totalFinal
+        };
+      });
+
+      return newCharges;
+    });
   };
-
-
-  const {
-    data: service = null,
-    isError: error,
-    refetch
-  } = useServiceById(booking?.serviceId as string || "");
-
-  // if (service) {
-  //   setServiceId(service?.serviceId ?? undefined);
-  // }
-
 
 
   const calculateCommisionTax = () => {
 
-    const commissionRate = service?.driverCommission || 0;
-    const baseAmount = (booking?.tripCompletedEstimatedAmount || 0) - (booking?.discountAmount || 0);
-    const adminCommission = Math.ceil((commissionRate * baseAmount) / 100);
-    const gst = (booking?.tripCompletedTaxAmount || 0);
+    const adminCommission = booking?.adminCommission || 0;
     const commissionTax = (adminCommission * 18) / 100;
 
     return commissionTax;
@@ -523,17 +557,16 @@ export default function BookingDetailsPage() {
                           <div className="flex items-center gap-1">
                             <span>Admin Commission</span>
                             <TooltipComponent name={`Commission Tax Amount = ${calculateCommisionTax()} `}>
-
                               <Info className="w-4 h-4" />
                             </TooltipComponent>
                           </div>
-                          <span>{formatCurrency(booking?.driverDeductionAmount)}</span>
+                          <span>{formatCurrency(Number(booking?.driverDeductionAmount) - Number(booking?.tripCompletedTaxAmount))}</span>
                         </div>
 
                         <div className="border-t border-b border-gray-200 pt-2">
                           <div className="flex justify-between font-bold">
                             <span>Total Amount</span>
-                            <span>{formatCurrency(calculateTotalEarnings())}</span>
+                            <span>{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
                           </div>
                         </div>
                       </div>
@@ -547,9 +580,9 @@ export default function BookingDetailsPage() {
                           <span>{formatCurrency((booking?.tripCompletedFinalAmount || 0))}</span>
                         </div>
 
-                         <div className="flex justify-between text-red-500">
+                        <div className="flex justify-between text-red-500">
                           <span>Admin Commission Amount</span>
-                          <span>-{formatCurrency(calculateTotalEarnings())}</span>
+                          <span>-{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
                         </div>
 
                         {/* {Object.entries(driverCharges).map(([key, value]) => (
@@ -563,8 +596,7 @@ export default function BookingDetailsPage() {
                           <div className="flex justify-between font-bold">
                             <span>Driver Total</span>
                             <span>
-                              {formatCurrency( (booking?.tripCompletedFinalAmount || 0) - (calculateTotalEarnings() || 0 ))}
-
+                              {formatCurrency((booking?.tripCompletedFinalAmount || 0) - (Number(booking?.driverDeductionAmount) || 0))}
                             </span>
                           </div>
                         </div>
