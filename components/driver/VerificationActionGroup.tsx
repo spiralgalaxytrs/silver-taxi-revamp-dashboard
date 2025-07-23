@@ -59,7 +59,7 @@ export default function VerificationActionGroup({
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
 
 
-  
+
 
   const { mutate: driverVerification } = useDriverVerification();
 
@@ -108,11 +108,18 @@ export default function VerificationActionGroup({
     }
 
     try {
-      // const message = await verificationStatus(driverId, payload);
-      const message = driverVerification({ id: driverId, data: payload });
-      toast.success("Verification status updated successfully: " + message);
-      
-      
+      driverVerification({ id: driverId, data: payload }, {
+        onSuccess: () => {
+          toast.success(`Document / Profile ${status} successfully`, {
+            style: { backgroundColor: "#009F7F", color: "#fff" },
+          });
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to update status", {
+            style: { backgroundColor: "#FF0000", color: "#fff" },
+          });
+        },
+      });
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     }

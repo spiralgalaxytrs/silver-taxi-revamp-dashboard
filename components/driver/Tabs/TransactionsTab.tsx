@@ -1,4 +1,4 @@
-import React,{useState}from "react";
+import React from "react";
 import { DriverTransaction, walletColumns } from "app/admin/drivers/view/[id]/walletColumns";
 import { Button } from "components/ui/button";
 import { Activity } from "lucide-react";

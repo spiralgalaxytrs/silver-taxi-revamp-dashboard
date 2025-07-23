@@ -52,16 +52,18 @@ const AdminSidebarItems: {
     {
       name: "Enquiries",
       icon: Calendar,
-      href: "/admin/enquiry",
-      // dropdown: [
-      //   { name: "Enquiry", href: "/admin/enquiry", icon: SquareChevronRight },
-      //   { name: "Manual Enquiry", href: "/admin/enquiry/create", icon: SquareChevronRight },
-      // ],
+      dropdown: [
+        { name: "Enquiry", href: "/admin/enquiry", icon: SquareChevronRight },
+        { name: "Manual Enquiry", href: "/admin/enquiry/create", icon: SquareChevronRight },
+      ],
     },
     {
       name: "Bookings",
       icon: Calendar,
-      href: "/admin/bookings",
+      dropdown: [
+        { name: "Booking", href: "/admin/bookings", icon: SquareChevronRight },
+        { name: "Manual Booking", href: "/admin/bookings/create", icon: SquareChevronRight },
+      ],
     },
     { name: "Customers", href: "/admin/customers", icon: Users },
     {
@@ -72,7 +74,10 @@ const AdminSidebarItems: {
     {
       name: "Vendors",
       icon: User,
-      href: "/admin/vendor",
+      dropdown: [
+        { name: "Vendor", href: "/admin/vendor", icon: SquareChevronRight },
+        { name: "Create Vendor", href: "/admin/vendor/create", icon: SquareChevronRight },
+      ],
     },
     {
       name: "Services",
@@ -129,7 +134,10 @@ const AdminSidebarItems: {
     {
       name: "Vehicles",
       icon: Truck,
-      href: "/admin/vehicles",
+      dropdown: [
+        { name: "Vehicle", href: "/admin/vehicles", icon: SquareChevronRight },
+        { name: "Create Vehicle", href: "/admin/vehicles/create", icon: SquareChevronRight },
+      ],
     },
     // {
     //   name: "Special Packages",
@@ -142,7 +150,10 @@ const AdminSidebarItems: {
     {
       name: "Invoices",
       icon: FileText,
-      href: "/admin/invoices",
+      dropdown: [
+        { name: "Invoices", href: "/admin/invoices", icon: SquareChevronRight },
+        { name: "Create Invoice", href: "/admin/invoices/create", icon: SquareChevronRight },
+      ],
     },
     // { name: "Site Analytics", href: "/admin/iptracking", icon: ChartColumnIncreasing },
     // {
