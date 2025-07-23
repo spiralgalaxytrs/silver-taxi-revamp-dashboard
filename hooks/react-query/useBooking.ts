@@ -71,8 +71,9 @@ export const useUpdateBooking = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Booking> }) =>
       updateBooking(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    onSuccess: (context) => {
+      const { bookingId } = context;
+      queryClient.invalidateQueries({ queryKey: ["booking", bookingId] });
     }
   });
 };
