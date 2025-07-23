@@ -33,8 +33,6 @@ import {
   useToggleStatus,
   useDeleteEnquiry
 } from 'hooks/react-query/useEnquiry';
-import { Row } from "rsuite"
-import { ro } from "date-fns/locale"
 
 export const columns: MRT_ColumnDef<Enquiry>[] = [
   // {
