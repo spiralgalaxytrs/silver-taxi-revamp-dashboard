@@ -50,7 +50,7 @@ export const useUpdateDriver = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateDriver,
-    onSuccess: (_, { id }) => {
+    onSuccess: (_, { id }) => { 
       queryClient.invalidateQueries({ queryKey: ["drivers"] });
       queryClient.invalidateQueries({ queryKey: ["driver", id] });
     },

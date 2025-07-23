@@ -71,7 +71,7 @@ export const columns: MRT_ColumnDef<Invoice>[] = [
 
       return (
         <Link
-          href={`/admin/invoices/view/${invoice.invoiceNo}`}
+          href={`/admin/invoices/view/${invoice.invoiceId}`}
           className="text-blue-600 hover:underline"
         >
           {invoice.invoiceNo}
