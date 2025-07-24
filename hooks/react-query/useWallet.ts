@@ -4,6 +4,8 @@ import {
   fetchDriverTransactions,
   fetchAllVendorTransactions,
   fetchAllDriverTransactions,
+  fetchVendorTransactionsByVendor,
+  fetchVendorWalletAmount,
 } from 'services/wallet';
 
 // Fetch transactions of a specific vendor by ID
@@ -12,6 +14,14 @@ export const useVendorTransactions = (vendorId: string) => {
     queryKey: ['wallet-transactions', 'vendor', vendorId],
     queryFn: () => fetchVendorTransactions(vendorId),
     enabled: !!vendorId,
+  });
+};
+
+// Fetch transactions of a specific vendor by ID
+export const useVendorWalletAmount = () => {
+  return useQuery({
+    queryKey: ['wallet-amount', 'vendor'],
+    queryFn: fetchVendorWalletAmount,
   });
 };
 
@@ -29,6 +39,14 @@ export const useAllVendorTransactions = () => {
   return useQuery({
     queryKey: ['wallet-transactions', 'vendor-all'],
     queryFn: fetchAllVendorTransactions,
+  });
+};
+
+// Fetch all vendor wallet transactions by vendor
+export const useVendorTransactionsByVendor = () => {
+  return useQuery({
+    queryKey: ['wallet-transactions', 'vendor-history'],
+    queryFn: fetchVendorTransactionsByVendor,
   });
 };
 
