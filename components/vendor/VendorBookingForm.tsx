@@ -368,8 +368,8 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                 newState.finalAmount = newState.estimatedAmount;
             }
 
-            if(name === "advanceAmount") {
-              newState.paymentStatus = newState.advanceAmount > 0 ? "Partial Paid" : "Unpaid";
+            if (name === "advanceAmount") {
+                newState.paymentStatus = newState.advanceAmount > 0 ? "Partial Paid" : "Unpaid";
             }
 
             // Ensure `finalAmount` is always correctly calculated
@@ -435,7 +435,7 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                                 color: "#fff",
                             },
                         });
-                        setTimeout(() => router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/bookings`), 500);
+                        setTimeout(() => router.push(`/vendor/bookings`), 500);
                     },
                     onError: (error: any) => {
                         toast.error(error?.response?.data?.message || 'Failed to update booking', {
@@ -455,7 +455,7 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                                 color: "#fff",
                             },
                         });
-                        setTimeout(() => router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/bookings`), 500);
+                        setTimeout(() => router.push(`/vendor/bookings`), 500);
                     },
                     onError: (error: any) => {
                         toast.error(error?.response?.data?.message || 'Failed to create booking', {
@@ -493,9 +493,9 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
     const handleClose = () => {
         if (isFormDirty) {
             setShowUnsavedChangesDialog(true);
-            setPendingNavigation(() => () => router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/bookings`));
+            setPendingNavigation(() => () => router.push(`/vendor/bookings`));
         } else {
-            router.push(`/${createdBy === "Admin" ? "admin" : "vendor"}/bookings`);
+            router.push(`/vendor/bookings`);
         }
     };
 
