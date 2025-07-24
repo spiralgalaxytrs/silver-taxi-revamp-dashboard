@@ -1,18 +1,14 @@
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import { useSearchParams } from 'next/navigation';
+import React, { useEffect, useMemo, useState } from "react";
 import { Input } from "components/ui/input";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
 import { Label } from "components/ui/label";
 import { Textarea } from "../ui/textarea";
 import { PlusIcon } from "lucide-react";
-import { customAlphabet, nanoid } from 'nanoid';
-import { useInvoiceStore } from "../../stores/-invoiceStore";
-import { useBookingStore } from "../../stores/bookingStore";
-import { useServiceStore } from "stores/-serviceStore";
-import { useOfferStore } from "stores/-offerStore";
-
+import { customAlphabet } from 'nanoid';
+import { useInvoiceById, useCreateInvoice, useUpdateInvoice } from 'hooks/react-query/useInvoice';
+import { useServices } from 'hooks/react-query/useServices';
+import { useOffers } from 'hooks/react-query/useOffers';
 import {
   Select,
   SelectTrigger,
@@ -21,7 +17,7 @@ import {
   SelectItem
 } from "../ui/select";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -35,22 +31,13 @@ import {
 import { Checkbox } from "components/ui/checkbox";
 
 interface InvoiceItem {
-  service: string;
+  serviceType: string;
   vehicleType: string;
   details: string;
   km: number;
   price: number;
   time: string;
   amount: number;
-  finalAmount: number;
-}
-
-interface StaticCharges {
-  discount: number;
-  advanceAmount: number;
-  toll: number;
-  hill: number;
-  permitCharge: number;
 }
 
 interface Charge {
@@ -59,28 +46,31 @@ interface Charge {
   isFixed?: boolean;
 }
 
-interface Offer {
-  offerId?: string;
-  type: "Percentage" | "Flat";
-  value: number;
-  category: string;
-  status: boolean;
-}
-
 interface InvoiceFormProps {
   invId?: string;
   createdBy: string;
-  bookingid?: string;
 }
 
-export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceFormProps) {
+export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
   const router = useRouter();
-  const [selectedServiceName, setSelectedServiceName] = useState("");
-  const [invoiceId, setInvoiceId] = useState("");
+  const { bookingId } = useParams<{ bookingId: string }>();
+  const { mutate: updateInvoice } = useUpdateInvoice();
+  const { mutate: createInvoice } = useCreateInvoice();
+  const { data: invoice = null } = useInvoiceById(invId || "");
+  const { data: offers = [] } = useOffers();
+  const { data: services = [] } = useServices();
+
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const nanoid = customAlphabet("0123456789", 4);
+  const uniqueId = nanoid();
+  const newInvoiceId = `INV-${year}${month}${day}${uniqueId}`;
+  const invoiceId = invoice?.invoiceNo || newInvoiceId;
+
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
-  const [bookingId, setBookingId] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState("");
-  const [bookingStatus, setBookingStatus] = useState("");
+
   const [shippingAddress, setShippingAddress] = useState({
     name: "",
     address: "",
@@ -88,532 +78,258 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
     email: "",
     GSTNumber: ""
   });
-  const [items, setItems] = useState<InvoiceItem[]>([
-    { service: "", vehicleType: "", details: "", km: 0, price: 0, time: "", amount: 0, finalAmount: 0 }
-  ]);
-  const [charges, setCharges] = useState<Charge[]>([
+
+  const [items, setItems] = useState<InvoiceItem>({
+    serviceType: "",
+    vehicleType: "",
+    details: "",
+    km: 0,
+    price: 0,
+    time: "",
+    amount: 0,
+  });
+
+  const [taxCharges, setTaxCharges] = useState<Charge[]>([
     { label: "CGST & SGST", value: 0, isFixed: true },
     { label: "IGST", value: 0, isFixed: true }
   ]);
-  const [staticCharges, setStaticCharges] = useState<StaticCharges>({
-    discount: 0,
-    advanceAmount: 0,
-    toll: 0,
-    hill: 0,
-    permitCharge: 0,
-  });
-  const [isTollFilled, setIsTollFilled] = useState(false);
-  const [isHillFilled, setIsHillFilled] = useState(false);
-  const [isPermitChargeFilled, setIsPermitChargeFilled] = useState(false);
-  const [isDiscountPrefilled, setIsDiscountPrefilled] = useState(false);
-  const [isAdvanceFilled, setIsAdvanceFilled] = useState(false);
-  const [isDriverBetaPrefilled, setIsDriverBetaPrefilled] = useState(false);
-  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
-  const [isOfferPrefilled, setIsOfferPrefilled] = useState(false);
-  const [paymentDetails, setPaymentDetails] = useState("");
-  const [note, setNote] = useState("");
-  const [totalAmount, setTotalAmount] = useState(0);
-  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
-  const { createInvoice, updateInvoice, invoices, fetchInvoices } = useInvoiceStore();
-  const { fetchBookingById, fetchBookings, bookings } = useBookingStore();
-  const { fetchServices, services } = useServiceStore();
-  const { fetchOffers, offers } = useOfferStore();
+  const [OtherCharges, setOtherCharges] = useState<Charge[]>([]);
+  const [customCharges, setCustomCharges] = useState<Charge[]>([]);
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
-  const searchParams = useSearchParams();
-  const bookingIdFromUrl = searchParams.get('bookingId');
-  const [loadingBooking, setLoadingBooking] = useState(false);
-  const [bookingError, setBookingError] = useState<string | null>(null);
-  const [bookingIdInput, setBookingIdInput] = useState("");
-  const [pickupDrop, setPickupDrop] = useState({ pickup: "", drop: "" });
-  const [km, setKm] = useState({ km: 0 });
   const [isCGSTSGSTSelected, setIsCGSTSGSTSelected] = useState(true);
   const [isIGSTSelected, setIsIGSTSelected] = useState(false);
-  const [offerAmount, setOfferAmount] = useState(0);
-  const [isDiscountApplied, setIsDiscountApplied] = useState(false); // Initially true
+  const [selectedServiceName, setSelectedServiceName] = useState("");
+  const [pickupDrop, setPickupDrop] = useState({ pickup: "", drop: "" });
+  const [paymentStatus, setPaymentStatus] = useState("Unpaid");
+  const [bookingStatus, setBookingStatus] = useState("Unpaid");
+  const [paymentDetails, setPaymentDetails] = useState("");
+  const [note, setNote] = useState("");
 
+  // Update from invoice when it loads
   useEffect(() => {
-    if (bookingIdFromUrl) {
-      setBookingId(bookingIdFromUrl);
-      setBookingIdInput(bookingIdFromUrl);
-    }
-  }, [bookingIdFromUrl]);
+    if (invoice) {
+      setShippingAddress({
+        name: invoice?.name || "",
+        phone: invoice?.phone || "",
+        email: invoice?.email || "",
+        GSTNumber: invoice?.GSTNumber || "",
+        address: invoice?.address || ""
+      });
 
-  useEffect(() => {
-    fetchServices();
-    fetchOffers();
-    fetchInvoices();
-  }, [fetchServices, fetchOffers, fetchInvoices]);
+      setItems({
+        serviceType: invoice?.serviceType || "",
+        vehicleType: invoice?.vehicleType || "",
+        details: `${invoice?.pickup} to ${invoice?.drop}` || "",
+        km: invoice?.totalKm || 0,
+        price: invoice?.pricePerKm || 0,
+        time: invoice?.travelTime || "",
+        amount: invoice?.estimatedAmount || 0,
+      })
 
+      // console.log("invoice >>>", invoice);
 
+      setPaymentDetails(invoice?.paymentDetails || "");
+      setNote(invoice?.note || "");
+      setPaymentStatus(invoice?.status || "Unpaid");
+      setInvoiceDate(invoice?.invoiceDate.split("T")[0] || new Date().toISOString().split("T")[0]);
 
-  // Fetch invoice data if invoiceId is provided (Edit mode)
-  useEffect(() => {
-    if (invId) {
-      const invoice = invoices.find((inv: any) => inv.invoiceId === invId);
-      if (invoice) {
-        setInvoiceId(invoice.invoiceNo || "");
-        setInvoiceDate(invoice.invoiceDate.split("T")[0]);
-        setBookingId(invoice.bookingId || "");
-        setBookingIdInput(invoice.bookingId || "");
-        setPaymentStatus(invoice.status || "");
-        setShippingAddress({
-          name: invoice.name || "",
-          address: invoice.address || "",
-          phone: invoice.phone || "",
-          email: invoice.email || "",
-          GSTNumber: invoice.GSTNumber || ""
+      if (invoice?.otherCharges) {
+
+        const taxValue = invoice?.otherCharges["CGST & SGST"] || 0;
+        setTaxCharges((prev) => {
+          return prev.map((charge) => {
+            return { ...charge, value: taxValue };
+          });
         });
-        setItems([{
-          service: invoice.serviceType || "",
-          vehicleType: invoice.vehicleType || "",
-          details: `${invoice.pickup || ""} - ${invoice.drop || ""}`,
-          km: invoice.totalKm || 0,
-          price: invoice.pricePerKm || 0,
-          time: invoice.travelTime || "",
-          amount: invoice.totalAmount || 0,
-          finalAmount: invoice.totalAmount || 0
-        }]);
-        setSelectedServiceName(invoice.serviceType || "");
-        const otherCharges = invoice.otherCharges || {};
-        setCharges([
-          { label: "CGST & SGST", value: otherCharges["CGST & SGST"] || 0, isFixed: true },
-          { label: "IGST", value: otherCharges["IGST"] || 0, isFixed: true },
-          ...Object.entries(otherCharges)
-            .filter(([key]) => !["CGST & SGST", "IGST", "Toll Charges", "Hill Charges", "Permit Charges", "Advance Amount", "Driver Betta", "Discount"].includes(key))
-            .map(([label, value]) => ({ label, value: Number(value), isFixed: false }))
-        ]);
-        setStaticCharges({
-          toll: otherCharges["Toll Charges"] || 0,
-          hill: otherCharges["Hill Charges"] || 0,
-          permitCharge: otherCharges["Permit Charges"] || 0,
-          advanceAmount: otherCharges["Advance Amount"] || 0,
-          discount: otherCharges["Discount"] || 0
-        });
-        setIsTollFilled(!!otherCharges["Toll Charges"]);
-        setIsHillFilled(!!otherCharges["Hill Charges"]);
-        setIsPermitChargeFilled(!!otherCharges["Permit Charges"]);
-        setIsAdvanceFilled(!!otherCharges["Advance Amount"]);
-        setIsDriverBetaPrefilled(!!otherCharges["Driver Betta"]);
-        setIsDiscountPrefilled(!!otherCharges["Discount"]);
-        setIsCGSTSGSTSelected(!!otherCharges["CGST & SGST"]);
-        setIsIGSTSelected(!!otherCharges["IGST"]);
-        if (invoice.offerId) {
-          const offer = offers.find((o: any) => o.offerId === invoice.offerId);
-          setSelectedOffer(offer || null);
-          setIsOfferPrefilled(true);
-          setOfferAmount(otherCharges["Discount"] || 0);
-        }
-        setPaymentDetails(invoice.paymentDetails || "");
-        setNote(invoice.note || "");
-        setTotalAmount(invoice.totalAmount || 0);
-        setPickupDrop({ pickup: invoice.pickup || "", drop: invoice.drop || "" });
-      }
-    } else {
-      // Generate new invoice ID for create mode
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = date.getMonth();
-      const day = date.getDate();
-      const nanoid = customAlphabet('0123456789', 4);
-      const uniqueId = nanoid();
-      const newInvoiceId = `INV-${year}${month + 1}${day}${uniqueId}`;
-      setInvoiceId(newInvoiceId);
-    }
-  }, [invId, invoices, offers]);
 
-  const handleItemChange = (index: number, field: keyof InvoiceItem, value: string | number) => {
-    setItems((prevItems) => {
-      const newItems = [...prevItems];
-      newItems[index] = { ...newItems[index], [field]: value };
-      if (field === "km" || field === "price") {
-        newItems[index].amount = Number(newItems[index].km) * Number(newItems[index].price);
+        const excludedLabels = ["CGST & SGST", "IGST"];
+        const parsedCharges = Object.entries(invoice.otherCharges)
+          .filter(([label]) => !excludedLabels.includes(label.trim()))
+          .map(([label, value]) => ({
+            label,
+            value: Number(value) || 0,
+          }));
+        setOtherCharges(parsedCharges);
       }
-      return newItems;
+    }
+  }, [invoice]);
+
+  const handleItemChange = (field: keyof InvoiceItem, value: any) => {
+    setItems((prevItem) => {
+      const updatedItem = { ...prevItem, [field]: value };
+
+      if (["km", "price"].includes(field)) {
+        const km = field === "km" ? Number(value) : updatedItem.km;
+        const price = field === "price" ? Number(value) : updatedItem.price;
+        const amount = km * price;
+        updatedItem.amount = amount;
+      }
+
+      return updatedItem;
     });
-    if (field === "details") {
-      // if (typingTimeout) clearTimeout(typingTimeout);
-      // const timeout = setTimeout(() => {
-      //   fetchDistance(index, value as string);
-      // }, 800);
-      // setTypingTimeout(timeout);
-    }
-    if (field === "service") {
-      setSelectedServiceName(value as string);
-      handleServiceBasedOffer(value as string); // Check for offers based on service
-    }
+
     setIsFormDirty(true);
   };
 
-  // const fetchDistance = async (index: number, details: string) => {
-  //   const [from, to] = details.split("-").map((part) => part.trim());
-  //   if (!from || !to) return;
-  //   try {
-  //     const response = await axios.get(`/api/findDistance?origin=${from}&destination=${to}`);
-  //     setItems((prevItems) => {
-  //       const newItems = [...prevItems];
-  //       newItems[index].km = response.data.distance;
-  //       newItems[index].time = response.data.duration;
-  //       newItems[index].amount = newItems[index].km * newItems[index].price;
-  //       return newItems;
-  //     });
-  //   } catch (error) {
-  //     console.error("Error fetching distance:", error);
-  //   }
-  // };
-
-  const handleChargeChange = (index: number, field: "label" | "value", value: string | number) => {
-    setCharges((prevCharges) => {
-      const newCharges = [...prevCharges];
-      if (!newCharges[index].isFixed) {
-        newCharges[index] = {
-          ...newCharges[index],
-          [field]: field === "value" ? Number(value) : String(value)
-        };
-      }
-      return newCharges;
-    });
-    setIsFormDirty(true);
-  };
-
-  const handleStaticChargeChange = (field: keyof StaticCharges, value: string) => {
-    const numValue = value === "" ? 0 : Number(value);
-    if (isNaN(numValue) || numValue < 0) return;
-    setStaticCharges((prev) => ({
-      ...prev,
-      [field]: numValue,
-    }));
-    setIsFormDirty(true);
-  };
 
   const addCustomCharge = () => {
-    setCharges(prevCharges => [...prevCharges, { label: "", value: 0 }]);
+    setCustomCharges([...customCharges, { label: "", value: 0 }]);
     setIsFormDirty(true);
   };
 
   const removeCustomCharge = (index: number) => {
-    setCharges(prevCharges => prevCharges.filter((_, i) => i !== index));
+    setCustomCharges((prev) => {
+      const updated = [...prev];
+      updated.splice(index, 1);
+
+      return updated;
+    });
+
     setIsFormDirty(true);
   };
 
-  const handleTaxSelection = (type: "CGST & SGST" | "IGST") => {
-    if (type === "CGST & SGST") {
-      setIsCGSTSGSTSelected(!isCGSTSGSTSelected);
+
+  const handleChargeChange = (index: number, field: keyof Charge, value: any) => {
+    setCustomCharges((prev) => {
+      const updated = [...prev];
+
+      updated[index] = {
+        ...updated[index],
+        [field]: field === "value" ? Number(value) : value
+      };
+
+      return updated;
+    });
+
+    setIsFormDirty(true);
+  };
+
+
+
+  const handleTaxSelection = (label: "CGST & SGST" | "IGST") => {
+    console.log("handleTaxSelection", label);
+    if (label === "CGST & SGST") {
+      console.log("Selected CGST & SGST");
+      setIsCGSTSGSTSelected(true);
       setIsIGSTSelected(false);
     } else {
-      setIsIGSTSelected(!isIGSTSelected);
+      console.log("Selected IGST");
       setIsCGSTSGSTSelected(false);
+      setIsCGSTSGSTSelected(false);
+      setIsIGSTSelected(true);
     }
     setIsFormDirty(true);
   };
 
-  // useEffect(() => {
-  //   const handleCreateInvoiceId = () => {
-  //     const date = new Date();
-  //     const year = date.getFullYear();
-  //     const month = date.getMonth();
-  //     const day = date.getDate();
-  //     const nanoid = customAlphabet('0123456789', 4); // Only numbers, length 4
-  //     const uniqueId = nanoid();
-  //     const invoiceId = `INV-${year}${month + 1}${day}${uniqueId}`;
-  //     setInvoiceId(invoiceId);
-  //   };
-  //   handleCreateInvoiceId();
-  // }, []);
 
-  const fetchBookingDetails = async (bookingId: string) => {
-    setLoadingBooking(true);
-    setBookingError(null);
+  const totalAmount = useMemo(() => {
+    const customTotal = customCharges.reduce(
+      (sum, charge) => sum + (Number(charge.value) || 0),
+      0
+    );
+    return (invoice?.totalAmount || 0) + customTotal;
+  }, [customCharges, invoice]);
 
-    await fetchBookings();
-    if (bookings.length > 0) {
-      const booking = bookings.filter((b: any) => b.bookingId === bookingId);
-      setBookingStatus(booking[0].paymentStatus);
-      // console.log("Status", booking);
-      booking.forEach((b: any) => {
-        // Check if invoice already has name, email, phone (from edit mode)
-        if (
-          !shippingAddress.name &&
-          !shippingAddress.email &&
-          !shippingAddress.phone
-        ) {
-          setShippingAddress({
-            ...shippingAddress,
-            name: b.name || "",
-            phone: b.phone || "",
-            email: b.email || "",
-          });
-        }
-        setPickupDrop({
-          pickup: b.pickup || "",
-          drop: b.drop || "",
-        });
-        setSelectedServiceName(b.serviceType as string);
+  const handleCreateInvoice = () => {
 
-        setKm({ km: b.distance || 0 });
+    const customChargeEntries = customCharges.map((c) => [c.label, c.value]);
+    const finalOtherCharges = {
+      ...invoice?.otherCharges,
+      ...Object.fromEntries(customChargeEntries)
+    };
 
-        const newDetails = `${b.pickup || ""} - ${b.drop || ""}`;
-        setItems((prevItems) => {
-          const newItems = [...prevItems];
-          if (newItems.length > 0) {
-            newItems[0] = {
-              ...newItems[0],
-              details: newDetails,
-              service: b.serviceType || "",
-              vehicleType: b.vehicles?.type || "",
-              km: b.distance || 0,
-              price: b.pricePerKm || 0,
-              amount: b.estimatedAmount || 0,
-              finalAmount: b.finalAmount || 0,
-              time: b.duration || ""
-            };
-          }
-          return newItems;
-        });
 
-        // Only set static charges if they are not 0
-        const staticChargesData = {
-          discount: b.discountAmount || 0,
-          advanceAmount: b.advanceAmount || 0,
-          toll: b.toll || 0,
-          hill: b.hill || 0,
-          permitCharge: b.permitCharge || 0,
-        };
-        setStaticCharges(staticChargesData);
-
-        setIsDiscountPrefilled(!!b.discountAmount);
-        setIsDriverBetaPrefilled(!!b.driverBeta);
-        setIsAdvanceFilled(!!b.advanceAmount);
-        setIsTollFilled(!!b.toll);
-        setIsHillFilled(!!b.hill);
-        setIsPermitChargeFilled(!!b.permitCharge);
-
-        if (b.offerId) {
-          const offer = offers.find((o: any) => o.offerId === b.offerId);
-          if (offer) {
-            setSelectedOffer(offer);
-            setIsOfferPrefilled(true);
-            if (offer.type === "Flat") {
-              setOfferAmount(offer.value);
-            } else if (offer?.type === "Percentage") {
-              const itemTotal = items[0].amount || 0;
-              const discountAmount = (itemTotal * offer.value) / 100;
-              setOfferAmount(discountAmount);
-            }
-          }
-        } else {
-          handleServiceBasedOffer(b.serviceType || "");
-        }
-        // setTimeout(() => fetchDistance(0, newDetails), 0);
-      });
-    }
-    setLoadingBooking(false);
-  };
-
-  const handleBookingIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setBookingIdInput(value);
-    if (typingTimeout) clearTimeout(typingTimeout);
-    const timeout = setTimeout(() => {
-      setBookingId(value.trim());
-    }, 800);
-    setTypingTimeout(timeout);
-    setIsFormDirty(true);
-  };
-
-  useEffect(() => {
-    if (bookingId) {
-      fetchBookingDetails(bookingId);
-    }
-  }, [bookingId]);
-
-  // Function to handle offers based on service type
-  const handleServiceBasedOffer = (serviceName: string) => {
-    if (!bookingId || !bookings.some((b: any) => b.bookingId === bookingId) || !isOfferPrefilled) {
-      const activeOffer = offers.find((o: any) => o.category === serviceName && o.status);
-      if (activeOffer) {
-        setSelectedOffer(activeOffer);
-        setIsOfferPrefilled(false); // Editable since it's not from booking
-        if (activeOffer?.type === "Flat") {
-          setOfferAmount(activeOffer.value);
-        } else if (activeOffer?.type === "Percentage") {
-          const itemTotal = items[0].amount || 0;
-          const discountAmount = (itemTotal * activeOffer.value) / 100;
-          setOfferAmount(discountAmount);
-        }
-      } else {
-        setSelectedOffer(null);
-        setOfferAmount(0);
-      }
-    }
-  };
-
-  useEffect(() => {
-    const selectedService = services.find((s: any) => s.name === items[0].service);
-    if (selectedService) {
-      const baseAmount = items[0].amount || 0;
-      const cgst = (baseAmount || 0) * (selectedService.tax.CGST / 100);
-      const sgst = (baseAmount || 0) * (selectedService.tax.SGST / 100);
-      const igst = (baseAmount || 0) * (selectedService.tax.IGST / 100);
-
-      setCharges((prevCharges) => {
-        const newCharges = [...prevCharges];
-        const cgstSgstIndex = newCharges.findIndex(c => c.label === "CGST & SGST");
-        const igstIndex = newCharges.findIndex(c => c.label === "IGST");
-        if (cgstSgstIndex !== -1) newCharges[cgstSgstIndex].value = parseFloat((cgst + sgst).toFixed(2));
-        if (igstIndex !== -1) newCharges[igstIndex].value = parseFloat(igst.toFixed(2));
-        return newCharges;
-      });
-    }
-  }, [items, services]);
-
-  // Effect for calculating total amount with offer discount
-  useEffect(() => {
-    const itemTotal = items.reduce((acc, item) => acc + (item.finalAmount || 0), 0);
-    const dynamicChargesTotal = charges
-      .filter(charge => !charge.isFixed)
-      .reduce((acc, charge) => acc + Number(charge.value || 0), 0);
-
-    // Recalculate offer amount if not prefilled from booking and discount is applied
-    if (selectedOffer && !isOfferPrefilled) {
-      if (selectedOffer?.type === "Flat") {
-        setOfferAmount(selectedOffer.value);
-      } else if (selectedOffer?.type === "Percentage") {
-        const discountAmount = (itemTotal * selectedOffer.value) / 100;
-        setOfferAmount(discountAmount);
-      }
-    }
-
-    const discountToApply = isDiscountApplied ? offerAmount : 0;
-    // const staticChargesTotal = staticCharges.hill + staticCharges.toll+ staticCharges.permitCharge +staticCharges.driverBeta - staticCharges.advanceAmount - discountToApply;
-    const total = Math.round(itemTotal + dynamicChargesTotal); {/*+ staticChargesTotal*/ }
-    setTotalAmount(total);
-  }, [items, charges, staticCharges, selectedOffer, isOfferPrefilled, isDiscountApplied]);
-
-  const handleCreateInvoice = async () => {
-    const chargesObject = charges.reduce((acc, charge) => {
-      if (charge.label.trim() && (!charge.isFixed || (charge.label === "CGST & SGST" && isCGSTSGSTSelected) || (charge.label === "IGST" && isIGSTSelected))) {
-        acc[charge.label.trim()] = charge.value;
-      }
-      return acc;
-    }, {} as Record<string, number>);
-
-    // Add static charges only if they are not 0
-    if (staticCharges.toll !== 0) chargesObject["Toll Charges"] = staticCharges.toll;
-    if (staticCharges.hill !== 0) chargesObject["Hill Charges"] = staticCharges.hill;
-    if (staticCharges.permitCharge !== 0) chargesObject["Permit Charges"] = staticCharges.permitCharge;
-    if (staticCharges.advanceAmount !== 0) chargesObject["Advance Amount"] = staticCharges.advanceAmount;
-    if (offerAmount !== 0) chargesObject["Discount"] = offerAmount;
-
-    const invoiceData = {
+    const payload = {
       invoiceId,
-      invoiceDate,
-      bookingId,
-      status: paymentStatus as "Paid" | "Partial Paid" | "Unpaid",
+      bookingId: invoice?.bookingId || bookingId || "",
+      companyId: invoice?.companyId || "",
+      invoiceNo: invoice?.invoiceNo || newInvoiceId,
+      invoiceDate: invoiceDate || invoice?.invoiceDate,
       name: shippingAddress.name,
-      address: shippingAddress.address,
       phone: shippingAddress.phone,
       email: shippingAddress.email,
-      GSTNumber: shippingAddress.GSTNumber,
-      serviceType: items[0].service,
-      vehicleType: items[0].vehicleType,
-      invoiceNo: invoiceId,
-      totalKm: items[0].km,
-      pricePerKm: items[0].price,
-      travelTime: items[0].time,
-      otherCharges: chargesObject,
-      totalAmount: totalAmount,
+      serviceType: items.serviceType,
+      vehicleType: items.vehicleType,
+      totalKm: items.km,
+      pricePerKm: items.price,
+      travelTime: items.time,
+      address: shippingAddress.address,
+      estimatedAmount: invoice?.estimatedAmount || items.amount,
+      advanceAmount: invoice?.advanceAmount || 0,
+      totalAmount: totalAmount || invoice?.totalAmount || 0,
+      otherCharges: finalOtherCharges,
       paymentDetails,
-      note,
-      pickup: pickupDrop.pickup,
-      drop: pickupDrop.drop,
-      offerId: selectedOffer?.offerId || null,
-      createdBy: createdBy as "Vendor" | "Admin",
+      createdBy: createdBy as "Admin" | "Vendor",
+      status: paymentStatus as "Partial Paid" | "Paid" | "Unpaid",
+      booking: invoice?.booking || null,
+      companyProfile: invoice?.companyProfile || null,
+      pickup: pickupDrop.pickup || invoice?.pickup,
+      drop: pickupDrop.drop || invoice?.drop,
+      note: note || invoice?.note,
+      GSTNumber: shippingAddress.GSTNumber || invoice?.GSTNumber,
+      offerId: invoice?.offerId || null,
     };
+
 
     try {
       if (invId) {
-        // Update existing invoice
-        await updateInvoice(invId || "", invoiceData);
-        const { statusCode, message } = useInvoiceStore.getState();
-        if (statusCode === 200 || statusCode === 201) {
-          toast.success(message || "Invoice updated successfully!", {
-            style: {
-              backgroundColor: "#009F7F",
-              color: "#fff",
-            },
-          });
-          router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`);
-        } else {
-          toast.error(message, {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
-          });
-        }
+        updateInvoice({ id: invId, data: payload }, {
+          onSuccess: () => {
+            toast.success("Invoice updated successfully", {
+              style: { backgroundColor: "#009F7F", color: "#fff" },
+            });
+            setIsFormDirty(false);
+            router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`);
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || "Error updating Invoice!", {
+              style: { backgroundColor: "#FF0000", color: "#fff" },
+            });
+          }
+        });
       } else {
-        // Create new invoice
-        await createInvoice(invoiceData);
-        const { statusCode, message } = useInvoiceStore.getState();
-        if (statusCode === 200 || statusCode === 201) {
-          toast.success(message || "Invoice created successfully!", {
-            style: {
-              backgroundColor: "#009F7F",
-              color: "#fff",
-            },
-          });
-          router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`);
-        } else {
-          toast.error(message, {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
-          });
-        }
+        createInvoice(payload, {
+          onSuccess: () => {
+            toast.success("Invoice created successfully", {
+              style: { backgroundColor: "#009F7F", color: "#fff" },
+            });
+            setIsFormDirty(false);
+            router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`);
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || "Error creating Invoice!", {
+              style: { backgroundColor: "#FF0000", color: "#fff" },
+            });
+          }
+        });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-      toast.error(errorMessage, {
-        style: {
-          backgroundColor: "#FF0000",
-          color: "#fff",
-        },
-      }); // Display the backend error message in the toast
-      // console.error("Error creating invoice:", error);
+      console.error("Error creating invoice:", error);
+      toast.error("Error creating invoice", {
+        style: { backgroundColor: "#FF0000", color: "#fff" },
+      });
+      return;
     }
+
   };
 
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isFormDirty) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isFormDirty]);
+  const handleConfirmNavigation = () => {
+    setShowUnsavedChangesDialog(false);
+    setIsFormDirty(false);
+    pendingNavigation();
+  };
 
   const handleClose = () => {
     if (isFormDirty) {
       setShowUnsavedChangesDialog(true);
-      setPendingNavigation(() => () => router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`));
+      setPendingNavigation(() =>
+        () => router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`)
+      );
     } else {
       router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`);
     }
-  };
-
-
-  console.log("Items >> :", items);
-
-
-  const handleConfirmNavigation = () => {
-    setIsFormDirty(false);
-    setShowUnsavedChangesDialog(false);
-    pendingNavigation();
   };
 
   return (
@@ -628,7 +344,7 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>Invoice ID</Label>
-            <Input type="text" readOnly value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} />
+            <Input type="text" readOnly value={invoiceId} />
           </div>
           <div>
             <Label>Invoice Date</Label>
@@ -636,20 +352,16 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
           </div>
         </div>
         <div className="mt-4 mb-4 grid grid-cols-2 gap-4">
-          {/* <div>
-            <Label>Booking ID</Label>
-            <Input
-              type="text"
-              value={bookingIdInput}
-              onChange={handleBookingIdChange}
-              placeholder="Enter Booking ID"
-            />
-            {loadingBooking && <p className="text-blue-500 mt-2">Loading booking details...</p>}
-            {bookingError && <p className="text-red-500 mt-2">{bookingError}</p>}
-          </div> */}
           <div className="mt-1 border-gray-900">
             <Label>Payment Status</Label>
-            <Select
+            {paymentStatus === "Paid" ? (
+              <Input
+                type="text"
+                readOnly
+                value={paymentStatus}
+                className="bg-gray-100 cursor-default"
+              />
+            ) : (<Select
               value={paymentStatus}
               onValueChange={(value) => {
                 setPaymentStatus(value);
@@ -664,7 +376,7 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                 <SelectItem value="Paid">Paid</SelectItem>
                 <SelectItem value="Unpaid">Unpaid</SelectItem>
               </SelectContent>
-            </Select>
+            </Select>)}
           </div>
         </div>
 
@@ -677,7 +389,7 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                 <Input
                   type="text"
                   placeholder="Full Name"
-                  value={shippingAddress.name}
+                  value={shippingAddress?.name}
                   onChange={(e) => setShippingAddress({ ...shippingAddress, name: e.target.value })}
                 />
               </div>
@@ -753,128 +465,126 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {items.map((item, index) => (
-                <tr key={index}>
+              <tr>
+                <td className="px-4 py-2 border">
+                  {paymentStatus === "Paid" ? (
+                    <div className="text-sm text-gray-700">
+                      {items.serviceType || "No Service Selected"}
+                    </div>
+                  ) : (
+                    <Select
+                      value={items.serviceType}
+                      onValueChange={(value) => handleItemChange("serviceType", value)}
+                    >
+                      <SelectTrigger className="border-none shadow-none">
+                        <SelectValue placeholder="Select Service" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {services.map((service: any) => (
+                          <SelectItem key={service.name} value={service.name}>
+                            {service.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                </td>
+                <td className="px-2 py-2 border">
+                  <Input
+                    type="text"
+                    readOnly={paymentStatus === "Paid"}
+                    className="border-none shadow-none"
+                    placeholder="Vehicle Category"
+                    value={items.vehicleType || ""}
+                    onChange={(e) => handleItemChange("vehicleType", e.target.value)}
+                  />
+                </td>
+                {
+                  selectedServiceName !== "Package" &&
                   <td className="px-4 py-2 border">
-                    {paymentStatus === "Paid" ? (
-                      <div className="text-sm text-gray-700">
-                        {item.service || "No Service Selected"}
-                      </div>
-                    ) : (
-                      <Select
-                        value={item.service}
-                        onValueChange={(value) => handleItemChange(index, "service", value)}
-                      >
-                        <SelectTrigger className="border-none shadow-none">
-                          <SelectValue placeholder="Select Service" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {services.map((service: any) => (
-                            <SelectItem key={service.name} value={service.name}>
-                              {service.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-
-                  </td>
-                  <td className="px-2 py-2 border">
                     <Input
-                      type="text"
-                      readOnly={paymentStatus === "Paid"}
                       className="border-none shadow-none"
-                      placeholder="Vehicle Category"
-                      value={item.vehicleType || ""}
-                      onChange={(e) => handleItemChange(index, "vehicleType", e.target.value)}
-                    />
-                  </td>
-                  {
-                    selectedServiceName !== "Package" &&
-                    <td className="px-4 py-2 border">
-                      <Input
-                        className="border-none shadow-none"
-                        placeholder="Pickup - Drop"
-                        readOnly={paymentStatus === "Paid"}
-                        value={item.details || ""}
-                        onBlur={(e) => {
-                          const value = e.target.value;
-
-                          // Update the item details when input loses focus
-                          handleItemChange(index, "details", value);
-
-                          // Parse and set pickup/drop if "-" is present
-                          if (value.includes("-")) {
-                            const [newPickup, newDrop] = value.split("-").map((s) => s.trim());
-                            setPickupDrop({ pickup: newPickup, drop: newDrop });
-                          }
-                        }}
-                      />
-
-                    </td>
-                  }
-                  {
-                    selectedServiceName === "Package" &&
-                    <td className="px-4 py-2 border">
-                      <Input
-                        className="border-none shadow-none"
-                        placeholder="Pickup - Drop"
-                        value={item.details.split("-")[0] || ""}
-                        onChange={(e) => handleItemChange(index, "details", e.target.value)}
-                        onBlur={(e) => {
-                          const newPickup = e.target.value;
-                          setPickupDrop({ pickup: newPickup, drop: "" });
-                        }}
-                      />
-                    </td>
-                  }
-                  <td className="px-2 py-2 border">
-                    <Input
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
-                      type="text"
-                      placeholder="Km"
+                      placeholder="Pickup - Drop"
                       readOnly={paymentStatus === "Paid"}
-                      value={item.km || 0}
-                      onChange={(e) => {
-                        const numericValue = e.target.value.replace(/[^0-9]/g, '')
-                        handleItemChange(index, "km", Number(numericValue))
+                      value={items.details || ""}
+                      onBlur={(e) => {
+                        const value = e.target.value;
+
+                        // Update the item details when input loses focus
+                        handleItemChange("details", value);
+
+                        // Parse and set pickup/drop if "-" is present
+                        if (value.includes("-")) {
+                          const [newPickup, newDrop] = value.split("-").map((s) => s.trim());
+                          setPickupDrop({ pickup: newPickup, drop: newDrop });
+                        }
+                      }}
+                    />
+
+                  </td>
+                }
+                {
+                  selectedServiceName === "Package" &&
+                  <td className="px-4 py-2 border">
+                    <Input
+                      className="border-none shadow-none"
+                      placeholder="Pickup - Drop"
+                      value={items.details.split("-")[0] || ""}
+                      onChange={(e) => handleItemChange("details", e.target.value)}
+                      onBlur={(e) => {
+                        const newPickup = e.target.value;
+                        setPickupDrop({ pickup: newPickup, drop: "" });
                       }}
                     />
                   </td>
-                  <td className="px-2 py-2 border">
-                    <Input
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
-                      type="text"
-                      placeholder="Price"
-                      readOnly={paymentStatus === "Paid"}
-                      value={item.price || 0}
-                      onChange={(e) => {
-                        const numericValue = e.target.value.replace(/[^0-9]/g, '')
-                        handleItemChange(index, "price", Number(numericValue))
-                      }}
-                    />
-                  </td>
-                  <td className="px-4 py-2 border">
-                    <Input
-                      type="text"
-                      className="border-none shadow-none"
-                      readOnly={paymentStatus === "Paid"}
-                      placeholder={selectedServiceName === "Package" ? "Day / Hour" : "Time"}
-                      value={item.time || ""}
-                      onChange={(e) => handleItemChange(index, "time", e.target.value)}
-                    />
-                  </td>
-                  <td className="px-2 py-2 border">
-                    <Input
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
-                      type="text"
-                      readOnly={paymentStatus === "Paid"}
-                      placeholder="Amount"
-                      value={item.amount || 0}
-                    />
-                  </td>
-                </tr>
-              ))}
+                }
+                <td className="px-2 py-2 border">
+                  <Input
+                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
+                    type="text"
+                    placeholder="Km"
+                    readOnly={paymentStatus === "Paid"}
+                    value={items.km || 0}
+                    onBlur={(e) => {
+                      const numericValue = e.target.value.replace(/[^0-9]/g, '')
+                      handleItemChange("km", Number(numericValue))
+                    }}
+                  />
+                </td>
+                <td className="px-2 py-2 border">
+                  <Input
+                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
+                    type="text"
+                    placeholder="Price"
+                    readOnly={paymentStatus === "Paid"}
+                    value={items.price || 0}
+                    onBlur={(e) => {
+                      const numericValue = e.target.value.replace(/[^0-9]/g, '')
+                      handleItemChange("price", Number(numericValue))
+                    }}
+                  />
+                </td>
+                <td className="px-4 py-2 border">
+                  <Input
+                    type="text"
+                    className="border-none shadow-none"
+                    readOnly={paymentStatus === "Paid"}
+                    placeholder={selectedServiceName === "Package" ? "Day / Hour" : "Time"}
+                    value={items.time || ""}
+                    onChange={(e) => handleItemChange("time", e.target.value)}
+                  />
+                </td>
+                <td className="px-2 py-2 border">
+                  <Input
+                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
+                    type="text"
+                    readOnly={paymentStatus === "Paid"}
+                    placeholder="Amount"
+                    value={items.amount || 0}
+                  />
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -883,106 +593,9 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
           <div className="flex flex-col gap-2">
             <h2 className="font-bold">Charges</h2>
 
-            {/* Static Charges */}
-            <div className="flex flex-col gap-2 items-end">
-              {staticCharges.toll !== 0 && (
-                <div className="flex flex-row gap-2 items-center">
-                  <Input
-                    type="text"
-                    value="Toll charges"
-                    readOnly
-                    className="w-32 bg-white border border-gray-300 text-gray-600"
-                  />
-                  <Input
-                    type="number"
-                    className={`w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isTollFilled ? ' cursor-not-allowed' : ''}`}
-                    value={staticCharges.toll}
-                    onChange={(e) => !isTollFilled && handleStaticChargeChange("toll", e.target.value)}
-                    placeholder="0"
-                  />
-                </div>
-              )}
-              {staticCharges.hill !== 0 && (
-                <div className="flex flex-row gap-2 items-center">
-                  <Input
-                    type="text"
-                    value="Hill charges"
-                    readOnly
-                    className="w-32 bg-white border border-gray-300 text-gray-600"
-                  />
-                  <Input
-                    type="number"
-                    className={`w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isHillFilled ? ' cursor-not-allowed' : ''}`}
-                    value={staticCharges.hill}
-                    onChange={(e) => !isHillFilled && handleStaticChargeChange("hill", e.target.value)}
-                    placeholder="0"
-                  />
-                </div>
-              )}
-              {staticCharges.permitCharge !== 0 && (
-                <div className="flex flex-row gap-2 items-center">
-                  <Input
-                    type="text"
-                    value="Permit charges"
-                    readOnly
-                    className="w-32 bg-white border border-gray-300 text-gray-600"
-                  />
-                  <Input
-                    type="number"
-                    className={`w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isPermitChargeFilled ? ' cursor-not-allowed' : ''}`}
-                    value={staticCharges.permitCharge}
-                    onChange={(e) => !isPermitChargeFilled && handleStaticChargeChange("permitCharge", e.target.value)}
-                    placeholder="0"
-                  />
-                </div>
-              )}
-              {staticCharges.advanceAmount !== 0 && (
-                <div className="flex flex-row gap-2 items-center">
-                  <Input
-                    type="text"
-                    value="Advance Amount"
-                    readOnly
-                    className="w-32 bg-white border border-gray-300 text-gray-600"
-                  />
-                  <Input
-                    type="number"
-                    className={`w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isAdvanceFilled ? ' cursor-not-allowed' : ''}`}
-                    value={staticCharges.advanceAmount}
-                    onChange={(e) => !isAdvanceFilled && handleStaticChargeChange("advanceAmount", e.target.value)}
-                    placeholder="0"
-                  />
-                </div>
-              )}
-          
-              {offerAmount !== 0 && (
-                <div className="flex flex-row gap-2 items-center">
-                  <Input
-                    type="text"
-                    value={
-                      selectedOffer
-                        ? selectedOffer.type === "Flat"
-                          ? "Flat Discount"
-                          : "Percentage Discount"
-                        : "Discount"
-                    }
-                    readOnly
-                    className="w-32 bg-white border border-gray-300 text-gray-600"
-                  />
-                  <Input
-                    type="number"
-                    className={`w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isOfferPrefilled ? ' cursor-not-allowed' : ''}`}
-                    value={offerAmount}
-                    onChange={(e) => !isOfferPrefilled && handleStaticChargeChange("discount", e.target.value)}
-                    readOnly={isOfferPrefilled}
-                    placeholder="0"
-                  />
-                </div>
-              )}
-            </div>
-
             {/* Fixed Tax Charges with Checkboxes */}
             <div className="flex flex-col gap-2 items-end">
-              {charges.filter(charge => charge.isFixed).map((charge, index) => (
+              {taxCharges.filter(charge => charge.isFixed).map((charge, index) => (
                 <div key={index} className="flex flex-row gap-2 items-center">
                   <Checkbox
                     checked={charge.label === "CGST & SGST" ? isCGSTSGSTSelected : isIGSTSelected}
@@ -1008,16 +621,35 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
               ))}
             </div>
 
+            {/* Other Charges */}
+            <div className="flex flex-col gap-2 items-end">
+              {OtherCharges.map((charge, index) => (
+                <div key={index} className="flex flex-row gap-2 items-center">
+                  <Input
+                    type="text"
+                    value={charge.label}
+                    readOnly
+                    className="w-32 bg-white border border-gray-300 text-gray-600"
+                  />
+                  <Input
+                    type="number"
+                    className="w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    value={charge.value || ""}
+                    readOnly
+                  />
+                </div>
+              ))}
+            </div>
+
             {/* Dynamic Custom Charges */}
             <div className="flex flex-col gap-2 items-end">
-              {charges.filter(charge => !charge.isFixed).map((charge, index) => {
-                const actualIndex = charges.findIndex(c => c === charge);
+              {customCharges.map((charge, index) => {
                 return (
-                  <div key={actualIndex} className="flex flex-row gap-2 items-end">
+                  <div key={index} className="flex flex-row gap-2 items-end">
                     <Button
                       variant="destructive"
                       className="w-10"
-                      onClick={() => removeCustomCharge(actualIndex)}
+                      onClick={() => removeCustomCharge(index)}
                     >✖</Button>
                     <Input
                       type="text"
@@ -1025,7 +657,7 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                       value={charge.label}
                       onChange={(e) => {
                         const filteredValue = e.target.value.replace(/[^A-Za-z\s]/g, "");
-                        handleChargeChange(actualIndex, "label", filteredValue);
+                        handleChargeChange(index, "label", filteredValue);
                       }}
                       className="w-32 bg-white border border-gray-300 text-gray-600"
                     />
@@ -1033,7 +665,7 @@ export default function InvoiceForm({ invId, createdBy, bookingid }: InvoiceForm
                       type="number"
                       className="w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       value={charge.value || ""}
-                      onChange={(e) => handleChargeChange(actualIndex, "value", e.target.value)}
+                      onChange={(e) => handleChargeChange(index, "value", e.target.value)}
                     />
                   </div>
                 );
