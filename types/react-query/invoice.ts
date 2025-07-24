@@ -13,6 +13,8 @@ export interface Invoice {
     pricePerKm?: number;
     travelTime?: string;
     address?: string;
+    estimatedAmount?: number;
+    advanceAmount?: number;
     totalAmount: number;
     otherCharges?: Record<string, number>;
     paymentDetails?: string | any;
