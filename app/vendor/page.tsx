@@ -11,9 +11,9 @@ import { useFetchVendorBookings } from 'hooks/react-query/useBooking'
 import { useVendorEnquiries } from 'hooks/react-query/useEnquiry';
 import { useDrivers } from 'hooks/react-query/useDriver';
 import { useVendorInvoices } from 'hooks/react-query/useInvoice';
-import { InvoiceTable } from 'components/admin-dashboard/InvoiceTable'
-import { BookingTable } from 'components/admin-dashboard/BookingTable'
-import { EnquiryTable } from 'components/admin-dashboard/EnquiryTable'
+import { InvoiceTable } from 'components/vendor-dashboard/InvoiceTable'
+import { BookingTable } from 'components/vendor-dashboard/BookingTable'
+import { EnquiryTable } from 'components/vendor-dashboard/EnquiryTable'
 import ShortcutSection from 'components/others/ShortCut'
 
 export default function VendorDashboard() {
@@ -61,21 +61,21 @@ export default function VendorDashboard() {
             shortcuts={[
               {
                 title: "Create Invoice",
-                href: "/admin/invoices/create",
+                href: "/vendor/invoices/create",
                 icon: FileText,
                 color: "from-blue-500 to-indigo-600",
                 hoverColor: "group-hover:from-blue-600 group-hover:to-indigo-700",
               },
               {
                 title: "Create Booking",
-                href: "/admin/bookings/create",
+                href: "/vendor/bookings/create",
                 icon: Calendar,
                 color: "from-emerald-500 to-teal-600",
                 hoverColor: "group-hover:from-emerald-600 group-hover:to-teal-700",
               },
               {
                 title: "Create Enquiry",
-                href: "/admin/enquiry/create",
+                href: "/vendor/enquiry/create",
                 icon: MessageSquare,
                 color: "from-amber-500 to-orange-600",
                 hoverColor: "group-hover:from-amber-600 group-hover:to-orange-700",
