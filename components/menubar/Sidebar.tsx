@@ -17,6 +17,7 @@ import {
   SquareChevronRight,
   LayoutDashboard,
   Users,
+  BadgeIndianRupee,
   Route,
   PackagePlus,
   ChartColumnIncreasing,
@@ -276,6 +277,9 @@ const VendorSidebarItems: {
         { name: "Invoices", href: "/vendor/invoices", icon: SquareChevronRight },
         { name: "Create Invoice", href: "/vendor/invoices/create", icon: SquareChevronRight },
       ],
+    },
+    {
+      name: "payments", href: "/vendor/payments", icon: BadgeIndianRupee
     },
   ];
 
