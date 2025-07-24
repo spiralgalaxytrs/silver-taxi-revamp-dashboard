@@ -759,7 +759,7 @@ export default function BookingDetailsPage() {
                           <span>{formatCurrency(parseFloat(value) || 0)}</span>
                         </div>
                       ))}
-                      
+
                       {Object.entries(extraCharges).map(([key, value]) => (
                         <div key={key} className="flex justify-between">
                           <span>{capitalizeLabel(key)}</span>
@@ -794,7 +794,7 @@ export default function BookingDetailsPage() {
 
                       <div className="border-t border-gray-200 pt-2">
                         <br />
-                        <h4 className="font-semibold mb-1">Admin Amount</h4>
+                        <h4 className="font-semibold mb-1">{booking?.createdBy}  Amount</h4>
                         <div className="space-y-1">
                           <div className="flex justify-between">
                             <span>GST ({booking?.taxPercentage || 0}%)</span>
@@ -802,7 +802,7 @@ export default function BookingDetailsPage() {
                           </div>
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-1">
-                              <span>Admin Commission</span>
+                              <span>{booking?.createdBy}  Commission</span>
                               <TooltipComponent name={`Commission Tax Amount = ${calculateCommisionTax()} `}>
                                 <Info className="w-4 h-4" />
                               </TooltipComponent>
@@ -816,6 +816,21 @@ export default function BookingDetailsPage() {
                               <span>{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
                             </div>
                           </div>
+
+                          {booking?.createdBy === "Vendor" && (
+                            <>
+                              <div className="flex justify-between">
+                                <span>Admin Commission</span>
+                                <span className='text-red-500'>- {formatCurrency(booking?.adminCommission)}</span>
+                              </div>
+                              <div className="border-t border-b border-gray-200 pt-2">
+                                <div className="flex justify-between font-bold">
+                                  <span>Total Amount</span>
+                                  <span>{formatCurrency(Number((booking?.driverDeductionAmount) - booking?.adminCommission))}</span>
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
 
                         <br />
@@ -828,7 +843,7 @@ export default function BookingDetailsPage() {
                           </div>
 
                           <div className="flex justify-between text-red-500">
-                            <span>Admin Commission Amount</span>
+                            <span>{booking?.createdBy} Commission Amount</span>
                             <span>-{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
                           </div>
 
