@@ -867,7 +867,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       const handleConvertBooking = async (id: string) => {
         try {
-          router.push(`/vendor/invoices/create?bookingId=${id}`);
+          router.push(`/vendor/invoices`);
         } catch (error) {
           toast.error("Failed to convert booking", {
             style: {
