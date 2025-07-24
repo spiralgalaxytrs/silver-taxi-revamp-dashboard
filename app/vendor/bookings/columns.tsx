@@ -5,7 +5,6 @@ import { Button } from "components/ui/button"
 import { Edit, SendHorizontal, Trash, Eye, ChevronDown } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "components/ui/badge"
-import { BookingPopup } from "components/booking/BookingPopup"
 import { DriverSelectionPopup } from "components/driver/SelectDriver"
 import {
   DropdownMenu,
@@ -45,6 +44,7 @@ import {
   MRT_ColumnDef
 } from 'material-react-table';
 import TooltipComponent from "components/others/TooltipComponent";
+import { VendorBookingPopup } from "components/booking/VendorBookingPopup";
 
 export type Booking = {
   bookingId?: string;
@@ -110,8 +110,6 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
-
-
   {
     accessorKey: "name",
     header: "Customer Name",
@@ -886,7 +884,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
             {/* Convert to Booking Icon */}
 
             {/*View Icon*/}
-            <BookingPopup
+            <VendorBookingPopup
               trigger={
                 <Button
                   variant="ghost"
