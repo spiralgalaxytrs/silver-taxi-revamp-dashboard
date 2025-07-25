@@ -37,14 +37,14 @@ const chartConfig = {
     label: "Round trip",
     color: colorMap["Round trip"],
   },
-  "Airport": {
-    label: "Airport",
-    color: colorMap["Airport"],
-  },
-  "Package": {
-    label: "Package",
-    color: colorMap["Package"],
-  },
+  // "Airport": {
+  //   label: "Airport",
+  //   color: colorMap["Airport"],
+  // },
+  // "Package": {
+  //   label: "Package",
+  //   color: colorMap["Package"],
+  // },
 } satisfies ChartConfig;
 
 // Custom Legend Component
@@ -79,7 +79,7 @@ export function AreaChart({ createdBy, bookings, isLoading }: AreaChartProps) {
     const initial = [
       { service: "One way", bookings: 0, fill: colorMap["One way"] },
       { service: "Round trip", bookings: 0, fill: colorMap["Round trip"] },
-      { service: "Package", bookings: 0, fill: colorMap["Package"] },
+      // { service: "Package", bookings: 0, fill: colorMap["Package"] },
       // { service: "Airport", bookings: 0, fill: colorMap["Airport"] },
     ];
 
@@ -117,8 +117,9 @@ export function AreaChart({ createdBy, bookings, isLoading }: AreaChartProps) {
               accessibilityLayer
               data={chartData}
               layout="vertical"
+              barCategoryGap={30}
               margin={{
-                left: 5,
+                left: 10,
               }}
             >
               <YAxis
