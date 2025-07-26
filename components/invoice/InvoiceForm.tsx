@@ -107,6 +107,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
   const [paymentDetails, setPaymentDetails] = useState("");
   const [note, setNote] = useState("");
 
+
   // Update from invoice when it loads
   useEffect(() => {
     if (invoice) {
@@ -137,12 +138,18 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
 
       if (invoice?.otherCharges) {
 
-        const taxValue = invoice?.otherCharges["CGST & SGST"] || 0;
+        const taxValue =
+          invoice?.otherCharges?.["CGST & SGST"] ??
+          invoice?.otherCharges?.["IGST"] ??
+          0;
+
         setTaxCharges((prev) => {
-          return prev.map((charge) => {
-            return { ...charge, value: taxValue };
-          });
+          return prev.map((charge) => ({
+            ...charge,
+            value: taxValue,
+          }));
         });
+
 
         const excludedLabels = ["CGST & SGST", "IGST"];
         const parsedCharges = Object.entries(invoice.otherCharges)
@@ -217,7 +224,6 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
     } else {
       console.log("Selected IGST");
       setIsCGSTSGSTSelected(false);
-      setIsCGSTSGSTSelected(false);
       setIsIGSTSelected(true);
     }
     setIsFormDirty(true);
@@ -232,13 +238,34 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
     return (invoice?.totalAmount || 0) + customTotal;
   }, [customCharges, invoice]);
 
+
+
+
   const handleCreateInvoice = () => {
 
+
     const customChargeEntries = customCharges.map((c) => [c.label, c.value]);
-    const finalOtherCharges = {
-      ...invoice?.otherCharges,
-      ...Object.fromEntries(customChargeEntries)
+
+    const baseOtherCharges = {
+      ...Object.fromEntries(OtherCharges.map(c => [c.label, Number(c.value)])),
+      ...Object.fromEntries(customChargeEntries),
     };
+
+    // Step 2: Remove any GST from base charges
+    delete baseOtherCharges["CGST & SGST"];
+    delete baseOtherCharges["IGST"];
+
+    // Step 3: Add only the selected GST
+    if (isCGSTSGSTSelected) {
+      const gstValue = taxCharges.find(charge => charge.label === "CGST & SGST")?.value || 0;
+      baseOtherCharges["CGST & SGST"] = gstValue;
+    } else if (isIGSTSelected) {
+      const gstValue = taxCharges.find(charge => charge.label === "IGST")?.value || 0;
+      baseOtherCharges["IGST"] = gstValue;
+    }
+
+    // Final object to save in DB
+    const finalOtherCharges = baseOtherCharges;
 
 
     const payload = {
@@ -281,7 +308,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
               style: { backgroundColor: "#009F7F", color: "#fff" },
             });
             setIsFormDirty(false);
-            router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`);
+            router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices/view/${invId}`);
           },
           onError: (error: any) => {
             toast.error(error?.response?.data?.message || "Error updating Invoice!", {
@@ -314,6 +341,16 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
     }
 
   };
+
+
+  useEffect(() => {
+    const hasCGST = invoice?.otherCharges?.["CGST & SGST"] !== undefined;
+    const hasIGST = invoice?.otherCharges?.["IGST"] !== undefined;
+
+    setIsCGSTSGSTSelected(hasCGST);
+    setIsIGSTSelected(hasIGST);
+  }, [invoice?.otherCharges]);
+
 
   const handleConfirmNavigation = () => {
     setShowUnsavedChangesDialog(false);
@@ -598,14 +635,15 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
             <div className="flex flex-col gap-2 items-end">
               {taxCharges.filter(charge => charge.isFixed).map((charge, index) => (
                 <div key={index} className="flex flex-row gap-2 items-center">
-                  <Checkbox
-                    checked={charge.label === "CGST & SGST" ? isCGSTSGSTSelected : isIGSTSelected}
-                    onCheckedChange={() => handleTaxSelection(charge.label as "CGST & SGST" | "IGST")}
-                    disabled={
-                      (charge.label === "CGST & SGST" && isIGSTSelected) ||
-                      (charge.label === "IGST" && isCGSTSGSTSelected)
+                      <Checkbox
+                    checked={
+                      charge.label === "CGST & SGST" ? isCGSTSGSTSelected : isIGSTSelected
+                    }
+                    onCheckedChange={() =>
+                      handleTaxSelection(charge.label as "CGST & SGST" | "IGST")
                     }
                   />
+
                   <Input
                     type="text"
                     value={charge.label}
