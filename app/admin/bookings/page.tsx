@@ -191,7 +191,7 @@ export default function BookingsPage() {
         if (bookingYear === currentYear) acc.yearlyBookings += 1;
         if (booking.status === 'Completed') acc.completedBookings += 1;
         if (booking.type === 'Manual') acc.manualBookings += 1;
-        if (booking.createdBy === 'Vendor') acc.vendorBooking += 1;
+        if (booking.createdBy === 'Vendor') acc.vendorBookings += 1;
 
         return acc;
       },

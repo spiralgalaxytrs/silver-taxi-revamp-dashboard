@@ -92,6 +92,7 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
     const [adjustmentRemarks, setAdjustmentRemarks] = useState("");
     const [adjustmentType, setAdjustmentType] = useState("add");
     const [localError, setLocalError] = useState("");
+    const [remarkError, setRemarkError] = useState("");
     const [walletMessage, setWalletMessage] = useState("");
     const [adjustmentReason, setAdjustmentReason] = useState("");
 
@@ -225,6 +226,11 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
 
         if (!amount || isNaN(amount) || amount <= 0) {
             setLocalError("Please enter a valid positive amount");
+            return;
+        }
+
+        if (!adjustmentRemarks) {
+            setRemarkError("Please enter remarks.");
             return;
         }
 
@@ -501,6 +507,8 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
                                                     placeholder="Enter remarks"
                                                     className="h-10 border-gray-300 rounded-lg"
                                                 />
+                                                {remarkError && <p className="text-sm text-red-500">{remarkError}</p>}
+
                                             </div>
 
                                             <Button
