@@ -567,6 +567,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                     <Input
                       className="border-none shadow-none"
                       placeholder="Pickup - Drop"
+                      readOnly={paymentStatus === "Paid"}
                       value={items.details.split("-")[0] || ""}
                       onChange={(e) => handleItemChange("details", e.target.value)}
                       onBlur={(e) => {
