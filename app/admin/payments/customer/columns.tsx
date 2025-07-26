@@ -24,12 +24,23 @@ export const columns: MRT_ColumnDef<GeneralTransaction>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
-  // {
-  //   accessorKey: "transactionId",
-  //   header: "Transaction ID",
-  //   muiTableHeadCellProps: { align: 'center' },
-  //   muiTableBodyCellProps: { align: 'center' },
-  // },
+  {
+    accessorKey: "bookingOrderId",
+    header: "Transaction ID",
+    Cell: ({ row }) => {
+      const bookingOrderId = row.getValue("bookingOrderId") as string;
+
+      if (!bookingOrderId || bookingOrderId === "null") return <div>-</div>;
+
+      return (
+        <div>
+          {bookingOrderId}
+        </div>
+      );
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
   {
     accessorKey: "name",
     header: "Name",
