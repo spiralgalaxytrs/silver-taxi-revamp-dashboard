@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { DataTable } from 'components/others/DataTable';
-import { columns, DriverTransaction } from './columns';
+import { columns } from './columns';
 import { Button } from 'components/ui/button';
-import { Activity, ArrowDown, ArrowUp, Trash, RefreshCcw } from 'lucide-react';
+import { Activity, ArrowDown, ArrowUp, RefreshCcw } from 'lucide-react';
 import CounterCard from 'components/cards/CounterCard';
 import { Card } from 'components/ui/card';
 import { Input } from 'components/ui/input';
@@ -17,17 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from 'components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogFooter
-} from 'components/ui/alert-dialog';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
 import {
   MRT_ColumnDef,
@@ -341,7 +329,7 @@ export default function DriverPaymentPage() {
           <MaterialReactTable
             columns={columns as MRT_ColumnDef<any>[]}
             data={filteredData}
-            enableRowSelection
+            // enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
             state={{ rowSelection, sorting }}
