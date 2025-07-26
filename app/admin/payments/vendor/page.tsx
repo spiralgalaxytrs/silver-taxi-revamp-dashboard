@@ -317,7 +317,7 @@ export default function VendorPaymentPage() {
           <MaterialReactTable
             columns={columns as MRT_ColumnDef<any>[]}
             data={filteredData}
-            enableRowSelection
+            // enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
             state={{ rowSelection, sorting }}
