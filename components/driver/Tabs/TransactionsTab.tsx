@@ -34,6 +34,7 @@ interface TransactionsTabProps {
   adjustmentReason: string;
   setAdjustmentReason: (value: string) => void;
   localError: string;
+  remarkError: string;
   walletMessage: string;
   isLoading: boolean;
   handleSubmit: () => void;
@@ -52,13 +53,14 @@ export default function TransactionsTab({
   adjustmentReason,
   setAdjustmentReason,
   localError,
+  remarkError,
   walletMessage,
   isLoading,
   handleSubmit,
   handleClose,
 }: TransactionsTabProps) {
 
-  
+
 
   const creditReasons = [
     { value: "referral_bonus", label: "Referral Bonus" },
@@ -74,7 +76,6 @@ export default function TransactionsTab({
     const rawValue = e.target.value;
     const sanitizedValue = rawValue.replace(/\D/g, "");
     setAdjustmentAmount(sanitizedValue);
-
     if (sanitizedValue === "" || Number(sanitizedValue) <= 0) {
       toast.error("Please enter a positive amount", {
         style: {
@@ -86,7 +87,8 @@ export default function TransactionsTab({
   };
 
 
-      
+
+
 
 
   return (
@@ -193,7 +195,7 @@ export default function TransactionsTab({
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">Remarks (Optional)</Label>
+                    <Label className="text-sm font-medium text-gray-700">Remarks </Label>
                     <Input
                       id="adjustmentRemarks"
                       name="adjustmentRemarks"
@@ -203,6 +205,8 @@ export default function TransactionsTab({
                       className="h-10 border-gray-300 rounded-lg"
                     />
                   </div>
+                  {remarkError && <p className="text-sm text-red-500">{remarkError}</p>}
+
 
                   <Button
                     onClick={handleSubmit}

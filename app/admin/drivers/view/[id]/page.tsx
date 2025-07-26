@@ -81,6 +81,7 @@ export default function ViewDriverPage() {
     const [adjustmentRemarks, setAdjustmentRemarks] = useState("");
     const [adjustmentType, setAdjustmentType] = useState("add");
     const [localError, setLocalError] = useState("");
+    const [remarkError, setRemarkError] = useState("");
     const [walletMessage, setWalletMessage] = useState("");
     const [adjustmentReason, setAdjustmentReason] = useState("");
 
@@ -227,6 +228,11 @@ export default function ViewDriverPage() {
 
         if (!amount || isNaN(amount) || amount <= 0) {
             setLocalError("Please enter a valid positive amount");
+            return;
+        }
+
+        if (!adjustmentRemarks) {
+            setRemarkError("Please enter remarks");
             return;
         }
 
@@ -512,11 +518,13 @@ export default function ViewDriverPage() {
                                     setAdjustmentAmount={setAdjustmentAmount}
                                     adjustmentRemarks={adjustmentRemarks}
                                     setAdjustmentRemarks={setAdjustmentRemarks}
+
                                     adjustmentType={adjustmentType}
                                     setAdjustmentType={setAdjustmentType}
                                     adjustmentReason={adjustmentReason}
                                     setAdjustmentReason={setAdjustmentReason}
                                     localError={localError}
+                                    remarkError={remarkError}
                                     walletMessage={walletMessage}
                                     isLoading={isLoading}
                                     handleSubmit={handleSubmit}
