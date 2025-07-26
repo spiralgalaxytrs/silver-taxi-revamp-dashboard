@@ -4,28 +4,34 @@ import { useRef, useState, useEffect } from "react"
 import jsPDF from "jspdf"
 import html2canvas from "html2canvas"
 import { Button } from "components/ui/button"
-import { Download, Phone, Mail } from "lucide-react"
-import { useInvoiceStore } from "stores/-invoiceStore"
-import { useProfileStore } from "stores/-profileStore"
+import { Download, Loader2 } from "lucide-react"
+
 import { Profile } from "types/profile"
+import { useAdminProfile } from "hooks/react-query/useProfile"
+import { useInvoiceById } from "hooks/react-query/useInvoice"
 
 const InvoicePDF = ({ id }: { id: string }) => {
   const pdfRef = useRef<HTMLDivElement>(null)
-  const { invoice, fetchInvoiceById } = useInvoiceStore()
-  const { profile, fetchProfile } = useProfileStore()
+
   const [isGenerating, setIsGenerating] = useState(false)
-  const [updatedCompanyProfile, setUpdatedCompanyProfile] = useState<Profile>()
+  // const [updatedCompanyProfile, setUpdatedCompanyProfile] = useState<Profile>()
 
-  useEffect(() => {
-    fetchInvoiceById(id);
-  }, [id])
+  const { data: profile = null } = useAdminProfile();
+  const { data: invoice = null, isPending: isLoading } = useInvoiceById(id)
 
-  useEffect(() => {
-    fetchProfile();
-    if (profile) {
-      setUpdatedCompanyProfile(profile as unknown as Profile)
-    }
-  }, [])
+  if (!isLoading && (!invoice || !profile)) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <p className="text-red-600">Invoice or profile data not found.</p>
+      </div>
+    );
+  }
+  // useEffect(() => {
+  //   if (profile) {
+  //     setUpdatedCompanyProfile(profile as unknown as Profile);
+  //   }
+  // }, [profile]);
+
 
   const handleDownload = async () => {
     const element = pdfRef.current
@@ -134,10 +140,10 @@ const InvoicePDF = ({ id }: { id: string }) => {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-[#00775F] mb-2">CompanyDetails</h3>
-                <p className="font-medium text-lg mb-2">{updatedCompanyProfile?.name}</p>
-                <p className="mt-3">{updatedCompanyProfile?.address}</p>
-                <p className="flex items-center mt-3">{updatedCompanyProfile?.phone}</p>
-                <p className="flex items-center mt-3">{updatedCompanyProfile?.email}</p>
+                <p className="font-medium text-lg mb-2">{profile?.name}</p>
+                <p className="mt-3">{profile?.address}</p>
+                <p className="flex items-center mt-3">{profile?.phone}</p>
+                <p className="flex items-center mt-3">{profile?.email}</p>
               </div>
             </div>
           </section>
@@ -177,7 +183,7 @@ const InvoicePDF = ({ id }: { id: string }) => {
             <div className="w-72 space-y-4">
               <h2 className="text-2xl font-semibold text-[#00775F]">Total Charges</h2>
               <div className="bg-gray-50 p-4 rounded-lg shadow space-y-2">
-                {invoice?.otherCharges &&
+                {/* {invoice?.otherCharges &&
                   Object.entries(invoice.otherCharges)
                     .reverse() // Reverse the order of entries
                     .map(([chargeKey, amount]) => (
@@ -185,7 +191,34 @@ const InvoicePDF = ({ id }: { id: string }) => {
                         <span>{chargeKey}</span>
                         <span className="font-medium">₹{amount}</span>
                       </div>
-                    ))}
+                    ))} */}
+                {invoice?.otherCharges &&
+                  Object.entries(invoice.otherCharges)
+                    .reverse()
+                    .filter(([, amount]) => {
+                      if (amount === null || amount === undefined) return false;
+
+                      if (typeof amount === "object" && amount !== null) {
+                        return Number(amount) !== 0;
+                      }
+
+                      return Number(amount) !== 0;
+                    })
+                    .map(([chargeKey, amount]) => {
+                      const valueToShow =
+                        typeof amount === "object" && amount !== null
+                          ? amount
+                          : amount;
+
+                      return (
+                        <div key={chargeKey} className="flex justify-between">
+                          <span>{chargeKey}</span>
+                          <span className="font-medium">₹{valueToShow}</span>
+                        </div>
+                      );
+                    })}
+
+
                 <div className="flex justify-between text-lg font-bold text-[#00775F] border-t border-gray-300 pt-2">
                   <span>Total Amount:</span>
                   <span>₹{invoice?.totalAmount}</span>

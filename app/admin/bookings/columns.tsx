@@ -34,8 +34,9 @@ import {
   useToggleTripStatus,
   useTogglePaymentStatus,
   useDeleteBooking,
-  useFetchBookings
+  useFetchBookings,
 } from "hooks/react-query/useBooking";
+import { useInvoiceById } from "hooks/react-query/useInvoice";
 import {
   useDrivers
 } from 'hooks/react-query/useDriver';
@@ -907,19 +908,19 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         }
       };
 
-      const handleConvertBooking = async (id: string) => {
+
+
+      const handleConvertBooking = async () => {
         try {
-          router.push(`/admin/invoices`);
+          router.push(`/admin/invoices/view/${booking.bookingId}`);
+
         } catch (error) {
+          console.log("error", error);
           toast.error("Failed to convert booking", {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
+            style: { backgroundColor: "#FF0000", color: "#fff" },
           });
         }
-      }
-
+      };
       return (
         <React.Fragment>
           <div className="flex items-center gap-3">
@@ -986,7 +987,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
                 size="icon"
                 className="text-yellow-600 hover:text-yellow-800 tool-tip"
                 data-tooltip="Convert to Booking"
-                onClick={() => handleConvertBooking(booking.bookingId || "")}
+                onClick={() => handleConvertBooking()}
               >
                 <SendHorizontal className="h-6 w-6" />
               </Button>
