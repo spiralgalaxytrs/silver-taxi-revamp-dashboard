@@ -175,7 +175,7 @@ export default function BookingsPage() {
 
   const filteredData = applyFilters();
 
-  
+
 
 
   const stats = useMemo(() => {
@@ -320,6 +320,7 @@ export default function BookingsPage() {
             <div className="flex items-center justify-between border-b-1 mb-5">
               <h1 className="text-2xl font-bold tracking-tight">Booking Page</h1>
               <div className="flex items-center gap-2">
+           
                 <Button
                   className='bg-[rgb(0,159,127)] inline-flex items-center justify-center flex-shrink-0 font-medium leading-none rounded-full outline-none transition duration-300 ease-in-out focus:outline-none focus:shadow text-white border border-solid border-accent hover:bg-[rgb(0,159,135)] hover:text-white hover:border-transparent px-5 py-0 h-12 text-[15px] lg:text-bas w-full md:w-auto md:ms-6'
                   onClick={handleCreateBooking}

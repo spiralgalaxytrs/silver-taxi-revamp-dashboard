@@ -8,6 +8,7 @@ import {
   MaterialReactTable
 } from 'material-react-table';
 
+
 interface BookingsTabProps {
   totalTrips: number;
   editedDriver: Driver | null;

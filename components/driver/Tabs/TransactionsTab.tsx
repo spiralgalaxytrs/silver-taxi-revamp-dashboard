@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { DriverTransaction, walletColumns } from "app/admin/drivers/view/[id]/walletColumns";
 import { Button } from "components/ui/button";
 import { Activity } from "lucide-react";
@@ -21,6 +21,8 @@ import {
   MRT_ColumnDef,
   MaterialReactTable
 } from 'material-react-table';
+import { useDriverTransactions } from "hooks/react-query/useWallet";
+import { RefreshCcw } from "lucide-react";
 
 interface TransactionsTabProps {
   walletTransactions: DriverTransaction[];
@@ -60,6 +62,14 @@ export default function TransactionsTab({
   handleClose,
 }: TransactionsTabProps) {
 
+  const [isSpinning, setIsSpinning] = useState(false)
+
+
+  const {
+    data: driverTransactions = [],
+    isPending: isLoadingTransactions,
+    refetch
+  } = useDriverTransactions(editedDriver.driverId as string || "");
 
 
   const creditReasons = [
@@ -86,6 +96,16 @@ export default function TransactionsTab({
     }
   };
 
+
+  const handleRefetch = async () => {
+    setIsSpinning(true);
+    try {
+      await refetch(); // wait for the refetch to complete
+    } finally {
+      // stop spinning after short delay to allow animation to play out
+      setTimeout(() => setIsSpinning(false), 500);
+    }
+  };
 
 
 
@@ -257,6 +277,19 @@ export default function TransactionsTab({
               justifyContent: 'flex-start', // Aligns search left
             },
           }}
+          renderTopToolbarCustomActions={() => (
+            <div className="flex flex-1 justify-end items-center">
+              {/* 🔁 Refresh Button */}
+              <Button
+                variant={"ghost"}
+                onClick={handleRefetch}
+                className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                title="Refresh Data"
+              >
+                <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+              </Button>
+            </div>
+          )}
         />
       </div>
     </React.Fragment>

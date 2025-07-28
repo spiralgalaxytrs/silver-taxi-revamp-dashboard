@@ -365,7 +365,7 @@ export default function ViewDriverPage() {
         return sorted;
     }, [bookingData, sortConfig]);
 
-    if (isLoading || isWalletAdjustmenting) {
+    if (isLoading || isWalletAdjustmenting || isLoadingTransactions) {
         return (
             <div className="flex items-center justify-center h-screen bg-gray-50">
                 <Loader2 className="w-12 h-12 animate-spin text-primary" />

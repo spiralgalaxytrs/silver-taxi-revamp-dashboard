@@ -61,6 +61,12 @@ interface CreateBookingFormProps {
     createdBy: string;
 }
 
+type ExtraCharges = {
+    toll?: number;
+    hill?: number;
+    permitCharge?: number;
+};
+
 type Booking = {
     bookingId?: string;
     name: string;
@@ -99,6 +105,8 @@ type Booking = {
     driverBeta?: number | null;
     duration?: string | null;
     pricePerKm?: number | null;
+    extraCharges: ExtraCharges;
+
 }
 
 export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
@@ -165,6 +173,11 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
         driverBeta: 0,
         duration: "",
         pricePerKm: 0,
+        extraCharges: {
+            toll: 0,
+            hill: 0,
+            permitCharge: 0,
+        },
     });
 
     let pastTimeToastShown = false;
@@ -253,6 +266,8 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                     | "Airport Drop"
                     | "Day Packages"
                     | "Hourly Packages",
+                extraCharges: booking.extraCharges || [],
+
             };
             setFormData(updatedBookingData);
             setCurrentStep(2);
@@ -306,9 +321,22 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
         }
     };
 
-    const handleInputChange = (name: keyof Booking, value: any) => {
+    const handleInputChange = (name: keyof Booking | `extraCharges.${keyof ExtraCharges}`, value: any) => {
         setFormData((prev) => {
+
+
             let newValue = value;
+
+            // if (name.startsWith("extraCharges.")) {
+            //     const field = name.split(".")[1] as keyof ExtraCharges;
+            //     return {
+            //         ...prev,
+            //         extraCharges: {
+            //             ...prev.extraCharges,
+            //             [field]: Number(value), 
+            //         },
+            //     };
+            // }       
 
             if (name === "pickupDateTime") {
                 const now = new Date();
@@ -348,6 +376,31 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                 ...prev,
                 [name]: newValue,
             };
+
+
+            if (name.startsWith("extraCharges.")) {
+                const field = name.split(".")[1] as keyof ExtraCharges;
+
+                const updatedExtraCharges = {
+                    ...prev.extraCharges,
+                    [field]: Number(value),
+                };
+
+                const totalExtraCharge = Object.values(updatedExtraCharges).reduce(
+                    (sum, charge) => sum + (Number(charge) || 0),
+                    0
+                );
+
+                newState.extraCharges = updatedExtraCharges;
+                newState.finalAmount = (prev.estimatedAmount || 0) + totalExtraCharge;
+
+                // Also recalculate upPaidAmount
+                newState.upPaidAmount =
+                    (newState.finalAmount + Number(prev.driverBeta || 0)) -
+                    (Number(prev.discountAmount || 0) + Number(prev.advanceAmount || 0));
+
+                return newState;
+            }
 
             if (name === "offerId") {
                 if (value === "None") {
@@ -397,7 +450,13 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
             !formData.vehicleId ||
             !formData.pickupDateTime
         ) {
-            toast.error("Please fill all required fields");
+            toast.error("Please fill all required fields", {
+                style: {
+                    backgroundColor: "#FF0000",
+                    color: "#fff",
+                },
+            }
+            );
             return;
         }
 
@@ -425,8 +484,23 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (
+            !formData.driverBeta
+        ) {
+            toast.error("Please fill all required fields", {
+                style: {
+                    backgroundColor: "#FF0000",
+                    color: "#fff",
+                },
+            }
+
+            );
+            return;
+        }
         try {
             if (id) {
+                console.log('Updating booking with ID:', id, 'and data:', formData);
+
                 updateBooking({ id, data: formData }, {
                     onSuccess: (data: any) => {
                         toast.success(data?.message || 'Booking updated successfully', {
@@ -807,7 +881,7 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>Driver Beta <span className='text-[10px]'>(Optional)</span></Label>
+                                        <Label>Driver Beta <span className='text-red-500'>*</span></Label>
                                         <Input
                                             value={formData.driverBeta || ''}
                                             className="h-12 bg-muted"
@@ -871,6 +945,7 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         />
                                     </div>
 
+
                                     <div className="space-y-2">
                                         <Label>Payment Method <span className='text-red-500'>*</span></Label>
                                         <Select
@@ -907,6 +982,33 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Toll <span className='text-xs text-gray-500 ml-1'>(Optional)</span></Label>
+                                        <Input
+                                            value={formData.extraCharges.toll || []}
+                                            className="h-12 bg-muted"
+                                            onChange={e => handleInputChange('extraCharges.toll', e.target.value)}
+
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Hill <span className='text-xs text-gray-500 ml-1'>(Optional)</span></Label>
+                                        <Input
+                                            value={formData.extraCharges.hill || ''}
+                                            className="h-12 bg-muted"
+                                            onChange={e => handleInputChange('extraCharges.hill', e.target.value)}
+
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Permit <span className='text-xs text-gray-500 ml-1'>(Optional)</span></Label>
+                                        <Input
+                                            value={formData.extraCharges.permitCharge || ''}
+                                            className="h-12 bg-muted"
+                                            onChange={e => handleInputChange('extraCharges.permitCharge', e.target.value)}
+
+                                        />
                                     </div>
                                 </div>
                             </div>
