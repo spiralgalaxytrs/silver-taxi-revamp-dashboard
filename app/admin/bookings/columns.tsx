@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "components/ui/button"
@@ -195,6 +195,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     accessorKey: "pickupDateTime",
     id: "pickupDate",
     header: "PickUp Date",
+    // filterVariant: "date",
     Cell: ({ row }) => {
       const pickupDate: string = row.getValue("pickupDate");
       if (!pickupDate) {
@@ -223,6 +224,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     accessorKey: "pickupDateTime",
     id: "pickupTime",
     header: "PickUp Time",
+
     Cell: ({ row }) => {
       const pickupTime: string = row.getValue("pickupTime");
       if (!pickupTime) {

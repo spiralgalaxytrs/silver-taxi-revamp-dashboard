@@ -346,6 +346,7 @@ export default function Sidebar({ createdBy }: { createdBy: string }) {
           )}
           <Link href={`/img/logo-v1-white.png`} target="_blank" rel="noopener noreferrer"></Link>
           <Link href={`/img/logo-v1.png`} target="_blank" rel="noopener noreferrer"></Link>
+          
         </div>
 
       </div>

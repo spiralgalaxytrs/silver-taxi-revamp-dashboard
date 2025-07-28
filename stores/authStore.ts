@@ -27,16 +27,23 @@ export const useAuthStore = create<AuthState>()(
       setPermissions: (permissions: string[] | null) => set({ permissions }),
       setTimestamp: (timestamp: number | null) => set({ timestamp }),
 
-      login: async (email: string, password: string) => {
+      login: async (emailOrPhone: string, password: string) => {
         try {
-          const response = await axios.post("/auth/login", { email, password });
+          const isEmail = /\S+@\S+\.\S+/.test(emailOrPhone);
+          const payload = {
+            email: isEmail ? emailOrPhone : null,
+            phone: !isEmail ? emailOrPhone : null,
+            password,
+          };
+          console.log("Login payload:", payload);
+          const response = await axios.post("/auth/login", payload);
           const { token, role, permissions, user } = response.data.data;
           const statusCode = response.status;
           const message = response.data.message;
 
           // Update the state and store the timestamp of when the data was saved
           const timestamp = Date.now();
-          set({ email, message, statusCode, user, timestamp });
+          set({  message, statusCode, user, timestamp });
 
           // Store the entire state along with the timestamp in localStorage
           sessionStorage.setItem("token", token);
