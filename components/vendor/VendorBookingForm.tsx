@@ -53,7 +53,6 @@ import {
 import {
     useOffers
 } from 'hooks/react-query/useOffers';
-import { hi } from 'date-fns/locale';
 
 
 
