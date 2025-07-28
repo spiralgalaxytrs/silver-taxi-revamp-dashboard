@@ -204,7 +204,7 @@ const AdminSidebarItems: {
       icon: CreditCard,
       dropdown: [
         // { name: "All Payment", href: "/admin/payments", icon:   SquareChevronRight },
-        { name: "Customer Payment", href: "/admin/payments/general", icon: SquareChevronRight },
+        { name: "Customer Payment", href: "/admin/payments/customer", icon: SquareChevronRight },
         // { name: "Customer Payment", href: "/admin/payments/customer", icon: SquareChevronRight },
         { name: "Driver Payment", href: "/admin/payments/driver", icon: SquareChevronRight },
         // { name: "Service Payment", href: "/admin/payments/service", icon: SquareChevronRight },
