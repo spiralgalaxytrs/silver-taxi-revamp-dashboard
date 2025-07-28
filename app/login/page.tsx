@@ -12,6 +12,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: "silvertaxi@gmail.com",
+    phone: "9361060914",
     password: "12345678",
   });
   const login = useAuthStore((state) => state.login);
@@ -36,30 +37,32 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     localStorage.clear()
+
+    const input = formData.phone?.trim();
+    const password = formData.password?.trim();
+
     // Basic validation
-    if (!formData.email || !formData.password) {
+    if (!input || !password) {
       toast.info("Please fill in all fields.", {
-        style: {
-          backgroundColor: "#007FFF",
-          color: "#fff",
-        },
+        style: { backgroundColor: "#007FFF", color: "#fff" },
       });
       return;
     }
 
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      toast.info("Please enter a valid email address.", {
-        style: {
-          backgroundColor: "#007FFF",
-          color: "#fff",
-        },
+    const isEmail = /\S+@\S+\.\S+/.test(input);
+    const isPhone = /^[6-9]\d{9}$/.test(input);
+
+    if (!isEmail && !isPhone) {
+      toast.info("Please enter a valid email or phone number.", {
+        style: { backgroundColor: "#007FFF", color: "#fff" },
       });
       return;
     }
 
-    await login(formData.email, formData.password);
+
+
+    await login(input, password);
 
     const status = useAuthStore.getState().statusCode;
     const message = useAuthStore.getState().message;
@@ -104,13 +107,13 @@ export default function LoginPage() {
         >
           <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
           <div className="mb-4">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email or Phone</Label>
             <Input
               id="email"
               name="email"
-              type="email"
+              // type="email"
               autoComplete="email"
-              value={formData.email}
+              value={formData.phone}
               onChange={handleInputChange}
               required
             />

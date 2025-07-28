@@ -53,6 +53,7 @@ import {
 import {
     useOffers
 } from 'hooks/react-query/useOffers';
+import InfoComponent from 'components/ui/Info';
 
 
 
@@ -99,6 +100,7 @@ type Booking = {
     driverBeta?: number | null;
     duration?: string | null;
     pricePerKm?: number | null;
+    breakFareDetails?: Record<string, any>;
 }
 
 export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
@@ -165,6 +167,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         driverBeta: 0,
         duration: "",
         pricePerKm: 0,
+        breakFareDetails: {}
     });
 
     let pastTimeToastShown = false;
@@ -341,7 +344,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
             }
 
             const response = await axios.post(`/v1/bookings/fair-calculation`, payload);
-            let { basePrice, driverBeta, pricePerKm, finalPrice, taxAmount, taxPercentage } = response.data.data;
+            let { basePrice, driverBeta, pricePerKm, finalPrice, taxAmount, taxPercentage , breakFareDetails} = response.data.data;
 
             setFormData(prev => ({
                 ...prev,
@@ -353,7 +356,8 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                 taxPercentage: taxPercentage,
                 price: basePrice,
                 extraPrice: pricePerKm || 0,
-                upPaidAmount: finalPrice
+                upPaidAmount: finalPrice,
+                breakFareDetails: breakFareDetails || {}
             }));
             setLocalLoading(false);
         } catch (err) {
@@ -855,7 +859,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         <Input
                                             value={formData.distance}
                                             readOnly
-                                            className="h-12 bg-muted"
+                                            className="h-12 bg-muted cursor-not-allowed"
                                         />
                                     </div>
 
@@ -916,11 +920,27 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>Final Amount <span className='text-red-500'>*</span></Label>
+
+                                        <Label>Final Amount <span className='text-red-500'>*</span>
+                                            <InfoComponent
+                                                content={[
+                                                    { label: "Estimated Amount", value: formData?.breakFareDetails?.basePrice || ''},
+                                                    { label: "Driver Beta", value: formData?.breakFareDetails?.driverBeta || '' },
+                                                    { label: "Tax Amount", value: formData?.breakFareDetails?.taxAmount || ''  },
+                                                    { label: "Final Amount", value: formData?.finalAmount || '' , highlight: true },
+                                               
+                                                ]}
+                                                position='top'
+                                                iconColor='text-blue-500'
+                                                className='ml-2'
+                                                title='Final Amount Info'
+                                            />
+                                        </Label>
+
                                         <Input
                                             value={formData.upPaidAmount}
                                             readOnly
-                                            className="h-12 bg-muted"
+                                            className="h-12 bg-muted cursor-not-allowed"
                                         />
                                     </div>
 
