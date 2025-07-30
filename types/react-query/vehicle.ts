@@ -50,6 +50,7 @@ export interface Vehicle {
   pollutionImageVerified?: "pending" | "accepted" | "rejected";
   pollutionImageRemark?: string;
   isUpdated?: boolean;
+  vehicleType?: string; // Added vehicleType field
   //  to here.
   pollutionExpiryDate?: string;
 

@@ -101,6 +101,7 @@ type Booking = {
     duration?: string | null;
     pricePerKm?: number | null;
     breakFareDetails?: Record<string, any>;
+    vehicleType?: string;
 }
 
 export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
@@ -167,7 +168,8 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         driverBeta: 0,
         duration: "",
         pricePerKm: 0,
-        breakFareDetails: {}
+        breakFareDetails: {},
+        vehicleType: ""
     });
 
     let pastTimeToastShown = false;
@@ -181,8 +183,10 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                     tariff.price > 0 &&
                     tariff.services?.name === formData.serviceType
             )
+
         );
     }, [vehicles, tariffs, formData.serviceType]);
+
 
 
     const findServiceId = (serviceType: string) => {
@@ -344,7 +348,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
             }
 
             const response = await axios.post(`/v1/bookings/fair-calculation`, payload);
-            let { basePrice, driverBeta, pricePerKm, finalPrice, taxAmount, taxPercentage , breakFareDetails} = response.data.data;
+            let { basePrice, driverBeta, pricePerKm, finalPrice, taxAmount, taxPercentage, breakFareDetails } = response.data.data;
 
             setFormData(prev => ({
                 ...prev,
@@ -400,7 +404,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                 }
             }
 
-            if (["distance", "estimatedAmount", "upPaidAmount", "discountAmount", "advanceAmount"].includes(name)) {
+            if (["distance", "estimatedAmount", "upPaidAmount", "discountAmount", "advanceAmount", "pricePerKm"].includes(name)) {
                 newValue = value.replace(/[^0-9.]/g, "");
             }
 
@@ -408,6 +412,12 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                 ...prev,
                 [name]: newValue,
             };
+
+            const pricePerKm = name === "pricePerKm" ? Number(newValue) : Number(prev.pricePerKm || 0);
+            const distance = name === "distance" ? Number(newValue) : Number(prev.distance || 0);
+
+            newState.estimatedAmount = Number((pricePerKm * distance).toFixed(2));
+            newState.finalAmount = Number(newState.estimatedAmount + newState.finalAmount || 0); // you can add taxes or other charges here
 
             if (name === "offerId") {
                 if (value === "None") {
@@ -451,9 +461,18 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
             !formData.phone ||
             !formData.pickup ||
             !formData.vehicleId ||
-            !formData.pickupDateTime
+            !formData.pickupDateTime ||
+            !formData.vehicleType
+
         ) {
-            toast.error("Please fill all required fields");
+            toast.error("Please fill all required fields",
+                {
+                    style: {
+                        backgroundColor: "#FF0000",
+                        color: "#fff",
+                    },
+                }
+            );
             return;
         }
 
@@ -474,7 +493,6 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         if (formData.serviceType !== 'Day Packages' && formData.serviceType !== 'Hourly Packages') {
             await fetchDistance(formData.pickup, formData.drop);
         }
-
         setCurrentStep(2);
     };
 
@@ -681,7 +699,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
 
 
                                 <div className="space-y-2">
-                                    <Label>Vehicle Type <span className='text-red-500'>*</span></Label>
+                                    <Label>Vehicle Name <span className='text-red-500'>*</span></Label>
                                     <Select
                                         value={formData.vehicleId || ""} // Ensure this is not an empty string
                                         onValueChange={async (v) => {
@@ -692,6 +710,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 const newState = {
                                                     ...prev,
                                                     vehicleId: v,
+                                                    vehicleType: selectedVehicle?.type || '',
                                                     // Add any other vehicle-related fields you want to update
                                                 };
                                                 return newState;
@@ -716,6 +735,31 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+
+                                {formData.vehicleId ? (
+                                    <div className="pt-2">
+                                        <Label>Vehicle Type</Label>
+                                        <Input
+                                            type="text"
+                                            value={formData.vehicleType || "Unknown"}
+                                            disabled
+                                            className="mt-1 w-full h-12 px-3 border rounded-md bg-gray-100 text-gray-700"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="pt-2">
+                                        <Label>Vehicle Type</Label>
+                                        <Input
+                                            type="text"
+                                            value="No vehicle selected"
+                                            disabled
+                                            className="mt-1 w-full h-12 px-3 border rounded-md bg-gray-100 text-gray-500 italic"
+                                        />
+                                    </div>
+                                )}
+
+
 
                                 {/* Add this new conditional package selection */}
                                 {/* {(formData.serviceType === 'Day Packages' || formData.serviceType === 'Hourly Packages') && formData.vehicleId && (
@@ -852,8 +896,18 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                     {/* Step 2: Pricing & Payment */}
                     {currentStep === 2 && (
                         <>
+
                             <div className="space-y-4 mt-4">
                                 <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Price Per KM <span className='text-red-500'>*</span></Label>
+                                        <Input
+                                            value={formData.pricePerKm || 0}
+                                            className="h-12 bg-muted"
+                                            onChange={e => handleInputChange('pricePerKm', e.target.value)}
+
+                                        />
+                                    </div>
                                     <div className="space-y-2">
                                         <Label>Distance (km) <span className='text-red-500'>*</span></Label>
                                         <Input
@@ -869,6 +923,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                             value={formData.estimatedAmount}
                                             className="h-12 bg-muted"
                                             onChange={e => handleInputChange('estimatedAmount', e.target.value)}
+                                            readOnly
                                         />
                                     </div>
 
@@ -924,11 +979,11 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         <Label>Final Amount <span className='text-red-500'>*</span>
                                             <InfoComponent
                                                 content={[
-                                                    { label: "Estimated Amount", value: formData?.breakFareDetails?.basePrice || ''},
+                                                    { label: "Estimated Amount", value: formData?.breakFareDetails?.basePrice || '' },
                                                     { label: "Driver Beta", value: formData?.breakFareDetails?.driverBeta || '' },
-                                                    { label: "Tax Amount", value: formData?.breakFareDetails?.taxAmount || ''  },
-                                                    { label: "Final Amount", value: formData?.finalAmount || '' , highlight: true },
-                                               
+                                                    { label: "Tax Amount", value: formData?.breakFareDetails?.taxAmount || '' },
+                                                    { label: "Final Amount", value: formData?.finalAmount || '', highlight: true },
+
                                                 ]}
                                                 position='top'
                                                 iconColor='text-blue-500'
