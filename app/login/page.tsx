@@ -11,8 +11,8 @@ import { toast } from "sonner";
 export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    email: "silvertaxi@gmail.com",
-    phone: "9361060914",
+    // email: "silvertaxi@gmail.com",
+    contact: "9361060914",
     password: "12345678",
   });
   const login = useAuthStore((state) => state.login);
@@ -32,26 +32,29 @@ export default function LoginPage() {
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.clear()
+    localStorage.clear();
 
-    const input = formData.phone?.trim();
-    const password = formData.password?.trim();
+    const contact = formData.contact.trim();
+    const password = formData.password.trim();
 
-    // Basic validation
-    if (!input || !password) {
+    if (!contact || !password) {
       toast.info("Please fill in all fields.", {
         style: { backgroundColor: "#007FFF", color: "#fff" },
       });
       return;
     }
 
-    const isEmail = /\S+@\S+\.\S+/.test(input);
-    const isPhone = /^[6-9]\d{9}$/.test(input);
+    const isEmail = /\S+@\S+\.\S+/.test(contact);
+    const isPhone = /^[6-9]\d{9}$/.test(contact);
 
     if (!isEmail && !isPhone) {
       toast.info("Please enter a valid email or phone number.", {
@@ -60,42 +63,30 @@ export default function LoginPage() {
       return;
     }
 
+    // You can pass both, backend will use whichever is valid
+    const email = isEmail ? contact : "";
+    const phone = isPhone ? contact : "";
 
-
-    await login(input, password);
+    await login(email || phone, password); // adjust this if login takes both separately
 
     const status = useAuthStore.getState().statusCode;
     const message = useAuthStore.getState().message;
 
     if (status === 200 || status === 201) {
       toast.success("You have successfully logged in.", {
-        style: {
-          backgroundColor: "#009F7F",
-          color: "#fff",
-        },
+        style: { backgroundColor: "#009F7F", color: "#fff" },
       });
       let role = sessionStorage.getItem("role");
-      if (role === "admin") {
-        router.push("/admin");
-      } else {
-        router.push("/vendor");
-      }
+      router.push(role === "admin" ? "/admin" : "/vendor");
     } else if (status === 400) {
       toast.info(message || "You are not authorized to login.", {
-        style: {
-          backgroundColor: "#00CAFF",
-          color: "#fff",
-        },
+        style: { backgroundColor: "#00CAFF", color: "#fff" },
       });
     } else {
       toast.error(message || "An unknown error occurred.", {
-        style: {
-          backgroundColor: "#FF0000",
-          color: "#fff",
-        },
+        style: { backgroundColor: "#FF0000", color: "#fff" },
       });
     }
-
   };
 
   return (
@@ -109,11 +100,11 @@ export default function LoginPage() {
           <div className="mb-4">
             <Label htmlFor="email">Email or Phone</Label>
             <Input
-              id="email"
-              name="email"
-              // type="email"
-              autoComplete="email"
-              value={formData.phone}
+              id="contact"
+              name="contact"
+              type="text"
+              autoComplete="username"
+              value={formData.contact}
               onChange={handleInputChange}
               required
             />
