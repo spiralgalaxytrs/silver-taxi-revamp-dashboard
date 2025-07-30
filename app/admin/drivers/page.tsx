@@ -136,11 +136,11 @@ export default function DriversPage(): JSX.Element {
   // Calculate counters whenever the driver data changes
   const totalDrivers = finalDrivers.length;
 
-  const activeDrivers = useMemo(() => (
-    finalDrivers.filter(driver => driver.isActive).length
+  const inactiveDrivers = useMemo(() => (
+    finalDrivers.filter(driver => driver.isActive === false).length
   ), [finalDrivers]);
 
-  const inactiveDrivers = totalDrivers - activeDrivers;
+  const activeDrivers = totalDrivers - inactiveDrivers;
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));

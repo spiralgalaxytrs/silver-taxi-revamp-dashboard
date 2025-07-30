@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "components/ui/button"
-import { Edit, SendHorizontal, Trash, Eye, ChevronDown } from "lucide-react"
+import { Edit, SendHorizontal, Trash, Eye, ChevronDown, FileText } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "components/ui/badge"
 import { BookingPopup } from "components/booking/BookingPopup"
@@ -991,7 +991,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
                 data-tooltip="Convert to Booking"
                 onClick={() => handleConvertBooking()}
               >
-                <SendHorizontal className="h-6 w-6" />
+                <FileText className="h-6 w-6" />
               </Button>
             )}
           </div>
