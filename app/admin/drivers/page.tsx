@@ -136,11 +136,11 @@ export default function DriversPage(): JSX.Element {
   // Calculate counters whenever the driver data changes
   const totalDrivers = finalDrivers.length;
 
-  const activeDrivers = useMemo(() => (
-    finalDrivers.filter(driver => driver.isActive).length
+  const inactiveDrivers = useMemo(() => (
+    finalDrivers.filter(driver => driver.isActive === false).length
   ), [finalDrivers]);
 
-  const inactiveDrivers = totalDrivers - activeDrivers;
+  const activeDrivers = totalDrivers - inactiveDrivers;
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -309,7 +309,7 @@ export default function DriversPage(): JSX.Element {
                     color="bg-blue-100"
                     icon={Activity}
                     count={activeDrivers.toLocaleString()}
-                    label="Inactive Drivers"
+                    label="Active Drivers"
                     cardSize="w-[180px] h-[90px]"
                   />
                 </div>
@@ -322,7 +322,7 @@ export default function DriversPage(): JSX.Element {
                     color="bg-purple-100"
                     icon={Activity}
                     count={inactiveDrivers.toLocaleString()}
-                    label="Active Drivers"
+                    label="Inactive Drivers"
                     cardSize="w-[180px] h-[90px]"
                   />
                 </div>
