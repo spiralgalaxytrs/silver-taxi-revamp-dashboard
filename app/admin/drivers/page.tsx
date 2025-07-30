@@ -309,7 +309,7 @@ export default function DriversPage(): JSX.Element {
                     color="bg-blue-100"
                     icon={Activity}
                     count={activeDrivers.toLocaleString()}
-                    label="Active Drivers"
+                    label="Inactive Drivers"
                     cardSize="w-[180px] h-[90px]"
                   />
                 </div>
@@ -322,7 +322,7 @@ export default function DriversPage(): JSX.Element {
                     color="bg-purple-100"
                     icon={Activity}
                     count={inactiveDrivers.toLocaleString()}
-                    label="Inactive Drivers"
+                    label="Active Drivers"
                     cardSize="w-[180px] h-[90px]"
                   />
                 </div>

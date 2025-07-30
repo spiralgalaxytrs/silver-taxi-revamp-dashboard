@@ -95,8 +95,8 @@ export const columns: MRT_ColumnDef<VendorTransaction>[] = [
         muiTableBodyCellProps: { align: 'center' },
     },
     {
-        accessorKey: "status",
-        header: "Status",
+        accessorKey: "remark",
+        header: "Remark",
         muiTableHeadCellProps: { align: 'center' },
         muiTableBodyCellProps: { align: 'center' },
     },

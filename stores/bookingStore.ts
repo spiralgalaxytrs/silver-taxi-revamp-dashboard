@@ -13,7 +13,6 @@ interface Booking {
   drop: string;
   pickupDateTime: string;
   pickupTime?: string;
-  vehicleType: string;
   discountAmount: number | null;
   dropDate: string | null;
   tariffId: string;
@@ -53,6 +52,7 @@ interface Booking {
   offers: Record<string, any>;
   vehicles: Record<string, any>;
   driver: Record<string, any>;
+  vehicleType?: string;
 
 
   startOtp: string;
