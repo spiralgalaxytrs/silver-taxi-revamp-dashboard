@@ -117,7 +117,7 @@ export default function BookingDetailsPage() {
   const afterTripFields = [
     { key: 'tripCompletedDistance', label: 'Total Km', format: formatDistance },
     { key: 'pricePerKm', label: 'Per Km', format: formatCurrency },
-    { key: 'driverBeta', label: 'Driver Beta', format: formatCurrency },
+    { key: 'tripCompletedDriverBeta', label: 'Driver Beta', format: formatCurrency },
     { key: 'tripCompletedDuration', label: 'Total Duration' },
     { key: 'tripCompletedEstimatedAmount', label: 'Estimation Fare', format: formatCurrency },
     { key: 'tripCompletedTaxAmount', label: 'Tax Amount', format: formatCurrency },

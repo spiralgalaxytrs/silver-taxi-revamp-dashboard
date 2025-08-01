@@ -128,6 +128,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
     const [serviceType, setServiceType] = useState("")
     const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
+    const [basePrice, setBasePrice] = useState("");
     // const [filteredVehicles, setFilteredVehicles] = useState<any[]>([]);
 
 
@@ -417,8 +418,20 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
             const distance = name === "distance" ? Number(newValue) : Number(prev.distance || 0);
 
             newState.estimatedAmount = Number((pricePerKm * distance).toFixed(2));
-            newState.finalAmount = Number(newState.estimatedAmount + newState.finalAmount || 0); // you can add taxes or other charges here
+            setBasePrice(String(newState.estimatedAmount));
 
+            // Apply discount and advance here
+            const discount = Number(newState.discountAmount || 0);
+            const advance = Number(newState.advanceAmount || 0);
+
+            const tax = Number(newState.taxAmount || 0);
+            const driverBeta = Number(newState.driverBeta || 0);
+
+            newState.finalAmount = Number(
+                (newState.estimatedAmount - discount - advance + tax + driverBeta).toFixed(2)
+            );
+
+            
             if (name === "offerId") {
                 if (value === "None") {
                     newState.offerId = null;
@@ -902,18 +915,18 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                     <div className="space-y-2">
                                         <Label>Price Per KM <span className='text-red-500'>*</span></Label>
                                         <Input
-                                            value={formData.pricePerKm || 0}
+                                            value={formData?.pricePerKm || ""}
                                             className="h-12 bg-muted"
                                             onChange={e => handleInputChange('pricePerKm', e.target.value)}
 
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Distance (km) <span className='text-red-500'>*</span></Label>
+                                        <Label>Distance (KM) <span className='text-red-500'>*</span></Label>
                                         <Input
                                             value={formData.distance}
-                                            readOnly
-                                            className="h-12 bg-muted cursor-not-allowed"
+                                            className="h-12 bg-muted"
+                                            onChange={e => handleInputChange('distance', e.target.value)}
                                         />
                                     </div>
 
@@ -979,7 +992,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         <Label>Final Amount <span className='text-red-500'>*</span>
                                             <InfoComponent
                                                 content={[
-                                                    { label: "Estimated Amount", value: formData?.breakFareDetails?.basePrice || '' },
+                                                    { label: "Estimated Amount", value: basePrice || '' },
                                                     { label: "Driver Beta", value: formData?.breakFareDetails?.driverBeta || '' },
                                                     { label: "Tax Amount", value: formData?.breakFareDetails?.taxAmount || '' },
                                                     { label: "Final Amount", value: formData?.finalAmount || '', highlight: true },
