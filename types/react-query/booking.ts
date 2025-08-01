@@ -63,6 +63,7 @@ export interface Booking {
   tripCompletedTaxAmount?: number;
   tripCompletedDistance?: number;
   tripCompletedEstimatedAmount?: number;
+  tripCompletedDriverBeta?: number;
   driverDeductionAmount?: number;
   vendorDeductionAmount?: number;
   bookingOrderId?: string;
