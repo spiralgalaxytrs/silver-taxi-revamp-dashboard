@@ -258,7 +258,7 @@ export default function BookingDetailsPage() {
         const estimatedFare = prevForm.tripCompletedEstimatedAmount ||
           calculateEstimatedFare(prevForm.tripCompletedDistance || 0);
         const taxAmount = Number(((estimatedFare * Number(prevForm.taxPercentage || 0)) / 100).toFixed(0));
-        const driverBeta = Number(prevForm.driverBeta) || 0;
+        const driverBeta = Number(prevForm.tripCompletedDriverBeta) || 0;
         const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta, newCharges, extraCharges);
 
         return {
