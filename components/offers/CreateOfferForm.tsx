@@ -32,6 +32,7 @@ import {
 type FormData = {
     offerName: string;
     category: string;
+    title: string;
     description: string;
     value: string;
     startDate: string;
@@ -48,6 +49,7 @@ export function CreateOfferForm() {
     const [offerType, setOfferType] = useState<'Flat' | 'Percentage'>('Flat');
     const [formData, setFormData] = useState<FormData>({
         offerName: '',
+        title: '',
         category: '',
         description: '',
         value: '',
@@ -78,6 +80,7 @@ export function CreateOfferForm() {
         const initialData = {
             name: '',
             offerName: '',
+            title: '',
             category: '',
             description: '',
             value: '',
@@ -143,6 +146,7 @@ export function CreateOfferForm() {
                 setFormData({
                     offerName: '',
                     category: '',
+                    title: '',
                     description: '',
                     value: '',
                     startDate: '',
@@ -244,6 +248,19 @@ export function CreateOfferForm() {
                                         name="offerName"
                                         placeholder='Enter offer name'
                                         value={formData.offerName}
+                                        onChange={handleInputChange}
+                                        className="h-12"
+                                    />
+                                </div>
+
+                                 <div className="space-y-2">
+                                    <Label htmlFor="title">Title <span className='text-red-500'>*</span></Label>
+                                    <Input
+                                        required
+                                        id="title"
+                                        name="title"
+                                        placeholder='Title'
+                                        value={formData.title}
                                         onChange={handleInputChange}
                                         className="h-12"
                                     />

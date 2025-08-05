@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 import { Card, CardContent } from "components/ui/card";
 import {
     Select,
@@ -13,7 +14,7 @@ import {
     SelectValue,
 } from '../ui/select';
 import { toast } from 'sonner';
-import { useOfferStore } from '../../stores/-offerStore';
+// import { useOfferStore } from '../../stores/-offerStore';
 import { useRouter } from 'next/navigation';
 import { Upload } from 'lucide-react';
 import { getMaxDateTime, getMinDateTime } from '../../lib/date-restrict';
@@ -28,10 +29,14 @@ import {
     AlertDialogCancel,
     AlertDialogFooter
 } from 'components/ui/alert-dialog'
+import { useCreatePromoCode, usePromoCodesAll } from 'hooks/react-query/usePromoCodes';
+import { title } from 'process';
 
 type FormData = {
-    offerName: string;
+    promoName: string;
+    title: string;
     category: string;
+    code: string;
     description: string;
     value: string;
     startDate: string;
@@ -43,12 +48,14 @@ type FormData = {
 }
 
 export function CreatePromoForm() {
-    const { createOffer, fetchOffers } = useOfferStore();
+    // const { createOffer, fetchOffers } = useOfferStore();
     const router = useRouter();
-    const [offerType, setOfferType] = useState<'Flat' | 'Percentage'>('Flat');
+    const [promoType, setPromoType] = useState<'Flat' | 'Percentage'>('Flat');
     const [formData, setFormData] = useState<FormData>({
-        offerName: '',
+        promoName: '',
+        title: '',
         category: '',
+        code: '',
         description: '',
         value: '',
         startDate: '',
@@ -63,6 +70,10 @@ export function CreatePromoForm() {
     const [isFormDirty, setIsFormDirty] = useState(false);
     const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
+    const { mutate: createPromoCode, isPending: isCreatePending } = useCreatePromoCode();
+    const { data: fetchPromoCodes, isPending: isFetchPening } = usePromoCodesAll();
+
+
 
     const handleBannerImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -70,14 +81,14 @@ export function CreatePromoForm() {
         setFormData(prevData => ({ ...prevData, bannerImage: file ?? undefined }));
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData(prevData => ({ ...prevData, [e.target.name]: e.target.value }));
     };
 
     useEffect(() => {
         const initialData = {
-            name: '',
-            offerName: '',
+            promoName: '',
+            title: '',
             category: '',
             description: '',
             value: '',
@@ -95,83 +106,227 @@ export function CreatePromoForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isCreatePending) return; // Prevent multiple submissions
+
         try {
-            const numericValue = Number(formData.value);
-            if (isNaN(numericValue)) {
-                toast.error("Please enter a valid number for offer value");
+            const { promoName, code, startDate, endDate, value } = formData;
+            const numericValue = Number(value);
+
+            if (!promoName || !code || !startDate || !endDate) {
+                toast.error("Please fill all required fields");
                 return;
             }
 
-            if (offerType === 'Percentage' && (numericValue < 0 || numericValue > 100)) {
+            if (isNaN(numericValue)) {
+                toast.error("Please enter a valid number for promo code value");
+                return;
+            }
+
+            if (promoType === 'Percentage' && (numericValue < 0 || numericValue > 100)) {
                 toast.error("Percentage must be between 0 and 100");
                 return;
             }
 
-            if (offerType === 'Flat' && numericValue < 0) {
+            if (promoType === 'Flat' && numericValue < 0) {
                 toast.error("Flat value must be greater than 0");
                 return;
             }
 
-            const offerData = {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            if (start > end) {
+                toast.error("Start date must be before end date");
+                return;
+            }
+
+            // Check for duplicate promo code
+            if (fetchPromoCodes?.some((promo: any) => promo.code === code)) {
+                toast.error("Promo code already exists");
+                return;
+            }
+
+            const promoCodeData = {
                 ...formData,
-                type: offerType,
+                type: promoType,
                 value: numericValue,
-                startDate: new Date(formData.startDate),
-                endDate: new Date(formData.endDate)
+                startDate: start,
+                endDate: end,
             };
 
-            await createOffer(offerData);
-
-            const { statusCode, message } = useOfferStore.getState();
-
-            if (statusCode === 400) {
-                toast.error(message || "An active offer already exists", {
-                    style: {
-                        background: '#FF0000',
-                        color: '#fff'
-                    }
-                });
-            } else if (statusCode === 201 || statusCode === 200) {
-                toast.success("Offer created successfully", {
-                    style: {
-                        background: '#009F7F',
-                        color: '#fff'
-                    }
-                });
-
-                // Reset form
-                setFormData({
-                    offerName: '',
-                    category: '',
-                    description: '',
-                    value: '',
-                    startDate: '',
-                    endDate: '',
-                    keywords: '',
-                    status: true,
-                    claimedCount: 0,
-                    bannerImage: undefined
-                });
-                setBannerImageURL(null);
-                // Optionally, navigate to another page
-                router.push('/admin/offers/');
-            } else {
-                toast.error(message || "Failed to create offer", {
-                    style: {
-                        background: '#FF0000',
-                        color: '#fff'
-                    }
-                });
-            }
+            createPromoCode(promoCodeData, {
+                onSuccess: (data: any) => {
+                    toast.success(data?.message || "Promo code created successfully", {
+                        style: {
+                            backgroundColor: "#009F7F",
+                            color: "#fff",
+                        },
+                    });
+                    setFormData({
+                        promoName: '',
+                        title: '',
+                        category: '',
+                        description: '',
+                        code: '',
+                        value: '',
+                        startDate: '',
+                        endDate: '',
+                        keywords: '',
+                        status: true,
+                        claimedCount: 0,
+                        bannerImage: undefined,
+                    });
+                    setBannerImageURL(null);
+                    router.push('/admin/promo-codes');
+                },
+                onError: (error: any) => {
+                    const message = error?.response?.data?.message || error.message || "Failed to create promo code";
+                    toast.error(message, {
+                        style: {
+                            backgroundColor: "#FF0000",
+                            color: "#fff",
+                        },
+                    });
+                },
+            });
         } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to create offer", {
-                style: {
-                    background: '#FF0000',
-                    color: '#fff'
-                }
+            const message = error?.message || "An unexpected error occurred";
+            toast.error(message, {
+                style: { background: '#FF0000', color: '#fff' },
             });
         }
     };
+
+    // const handleSubmit = async (e: React.FormEvent) => {
+    //     e.preventDefault();
+
+
+    //     console.log("Hiii, h")
+
+    //     try {
+    //         const { promoName, code, startDate, endDate, value } = formData;
+    //         const numericValue = Number(value);
+    //         console.log("Deiiiiii")
+
+
+    //         if (!promoName || !code || !startDate || !endDate) {
+    //             toast.error("Please fill all required fields");
+    //             return;
+    //         }
+
+    //         console.log("Bus")
+    //         if (isNaN(numericValue)) {
+    //             toast.error("Please enter a valid number for promo code value");
+    //             return;
+    //         }
+
+    //         console.log("MOssss ")
+    //         if (promoType === 'Percentage' && (numericValue < 0 || numericValue > 100)) {
+    //             toast.error("Percentage must be between 0 and 100");
+    //             return;
+    //         }
+
+    //         console.log("percenteage")
+
+    //         if (promoType === 'Flat' && numericValue < 0) {
+    //             toast.error("Flat value must be greater than 0");
+    //             return;
+    //         }
+
+    //         console.log("Flat")
+    //         const start = new Date(startDate);
+    //         const end = new Date(endDate);
+
+    //         if (start > end) {
+    //             toast.error("Start date must be before end date");
+    //             return;
+    //         }
+
+    //         console.log("Date")
+
+    //         const promoCodeData = {
+    //             ...formData,
+    //             type: promoType,
+    //             value: numericValue,
+    //             startDate: start,
+    //             endDate: end
+    //         };
+
+
+    //         // const response = await createPromoCode(promoCodeData);
+
+    //         createPromoCode(promoCodeData, {
+    //             onSuccess: (data: any) => {
+    //                 console.log("From success")
+
+    //                 toast.success(data?.message || "Promo code created successfully", {
+    //                     style: {
+    //                         backgroundColor: "#009F7F",
+    //                         color: "#fff",
+    //                     },
+    //                 });
+
+
+    //                 setFormData({
+    //                     promoName: '',
+    //                     category: '',
+    //                     description: '',
+    //                     code: '',
+    //                     value: '',
+    //                     startDate: '',
+    //                     endDate: '',
+    //                     keywords: '',
+    //                     status: true,
+    //                     claimedCount: 0,
+    //                     bannerImage: undefined,
+    //                 });
+
+    //                 setBannerImageURL(null);
+    //                 router.push('/admin/promo-codes');
+
+    //             },
+    //             onError: (error: any) => {
+    //                 console.log("From error")
+
+    //                 toast.error(error?.response?.data?.message || "Failed to create promo-code", {
+    //                     style: {
+    //                         backgroundColor: "#FF0000",
+    //                         color: "#fff",
+    //                     },
+    //                 });
+    //             },
+    //         });
+    //         // const { success, message } = response ?? fetchPromoCodes.getState();
+
+    //         // if (success === true) {
+    //         //     toast.success("Promo code created successfully", {
+    //         //         style: { background: '#009F7F', color: '#fff' }
+    //         //     });
+
+    //         //     setFormData({
+    //         //         promoName: '',
+    //         //         category: '',
+    //         //         description: '',
+    //         //         code: '',
+    //         //         value: '',
+    //         //         startDate: '',
+    //         //         endDate: '',
+    //         //         keywords: '',
+    //         //         status: true,
+    //         //         claimedCount: 0,
+    //         //         bannerImage: undefined
+    //         //     });
+    //         //     setBannerImageURL(null);
+    //         //     router.push('/admin/promo-codes/');
+    //         // }
+
+    //     } catch (error: any) {
+    //         toast.error(error.response?.data?.message || "Failed to create promo-code", {
+    //             style: { background: '#FF0000', color: '#fff' }
+    //         });
+    //     }
+    // };
+
 
     // Add beforeunload handler
     useEffect(() => {
@@ -192,7 +347,7 @@ export function CreatePromoForm() {
             setShowUnsavedChangesDialog(true);
             setPendingNavigation(() => () => router.push('/admin/promo-codes'));
         } else {
-            router.push('/admin/offers');
+            router.push('/admin/promo-codes');
         }
     };
 
@@ -220,42 +375,54 @@ export function CreatePromoForm() {
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Offer Type Selection */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="offerType">Offer Type <span className='text-red-500'>*</span></Label>
+                                    <Label htmlFor="promoType">Promo Type <span className='text-red-500'>*</span></Label>
                                     <Select
-                                        value={offerType}
-                                        onValueChange={(value: 'Flat' | 'Percentage') => setOfferType(value)}
+                                        value={promoType}
+                                        onValueChange={(value: 'Flat' | 'Percentage') => setPromoType(value)}
                                     >
                                         <SelectTrigger className="h-12">
-                                            <SelectValue placeholder="Select offer type" />
+                                            <SelectValue placeholder="Select Promo type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="Flat">Flat Offer</SelectItem>
-                                            <SelectItem value="Percentage">Percentage Offer</SelectItem>
+                                            <SelectItem value="Flat">Flat Discount</SelectItem>
+                                            <SelectItem value="Percentage">Percentage Discount</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
 
                                 {/* Form Fields */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="offerName">Promo Name <span className='text-red-500'>*</span></Label>
+                                    <Label htmlFor="promoName">Promo Name <span className='text-red-500'>*</span></Label>
                                     <Input
                                         required
-                                        id="offerName"
-                                        name="offerName"
-                                        placeholder='Enter offer name'
-                                        value={formData.offerName}
+                                        id="promoName"
+                                        name="promoName"
+                                        placeholder='Enter promo code name'
+                                        value={formData.promoName}
+                                        onChange={handleInputChange}
+                                        className="h-12"
+                                    />
+                                </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="title">Title <span className='text-red-500'>*</span></Label>
+                                    <Input
+                                        required
+                                        id="title"
+                                        name="title"
+                                        placeholder='Title'
+                                        value={formData.title}
                                         onChange={handleInputChange}
                                         className="h-12"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="offerName">Promo Code <span className='text-red-500'>*</span></Label>
+                                    <Label htmlFor="code">Promo Code <span className='text-red-500'>*</span></Label>
                                     <Input
                                         required
-                                        id="offerName"
-                                        name="offerName"
-                                        placeholder='Enter offer name'
-                                        value={formData.offerName}
+                                        id="code"
+                                        name="code"
+                                        placeholder='Enter promo code'
+                                        value={formData.code}
                                         onChange={handleInputChange}
                                         className="h-12"
                                     />
@@ -263,7 +430,7 @@ export function CreatePromoForm() {
 
                                 <div className="space-y-2">
                                     <Label htmlFor="value">
-                                        {offerType === 'Flat' ? 'Amount' : 'Percentage'}
+                                        {promoType === 'Flat' ? 'Amount' : 'Percentage'}
                                         <span className='text-red-500'>*</span>
                                     </Label>
                                     <Input
@@ -271,7 +438,7 @@ export function CreatePromoForm() {
                                         id="value"
                                         name="value"
                                         type="number"
-                                        placeholder={offerType === 'Flat' ? "Enter the flat amount" : "Enter the promo percentage"}
+                                        placeholder={promoType === 'Flat' ? "Enter the flat amount" : "Enter the promo percentage"}
                                         value={formData.value}
                                         onChange={handleInputChange}
                                         className="h-12"
@@ -299,17 +466,7 @@ export function CreatePromoForm() {
                                     </Select>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="description">Description</Label>
-                                    <Input
-                                        id="description"
-                                        name="description"
-                                        placeholder='Enter the description'
-                                        value={formData.description}
-                                        onChange={handleInputChange}
-                                        className="h-12"
-                                    />
-                                </div>
+
 
                                 <div className="space-y-2">
                                     <Label htmlFor="startDate">Start Date/Time <span className='text-red-500'>*</span></Label>
@@ -338,7 +495,7 @@ export function CreatePromoForm() {
                                         min={getMinDateTime()}
                                     />
                                 </div>
-                                <div className="space-y-2">
+                                {/* <div className="space-y-2">
                                     <Label htmlFor="endDate">Promo Code Quantity <span className='text-red-500'>*</span></Label>
                                     <Input
                                         required
@@ -349,6 +506,18 @@ export function CreatePromoForm() {
                                         className="h-12"
                                         min={getMinDateTime()}
                                     />
+                                </div> */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="description">Description</Label>
+                                    <Textarea
+                                        id="description"
+                                        name="description"
+                                        placeholder='Enter the description'
+                                        value={formData.description}
+                                        onChange={handleInputChange}
+                                        className="h-12"
+
+                                    />
                                 </div>
                             </div>
 
@@ -357,7 +526,7 @@ export function CreatePromoForm() {
                                 <Label htmlFor="bannerImage">Banner Image</Label>
                                 <div className="border bg-white rounded p-4 border-dashed border-border-base">
                                     <div className="flex flex-col items-center justify-center h-32 cursor-pointer">
-                                        <Label htmlFor="bannerImage" className="flex flex-col items-center w-full">
+                                        <Label htmlFor="bannerImage-upload" className="flex flex-col items-center w-full">
                                             {!bannerImageURL && <>
                                                 <Upload className="text-gray-600 text-4xl mb-2" />
                                                 <p className="text-gray-600 text-sm mb-2">Click to upload or drag and drop</p>
@@ -389,7 +558,7 @@ export function CreatePromoForm() {
                                                         </p>
                                                         <span className='cursor-pointer text-black text-base border border-black rounded bg-[#EFEFEF] p-1'>change image</span>
                                                         <input
-                                                            id="bannerImage"
+                                                            id="bannerImage-upload"
                                                             type="file"
                                                             accept="image/*"
                                                             className="hidden"
