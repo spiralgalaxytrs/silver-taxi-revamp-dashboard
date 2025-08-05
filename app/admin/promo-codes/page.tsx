@@ -29,17 +29,31 @@ import {
     AlertDialogFooter
 } from 'components/ui/alert-dialog';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
-import { useOfferStore } from 'stores/-offerStore';
 import { toast } from "sonner";
 import {
     MRT_ColumnDef,
     MaterialReactTable
 } from 'material-react-table';
 import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
+import { usePromoCodesAll, useBulkDeletePromoCodes } from 'hooks/react-query/usePromoCodes';
 
-export default function OffersPage() {
+export default function PromoCodePage() {
 
-    const { offers, fetchOffers, multiDeleteOffers, isLoading } = useOfferStore();
+    const {
+        data: promoCodes = [],
+        isPending: isFetchPending,
+        isError,
+        error,
+    } = usePromoCodesAll();
+
+    const { mutate: bulkDeletePromoCodes, isPending: isDeleteLoaing } = useBulkDeletePromoCodes();
+
+    const safePromoCodes = Array.isArray(promoCodes) ? promoCodes : [];
+
+
+    console.log("promocodes", promoCodes)
+
+
     const router = useRouter();
 
 
@@ -48,15 +62,15 @@ export default function OffersPage() {
     const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
     const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
     const [isSpinning, setIsSpinning] = useState(false)
-    const [totalOffers, setTotalOffers] = useState(0);
-    const [todayOffers, setTodayOffers] = useState(0);
-    const [activeOffers, setActiveOffers] = useState(0);
-    const [inactiveOffers, setInactiveOffers] = useState(0)
+    const [totalPromoCodes, setTotalPromoCodes] = useState(0);
+    const [todayPromoCodes, setTodayPromoCodes] = useState(0);
+    const [activePromoCodes, setActivePromoCodes] = useState(0);
+    const [inactivePromoCodes, setInactivePromoCodes] = useState(0)
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [filters, setFilters] = useState({
         search: '',
         category: '',
-        offerType: '',
+        promoType: '',
         startDateStart: '',
         startDateEnd: '',
         endDateStart: '',
@@ -69,21 +83,36 @@ export default function OffersPage() {
         columnId: string | null;
         direction: 'asc' | 'desc' | null;
     }>({ columnId: null, direction: null });
-    const [offersData, setOffersData] = useState(
-        offers.map(offer => ({
-            ...offer,
-            id: offer.offerId
+    const [promoCodeData, setPromoCodeData] = useState(
+        promoCodes?.map((promos: any) => ({
+            ...promos,
+            id: promos.codeId
         }))
     );
 
+    // useEffect(() => {
+    //     if (Array.isArray(promoCodes)) {
+    //         setPromoCodeData(
+    //             promoCodes.map((promo: any) => ({
+    //                 ...promo,
+    //                 id: promo.codeId
+    //             }))
+    //         );
+    //     }
+    // }, [promoCodes]);
     useEffect(() => {
-        setOffersData(
-            offers.map(offer => ({
-                ...offer,
-                id: offer.offerId
-            }))
-        );
-    }, [offers])
+        if (Array.isArray(safePromoCodes)) {
+            setPromoCodeData(
+                safePromoCodes.map((promo: any) => ({
+                    ...promo,
+                    id: promo.codeId,
+                }))
+            );
+        }
+    }, [promoCodes]);
+
+
+
 
 
 
@@ -92,8 +121,8 @@ export default function OffersPage() {
     };
 
     useEffect(() => {
-        fetchOffers();
-        setOffersData(offersData);
+        // promoCodes();
+        setPromoCodeData(promoCodeData);
     }, []);
 
     const handleClear = async () => {
@@ -101,7 +130,7 @@ export default function OffersPage() {
             setFilters({
                 search: '',
                 category: '',
-                offerType: '',
+                promoType: '',
                 startDateStart: '',
                 startDateEnd: '',
                 endDateStart: '',
@@ -115,7 +144,7 @@ export default function OffersPage() {
         }
     };
 
-    const unFilteredData = [...offersData].sort((a, b) => {
+    const unFilteredData = [...promoCodeData].sort((a, b) => {
         const acreatedAt = new Date(a.createdAt).getTime();
         const bcreatedAt = new Date(b.createdAt).getTime();
         return bcreatedAt - acreatedAt; // Descending order
@@ -125,15 +154,15 @@ export default function OffersPage() {
         let filteredData = [...unFilteredData];
 
         if (filters.search) {
-            filteredData = filteredData.filter(offer =>
-                offer.offerId?.toLowerCase().includes(filters.search.toLowerCase()) ||
-                offer.offerName.toLowerCase().includes(filters.search.toLowerCase()) ||
-                offer.category.toLowerCase().includes(filters.search.toLowerCase())
+            filteredData = filteredData.filter(promos =>
+                promos.codeId?.toLowerCase().includes(filters.search.toLowerCase()) ||
+                promos.promoName.toLowerCase().includes(filters.search.toLowerCase()) ||
+                promos.category.toLowerCase().includes(filters.search.toLowerCase())
             );
         }
 
         if (filters.category) {
-            filteredData = filteredData.filter(offer => offer.category === filters.category);
+            filteredData = filteredData.filter(promos => promos.category === filters.category);
         }
 
         // if (filters.createdAtStart || filters.createdAtEnd) {
@@ -146,23 +175,23 @@ export default function OffersPage() {
         // }
 
         if (filters.startDateStart || filters.startDateEnd) {
-            filteredData = filteredData.filter(offer => {
-                const offerStart = new Date(offer.startDate).setHours(0, 0, 0, 0);
+            filteredData = filteredData.filter(promos => {
+                const promoStart = new Date(promos.startDate).setHours(0, 0, 0, 0);
                 const filterStart = filters.startDateStart ? new Date(filters.startDateStart).setHours(0, 0, 0, 0) : null;
                 const filterEnd = filters.startDateEnd ? new Date(filters.startDateEnd).setHours(0, 0, 0, 0) : null;
-                return (!filterStart || offerStart >= filterStart) &&
-                    (!filterEnd || offerStart <= filterEnd);
+                return (!filterStart || promoStart >= filterStart) &&
+                    (!filterEnd || promoStart <= filterEnd);
             });
         }
 
         if (filters.endDateStart || filters.endDateEnd) {
-            filteredData = filteredData.filter(offer => {
-                const offerEnd = new Date(offer.endDate).setHours(0, 0, 0, 0);
+            filteredData = filteredData.filter(promos => {
+                const promoEnd = new Date(promos.endDate).setHours(0, 0, 0, 0);
                 const filterStart = filters.endDateStart ? new Date(filters.endDateStart).setHours(0, 0, 0, 0) : null;
                 const filterEnd = filters.endDateEnd ? new Date(filters.endDateEnd).setHours(0, 0, 0, 0) : null;
 
-                return (!filterStart || offerEnd >= filterStart) &&
-                    (!filterEnd || offerEnd <= filterEnd);
+                return (!filterStart || promoEnd >= filterStart) &&
+                    (!filterEnd || promoEnd <= filterEnd);
             });
         }
 
@@ -178,7 +207,7 @@ export default function OffersPage() {
                 if (bValue == null) return sortConfig.direction === 'asc' ? -1 : 1;
 
                 // Date comparison for date fields
-                if (['startDate', 'endDate', 'createdAt'].includes(columnKey)) {
+                if (['startDate', 'endDate', 'createdAt'].includes(String(columnKey))) {
                     const dateA = new Date(aValue as string).getTime();
                     const dateB = new Date(bValue as string).getTime();
                     return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
@@ -215,17 +244,17 @@ export default function OffersPage() {
 
         const counts = {
             total: filteredData.length,
-            today: filteredData.filter(offer =>
-                new Date(offer.startDate).toISOString().split('T')[0] === today
+            today: filteredData.filter(promos =>
+                new Date(promos.startDate).toISOString().split('T')[0] === today
             ).length,
-            active: filteredData.filter(offer => offer.status).length,
-            inactive: filteredData.filter(offer => !offer.status).length
+            active: filteredData.filter(promos => promos.status).length,
+            inactive: filteredData.filter(promos => !promos.status).length
         };
 
-        setTotalOffers(counts.total);
-        setTodayOffers(counts.today);
-        setActiveOffers(counts.active);
-        setInactiveOffers(counts.inactive);
+        setTotalPromoCodes(counts.total);
+        setTodayPromoCodes(counts.today);
+        setActivePromoCodes(counts.active);
+        setInactivePromoCodes(counts.inactive);
     }, [filteredData]);
 
     const handleSort = (columnId: string) => {
@@ -253,7 +282,7 @@ export default function OffersPage() {
         return start && end ? `${start} - ${end}` : 'End Date Range';
     };
 
-    if (isLoading) {
+    if (isFetchPending) {
         return (
             <div className="flex items-center justify-center h-screen bg-gray-50">
                 <Loader2 className="w-12 h-12 animate-spin text-primary" />
@@ -269,20 +298,20 @@ export default function OffersPage() {
 
     const confirmBulkDelete = async () => {
         const selectedIndices = Object.keys(rowSelection)
-        const selectedIds = selectedIndices.map(index => {
-            const promoId = filteredData[parseInt(index)]?.offerId
+        const selectedIds = selectedIndices?.map(index => {
+            const promoId = filteredData[parseInt(index)]?.codeId
             return promoId !== undefined ? promoId : null
         }).filter(id => id !== null);
-        await multiDeleteOffers(selectedIds);
-        const newData = filteredData.filter(offer => !selectedIds.includes(offer.offerId || ""));
-        setOffersData(newData);
+        await bulkDeletePromoCodes(selectedIds || []);
+        const newData = filteredData.filter(promos => !selectedIds.includes(promos.codeId || ""));
+        setPromoCodeData(newData);
         setRowSelection({});
-        const { statusCode, message } = useOfferStore.getState()
+        const { statusCode, message } = promoCodes.getState()
         if (statusCode === 200 || statusCode === 201) {
-            toast.success("Offers deleted successfully");
-            router.push("/admin/offers");
+            toast.success("Promo Codes deleted successfully");
+            router.push("/admin/promo-codes");
         } else {
-            toast.error(message || "Error deleting Offers", {
+            toast.error(message || "Error deleting promo codes", {
                 style: {
                     backgroundColor: "#FF0000",
                     color: "#fff",
@@ -300,6 +329,7 @@ export default function OffersPage() {
         setIsSpinning(true);
         try {
             // await refetch(); // wait for the refetch to complete
+            await usePromoCodesAll().refetch();
         } finally {
             // stop spinning after short delay to allow animation to play out
             setTimeout(() => setIsSpinning(false), 500);
@@ -349,7 +379,7 @@ export default function OffersPage() {
                                                     <AlertDialogHeader>
                                                         <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                                                         <AlertDialogDescription>
-                                                            Are you sure you want to delete {Object.keys(rowSelection).length} selected offers?
+                                                            Are you sure you want to delete {Object.keys(rowSelection).length} selected promo codes?
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
@@ -373,7 +403,7 @@ export default function OffersPage() {
                                     <CounterCard
                                         color="bg-emerald-100"
                                         icon={Activity}
-                                        count={totalOffers}
+                                        count={totalPromoCodes}
                                         label="Total Promo Codes"
                                         cardSize="w-[180px] h-[90px]"
                                     />
@@ -386,8 +416,8 @@ export default function OffersPage() {
                                     <CounterCard
                                         color="bg-blue-100"
                                         icon={Activity}
-                                        count={todayOffers}
-                                        label="Today's Offers"
+                                        count={todayPromoCodes}
+                                        label="Today's Promo Codes"
                                         cardSize="w-[180px] h-[90px]"
                                     />
                                 </div>
@@ -399,7 +429,7 @@ export default function OffersPage() {
                                     <CounterCard
                                         color="bg-purple-100"
                                         icon={Activity}
-                                        count={activeOffers}
+                                        count={activePromoCodes}
                                         label="Active Promo Codes"
                                         cardSize="w-[180px] h-[90px]"
                                     />
@@ -412,7 +442,7 @@ export default function OffersPage() {
                                     <CounterCard
                                         color="bg-orange-100"
                                         icon={Activity}
-                                        count={inactiveOffers}
+                                        count={inactivePromoCodes}
                                         label="Inactive Promo Codes"
                                         cardSize="w-[180px] h-[90px]"
                                     />
@@ -429,7 +459,7 @@ export default function OffersPage() {
                                 </Label>
                                 <Input
                                     id="search"
-                                    placeholder="Search in offers"
+                                    placeholder="Search in promo codes"
                                     value={filters.search}
                                     onChange={(e) => handleFilterChange('search', e.target.value)}
                                 />
@@ -483,7 +513,7 @@ export default function OffersPage() {
                                     className='mt-5 p-1 border-none bg-[#009F87] flex justify-center items-center w-28'
                                     // variant="outline"
                                     onClick={handleClear}
-                                    disabled={isLoading}
+                                    disabled={isFetchPending}
                                 >
                                     Clear
                                 </Button>
@@ -507,7 +537,7 @@ export default function OffersPage() {
                             showGlobalFilter: true,
                         }}
                         muiSearchTextFieldProps={{
-                            placeholder: 'Search offers...',
+                            placeholder: 'Search promo codes...',
                             variant: 'outlined',
                             fullWidth: true, // 🔥 Makes the search bar take full width
                             sx: {

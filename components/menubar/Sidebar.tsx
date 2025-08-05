@@ -181,23 +181,23 @@ const AdminSidebarItems: {
     //     { name: "Create Popular Route", href: "/admin/popular-routes/create", icon: SquareChevronRight },
     //   ]
     // },
-    // {
-    //   name: "Offers",
-    //   icon: BadgePercent,
-    //   dropdown: [
-    //     { name: "Offers", href: "/admin/offers", icon: SquareChevronRight },
-    //     { name: "Create Offers", href: "/admin/offers/create", icon: SquareChevronRight },
-    //   ],
-    // },
+    {
+      name: "Offers",
+      icon: BadgePercent,
+      dropdown: [
+        { name: "Offers", href: "/admin/offers", icon: SquareChevronRight },
+        { name: "Create Offers", href: "/admin/offers/create", icon: SquareChevronRight },
+      ],
+    },
 
-    // {
-    //   name: "Promo Code",
-    //   icon: TicketPercent,
-    //   dropdown: [
-    //     { name: "Promo Codes", href: "/admin/promo-codes", icon: SquareChevronRight },
-    //     { name: "Create Promo Codes", href: "/admin/promo-codes/create", icon: SquareChevronRight },
-    //   ],
-    // },
+    {
+      name: "Promo Code",
+      icon: TicketPercent,
+      dropdown: [
+        { name: "Promo Code", href: "/admin/promo-codes", icon: SquareChevronRight },
+        { name: "Create Promo Code", href: "/admin/promo-codes/create", icon: SquareChevronRight },
+      ],
+    },
 
     {
       name: "Payments",
