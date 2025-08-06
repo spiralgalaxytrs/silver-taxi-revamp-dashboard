@@ -15,6 +15,7 @@ import {
 import {
     useVehicleById
 } from 'hooks/react-query/useVehicle';
+import { Textarea } from "components/ui/textarea";
 
 interface TariffSectionProps {
     isEditing: boolean;
@@ -31,6 +32,7 @@ type Tariff = {
     status: boolean;
     serviceId?: string;
     vehicleId?: string;
+    description?: string;
     createdBy: "Admin" | "Vendor";
 }
 
@@ -247,10 +249,10 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                     <div>
                         <Label>Vehicle Type</Label>
                         {isEditing ? (
-                            <Input 
-                                value={vehicle?.type || ''} 
-                                readOnly 
-                                className="mt-3" 
+                            <Input
+                                value={vehicle?.type || ''}
+                                readOnly
+                                className="mt-3"
                             />
                         ) : (
                             <p className="mt-3">{vehicle?.type || 'N/A'}</p>
@@ -275,6 +277,39 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                             <>
                                 <h2 className="text-base mb-1">Price (Per Km)</h2>
                                 <p className="mt-3">₹{currentTariff.price} per Km</p>
+                            </>
+                        )}
+                    </div>
+                    <div>
+                        {isEditing ? (
+                            <>
+                                <Label>
+                                    Description
+                                </Label>
+                                <Textarea
+                                    id="description"
+                                    // type="text"
+                                    value={currentTariff.description}
+                                    className="mt-3"
+                                    onChange={(e) => handleTariffChange("description", e.target.value)}
+                                />
+                            </>
+                        ) : (
+                            <>
+                                {/* <h2 className="text-base mb-1">Description</h2>
+                                <p className="mt-3">{currentTariff.description}</p> */}
+                                <h2 className="text-base mb-1">Description</h2>
+                                {currentTariff.description?.trim() ? (
+                                    <ul className="list-disc pl-5 mt-3 space-y-1">
+                                        {currentTariff.description.split('\n').map((item, index) => (
+                                            <li key={index}>{item.trim()}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-muted-foreground mt-3">No description available.</p>
+                                )}
+
+
                             </>
                         )}
                     </div>
@@ -312,6 +347,8 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                             </>
                         )}
                     </div>
+
+
                 </div>
             </div>
 

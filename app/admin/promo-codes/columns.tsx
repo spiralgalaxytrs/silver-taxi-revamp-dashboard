@@ -19,15 +19,17 @@ import {
   AlertDialogCancel,
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
-import { useOfferStore } from "stores/-offerStore";
+import { useTogglePromoCodeStatus, usePromoCodesAll, useDeletePromoCode } from "hooks/react-query/usePromoCodes";
+// import { useOfferStore } from "stores/-offerStore";
 import { useRouter } from "next/navigation";
 import {
   MRT_ColumnDef,
 } from 'material-react-table'
+import { PromoCodePopup } from "components/offers/PromoCodePopup";
 
-type Offers = {
-  offerId?: string;
-  offerName: string;
+type PromoCodes = {
+  codeId?: string;
+  promoName?: string;
   category: string;
   //bannerImage?: string;
   description?: string;
@@ -40,7 +42,7 @@ type Offers = {
   claimedCount: number;
 }
 
-export const columns: MRT_ColumnDef<Offers>[] = [
+export const columns: MRT_ColumnDef<PromoCodes>[] = [
   // {
   //   id: "select",
   //   header: "Select",
@@ -74,8 +76,8 @@ export const columns: MRT_ColumnDef<Offers>[] = [
   // muiTableBodyCellProps: { align: 'center' },
   // },
   {
-    accessorKey: "offerName",
-    header: "Offer Name",
+    accessorKey: "promoName",
+    header: "Promo Name",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
@@ -102,40 +104,48 @@ export const columns: MRT_ColumnDef<Offers>[] = [
     header: "Status",
     Cell: ({ row }) => {
       const status = row.getValue("status") as boolean;
-      const { toggleChanges, fetchOffers } = useOfferStore();
-      const id = row.original.offerId;
+      // const { toggleChanges, fetchOffers } = useOfferStore();
+      const { data: promoCodes, isPending: isfetchPending } = usePromoCodesAll();
+      const { mutate: togglePromoCodeStatus, isPending: isBulkDeleteLoading } = useTogglePromoCodeStatus();
 
-      const handleToggleStatus = async (newStatus: boolean) => {
-        try {
-          await toggleChanges(id, newStatus);
-          const statusCode = useOfferStore.getState().statusCode;
-          const message = useOfferStore.getState().message;
-          if (statusCode === 200 || statusCode === 201) {
-            toast.success("Offer status updated successfully", {
-              style: {
-                backgroundColor: "#009F7F",
-                color: "#fff",
-              },
-            });
-          } else {
-            toast.error(message || "Failed to update status", {
-              style: {
-                backgroundColor: "#FF0000",
-                color: "#fff",
-              },
-            });
-          }
-          await fetchOffers();
-        } catch (error) {
-          toast.error("Failed to update status", {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
-          });
-        }
+      const id = row.original.codeId;
+
+      // const handleToggleStatus = async (newStatus: boolean) => {
+      //   try {
+      //     await togglePromoCodeStatus({ id: id!, status: newStatus });
+      //     const statusCode = promoCodes.getState().statusCode;
+      //     const message = promoCodes.getState().message;
+      //     if (statusCode === 200 || statusCode === 201) {
+      //       toast.success("Promo code status updated successfully", {
+      //         style: {
+      //           backgroundColor: "#009F7F",
+      //           color: "#fff",
+      //         },
+      //       });
+      //     } else {
+      //       toast.error(message || "Failed to update status", {
+      //         style: {
+      //           backgroundColor: "#FF0000",
+      //           color: "#fff",
+      //         },
+      //       });
+      //     }
+      //     await promoCodes();
+      //   } catch (error) {
+      //     toast.error("Failed to update status", {
+      //       style: {
+      //         backgroundColor: "#FF0000",
+      //         color: "#fff",
+      //       },
+      //     });
+      //   }
+      // };
+
+
+      const handleToggleStatus = (newStatus: boolean) => {
+        if (!id) return;
+        togglePromoCodeStatus({ id, status: newStatus });
       };
-
       return (
         <div className="flex items-center justify-center">
           <DropdownMenu>
@@ -261,16 +271,17 @@ export const columns: MRT_ColumnDef<Offers>[] = [
     id: "actions",
     header: "Actions",
     Cell: ({ row }) => {
-      const offer = row.original;
+      const promoCode = row.original;
       const router = useRouter()
       const [isDialogOpen, setIsDialogOpen] = useState(false);
-      const { deleteOffer } = useOfferStore();
+      // const { deleteOffer } = useOfferStore();
+      const { mutate: deletePromoCode, isPending: isDeleteLoading } = useDeletePromoCode();
 
       const handleCopy = (id: string | undefined) => {
         if (!id) return;
         navigator.clipboard.writeText(id)
           .then(() => {
-            toast.success("Offer ID copied!");
+            toast.success("Promo code copied!");
           })
           .catch((err) => {
             // console.error("Failed to copy ID", err);
@@ -288,9 +299,9 @@ export const columns: MRT_ColumnDef<Offers>[] = [
       }
 
       const confirmDelete = async (id: string) => {
-        await deleteOffer(id);
+        await deletePromoCode(id);
         setIsDialogOpen(false);
-        toast.success("Offer deleted successfully");
+        toast.success("Promo code deleted successfully");
       }
 
       return (
@@ -308,7 +319,7 @@ export const columns: MRT_ColumnDef<Offers>[] = [
             </Button> */}
 
             {/* View Icon */}
-            <OfferPopup
+            <PromoCodePopup
               trigger={
                 <Button
                   variant="ghost"
@@ -319,8 +330,8 @@ export const columns: MRT_ColumnDef<Offers>[] = [
                   <Eye className="h-5 w-5" />
                 </Button>
               }
-              id={offer.offerId ?? ''}
-              title="Offer Details"
+              id={promoCode.codeId ?? ''}
+              title="Promo code Details"
             />
             {/* Delete Icon */}
             <>
@@ -328,7 +339,7 @@ export const columns: MRT_ColumnDef<Offers>[] = [
                 variant="ghost"
                 size="icon"
                 className="text-red-600 hover:text-red-800 tool-tip"
-                data-tooltip="Delete Offer"
+                data-tooltip="Delete Promo Code"
                 onClick={() => setIsDialogOpen(true)}
               >
                 <Trash className="h-5 w-5" />
@@ -339,12 +350,12 @@ export const columns: MRT_ColumnDef<Offers>[] = [
                   <AlertDialogHeader>
                     <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete this Offer?
+                      Are you sure you want to delete this Promo code?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => confirmDelete(offer.offerId ?? '')}>Delete</AlertDialogAction>
+                    <AlertDialogAction onClick={() => confirmDelete(promoCode.codeId ?? '')}>Delete</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -356,7 +367,7 @@ export const columns: MRT_ColumnDef<Offers>[] = [
               size="icon"
               className="text-gray-500 hover:text-gray-700 tool-tip"
               data-tooltip="Copy"
-              onClick={() => handleCopy(offer.offerId)}
+              onClick={() => handleCopy(promoCode.codeId)}
             >
               <Copy className="h-5 w-5" />
             </Button>
