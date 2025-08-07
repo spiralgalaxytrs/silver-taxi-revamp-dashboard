@@ -679,4 +679,4 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
     );
 };
 
-export default ProfileForm;
+export default ProfileForm
