@@ -99,6 +99,7 @@ const InvoicePDF = ({ id }: { id: string }) => {
             </div>
             <div className="text-right">
               <h2 className="text-5xl font-bold whitespace-nowrap -mt-2">INVOICE</h2>
+              <p className="text-sm mt-1 opacity-75 text-start">GST No : {profile?.GSTNumber}</p>
               <p className="text-sm mt-1 opacity-75 text-start">Invoice #{invoice?.invoiceNo}</p>
             </div>
           </div>

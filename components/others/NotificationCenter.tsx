@@ -17,6 +17,7 @@ import { useSocket } from 'providers/websocket/SocketProvider';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { playNotificationSound } from 'lib/capitalize';
 
 
 const notificationImage = {
@@ -48,6 +49,7 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
         // Listen for incoming notifications
         socket.on('notification', (notification: any) => {
             addNotification(notification)
+            playNotificationSound();
             toast.info(notification.title, {
                 duration: 5000,
                 position: "top-right",
