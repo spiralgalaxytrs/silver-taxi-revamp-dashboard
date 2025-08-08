@@ -323,9 +323,11 @@ export default function VendorPaymentPage() {
             state={{ rowSelection, sorting }}
             onSortingChange={setSorting}
             enableSorting
+            enableColumnPinning={false}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },
+              columnPinning: { right: ["actions"] },
               showGlobalFilter: true,
             }}
             muiSearchTextFieldProps={{

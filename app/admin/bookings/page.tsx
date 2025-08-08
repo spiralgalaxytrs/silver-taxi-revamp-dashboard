@@ -573,7 +573,7 @@ export default function BookingsPage() {
               showGlobalFilter: true,
             }}
             muiSearchTextFieldProps={{
-              placeholder: 'Search bookings...',
+              placeholder: 'Search ...',
               variant: 'outlined',
               fullWidth: true, // 🔥 Makes the search bar take full width
               sx: {
