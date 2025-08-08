@@ -43,6 +43,7 @@ import {
   MaterialReactTable,
   type MRT_ColumnDef
 } from 'material-react-table'
+import { useTableColumnVisibility, useUpdateTableColumnVisibility } from 'hooks/react-query/useImageUpload';
 
 export default function BookingsPage() {
   const router = useRouter();
@@ -61,11 +62,20 @@ export default function BookingsPage() {
     mutate: bulkDeleteBookings
   } = useBulkDeleteBookings()
 
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("bookings");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("bookings");
+
 
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [isSpinning, setIsSpinning] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
   const [filters, setFilters] = useState({
     search: '',
     status: '',
@@ -81,6 +91,12 @@ export default function BookingsPage() {
     serviceType: ''
   });
   const [showFilters, setShowFilters] = useState(false);
+
+  const columnVisibility = useMemo(() => {
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    return { ...serverVisibility, ...localColumnVisibility };
+  }, [tableColumnVisibility, localColumnVisibility]);
+
 
   const bookingData = useMemo(() => {
     return bookings.map((booking: any) => ({
@@ -304,6 +320,9 @@ export default function BookingsPage() {
     }
   };
 
+
+  // console.log("columnVisibility >", columnVisibility)
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -320,20 +339,12 @@ export default function BookingsPage() {
             <div className="flex items-center justify-between border-b-1 mb-5">
               <h1 className="text-2xl font-bold tracking-tight">Booking Page</h1>
               <div className="flex items-center gap-2">
-           
+
                 <Button
                   className='bg-[rgb(0,159,127)] inline-flex items-center justify-center flex-shrink-0 font-medium leading-none rounded-full outline-none transition duration-300 ease-in-out focus:outline-none focus:shadow text-white border border-solid border-accent hover:bg-[rgb(0,159,135)] hover:text-white hover:border-transparent px-5 py-0 h-12 text-[15px] lg:text-bas w-full md:w-auto md:ms-6'
                   onClick={handleCreateBooking}
                 >
                   Create Booking
-                </Button>
-                <Button
-                  variant="none"
-                  className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  {showFilters ? 'Hide Filters' : 'Show Filters'}
-                  {showFilters ? <ArrowDown className="ml-2" /> : <ArrowUp className="ml-2" />}
                 </Button>
                 <div className="flex items-center gap-2">
                   {Object.keys(rowSelection).length > 0 && (
@@ -547,16 +558,22 @@ export default function BookingsPage() {
             enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setLocalColumnVisibility(newVisibility);
+              updateTableColumnVisibility(columnVisibility);
+            }}
+            state={{ rowSelection, sorting, columnVisibility }}
             onSortingChange={setSorting}
             enableSorting
+            enableColumnPinning={false}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },
+              columnPinning: { right: ["actions"] },
               showGlobalFilter: true,
             }}
             muiSearchTextFieldProps={{
-              placeholder: 'Search enquiries...',
+              placeholder: 'Search bookings...',
               variant: 'outlined',
               fullWidth: true, // 🔥 Makes the search bar take full width
               sx: {

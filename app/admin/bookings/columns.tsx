@@ -77,7 +77,7 @@ export type Booking = {
   distance: number | null;
   amount: number | null;
   bookingDate: string;
-  status: "Completed" | "Cancelled" | "Not-Started" | "Started";
+  status: "Completed" | "Cancelled" | "Not-Started" | "Started" | "Reassign" | "Manual Completed" ;
   advanceAmount: number | null;
 }
 
@@ -693,6 +693,10 @@ export const columns: MRT_ColumnDef<Booking>[] = [
             return "bg-[#e31e1e] text-white";
           case "Started":
             return "bg-[#327bf0] text-white";
+          case "Reassign":
+            return "bg-[#327bf0] text-white";
+          case "Manual Completed":
+            return "bg-[#009F7F] text-white";
           default:
             return "bg-gray-100";
         }
@@ -740,7 +744,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
               >
                 <Badge variant="outline" className={getStatusColor(status)}>
                   {status}
-                  {status !== "Completed" && <ChevronDown className="ml-2 h-4 w-4" aria-hidden="true" />}
+                  {status !== "Completed" && status !== "Manual Completed" && <ChevronDown className="ml-2 h-4 w-4" aria-hidden="true" />}
                 </Badge>
               </Button>
             </DropdownMenuTrigger>
@@ -752,6 +756,16 @@ export const columns: MRT_ColumnDef<Booking>[] = [
                   disabled={isLoading}
                 >
                   Not Started
+                </DropdownMenuItem>
+              )}
+
+              {/* Show "Reassign" only if the trip is reassign */}
+              {booking.status === "Reassign" && (
+                <DropdownMenuItem
+                  onClick={() => handleToggleTripStatus("Reassign")}
+                  disabled={isLoading}
+                >
+                  Reassign
                 </DropdownMenuItem>
               )}
 
@@ -777,6 +791,17 @@ export const columns: MRT_ColumnDef<Booking>[] = [
                 </>
               )}
 
+              {booking.status === "Manual Completed" && booking.driverId !== null && (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => setIsDialogOpen(true)}
+                    disabled={isLoading}
+                  >
+                    Manual Completed
+                  </DropdownMenuItem>
+                </>
+              )}
+
               {/* Show "Cancelled" only if the trip is not completed */}
               {booking.status !== "Cancelled" && (
                 <DropdownMenuItem
@@ -791,6 +816,8 @@ export const columns: MRT_ColumnDef<Booking>[] = [
           }
 
           {booking.status === "Completed"
+            && <Badge variant="outline" className={`${getStatusColor(status)} cursor-default`}>{status}</Badge>}
+          {booking.status === "Manual Completed"
             && <Badge variant="outline" className={`${getStatusColor(status)} cursor-default`}>{status}</Badge>}
 
           {/* Status Completed Confirmation */}
