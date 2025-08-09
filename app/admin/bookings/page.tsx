@@ -107,15 +107,10 @@ export default function BookingsPage() {
     }))
   }, [bookings])
 
-  const unFilteredData = [...bookingData].sort((a, b) => {
-    const abookingDate = new Date(a.bookingDate || "").getTime();
-    const bbookingDate = new Date(b.bookingDate || "").getTime();
-    return bbookingDate - abookingDate; // Descending order
-  });
 
   const applyFilters = () => {
 
-    let filteredData = [...unFilteredData];
+    let filteredData = [...bookingData];
 
     if (filters.search) {
       filteredData = filteredData.filter(booking =>

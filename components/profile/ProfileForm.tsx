@@ -424,7 +424,7 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
 
                             {/*Company Commission Percentage */}
                             <div>
-                                <Label htmlFor="commission">Company Commission Percentage</Label>
+                                <Label htmlFor="commission">Commission GST %</Label>
                                 <Input
                                     id="commission"
                                     placeholder="Enter company commission percentage"

@@ -47,39 +47,7 @@ import {
   MRT_ColumnDef
 } from 'material-react-table';
 import TooltipComponent from "components/others/TooltipComponent";
-
-export type Booking = {
-  bookingId?: string;
-  name: string;
-  phone: string;
-  email: string;
-  pickup: string;
-  drop: string;
-  driverId: string | null;
-  pickupDate: string;
-  pickupTime: string;
-  vehicleType: string;
-  dropDate: string | null;
-  discountAmount: number | null;
-  tariffId: string;
-  estimatedAmount: number | null;
-  upPaidAmount: number | null;
-  finalAmount: number | null;
-  createdBy: "Admin" | "Vendor";
-  createdAt?: string | null;
-  offerId?: string | null;
-  offerName?: string;
-  paymentMethod: "UPI" | "Bank" | "Cash" | "Card";
-  type: "Website" | "App" | "Manual";
-  paymentStatus: "Unpaid" | "Paid" | "Partial Paid";
-  serviceType: "One way" | "Round trip" | "Hourly Package" | "Day Package" | "Airport";
-  vehicleName: string;
-  distance: number | null;
-  amount: number | null;
-  bookingDate: string;
-  status: "Completed" | "Cancelled" | "Not-Started" | "Started" | "Reassign" | "Manual Completed" ;
-  advanceAmount: number | null;
-}
+import { Booking } from "types/react-query/booking";
 
 export const columns: MRT_ColumnDef<Booking>[] = [
   // {
@@ -289,8 +257,13 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     accessorKey: "distance",
     header: "Distance",
     Cell: ({ row }) => {
-      const distance = parseFloat(row.getValue("distance"));
-      return <div>{`${distance} Km`}</div>;
+      const distance = Number(row.getValue("distance"));
+      const tripCompletedDistance = Number(row.original.tripCompletedDistance);
+      if (tripCompletedDistance > 0) {
+        return <div>{`${tripCompletedDistance} Km`}</div>;
+      } else {
+        return <div>{`${distance} Km`}</div>;
+      }
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
@@ -299,13 +272,16 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     accessorKey: "estimatedAmount",
     header: "Estimated Amount",
     Cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("estimatedAmount"))
+      const amount = Number(row.getValue("estimatedAmount"))
+      const tripCompletedAmount = Number(row.original.tripCompletedEstimatedAmount)
+      const formattedAmount = tripCompletedAmount > 0 ? tripCompletedAmount : amount
+
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
-      }).format(amount)
+      }).format(formattedAmount)
 
-      return <div>{formatted}</div>
+      return <div>{formatted}</div>;
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
@@ -349,11 +325,13 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     accessorKey: "finalAmount",
     header: "Total Amount",
     Cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("finalAmount"))
+      const amount = Number(row.getValue("finalAmount"))
+      const tripCompletedAmount = Number(row.original.tripCompletedFinalAmount)
+      const formattedAmount = tripCompletedAmount > 0 ? tripCompletedAmount : amount
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
-      }).format(amount)
+      }).format(formattedAmount)
 
       return <div>{formatted}</div>
     },
@@ -364,7 +342,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     accessorKey: "advanceAmount",
     header: "Advance Amount",
     Cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("advanceAmount"))
+      const amount = Number(row.getValue("advanceAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
@@ -379,7 +357,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     accessorKey: "upPaidAmount",
     header: "Remaining Amount",
     Cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("upPaidAmount"))
+      const amount = Number(row.getValue("upPaidAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
@@ -496,7 +474,6 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
-
   {
     accessorKey: "paymentMethod",
     header: "Payment Type",
@@ -849,7 +826,6 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
-
   {
     accessorKey: "createdAt",
     header: "Bookings At",
