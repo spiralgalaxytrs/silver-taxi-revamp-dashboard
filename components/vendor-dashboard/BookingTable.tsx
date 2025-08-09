@@ -106,13 +106,15 @@ export const BookingTable: React.FC<{ bookings: any[], isLoading: boolean }> = (
                         enableSorting
                         enableHiding={false}
                         enableDensityToggle={false}
+                        enableColumnPinning={false}
                         initialState={{
                             density: 'compact',
                             pagination: { pageIndex: 0, pageSize: 10 },
-                            showGlobalFilter: true
+                            showGlobalFilter: true,
+                            columnPinning: { right: ["actions"] },
                         }}
                         muiSearchTextFieldProps={{
-                            placeholder: 'Search bookings...',
+                            placeholder: 'Search ...',
                             variant: 'outlined',
                             fullWidth: true, // 🔥 Makes the search bar take full width
                             sx: {
