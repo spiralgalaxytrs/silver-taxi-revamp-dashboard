@@ -109,14 +109,16 @@ const page = () => {
             enableHiding={false}
             onRowSelectionChange={setRowSelection}
             state={{ rowSelection, sorting }}
-            enableSorting
+            enableSorting 
+            enableColumnPinning={false}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },
               showGlobalFilter: true,
+              columnPinning: { right: ["actions"] },
             }}
             muiSearchTextFieldProps={{
-              placeholder: 'Search Transactions...',
+              placeholder: 'Search ...',
               variant: 'outlined',
               fullWidth: true, // 🔥 Makes the search bar take full width
               sx: {

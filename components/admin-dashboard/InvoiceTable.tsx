@@ -102,13 +102,15 @@ export const InvoiceTable: React.FC<{ invoices: any[], isLoading: boolean }> = (
                     enableSorting
                     enableHiding={false}
                     enableDensityToggle={false}
+                    enableColumnPinning={false}
                     initialState={{
                         density: 'compact',
                         pagination: { pageIndex: 0, pageSize: 10 },
                         showGlobalFilter: true,
+                        columnPinning: { right: ["actions"] },
                     }}
                     muiSearchTextFieldProps={{
-                        placeholder: 'Search enquiries...',
+                        placeholder: 'Search ...',
                         variant: 'outlined',
                         fullWidth: true, // 🔥 Makes the search bar take full width
                         sx: {

@@ -13,3 +13,14 @@ export const uploadImage = async (image: File): Promise<string> => {
 
   return res.data.data as string;
 };
+
+
+export const getTableColumnVisibility = async (table: string) => {
+  const res = await axios.get(`/v1/column-visibility/${table}`);
+  return res.data.data as any;
+}
+
+export const updateTableColumnVisibility = async (table: string, data: any) => {
+  const res = await axios.post(`/v1/column-visibility/${table}`, data);
+  return res.data.data as any;
+}
