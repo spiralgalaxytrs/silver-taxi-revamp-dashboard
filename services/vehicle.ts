@@ -7,11 +7,13 @@ export const getVehicles = async (): Promise<Vehicle[]> => {
   return res.data.data;
 };
 
+//🚘 Get all vehicle types
 export const getVehicleTypes = async (): Promise<any[]> => {
   const res = await axios.get("/v1/vehicles/types");
   return res.data.data;
 };
 
+//🚘 Get all vehicles for admin
 export const getVehiclesAdmin = async (): Promise<Vehicle[]> => {
   const res = await axios.get("/v1/vehicles/admin");
   return res.data.data;
@@ -54,7 +56,7 @@ export const createVehicle = async (vehicleData: Partial<Vehicle>) => {
   return res.data.data;
 };
 
-// ➕ Create a new vehicle
+// ➕ Create a new vehicle type
 export const createVehicleTypes = async (name: string) => {
   const data = { name: name.trim().toLowerCase() };
   const res = await axios.post("/v1/vehicles/types/add", data);
@@ -76,6 +78,12 @@ export const updateVehicle = async ({ id, vehicleData }: { id: string; vehicleDa
   vehicleData.imageUrl = imageUpload.data.data;
 
   const res = await axios.put(`/v1/vehicles/${id}`, vehicleData);
+  return res.data.data;
+};
+
+// ✅ Accept a vehicle type
+export const acceptVehicleTypes = async ({ name, acceptedVehicleTypes }: { name: string, acceptedVehicleTypes: string[] }) => {
+  const res = await axios.put(`/v1/vehicles/types/accept/${name}`, { acceptedVehicleTypes });
   return res.data.data;
 };
 
