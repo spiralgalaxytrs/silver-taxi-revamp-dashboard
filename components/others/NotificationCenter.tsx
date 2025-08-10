@@ -124,7 +124,7 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
                     )}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <ScrollArea className="h-[600px] overflow-y-auto">
+                <ScrollArea className="h-[450px] overflow-y-auto">
 
                     {data.slice(0, 8).map((notification) => (
                         <button

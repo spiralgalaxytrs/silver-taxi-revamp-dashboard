@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { useOfferStore } from '../../stores/-offerStore';
 import { useRouter } from 'next/navigation';
 import { Upload } from 'lucide-react';
-import { getMaxDateTime, getMinDateTime } from '../../lib/date-restrict';
+import { getMaxDateTime, getMinDateTime } from '../../lib/dateFunctions';
 import {
     AlertDialog,
     AlertDialogTrigger,

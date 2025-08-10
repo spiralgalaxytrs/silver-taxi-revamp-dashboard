@@ -33,6 +33,7 @@ type Tariff = {
     serviceId?: string;
     vehicleId?: string;
     description?: string;
+    driverBeta?: number;
     createdBy: "Admin" | "Vendor";
 }
 
@@ -83,7 +84,8 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                 status: true,
                 serviceId,
                 vehicleId,
-                createdBy
+                createdBy,
+                driverBeta: 0
             };
         }
 
@@ -119,7 +121,8 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                     status: true,
                     serviceId,
                     vehicleId,
-                    createdBy
+                    createdBy,
+                    driverBeta: 0
                 }),
                 [key]: updatedValue,
             },
@@ -146,7 +149,8 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                 extraPrice: Number(tariffData.extraPrice),
                 vehicleId: targetVehicleId,
                 serviceId,
-                createdBy
+                createdBy,
+                driverBeta: 0
             };
 
             const existingTariff = tariffs?.find(
@@ -232,6 +236,7 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
         serviceId,
         vehicleId,
         createdBy,
+        driverBeta: 0
     };
 
     if (isLoading || isTariffsLoading || isVehicleLoading) {
@@ -277,6 +282,27 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                             <>
                                 <h2 className="text-base mb-1">Price (Per Km)</h2>
                                 <p className="mt-3">₹{currentTariff.price} per Km</p>
+                            </>
+                        )}
+                    </div>
+                    <div>
+                        {isEditing ? (
+                            <>
+                                <Label>
+                                    Driver Beta <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    id="driverBeta"
+                                    type="text"
+                                    value={currentTariff.driverBeta?.toString() || '0'}
+                                    className="mt-3"
+                                    onChange={(e) => handleTariffChange("driverBeta", e.target.value)}
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <h2 className="text-base mb-1">Driver Beta</h2>
+                                <p className="mt-3">₹{currentTariff.driverBeta || 0}</p>
                             </>
                         )}
                     </div>

@@ -5,7 +5,7 @@ import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { useRouter } from 'next/navigation'
-import { getMinDateTime, getMaxDateTime } from '../../lib/date-restrict'
+import { getMinDateTime, getMaxDateTime } from '../../lib/dateFunctions'
 import {
     Select,
     SelectContent,

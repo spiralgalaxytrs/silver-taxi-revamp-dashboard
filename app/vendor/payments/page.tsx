@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react'
+import React, { useMemo, useEffect, useState } from 'react'
 import { Button } from 'components/ui/button'
 import {
   useVendorTransactionsByVendor,
@@ -14,6 +14,10 @@ import {
 import { RefreshCcw, Activity } from 'lucide-react';
 import { Card, CardContent } from 'components/ui/card';
 import CounterCard from "components/cards/CounterCard";
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 const page = () => {
 
@@ -28,13 +32,39 @@ const page = () => {
     isLoading: isLoadingWalletAmount,
     refetch: refetchWalletAmount
   } = useVendorWalletAmount();
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("vendor-payments");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("vendor-payments");
 
   const [totalTrips, setTotalTrips] = useState(8);
   const [totalEarnings, setTotalEarnings] = useState(22500);
-
+  const [localColumnVisibility, setLocalColumnVisibility] = useState({});
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState([]);
   const [isSpinning, setIsSpinning] = React.useState(false);
+
+
+  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+  const columnVisibility = useMemo(() => {
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    return { ...serverVisibility, ...localColumnVisibility };
+  }, [tableColumnVisibility, localColumnVisibility]);
+
+  useEffect(() => {
+    // 🌟 Only update server when local or server visibility changes
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+    if (isColumnVisibilityUpdated) {
+      updateTableColumnVisibility(finalVisibility);
+      setIsColumnVisibilityUpdated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localColumnVisibility, isColumnVisibilityUpdated]);
 
 
   const handleRefetch = async () => {
@@ -108,8 +138,12 @@ const page = () => {
             positionGlobalFilter="left"
             enableHiding={false}
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
-            enableSorting 
+            state={{ rowSelection, sorting, columnVisibility }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
+            enableSorting
             enableColumnPinning={false}
             initialState={{
               density: 'compact',
