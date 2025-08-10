@@ -28,6 +28,7 @@ export const getCustomerBooking = async (id: string): Promise<CustomerBooking[]>
     email: booking.email,
     phone: booking.phone,
     serviceType: booking.serviceType,
+    pickupDateTime: booking.pickupDateTime,
     pickupDate: booking.pickupDateTime,
     pickupTime: booking.pickupDateTime,
     dropDate: booking.dropDate,

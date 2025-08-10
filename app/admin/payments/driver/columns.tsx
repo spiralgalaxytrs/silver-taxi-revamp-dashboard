@@ -4,6 +4,7 @@ import { Badge } from "components/ui/badge";
 import {
     MRT_ColumnDef
 } from 'material-react-table'
+import { dateRangeFilter } from "lib/dateFunctions";
 
 export type DriverTransaction = {
     transactionId: string;
@@ -93,7 +94,7 @@ export const columns: MRT_ColumnDef<DriverTransaction>[] = [
         muiTableBodyCellProps: { align: 'center' },
     },
     {
-        accessorKey: "createdAt",
+        id: "createdAt",
         header: "Created Date/Time",
         Cell: ({ row }) => {
             const createdAt: string = row.getValue("createdAt")
@@ -109,6 +110,10 @@ export const columns: MRT_ColumnDef<DriverTransaction>[] = [
                 </div>
             )
         },
+        accessorFn: (row) => new Date(row.createdAt || ""),
+        filterFn: dateRangeFilter,
+        filterVariant: "date-range",
+        sortingFn: "datetime",
         muiTableHeadCellProps: { align: 'center' },
         muiTableBodyCellProps: { align: 'center' },
     }

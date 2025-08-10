@@ -10,7 +10,7 @@ import { Label } from "../ui/label"
 import { CalendarIcon, Minus, Plus } from "lucide-react"
 import { cn } from "lib/utils"
 import type { PriceEntry } from "../../app/admin/price-changes/airport/pickup-pricing/page"
-import { getMinDate } from "../../lib/date-restrict"
+import { getMinDate } from "../../lib/dateFunctions"
 
 interface PriceFormProps {
     onSave: (data: PriceEntry) => void

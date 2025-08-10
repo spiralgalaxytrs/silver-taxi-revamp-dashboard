@@ -25,6 +25,10 @@ import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
 import {
   useAllDriverTransactions
 } from "hooks/react-query/useWallet";
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 export default function DriverPaymentPage() {
   const router = useRouter();
@@ -33,6 +37,13 @@ export default function DriverPaymentPage() {
     data: driverTransactions = []
   } = useAllDriverTransactions();
 
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("payments-driver");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("payments-driver");
 
   const [lockBack, setLockBack] = useState(false);
   useBackNavigation(lockBack);
@@ -43,6 +54,8 @@ export default function DriverPaymentPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [totalPayments, setTotalPayments] = useState(0);
   const [todayPayments, setTodayPayments] = useState(0);
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
     columnId: string | null;
     direction: 'asc' | 'desc' | null;
@@ -56,12 +69,29 @@ export default function DriverPaymentPage() {
   });
 
   const transactionData = useMemo(() =>
-      driverTransactions.map(transaction => ({
-        ...transaction,
-        id: transaction.transactionId,
-      })),
+    driverTransactions.map(transaction => ({
+      ...transaction,
+      id: transaction.transactionId,
+    })),
     [driverTransactions]
   );
+
+  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+  const columnVisibility = useMemo(() => {
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    return { ...serverVisibility, ...localColumnVisibility };
+  }, [tableColumnVisibility, localColumnVisibility]);
+
+  useEffect(() => {
+    // 🌟 Only update server when local or server visibility changes
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+    if (isColumnVisibilityUpdated) {
+      updateTableColumnVisibility(finalVisibility);
+      setIsColumnVisibilityUpdated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localColumnVisibility, isColumnVisibilityUpdated]);
 
 
   const unFiltered = [...transactionData].sort((a, b) => {
@@ -332,7 +362,11 @@ export default function DriverPaymentPage() {
             // enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
+            state={{ rowSelection, sorting, columnVisibility }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
             onSortingChange={setSorting}
             enableSorting
             enableColumnPinning={false}

@@ -33,6 +33,7 @@ import {
   useToggleStatus,
   useDeleteEnquiry
 } from 'hooks/react-query/useEnquiry';
+import { dateRangeFilter } from "lib/dateFunctions"
 
 export const columns: MRT_ColumnDef<Enquiry>[] = [
   // {
@@ -147,7 +148,7 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "pickupDate",
+    id: "pickupDate",
     header: "PickUp Date",
     Cell: ({ row }) => {
       const pickupDate: string = row.original.pickupDateTime;
@@ -170,6 +171,10 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
 
       return <div>{formattedDate}</div>;
     },
+    accessorFn: (row) => new Date(row.pickupDateTime || ""),
+    filterFn: dateRangeFilter,
+    filterVariant: "date-range",
+    sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
@@ -203,7 +208,7 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "dropDate",
+    id: "dropDate",
     header: "Drop Date",
     Cell: ({ row }) => {
       const dropDate: string = row.getValue("dropDate");
@@ -226,6 +231,10 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
 
       return <div>{formattedDate}</div>;
     },
+    accessorFn: (row) => new Date(row.dropDate || ""),
+    filterFn: dateRangeFilter,
+    filterVariant: "date-range",
+    sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
@@ -326,7 +335,7 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "createdAt",
+    id: "createdAt",
     header: "Created At",
     Cell: ({ row }) => {
       const createdAt: string = row.original.createdAt;
@@ -362,9 +371,12 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
         </div>
       );
     },
+    accessorFn: (row) => new Date(row.createdAt || ""),
+    filterFn: dateRangeFilter,
+    filterVariant: "date-range",
+    sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
-    filterFn: "dateRange",
   },
   {
     id: "actions",

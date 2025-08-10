@@ -1,5 +1,5 @@
 import axios from "lib/http-common";
-import type { Driver, wallet, ExpiryStatus } from "types/react-query/driver";
+import type { Driver, wallet, ExpiryStatus, DriverWalletRequest } from "types/react-query/driver";
 
 export const getDrivers = async (): Promise<Driver[]> => {
   const res = await axios.get("/v1/drivers");
@@ -74,7 +74,6 @@ export const toggleDriverStatus = async ({
   return res.data.data;
 };
 
-
 export const adjustDriverWallet = async ({
   id,
   amount,
@@ -117,3 +116,20 @@ export const expiryCheck = async (id: string): Promise<ExpiryStatus> => {
   const res = await axios.get(`/v1/drivers/expiry-check/${id}`);
   return res.data.data;
 };
+
+
+export const approveOrRejectDriverWalletRequest = async ({ id, data }: { id: string, data: any }): Promise<DriverWalletRequest> => {
+  const res = await axios.put(`/v1/drivers/wallet/request/${id}`, data);
+  return res.data.data;
+};
+
+export const getAllDriverWalletRequests = async (): Promise<DriverWalletRequest[]> => {
+  const res = await axios.get(`/v1/drivers/wallet/requests`);
+  return res.data.data;
+};
+
+export const getDriverWalletRequestById = async (id: string): Promise<DriverWalletRequest> => {
+  const res = await axios.get(`/v1/drivers/wallet/request/${id}`);
+  return res.data.data;
+};
+

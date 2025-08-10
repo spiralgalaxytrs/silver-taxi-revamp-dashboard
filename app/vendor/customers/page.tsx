@@ -30,6 +30,10 @@ import {
   MRT_ColumnDef,
   MaterialReactTable
 } from 'material-react-table'
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 interface Customer {
   customerId?: string;
@@ -60,6 +64,13 @@ export default function CustomersPage() {
     mutate: multiDeleteCustomers
   } = useBulkDeleteCustomers();
 
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("vendor-customers");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("vendor-customers");
 
   const [filters, setFilters] = useState({
     search: "",
@@ -80,6 +91,9 @@ export default function CustomersPage() {
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
+
 
   const customerData = useMemo(() => {
     return customers.map(customer => ({
@@ -107,6 +121,24 @@ export default function CustomersPage() {
     const bCreatedAt = new Date(b.createdAt || "").getTime();
     return bCreatedAt - aCreatedAt; // Descending order
   });
+
+  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+  const columnVisibility = useMemo(() => {
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    return { ...serverVisibility, ...localColumnVisibility };
+  }, [tableColumnVisibility, localColumnVisibility]);
+
+  useEffect(() => {
+    // 🌟 Only update server when local or server visibility changes
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+    if (isColumnVisibilityUpdated) {
+      updateTableColumnVisibility(finalVisibility);
+      setIsColumnVisibilityUpdated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localColumnVisibility, isColumnVisibilityUpdated]);
+
 
   const applyFilters = () => {
     let filtered = [...unFiltered];
@@ -390,7 +422,11 @@ export default function CustomersPage() {
             enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
+            state={{ rowSelection, sorting, columnVisibility }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
             onSortingChange={setSorting}
             enableSorting
             enableColumnPinning={false}

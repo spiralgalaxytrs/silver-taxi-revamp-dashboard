@@ -7,6 +7,7 @@ import Loading from "./Loading";
 import { CustomProvider } from 'rsuite';
 import GoogleMapsProvider from "providers/google/GoogleMapProvider";
 import ReactQueryProvider from "providers/react-query/ReactQueryProvider";
+import DateLocalizationProvider from "components/others/DateLocalizationProvider";
 import "../public/styles/main.css"
 import "../public/css/column.css";
 import "../public/css/InvoiceForm.css";
@@ -37,22 +38,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          cz-shortcut-listen="true"
-        >
-          <CustomProvider>
-            <Suspense fallback={<Loading />}>
-              <ReactQueryProvider >
-                <GoogleMapsProvider>
-                  {children}
-                </GoogleMapsProvider>
-              </ReactQueryProvider>
-              <Toaster />
-            </Suspense>
-          </CustomProvider>
-        </body>
-      </html>
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        cz-shortcut-listen="true"
+      >
+        <CustomProvider>
+          <Suspense fallback={<Loading />}>
+            <ReactQueryProvider >
+              <GoogleMapsProvider>
+                  <DateLocalizationProvider>
+                    {children}
+                  </DateLocalizationProvider>
+              </GoogleMapsProvider>
+            </ReactQueryProvider>
+            <Toaster />
+          </Suspense>
+        </CustomProvider>
+      </body>
+    </html>
   );
 }

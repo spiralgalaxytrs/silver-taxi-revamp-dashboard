@@ -43,7 +43,10 @@ import {
   MaterialReactTable,
   type MRT_ColumnDef
 } from 'material-react-table'
-import { useTableColumnVisibility, useUpdateTableColumnVisibility } from 'hooks/react-query/useImageUpload';
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 export default function BookingsPage() {
   const router = useRouter();
@@ -76,6 +79,7 @@ export default function BookingsPage() {
   const [isSpinning, setIsSpinning] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     status: '',
@@ -92,10 +96,22 @@ export default function BookingsPage() {
   });
   const [showFilters, setShowFilters] = useState(false);
 
+  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
   const columnVisibility = useMemo(() => {
     const serverVisibility = tableColumnVisibility.preferences || {};
     return { ...serverVisibility, ...localColumnVisibility };
   }, [tableColumnVisibility, localColumnVisibility]);
+
+  useEffect(() => {
+    // 🌟 Only update server when local or server visibility changes
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+    if (isColumnVisibilityUpdated) {
+      updateTableColumnVisibility(finalVisibility);
+      setIsColumnVisibilityUpdated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localColumnVisibility, isColumnVisibilityUpdated]);
 
 
   const bookingData = useMemo(() => {
@@ -554,8 +570,8 @@ export default function BookingsPage() {
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
             onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
               setLocalColumnVisibility(newVisibility);
-              updateTableColumnVisibility(columnVisibility);
             }}
             state={{ rowSelection, sorting, columnVisibility }}
             onSortingChange={setSorting}

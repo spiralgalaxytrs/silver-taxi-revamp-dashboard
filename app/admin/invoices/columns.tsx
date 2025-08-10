@@ -23,6 +23,7 @@ import {
 import {
   useDeleteInvoice
 } from 'hooks/react-query/useInvoice';
+import { dateRangeFilter } from "lib/dateFunctions";
 
 export type Invoice = {
   // id: string ;
@@ -107,7 +108,7 @@ export const columns: MRT_ColumnDef<Invoice>[] = [
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "createdAt",
+    id: "createdAt",
     header: "Created At",
     Cell: ({ row }) => {
       const createdAt: string = row.getValue("createdAt");
@@ -143,6 +144,10 @@ export const columns: MRT_ColumnDef<Invoice>[] = [
         </div>
       )
     },
+    accessorFn: (row) => new Date(row.createdAt || ""),
+    filterFn: dateRangeFilter,
+    filterVariant: "date-range",
+    sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },

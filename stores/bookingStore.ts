@@ -130,6 +130,7 @@ export const useBookingStore = create<BookingState>()(
             pickup: booking.pickup || '',
             drop: booking.drop || '',
             packageId: booking.packageId || '',
+            pickupDateTime: booking.pickupDateTime,
             pickupDate: booking.pickupDateTime,
             pickupTime: booking.pickupDateTime,
             dropDate: booking.dropDate,
