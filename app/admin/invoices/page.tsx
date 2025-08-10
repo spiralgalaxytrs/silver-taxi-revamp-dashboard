@@ -38,6 +38,10 @@ import {
   useInvoices,
   useMultiDeleteInvoice
 } from 'hooks/react-query/useInvoice';
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 export default function InvoicesPage() {
   const router = useRouter();
@@ -47,6 +51,14 @@ export default function InvoicesPage() {
     refetch
   } = useInvoices();
   const { mutate: multiDeleteInvoice } = useMultiDeleteInvoice();
+
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("invoices");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("invoices");
 
   const [lockBack, setLockBack] = useState(false);
   useBackNavigation(lockBack);
@@ -58,7 +70,8 @@ export default function InvoicesPage() {
   const [paidInvoices, setPaidInvoices] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [unpaidInvoices, setUnpaidInvoices] = useState(0);
-
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
     columnId: string | null;
     direction: 'asc' | 'desc' | null;
@@ -89,6 +102,24 @@ export default function InvoicesPage() {
       console.error('Error clearing filters:', error);
     }
   };
+
+  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+  const columnVisibility = useMemo(() => {
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    return { ...serverVisibility, ...localColumnVisibility };
+  }, [tableColumnVisibility, localColumnVisibility]);
+
+  useEffect(() => {
+    // 🌟 Only update server when local or server visibility changes
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+    if (isColumnVisibilityUpdated) {
+      updateTableColumnVisibility(finalVisibility);
+      setIsColumnVisibilityUpdated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localColumnVisibility, isColumnVisibilityUpdated]);
+
 
   const invoiceData = useMemo(() => {
     return invoices.map(invoice => ({
@@ -440,7 +471,11 @@ export default function InvoicesPage() {
             enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
+            state={{ rowSelection, sorting, columnVisibility }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
             onSortingChange={setSorting}
             enableSorting
             enableColumnPinning={false}

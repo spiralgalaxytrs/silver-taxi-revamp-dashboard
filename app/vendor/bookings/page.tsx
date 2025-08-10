@@ -43,6 +43,10 @@ import {
   MaterialReactTable,
   type MRT_ColumnDef
 } from 'material-react-table'
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 export default function BookingsPage() {
   const router = useRouter();
@@ -61,11 +65,20 @@ export default function BookingsPage() {
     mutate: bulkDeleteBookings
   } = useBulkDeleteBookings()
 
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("vendor-bookings");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("vendor- bookings");
 
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [isSpinning, setIsSpinning] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     status: '',
@@ -174,6 +187,24 @@ export default function BookingsPage() {
   };
 
   const filteredData = applyFilters();
+
+
+  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+  const columnVisibility = useMemo(() => {
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    return { ...serverVisibility, ...localColumnVisibility };
+  }, [tableColumnVisibility, localColumnVisibility]);
+
+  useEffect(() => {
+    // 🌟 Only update server when local or server visibility changes
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+    if (isColumnVisibilityUpdated) {
+      updateTableColumnVisibility(finalVisibility);
+      setIsColumnVisibilityUpdated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localColumnVisibility, isColumnVisibilityUpdated]);
 
 
   const stats = useMemo(() => {
@@ -544,7 +575,11 @@ export default function BookingsPage() {
             enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
+            state={{ rowSelection, sorting, columnVisibility }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
             onSortingChange={setSorting}
             enableSorting
             enableColumnPinning={false}

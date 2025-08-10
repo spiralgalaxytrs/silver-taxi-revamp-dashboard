@@ -26,6 +26,7 @@ import {
   MRT_ColumnDef,
 } from 'material-react-table'
 import { PromoCodePopup } from "components/offers/PromoCodePopup";
+import { dateRangeFilter } from "lib/dateFunctions";
 
 type PromoCodes = {
   codeId?: string;
@@ -190,7 +191,7 @@ export const columns: MRT_ColumnDef<PromoCodes>[] = [
   // muiTableBodyCellProps: { align: 'center' },
   // },
   {
-    accessorKey: "startDate",
+    id: "startDate",
     header: "Start Date",
     Cell: ({ row }) => {
       const startDate: string = row.getValue("startDate");
@@ -226,11 +227,15 @@ export const columns: MRT_ColumnDef<PromoCodes>[] = [
         </div>
       )
     },
+    accessorFn: (row) => new Date(row.startDate || ""),
+    filterFn: dateRangeFilter,
+    filterVariant: "date-range",
+    sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "endDate",
+    id: "endDate",
     header: "End Date",
     Cell: ({ row }) => {
       const endDate: string = row.getValue("endDate");
@@ -266,6 +271,12 @@ export const columns: MRT_ColumnDef<PromoCodes>[] = [
         </div>
       )
     },
+    accessorFn: (row) => new Date(row.endDate || ""),
+    filterFn: dateRangeFilter,
+    filterVariant: "date-range",
+    sortingFn: "datetime",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
   },
   {
     id: "actions",

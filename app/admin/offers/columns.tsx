@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import {
   MRT_ColumnDef,
 } from 'material-react-table'
+import { dateRangeFilter } from "lib/dateFunctions";
 
 type Offers = {
   offerId?: string;
@@ -173,7 +174,7 @@ export const columns: MRT_ColumnDef<Offers>[] = [
   // muiTableBodyCellProps: { align: 'center' },
   // },
   {
-    accessorKey: "startDate",
+    id: "startDate",
     header: "Start Date",
     Cell: ({ row }) => {
       const startDate: string = row.getValue("startDate");
@@ -209,11 +210,15 @@ export const columns: MRT_ColumnDef<Offers>[] = [
         </div>
       )
     },
+    accessorFn: (row) => new Date(row.startDate || ""),
+    filterFn: dateRangeFilter,
+    filterVariant: "date-range",
+    sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "endDate",
+    id: "endDate",
     header: "End Date",
     Cell: ({ row }) => {
       const endDate: string = row.getValue("endDate");
@@ -249,6 +254,10 @@ export const columns: MRT_ColumnDef<Offers>[] = [
         </div>
       )
     },
+    accessorFn: (row) => new Date(row.endDate || ""),
+    filterFn: dateRangeFilter,
+    filterVariant: "date-range",
+    sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },

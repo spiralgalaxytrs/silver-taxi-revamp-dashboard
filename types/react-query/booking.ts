@@ -5,8 +5,7 @@ export interface Booking {
   email: string;
   pickup: string;
   drop: string;
-  pickupDate: string;
-  pickupTime: string;
+  pickupDateTime: string;
   vehicleType: string;
   discountAmount: number | null;
   dropDate: string | null;

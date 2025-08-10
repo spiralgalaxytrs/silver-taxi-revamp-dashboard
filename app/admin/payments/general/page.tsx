@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { DataTable } from 'components/others/DataTable';
 import { columns, GeneralTransaction } from './columns';
@@ -31,10 +31,21 @@ import {
 } from 'components/ui/alert-dialog';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
 import { useWalletTransactionStore } from "stores/-walletTransactionStore";
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 export default function GeneralPaymentPage() {
   const router = useRouter();
-  const { fetchAllDriverTransactions, driverTransactions, fetchAllVendorTransactions, vendorTransactions} = useWalletTransactionStore();
+  const { fetchAllDriverTransactions, driverTransactions, fetchAllVendorTransactions, vendorTransactions } = useWalletTransactionStore();
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("payments-general");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("payments-general");
   const [showFilters, setShowFilters] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
     columnId: string | null;
@@ -52,6 +63,9 @@ export default function GeneralPaymentPage() {
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [totalPayments, setTotalPayments] = useState(0);
   const [todayPayments, setTodayPayments] = useState(0);
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
+
   const [driverTransactionData, setDriverTransactionData] = useState(
     driverTransactions.map(transaction => ({
       ...transaction,
@@ -68,7 +82,7 @@ export default function GeneralPaymentPage() {
     }))
   );
 
-  let finalData = [...driverTransactionData , ...vendorTransactionData]
+  let finalData = [...driverTransactionData, ...vendorTransactionData]
 
   const unFiltered = [...finalData].sort((a, b) => {
     const aCreatedAt = new Date(a.createdAt || "").getTime();
@@ -91,7 +105,7 @@ export default function GeneralPaymentPage() {
           payment.ownedBy.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.type.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.amount.toString().toLowerCase().includes(filters.search.toLowerCase()) ||
-          payment.description.toString().toLowerCase().includes(filters.search.toLowerCase()) 
+          payment.description.toString().toLowerCase().includes(filters.search.toLowerCase())
       );
     }
 
@@ -100,6 +114,24 @@ export default function GeneralPaymentPage() {
         (payment) => payment.status === filters.status
       );
     }
+
+    // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+    const columnVisibility = useMemo(() => {
+      const serverVisibility = tableColumnVisibility.preferences || {};
+      return { ...serverVisibility, ...localColumnVisibility };
+    }, [tableColumnVisibility, localColumnVisibility]);
+
+    useEffect(() => {
+      // 🌟 Only update server when local or server visibility changes
+      const serverVisibility = tableColumnVisibility.preferences || {};
+      const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+      if (isColumnVisibilityUpdated) {
+        updateTableColumnVisibility(finalVisibility);
+        setIsColumnVisibilityUpdated(false);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [localColumnVisibility, isColumnVisibilityUpdated]);
+
 
     if (filters.dateStart || filters.dateEnd) {
       filteredData = filteredData.filter((payment) => {
