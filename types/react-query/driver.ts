@@ -156,4 +156,5 @@ export interface DriverWalletRequest {
     tnxPaymentId?: string | null;
     transactionDate?: Date;
     status: "pending" | "approved" | "rejected";
+    createdAt?: string;
 }

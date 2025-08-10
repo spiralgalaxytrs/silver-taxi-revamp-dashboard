@@ -17,14 +17,12 @@ export default function VehicleTypeConfig() {
     const { data: vehicleTypes, isLoading } = useVehicleTypes();
     const { mutate: acceptMutation, isPending } = useAcceptVehicleTypes();
 
-    const handleCheckboxChange = (typeId: string, checked: boolean) => {
+    const handleCheckboxChange = (type: string, checked: boolean) => {
         setCheckedTypes((prev) => {
             if (checked) {
-                // Push: Add the typeId if it's not already in the array
-                return prev.includes(typeId) ? prev : [...prev, typeId];
+                return prev.includes(type) ? prev : [...prev, type];
             } else {
-                // Pop: Remove the typeId from the array
-                return prev.filter((id) => id !== typeId);
+                return prev.filter((id) => id !== type);
             }
         });
     };
@@ -39,7 +37,7 @@ export default function VehicleTypeConfig() {
     }, [selectedType]);
 
     const handleSave = () => {
-        
+
         if (selectedType === "") {
             toast.error("Please select a vehicle type", {
                 style: {

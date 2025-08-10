@@ -36,6 +36,7 @@ import {
   MaterialReactTable,
   type MRT_ColumnDef
 } from 'material-react-table'
+import DriverWalletRequest from "components/driver/DriverWalletRequest";
 
 
 export default function DriversPage(): JSX.Element {
@@ -243,17 +244,17 @@ export default function DriversPage(): JSX.Element {
             <div className="flex justify-between items-center mb-5">
               <h1 className="text-3xl font-bold tracking-tight">Drivers</h1>
               <div className="flex items-center gap-2">
-                {/* <Link href="/admin/drivers/create">
-                  <Button>Add New Driver</Button>
-                </Link> */}
-                <Button
-                  variant="none"
-                  className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  {showFilters ? 'Hide Filters' : 'Show Filters'}
-                  {showFilters ? <ArrowDown className="ml-2" /> : <ArrowUp className="ml-2" />}
-                </Button>
+                <div className="flex items-center gap-3">
+                  <DriverWalletRequest />
+                  <Button
+                    variant="none"
+                    className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    {showFilters ? 'Hide Filters' : 'Show Filters'}
+                    {showFilters ? <ArrowDown className="ml-2" /> : <ArrowUp className="ml-2" />}
+                  </Button>
+                </div>
                 <div className="flex items-center gap-2">
                   {Object.keys(rowSelection).length > 0 && (
                     <>

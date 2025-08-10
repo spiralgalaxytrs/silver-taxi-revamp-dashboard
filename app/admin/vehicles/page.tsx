@@ -8,7 +8,7 @@ import { Loader2 } from "lucide-react"
 import {
   useVehiclesAdmin
 } from 'hooks/react-query/useVehicle';
-import VehicleTypeConfig from "components/vehicle/vehicleTypeConfig"
+import VehicleTypeConfig from "components/vehicle/VehicleTypeConfig"
 
 export default function Page() {
 
