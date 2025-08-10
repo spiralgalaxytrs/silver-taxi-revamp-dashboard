@@ -27,6 +27,7 @@ type AirportTariff = {
     vehicleId: string;
     type: "Pickup" | "Drop";
     createdBy: "Admin" | "Vendor";
+    driverBeta?: number;
 };
 
 export function AirportTariffSection({ isEditing, serviceId, vehicleId, type, createdBy }: AirportTariffSectionProps) {
@@ -69,7 +70,8 @@ export function AirportTariffSection({ isEditing, serviceId, vehicleId, type, cr
                     serviceId,
                     vehicleId,
                     type,
-                    createdBy: createdBy
+                    createdBy: createdBy,
+                    driverBeta: 0
                 };
             }
         } else {
@@ -81,7 +83,8 @@ export function AirportTariffSection({ isEditing, serviceId, vehicleId, type, cr
                 serviceId,
                 vehicleId,
                 type,
-                createdBy: createdBy
+                createdBy: createdBy,
+                driverBeta: 0
             };
         }
 
@@ -135,6 +138,7 @@ export function AirportTariffSection({ isEditing, serviceId, vehicleId, type, cr
                 price: Number(tariffData.price),
                 extraPrice: Number(tariffData.extraPrice),
                 vehicleId: targetVehicleId,
+                driverBeta: 0
             };
 
             // Check if a tariff exists for this specific vehicleId, serviceId, and type
@@ -211,7 +215,8 @@ export function AirportTariffSection({ isEditing, serviceId, vehicleId, type, cr
         vehicleId,
         type,
         createdBy,
-    };
+        driverBeta: 0
+        };
 
     return (
         <>
@@ -244,6 +249,26 @@ export function AirportTariffSection({ isEditing, serviceId, vehicleId, type, cr
                                 <>
                                     <h2 className="text-base mb-1">Price (Per Km)</h2>
                                     <p className="mt-3">₹{currentTariff.price} per Km</p>
+                                </>
+                            )}
+                        </div>
+                        <div>
+                            {isEditing ? (
+                                <>
+                                    <Label>
+                                        Driver Beta <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Input
+                                        type="text"
+                                        value={currentTariff.driverBeta?.toString() || '0'}
+                                        className="mt-3"
+                                        onChange={(e) => handleTariffChange("driverBeta", Number(e.target.value))}
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    <h2 className="text-base mb-1">Driver Beta</h2>
+                                    <p className="mt-3">₹{currentTariff.driverBeta || 0}</p>
                                 </>
                             )}
                         </div>
