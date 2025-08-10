@@ -214,7 +214,7 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
-    accessorFn: (row) => new Date(row.dropDateTime || ""),
+    accessorFn: (row) => new Date(row.dropDate || ""),
     filterFn: dateRangeFilter,
     filterVariant: "date-range",
     sortingFn: "datetime",
