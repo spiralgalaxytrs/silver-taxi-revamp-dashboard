@@ -23,6 +23,10 @@ import {
   MaterialReactTable
 } from 'material-react-table';
 import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 export default function VendorPaymentPage() {
   const router = useRouter();
@@ -33,6 +37,14 @@ export default function VendorPaymentPage() {
     refetch
   } = useAllVendorTransactions();
   console.log(vendorTransactions)
+
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("payments-vendor");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("payments-vendor");
 
   const [sortConfig, setSortConfig] = useState<{
     columnId: string | null;
@@ -54,6 +66,8 @@ export default function VendorPaymentPage() {
   const [isSpinning, setIsSpinning] = useState(false)
   const [totalPayments, setTotalPayments] = useState(0);
   const [todayPayments, setTodayPayments] = useState(0);
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
 
   const transactionData = useMemo(() => {
     return vendorTransactions.map((transaction) => ({
@@ -144,6 +158,24 @@ export default function VendorPaymentPage() {
 
     return filteredData;
   };
+
+  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+  const columnVisibility = useMemo(() => {
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    return { ...serverVisibility, ...localColumnVisibility };
+  }, [tableColumnVisibility, localColumnVisibility]);
+
+  useEffect(() => {
+    // 🌟 Only update server when local or server visibility changes
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+    if (isColumnVisibilityUpdated) {
+      updateTableColumnVisibility(finalVisibility);
+      setIsColumnVisibilityUpdated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localColumnVisibility, isColumnVisibilityUpdated]);
+
 
   const filteredData = applyFilters();
 
@@ -320,7 +352,11 @@ export default function VendorPaymentPage() {
             // enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
+            state={{ rowSelection, sorting, columnVisibility }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
             onSortingChange={setSorting}
             enableSorting
             enableColumnPinning={false}

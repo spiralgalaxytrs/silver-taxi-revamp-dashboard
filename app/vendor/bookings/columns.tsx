@@ -45,6 +45,7 @@ import {
 } from 'material-react-table';
 import TooltipComponent from "components/others/TooltipComponent";
 import { VendorBookingPopup } from "components/booking/VendorBookingPopup";
+import { dateRangeFilter } from "lib/dateFunctions";
 
 export type Booking = {
   bookingId?: string;
@@ -161,11 +162,10 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "pickupDateTime",
-    id: "pickupDate",
+    id: "pickupDateTime",
     header: "PickUp Date",
     Cell: ({ row }) => {
-      const pickupDate: string = row.getValue("pickupDate");
+      const pickupDate: string = row.original.pickupDate;
       if (!pickupDate) {
         return <div>-</div>;
       }
@@ -185,6 +185,10 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return <div>{formattedDate}</div>;
     },
+    accessorFn: (row) => new Date(row.pickupDate || ""),
+    filterFn: dateRangeFilter,
+    filterVariant: "date-range",
+    sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
@@ -219,10 +223,10 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "dropDate",
+    id: "dropDate",
     header: "Drop Date",
     Cell: ({ row }) => {
-      const dropDate: string = row.getValue("dropDate");
+      const dropDate: string = row.original.dropDate || "";
 
       if (!dropDate) {
         return <div>-</div>;
@@ -243,6 +247,10 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return <div>{formattedDate}</div>;
     },
+    accessorFn: (row) => new Date(row.dropDate || ""),
+    filterFn: dateRangeFilter,
+    filterVariant: "date-range",
+    sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
@@ -791,10 +799,10 @@ export const columns: MRT_ColumnDef<Booking>[] = [
   },
 
   {
-    accessorKey: "createdAt",
+    id: "createdAt",
     header: "Bookings At",
     Cell: ({ row }) => {
-      const bookingDate: string = row.getValue("createdAt");
+      const bookingDate: string = row.original.createdAt || "";
       if (!bookingDate) {
         return <div>-</div>;
       }
@@ -827,6 +835,10 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         </div>
       )
     },
+    accessorFn: (row) => new Date(row.createdAt || ""),
+    filterFn: dateRangeFilter,
+    filterVariant: "date-range",
+    sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },

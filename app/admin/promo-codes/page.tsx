@@ -4,7 +4,7 @@ import { DataTable } from 'components/others/DataTable';
 import { columns } from './columns';
 import { Button } from 'components/ui/button';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ArrowDown, ArrowUp, Activity, Trash, Loader2, RefreshCcw } from 'lucide-react';
 import { Input } from 'components/ui/input';
 import { Label } from 'components/ui/label';
@@ -36,6 +36,10 @@ import {
 } from 'material-react-table';
 import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
 import { usePromoCodesAll, useBulkDeletePromoCodes } from 'hooks/react-query/usePromoCodes';
+import {
+    useTableColumnVisibility,
+    useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 export default function PromoCodePage() {
 
@@ -45,6 +49,14 @@ export default function PromoCodePage() {
         isError,
         error,
     } = usePromoCodesAll();
+
+    const {
+        data: tableColumnVisibility = {},
+    } = useTableColumnVisibility("promo-codes");
+
+    const {
+        mutate: updateTableColumnVisibility
+    } = useUpdateTableColumnVisibility("promo-codes");
 
     const { mutate: bulkDeletePromoCodes, isPending: isDeleteLoaing } = useBulkDeletePromoCodes();
 
@@ -89,6 +101,8 @@ export default function PromoCodePage() {
             id: promos.codeId
         }))
     );
+    const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+    const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
 
     // useEffect(() => {
     //     if (Array.isArray(promoCodes)) {
@@ -111,6 +125,22 @@ export default function PromoCodePage() {
         }
     }, [promoCodes]);
 
+    // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+    const columnVisibility = useMemo(() => {
+        const serverVisibility = tableColumnVisibility.preferences || {};
+        return { ...serverVisibility, ...localColumnVisibility };
+    }, [tableColumnVisibility, localColumnVisibility]);
+
+    useEffect(() => {
+        // 🌟 Only update server when local or server visibility changes
+        const serverVisibility = tableColumnVisibility.preferences || {};
+        const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+        if (isColumnVisibilityUpdated) {
+            updateTableColumnVisibility(finalVisibility);
+            setIsColumnVisibilityUpdated(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [localColumnVisibility, isColumnVisibilityUpdated]);
 
 
 
@@ -528,7 +558,11 @@ export default function PromoCodePage() {
                         enableRowSelection
                         positionGlobalFilter="left"
                         onRowSelectionChange={setRowSelection}
-                        state={{ rowSelection, sorting }}
+                        state={{ rowSelection, sorting, columnVisibility }}
+                        onColumnVisibilityChange={(newVisibility) => {
+                            setIsColumnVisibilityUpdated(true);
+                            setLocalColumnVisibility(newVisibility);
+                        }}
                         onSortingChange={setSorting}
                         enableSorting
                         enableColumnPinning={false}

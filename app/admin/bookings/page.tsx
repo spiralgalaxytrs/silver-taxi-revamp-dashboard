@@ -43,7 +43,10 @@ import {
   MaterialReactTable,
   type MRT_ColumnDef
 } from 'material-react-table'
-import { useTableColumnVisibility, useUpdateTableColumnVisibility } from 'hooks/react-query/useImageUpload';
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 export default function BookingsPage() {
   const router = useRouter();
@@ -560,54 +563,54 @@ export default function BookingsPage() {
           )}
         </div>
         <div className="rounded bg-white shadow">
-            <MaterialReactTable
-              columns={columns as MRT_ColumnDef<any>[]}
-              data={filteredData}
-              enableRowSelection
-              positionGlobalFilter="left"
-              onRowSelectionChange={setRowSelection}
-              onColumnVisibilityChange={(newVisibility) => {
-                setIsColumnVisibilityUpdated(true);
-                setLocalColumnVisibility(newVisibility);
-              }}
-              state={{ rowSelection, sorting, columnVisibility }}
-              onSortingChange={setSorting}
-              enableSorting
-              enableColumnPinning={false}
-              initialState={{
-                density: 'compact',
-                pagination: { pageIndex: 0, pageSize: 10 },
-                columnPinning: { right: ["actions"] },
-                showGlobalFilter: true,
-              }}
-              muiSearchTextFieldProps={{
-                placeholder: 'Search ...',
-                variant: 'outlined',
-                fullWidth: true, // 🔥 Makes the search bar take full width
-                sx: {
-                  minWidth: '600px', // Adjust width as needed
-                  marginLeft: '16px',
-                },
-              }}
-              muiToolbarAlertBannerProps={{
-                sx: {
-                  justifyContent: 'flex-start', // Aligns search left
-                },
-              }}
-              renderTopToolbarCustomActions={() => (
-                <div className="flex flex-1 justify-end items-center">
-                  {/* 🔁 Refresh Button */}
-                  <Button
-                    variant={"ghost"}
-                    onClick={handleRefetch}
-                    className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
-                    title="Refresh Data"
-                  >
-                    <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
-                  </Button>
-                </div>
-              )}
-            />
+          <MaterialReactTable
+            columns={columns as MRT_ColumnDef<any>[]}
+            data={filteredData}
+            enableRowSelection
+            positionGlobalFilter="left"
+            onRowSelectionChange={setRowSelection}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
+            state={{ rowSelection, sorting, columnVisibility }}
+            onSortingChange={setSorting}
+            enableSorting
+            enableColumnPinning={false}
+            initialState={{
+              density: 'compact',
+              pagination: { pageIndex: 0, pageSize: 10 },
+              columnPinning: { right: ["actions"] },
+              showGlobalFilter: true,
+            }}
+            muiSearchTextFieldProps={{
+              placeholder: 'Search ...',
+              variant: 'outlined',
+              fullWidth: true, // 🔥 Makes the search bar take full width
+              sx: {
+                minWidth: '600px', // Adjust width as needed
+                marginLeft: '16px',
+              },
+            }}
+            muiToolbarAlertBannerProps={{
+              sx: {
+                justifyContent: 'flex-start', // Aligns search left
+              },
+            }}
+            renderTopToolbarCustomActions={() => (
+              <div className="flex flex-1 justify-end items-center">
+                {/* 🔁 Refresh Button */}
+                <Button
+                  variant={"ghost"}
+                  onClick={handleRefetch}
+                  className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                  title="Refresh Data"
+                >
+                  <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                </Button>
+              </div>
+            )}
+          />
         </div>
       </div>
     </React.Fragment>

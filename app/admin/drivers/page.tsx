@@ -37,6 +37,10 @@ import {
   type MRT_ColumnDef
 } from 'material-react-table'
 import DriverWalletRequest from "components/driver/DriverWalletRequest";
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 
 export default function DriversPage(): JSX.Element {
@@ -52,12 +56,22 @@ export default function DriversPage(): JSX.Element {
     mutate: bulkDeleteDrivers
   } = useBulkDeleteDrivers();
 
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("drivers");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("drivers");
+
 
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [isSpinning, setIsSpinning] = useState(false)
   const [showFilters, setShowFilters] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
     columnId: string | null;
     direction: 'asc' | 'desc' | null;
@@ -78,6 +92,23 @@ export default function DriversPage(): JSX.Element {
       walletAmount: driver.wallet?.balance ?? 0
     }))
   }, [drivers]);
+  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+  const columnVisibility = useMemo(() => {
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    return { ...serverVisibility, ...localColumnVisibility };
+  }, [tableColumnVisibility, localColumnVisibility]);
+
+  useEffect(() => {
+    // 🌟 Only update server when local or server visibility changes
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+    if (isColumnVisibilityUpdated) {
+      updateTableColumnVisibility(finalVisibility);
+      setIsColumnVisibilityUpdated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localColumnVisibility, isColumnVisibilityUpdated]);
+
 
   const unFiltered = [...driverData].sort((a, b) => {
     const aCreatedAt = new Date(a.createdAt).getTime();
@@ -389,7 +420,11 @@ export default function DriversPage(): JSX.Element {
             enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
+            state={{ rowSelection, sorting, columnVisibility }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
             onSortingChange={setSorting}
             enableSorting
             enableColumnPinning={false}
