@@ -138,3 +138,22 @@ export interface ErrorResponse {
     message: string;
     success: boolean;
 }
+
+export interface DriverWalletRequest {
+    adminId: string;
+    requestId?: string;
+    driverId: string;
+    name?: string;
+    phone?: string;
+    walletId: string;
+    type: "add" | "withdraw";
+    amount: number;
+    reason?: string;
+    remark?: string | null;
+    description?: string;
+    transId?: string;
+    paymentMethod?: string;
+    tnxPaymentId?: string | null;
+    transactionDate?: Date;
+    status: "pending" | "approved" | "rejected";
+}

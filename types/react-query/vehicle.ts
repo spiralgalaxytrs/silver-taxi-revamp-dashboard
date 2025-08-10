@@ -57,3 +57,12 @@ export interface Vehicle {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface VehicleType {
+  adminId: string;
+  vTypeId?: string;
+  name: string;
+  isActive?: boolean;
+  order?: number;
+  acceptedVehicleTypes?: string[];
+}

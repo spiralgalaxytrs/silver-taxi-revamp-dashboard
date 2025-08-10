@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react"
 import {
   useVehiclesAdmin
 } from 'hooks/react-query/useVehicle';
+import VehicleTypeConfig from "components/vehicle/vehicleTypeConfig"
 
 export default function Page() {
 
@@ -46,9 +47,12 @@ export default function Page() {
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Vehicle Management</h1>
-          <Link href="/admin/vehicles/create">
-            <Button>Create Vehicle</Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/admin/vehicles/create">
+              <Button>Create Vehicle</Button>
+            </Link>
+            <VehicleTypeConfig />
+          </div>
         </div>
         {sortedVehicles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
