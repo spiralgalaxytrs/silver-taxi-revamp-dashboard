@@ -76,6 +76,7 @@ export default function BookingsPage() {
   const [isSpinning, setIsSpinning] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     status: '',
@@ -92,10 +93,22 @@ export default function BookingsPage() {
   });
   const [showFilters, setShowFilters] = useState(false);
 
+  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
   const columnVisibility = useMemo(() => {
     const serverVisibility = tableColumnVisibility.preferences || {};
     return { ...serverVisibility, ...localColumnVisibility };
   }, [tableColumnVisibility, localColumnVisibility]);
+
+  useEffect(() => {
+    // 🌟 Only update server when local or server visibility changes
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+    if (isColumnVisibilityUpdated) {
+      updateTableColumnVisibility(finalVisibility);
+      setIsColumnVisibilityUpdated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localColumnVisibility, isColumnVisibilityUpdated]);
 
 
   const bookingData = useMemo(() => {
@@ -547,54 +560,54 @@ export default function BookingsPage() {
           )}
         </div>
         <div className="rounded bg-white shadow">
-          <MaterialReactTable
-            columns={columns as MRT_ColumnDef<any>[]}
-            data={filteredData}
-            enableRowSelection
-            positionGlobalFilter="left"
-            onRowSelectionChange={setRowSelection}
-            onColumnVisibilityChange={(newVisibility) => {
-              setLocalColumnVisibility(newVisibility);
-              updateTableColumnVisibility(columnVisibility);
-            }}
-            state={{ rowSelection, sorting, columnVisibility }}
-            onSortingChange={setSorting}
-            enableSorting
-            enableColumnPinning={false}
-            initialState={{
-              density: 'compact',
-              pagination: { pageIndex: 0, pageSize: 10 },
-              columnPinning: { right: ["actions"] },
-              showGlobalFilter: true,
-            }}
-            muiSearchTextFieldProps={{
-              placeholder: 'Search ...',
-              variant: 'outlined',
-              fullWidth: true, // 🔥 Makes the search bar take full width
-              sx: {
-                minWidth: '600px', // Adjust width as needed
-                marginLeft: '16px',
-              },
-            }}
-            muiToolbarAlertBannerProps={{
-              sx: {
-                justifyContent: 'flex-start', // Aligns search left
-              },
-            }}
-            renderTopToolbarCustomActions={() => (
-              <div className="flex flex-1 justify-end items-center">
-                {/* 🔁 Refresh Button */}
-                <Button
-                  variant={"ghost"}
-                  onClick={handleRefetch}
-                  className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
-                  title="Refresh Data"
-                >
-                  <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
-                </Button>
-              </div>
-            )}
-          />
+            <MaterialReactTable
+              columns={columns as MRT_ColumnDef<any>[]}
+              data={filteredData}
+              enableRowSelection
+              positionGlobalFilter="left"
+              onRowSelectionChange={setRowSelection}
+              onColumnVisibilityChange={(newVisibility) => {
+                setIsColumnVisibilityUpdated(true);
+                setLocalColumnVisibility(newVisibility);
+              }}
+              state={{ rowSelection, sorting, columnVisibility }}
+              onSortingChange={setSorting}
+              enableSorting
+              enableColumnPinning={false}
+              initialState={{
+                density: 'compact',
+                pagination: { pageIndex: 0, pageSize: 10 },
+                columnPinning: { right: ["actions"] },
+                showGlobalFilter: true,
+              }}
+              muiSearchTextFieldProps={{
+                placeholder: 'Search ...',
+                variant: 'outlined',
+                fullWidth: true, // 🔥 Makes the search bar take full width
+                sx: {
+                  minWidth: '600px', // Adjust width as needed
+                  marginLeft: '16px',
+                },
+              }}
+              muiToolbarAlertBannerProps={{
+                sx: {
+                  justifyContent: 'flex-start', // Aligns search left
+                },
+              }}
+              renderTopToolbarCustomActions={() => (
+                <div className="flex flex-1 justify-end items-center">
+                  {/* 🔁 Refresh Button */}
+                  <Button
+                    variant={"ghost"}
+                    onClick={handleRefetch}
+                    className="text-gray-600 hover:text-primary transition p-0 m-0 hover:bg-transparent hover:shadow-none"
+                    title="Refresh Data"
+                  >
+                    <RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin-smooth ' : ''}`} />
+                  </Button>
+                </div>
+              )}
+            />
         </div>
       </div>
     </React.Fragment>
