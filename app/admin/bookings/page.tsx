@@ -47,6 +47,7 @@ import {
   useTableColumnVisibility,
   useUpdateTableColumnVisibility
 } from 'hooks/react-query/useImageUpload';
+import dayjs from 'dayjs';
 
 export default function BookingsPage() {
   const router = useRouter();
@@ -203,35 +204,49 @@ export default function BookingsPage() {
   const filteredData = applyFilters();
 
 
-
-
   const stats = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-
     return filteredData.reduce(
       (acc, booking) => {
-        const amount = Number(booking.finalAmount) || 0;
-        const bookingYear = new Date(booking.createdAt).getFullYear();
-
-        acc.totalBookings += 1;
-        acc.totalBookingValue += amount;
-        if (bookingYear === currentYear) acc.yearlyBookings += 1;
-        if (booking.status === 'Completed') acc.completedBookings += 1;
-        if (booking.type === 'Manual') acc.manualBookings += 1;
-        if (booking.createdBy === 'Vendor') acc.vendorBookings += 1;
-
+        // Check if booking.createdAt is today
+        if (dayjs(booking.createdAt).isSame(dayjs(), 'day')) {
+          acc.todayBookings += 1;
+        }
+  
+        // Check if booking.pickupDate is today (make sure pickupDate exists)
+        if (booking.pickupDate && dayjs(booking.pickupDate).isSame(dayjs(), 'day')) {
+          acc.todayPickups += 1;
+        }
+  
+        // Count by status
+        switch (booking.status) {
+          case "Not-Started":
+            acc.nonStarted += 1;
+            break;
+          case "Started":
+            acc.started += 1;
+            break;
+          case "Completed":
+            acc.completed += 1;
+            break;
+          case "Cancelled":
+            acc.cancelled += 1;
+            break;
+        }
+  
         return acc;
       },
       {
-        totalBookings: 0,
-        totalBookingValue: 0,
-        yearlyBookings: 0,
-        completedBookings: 0,
-        manualBookings: 0,
-        vendorBookings: 0,
+        todayBookings: 0,
+        todayPickups: 0,
+        nonStarted: 0,
+        started: 0,
+        completed: 0,
+        cancelled: 0,
       }
     );
   }, [filteredData]);
+  
+
 
 
   const handleFilterChange = (key: string, value: string) => {
@@ -395,8 +410,8 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-emerald-100"
                     icon={Activity}
-                    count={stats.totalBookings.toLocaleString()}
-                    label="Total Bookings"
+                    count={stats.todayBookings.toLocaleString()}
+                    label="Today's Bookings"
                     className="relative z-10 p-6"
                   //cardSize="w-[200px] h-[100px]"
                   />
@@ -409,8 +424,8 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-blue-100"
                     icon={Activity}
-                    count={stats.totalBookingValue.toLocaleString()}
-                    label="Total Booking Value"
+                    count={stats.todayPickups.toLocaleString()}
+                    label="Today's Pickups"
                     //cardSize="w-[200px] h-[100px]"
                     format="currency"
                   />
@@ -423,8 +438,8 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-purple-100"
                     icon={Activity}
-                    count={stats.yearlyBookings.toLocaleString()}
-                    label="This Year's Bookings"
+                    count={stats.nonStarted.toLocaleString()}
+                    label="Non Started Bookings"
                   //cardSize="w-[200px] h-[100px]"
                   />
                 </div>
@@ -436,8 +451,8 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-emerald-100"
                     icon={Activity}
-                    count={stats.completedBookings.toLocaleString()}
-                    label="Completed Bookings"
+                    count={stats.started.toLocaleString()}
+                    label="Started Bookings"
                   //cardSize="w-[200px] h-[100px]"
                   />
                 </div>
@@ -449,8 +464,8 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-blue-100"
                     icon={Activity}
-                    count={stats.manualBookings.toLocaleString()}
-                    label="Manual Bookings"
+                    count={stats.completed.toLocaleString()}
+                    label="Completed Bookings"
                   //cardSize="w-[200px] h-[100px]"
                   />
                 </div>
@@ -462,8 +477,8 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-purple-100"
                     icon={Activity}
-                    count={stats.vendorBookings.toLocaleString()}
-                    label="Vendor Bookings"
+                    count={stats.cancelled.toLocaleString()}
+                    label="Cancelled Bookings"
                   />
                 </div>
                 <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500 transform scale-x-100" />
