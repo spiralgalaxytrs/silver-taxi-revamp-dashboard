@@ -88,6 +88,7 @@ export default function BookingDetailsPage() {
     { key: 'serviceType', label: 'Service Type' },
     { key: 'pickupDateTime', label: 'Pickup Date & Time', format: formatDateTime },
     { key: 'pickup', label: 'Pickup Location' },
+    { key: 'stops', label: 'Stops' },
     { key: 'drop', label: 'Drop Location' },
     { key: 'paymentMethod', label: 'Payment Method' },
     { key: 'paymentStatus', label: 'Payment Status' },
