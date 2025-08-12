@@ -7,6 +7,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from "components/ui/card";
+
 import {
     Select,
     SelectContent,
@@ -17,7 +18,7 @@ import {
 import { toast } from 'sonner';
 import { getMinDateTime, getMaxDateTime, getMinDate } from '../../lib/date-restrict';
 import axios from "../../lib/http-common"
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowUp, ArrowDown, Plus, Trash } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogTrigger,
@@ -54,6 +55,7 @@ import {
     useOffers
 } from 'hooks/react-query/useOffers';
 import InfoComponent from 'components/ui/Info';
+import { distance } from 'framer-motion';
 
 
 
@@ -69,6 +71,7 @@ type Booking = {
     email: string;
     pickup: string;
     drop: string;
+    stops: any;
     pickupDateTime: string;
     dropDate: string | null;
     vehicleId: string;
@@ -128,7 +131,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
     const [serviceType, setServiceType] = useState("")
     const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
-    const [basePrice, setBasePrice] = useState("");
+    const [finalTax, setFinalTax] = useState("");
     // const [filteredVehicles, setFilteredVehicles] = useState<any[]>([]);
 
 
@@ -138,6 +141,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         phone: '',
         pickup: '',
         drop: '',
+        stops: [],
         pickupDateTime: '',
         dropDate: '',
         serviceType: 'One way',
@@ -174,6 +178,38 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
     });
 
     let pastTimeToastShown = false;
+
+
+    const MAX_STOPS = 5;
+
+
+    const handleAddStop = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        if (formData.stops.length < MAX_STOPS) {
+            setFormData((prev) => ({
+                ...prev,
+                stops: [...prev.stops, ""]
+            }));
+        }
+    };
+
+
+    const handleStopChange = (index: number, value: string) => {
+        setFormData((prev) => {
+            const updatedStops = [...prev.stops];
+            updatedStops[index] = value;
+            return { ...prev, stops: updatedStops };
+        });
+    };
+
+
+    const handleRemoveStop = (index: number, e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        setFormData((prev) => {
+            const updatedStops = prev.stops.filter((_: string, i: number) => i !== index);
+            return { ...prev, stops: updatedStops };
+        });
+    };
 
     const filteredVehicles = useMemo(() => {
         return vehicles.filter(vehicle =>
@@ -289,30 +325,70 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         });
     }, [formData]);
 
+
     const fetchDistance = async (pickup: string, drop: string) => {
         if (pickup && drop) {
             setLocalLoading(true);
             try {
-                const response = await axios.get(`/global/distance`, {
-                    params: { origin: pickup, destination: drop }
-                });
-                let { distance, duration } = response.data.data;
+              // Ensure stops are strings (adjust if stops already strings)
+const stopsList = (formData.stops || []).map((s: any) => s.location || s);
+
+// Build location sequence
+let allLocations = [pickup, ...stopsList, drop];
+
+// For round trips, add pickup again at end if stops exist
+if (formData.serviceType === "Round trip" && stopsList.length > 0) {
+    allLocations.push(pickup);
+}
+
+// Build origin-destination pairs
+const locationPairs = allLocations.slice(0, -1).map((loc, index) => ({
+    origin: loc,
+    destination: allLocations[index + 1]
+}));
+
+// Fetch all distances in parallel
+const results = await Promise.all(
+    locationPairs.map(pair =>
+        axios.get(`/global/distance`, {
+            params: { origin: pair.origin, destination: pair.destination }
+        })
+    )
+);
+
+// Sum total distance and duration
+const { totalDistance, totalDuration } = results.reduce(
+    (acc, res) => {
+        const { distance, duration } = res.data.data;
+        acc.totalDistance += distance;
+        acc.totalDuration += duration;
+        return acc;
+    },
+    { totalDistance: 0, totalDuration: 0 }
+);
+
+console.log("Total Distance:", totalDistance);
+console.log("Total Duration:", totalDuration);
+
+
+                // Save to form state
                 setFormData(prev => ({
                     ...prev,
-                    distance: distance,
-                    duration: duration
+                    distance: totalDistance,
+                    duration: String(totalDuration)
                 }));
 
-
-                if (distance > 0) {
+                // Trigger fare calculation
+                if (totalDistance > 0) {
                     await handleFairCalculation(
                         formData.serviceType,
                         formData.vehicleId,
-                        distance,
+                        totalDistance,
                         formData.pickupDateTime,
                         formData.dropDate || ''
                     );
                 }
+
                 setLocalLoading(false);
             } catch (error) {
                 toast.error('Failed to calculate distance');
@@ -320,6 +396,57 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
             }
         }
     };
+
+
+
+    // const fetchDistance = async (pickup: string, drop: string) => {
+    //     if (pickup && drop) {
+    //         setLocalLoading(true);
+    //         try {
+    //             const allLocations = [pickup, ...formData.stops, drop];
+
+    //             let totalDistance = 0;
+    //             let totalDuration = 0;
+
+    //             for (let i = 0; i < allLocations.length - 1; i++) {
+    //                 const origin = allLocations[i];
+    //                 const destination = allLocations[i + 1];
+
+    //                 const response = await axios.get(`/global/distance`, {
+    //                     params: { origin, destination }
+    //                 });
+
+    //                 const { distance, duration } = response.data.data;
+    //                 totalDistance += distance;
+    //                 totalDuration += duration;
+    //             }
+
+    //             setFormData(prev => ({
+    //                 ...prev,
+    //                 distance: Number(totalDistance),
+    //                 duration: String(totalDuration)
+    //             }));
+
+    //             if (totalDistance > 0) {
+    //                 await handleFairCalculation(
+    //                     formData.serviceType,
+    //                     formData.vehicleId,
+    //                     totalDistance,
+    //                     formData.pickupDateTime,
+    //                     formData.dropDate || ''
+    //                 );
+    //                 //  totalDistance += res.totalDistance;
+    //             }
+    //             setLocalLoading(false);
+    //         } catch (error) {
+    //             toast.error('Failed to calculate distance');
+    //             setLocalLoading(false);
+    //         }
+    //     }
+    // };
+
+
+
 
 
     const handleFairCalculation = async (serviceType: string, vehicleId: string, distance: number, pickupDateTime: string, dropDate: string) => {
@@ -332,6 +459,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                 distance,
                 pickupDateTime,
                 dropDate,
+                stops: formData.stops,
                 createdBy: formData.createdBy
             };
 
@@ -349,8 +477,8 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
             }
 
             const response = await axios.post(`/v1/bookings/fair-calculation`, payload);
-            let { basePrice, driverBeta, pricePerKm, finalPrice, taxAmount, taxPercentage, breakFareDetails } = response.data.data;
-
+            let { basePrice, driverBeta, pricePerKm, finalPrice, taxAmount, taxPercentage, breakFareDetails, totalDistance } = response.data.data;
+            console.log("basePrice", totalDistance);
             setFormData(prev => ({
                 ...prev,
                 estimatedAmount: basePrice,
@@ -362,7 +490,8 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                 price: basePrice,
                 extraPrice: pricePerKm || 0,
                 upPaidAmount: finalPrice,
-                breakFareDetails: breakFareDetails || {}
+                breakFareDetails: breakFareDetails || {},
+                distance: totalDistance
             }));
             setLocalLoading(false);
         } catch (err) {
@@ -371,67 +500,75 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         }
     };
 
+
+
     const handleInputChange = (name: keyof Booking, value: any) => {
         setFormData((prev) => {
             let newValue = value;
 
+            // Past time check (unchanged)
             if (name === "pickupDateTime") {
                 const now = new Date();
                 const selectedDate = new Date(value);
-
-                // Ensure we get HH:MM format for comparison
                 const minTime = now.toISOString().slice(11, 16);
                 const selectedTime = value.slice(11, 16);
-
-                // If the selected date is today, enforce time restriction
                 if (selectedDate.toDateString() === now.toDateString() && selectedTime < minTime) {
-                    newValue = new Date().toISOString().slice(11, 16);
-
-                    // Check if the toast has already been shown to prevent duplicates
+                    newValue = minTime;
                     if (!pastTimeToastShown) {
-                        toast.error("You cannot select a past time!", {
-                            id: "past-time-toast",
-                            duration: 2000,
-                            closeButton: true,
-                            position: "top-right",
-                            icon: "🚫",
-                            style: {
-                                borderRadius: "10px",
-                                padding: "20px",
-                            }
-                        });
-                        pastTimeToastShown = true; // Set the flag to true after showing the toast
+                        toast.error("You cannot select a past time!", { id: "past-time-toast" });
+                        pastTimeToastShown = true;
                     }
                 }
             }
 
+            // Numeric sanitization
             if (["distance", "estimatedAmount", "upPaidAmount", "discountAmount", "advanceAmount", "pricePerKm"].includes(name)) {
-                newValue = value.replace(/[^0-9.]/g, "");
+                newValue = String(value).replace(/[^0-9.]/g, "");
             }
 
-            const newState = {
-                ...prev,
-                [name]: newValue,
-            };
+            const newState = { ...prev, [name]: newValue };
 
-            const pricePerKm = name === "pricePerKm" ? Number(newValue) : Number(prev.pricePerKm || 0);
-            const distance = name === "distance" ? Number(newValue) : Number(prev.distance || 0);
+            let pricePerKm = Number(newState.pricePerKm || 0);
+            let totalDistance = 0;
 
-            newState.estimatedAmount = Number((pricePerKm * distance).toFixed(2));
-            setBasePrice(String(newState.estimatedAmount));
+            if (newState.serviceType === "Round trip") {
+                let oneWayDistance = Number(newState.distance || 0);
 
-            // Apply discount and advance here
-            const discount = Number(newState.discountAmount || 0);
-            const advance = Number(newState.advanceAmount || 0);
+                // let roundTripDistance = oneWayDistance * 2;
 
-            const tax = Number(newState.taxAmount || 0);
-            const driverBeta = Number(newState.driverBeta || 0);
+                const pickupDate = new Date(newState.pickupDateTime || new Date().toISOString());
+                const dropDate = new Date(newState.dropDate || new Date().toISOString());
+                const timeDiff = dropDate.getTime() - pickupDate.getTime();
+                const tripDays = timeDiff > 0 ? Math.ceil(timeDiff / (1000 * 3600 * 24)) : 1;
 
-            newState.finalAmount = Number(
-                (newState.estimatedAmount - discount - advance + tax + driverBeta).toFixed(2)
-            );
+                totalDistance = Math.max(newState.distance
+                    // 300 * tripDays
+                );
 
-            
+                // const driverBetaTotal = (Number(newState.driverBeta) || 0) * tripDays;
+                const basePrice = totalDistance * pricePerKm;
+                const taxAmount = (basePrice * (Number(newState.taxPercentage) || 0)) / 100;
+                setFinalTax(String(taxAmount));
+                newState.taxAmount = taxAmount;
+
+                newState.estimatedAmount = Number((basePrice).toFixed(2));
+
+                newState.finalAmount = Number((basePrice + (newState.driverBeta || 0) + taxAmount - (Number(newState.discountAmount) || 0)).toFixed(2));
+
+            } else {
+                // Regular single trip calculation
+                pricePerKm = name === "pricePerKm" ? Number(newValue) : Number(prev.pricePerKm || 0);
+                const distance = name === "distance" ? Number(newValue) : Number(prev.distance || 0);
+                const estimated = pricePerKm * distance;
+                const taxAmount = (estimated * (Number(newState.taxPercentage) || 0)) / 100;
+                setFinalTax(String(taxAmount));
+                newState.taxAmount = taxAmount;
+                const driverBeta = Number(newState.driverBeta || 0);
+                newState.estimatedAmount = Number((estimated).toFixed(2));
+                newState.finalAmount = Number((estimated - Number(newState.discountAmount || 0) + taxAmount + driverBeta).toFixed(2));
+            }
+
+            // Offer handling (unchanged)
             if (name === "offerId") {
                 if (value === "None") {
                     newState.offerId = null;
@@ -447,16 +584,12 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
             }
 
             if (name === "advanceAmount") {
-                newState.paymentStatus = newState.advanceAmount > 0 ? "Partial Paid" : "Unpaid";
+                newState.paymentStatus = Number(newState.advanceAmount) > 0 ? "Partial Paid" : "Unpaid";
             }
 
-            // Ensure `finalAmount` is always correctly calculated
-            newState.upPaidAmount =
-                Number(newState.finalAmount || 0) -
-                Number(newState.discountAmount || 0) -
-                Number(newState.advanceAmount || 0);
+            // Always recalc unpaid
+            newState.upPaidAmount = Number(newState.finalAmount || 0) - Number(newState.advanceAmount || 0);
 
-            // console.log('Form data updated:', { name, value, newState });
             return newState;
         });
     };
@@ -504,9 +637,12 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
 
         // Only calculate distance for non-package bookings
         if (formData.serviceType !== 'Day Packages' && formData.serviceType !== 'Hourly Packages') {
-            await fetchDistance(formData.pickup, formData.drop);
+            await fetchDistance(formData.pickup, formData.drop,
+                // formData.stops
+            );
         }
         setCurrentStep(2);
+        setFinalTax('');
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -629,6 +765,25 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         );
     }
 
+    const handleMoveStop = (
+        index: number,
+        direction: number,
+        e: React.MouseEvent<HTMLButtonElement> | React.TouchEvent<HTMLButtonElement>
+    ) => {
+        e.preventDefault();
+
+        const newIndex = index + direction;
+
+        if (newIndex < 0 || newIndex >= formData.stops.length) return;
+
+        const newStops = [...formData.stops];
+        [newStops[index], newStops[newIndex]] = [newStops[newIndex], newStops[index]];
+
+        setFormData(prev => ({
+            ...prev,
+            stops: newStops
+        }));
+    };
 
     return (
         <Card className="rounded-none">
@@ -855,20 +1010,67 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>Pickup Location <span className='text-red-500'>*</span></Label>
+                                    <Label>Pickup Location <span className="text-red-500">*</span></Label>
                                     <LocationAutocomplete
                                         onSelect={handleLocationSelectFromGoogle}
-                                        onChange={e => handleInputChange('pickup', e.target.value)}
+                                        onChange={(e) => handleInputChange("pickup", e.target.value)}
                                         getValue={formData.pickup}
                                     />
+                                    <Button
+                                        variant="link"
+                                        onClick={handleAddStop}
+                                        disabled={formData.stops.length >= MAX_STOPS}
+                                        className="text-blue-500 text-sm mt-1 hover:underline flex items-center p-0"
+                                    >
+                                        <Plus className="w-4 h-4 mr-1" /> Add Stop
+                                    </Button>
                                 </div>
 
-                                {formData.serviceType !== 'Day Packages' && formData.serviceType !== 'Hourly Packages' && (
+                                {formData.stops.map((stop: any, index: any) => (
+                                    <div key={index} className="mb-3 flex items-center gap-2">
+                                        <div className="flex-1">
+                                            <Label className="text-sm text-gray-600">Stop {index + 1}</Label>
+                                            <LocationAutocomplete
+                                                onSelect={(value) => handleStopChange(index, value)}
+                                                onChange={(e) => handleStopChange(index, e.target.value)}
+                                                getValue={stop}
+                                            />
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={(e) => handleMoveStop(index, -1, e)}
+                                            disabled={index === 0}
+                                            className="text-gray-600 hover:text-gray-800"
+                                        >
+                                            <ArrowUp className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={(e) => handleMoveStop(index, 1, e)}
+                                            disabled={index === formData.stops.length - 1}
+                                            className="text-gray-600 hover:text-gray-800"
+                                        >
+                                            <ArrowDown className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={(e) => handleRemoveStop(index, e)}
+                                            className="text-red-500 hover:text-red-700"
+                                        >
+                                            <Trash className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+
+                                {formData.serviceType !== "Day Packages" && formData.serviceType !== "Hourly Packages" && (
                                     <div className="space-y-2">
-                                        <Label>Drop Location <span className='text-red-500'>*</span></Label>
+                                        <Label>Drop Location <span className="text-red-500">*</span></Label>
                                         <LocationAutocomplete
                                             onSelect={handleLocationSelectToGoogle}
-                                            onChange={e => handleInputChange('drop', e.target.value)}
+                                            onChange={(e) => handleInputChange("drop", e.target.value)}
                                             getValue={formData.drop}
                                         />
                                     </div>
@@ -909,7 +1111,62 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                     {/* Step 2: Pricing & Payment */}
                     {currentStep === 2 && (
                         <>
+                            <div className="flex items-center flex-wrap gap-3 bg-gray-50 p-4 rounded-xl shadow-sm mb-6 max-w-full overflow-x-auto">
+                                {(() => {
+                                    const routeParts = [];
 
+                                    // Start with Pickup
+                                    routeParts.push({ label: formData.pickup || "Pickup", type: "pickup" });
+
+                                    // Add up to 5 stops with truncation for more
+                                    if (Array.isArray(formData.stops) && formData.stops.length > 0) {
+                                        const maxStops = 5;
+                                        formData.stops.slice(0, maxStops).forEach((stop, i) => {
+                                            routeParts.push({ label: stop || `Stop ${i + 1}`, type: "stop" });
+                                        });
+                                        if (formData.stops.length > maxStops) {
+                                            routeParts.push({ label: `+${formData.stops.length - maxStops} more`, type: "more" });
+                                        }
+                                    }
+
+                                    // Add Drop
+                                    routeParts.push({ label: formData.drop || "Drop", type: "drop" });
+
+                                    // Add Pickup again for round trip with stops
+                                    if (formData.serviceType === "Round trip" && Array.isArray(formData.stops) && formData.stops.length > 0) {
+                                        routeParts.push({ label: formData.pickup || "Pickup", type: "pickup" });
+                                    }
+
+                                    return routeParts.map((part, i) => (
+                                        <React.Fragment key={i}>
+                                            <span
+                                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${part.type === "more"
+                                                    ? "italic text-gray-500 bg-gray-200"
+                                                    : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-100"
+                                                    }`}
+                                            >
+                                                {part.label}
+                                            </span>
+                                            {i < routeParts.length - 1 && (
+                                                <svg
+                                                    className="w-4 h-4 text-gray-500 mx-1"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth="2"
+                                                        d="M9 5l7 7-7 7"
+                                                    />
+                                                </svg>
+                                            )}
+                                        </React.Fragment>
+                                    ));
+                                })()}
+                            </div>
                             <div className="space-y-4 mt-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
@@ -992,9 +1249,9 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         <Label>Final Amount <span className='text-red-500'>*</span>
                                             <InfoComponent
                                                 content={[
-                                                    { label: "Estimated Amount", value: basePrice || '' },
+                                                    { label: "Estimated Amount", value: formData.estimatedAmount || '' },
                                                     { label: "Driver Beta", value: formData?.breakFareDetails?.driverBeta || '' },
-                                                    { label: "Tax Amount", value: formData?.breakFareDetails?.taxAmount || '' },
+                                                    { label: "Tax Amount", value: finalTax || formData?.breakFareDetails?.taxAmount || '' },
                                                     { label: "Final Amount", value: formData?.finalAmount || '', highlight: true },
 
                                                 ]}
@@ -1061,6 +1318,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                 type="button"
                                 variant="outline"
                                 onClick={() => setCurrentStep(1)}
+
                             >
                                 Previous
                             </Button>
