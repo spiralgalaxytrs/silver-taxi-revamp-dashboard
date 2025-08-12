@@ -35,6 +35,20 @@ export interface Driver {
     licenseImageBackVerified?:  "pending" | "accepted" | "rejected";
     licenseImageFrontRemark?: string;
     licenseImageBackRemark?: string;
+    createdBy: "Vendor" | "Admin" | "Driver";
+    fcmToken?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    state?: string;
+    pinCode?: string;
+    city?: string;
+
+
+    onlineTime?: Date | null;
+    offlineTime?: Date | null;
+
+    geoLocation?: any;
+    referralCode?: string;
 
     wallet?: {
         balance: number;
@@ -95,6 +109,7 @@ export interface VehicleAttributes {
     pollutionExpiryDate?: string;
     pollutionImageVerified  ?: "pending" | "accepted" | "rejected";
     pollutionImageRemark?: string;
+
 }
 
 export interface wallet {
