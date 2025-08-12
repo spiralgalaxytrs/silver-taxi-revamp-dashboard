@@ -105,6 +105,7 @@ type Booking = {
     driverBeta?: number | null;
     duration?: string | null;
     pricePerKm?: number | null;
+    vehicleType: string;
     extraCharges: ExtraCharges;
 
 }
@@ -173,6 +174,7 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
         driverBeta: 0,
         duration: "",
         pricePerKm: 0,
+        vehicleType: '',
         extraCharges: {
             toll: 0,
             hill: 0,
@@ -267,7 +269,7 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                     | "Day Packages"
                     | "Hourly Packages",
                 extraCharges: booking.extraCharges || [],
-
+                vehicleType: booking.vehicleType || '',
             };
             setFormData(updatedBookingData);
             setCurrentStep(2);
@@ -691,6 +693,7 @@ export function VendorBookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 const newState = {
                                                     ...prev,
                                                     vehicleId: v,
+                                                    vehicleType: selectedVehicle?.type || '',
                                                     // Add any other vehicle-related fields you want to update
                                                 };
                                                 return newState;
