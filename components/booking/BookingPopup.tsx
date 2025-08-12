@@ -89,6 +89,10 @@ export function BookingPopup({
       "Email": booking.email || "-",
       "Pick Up": booking.pickup || "-",
       "Drop": booking.drop || "-",
+    "Stops": Array.isArray(booking.stops) && booking.stops.length
+  ? booking.stops.map(s => s.location || s).join(", ")
+  : "-",
+
       "Pickup Date & Time": formatDate(booking.pickupDateTime || "") || "-",
       "Pickup Date": formatDate(booking.pickupDateTime || "") || "-",
       "Pickup Time": formattedTime(booking.pickupDateTime || "") || "-",
