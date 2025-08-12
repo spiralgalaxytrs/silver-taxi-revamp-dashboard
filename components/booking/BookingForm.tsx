@@ -16,7 +16,7 @@ import {
     SelectValue,
 } from '../ui/select';
 import { toast } from 'sonner';
-import { getMinDateTime, getMaxDateTime, getMinDate } from '../../lib/date-restrict';
+import { getMinDateTime, getMaxDateTime, getMinDate } from '../../lib/dateFunctions';
 import axios from "../../lib/http-common"
 import { Loader2, ArrowUp, ArrowDown, Plus, Trash } from 'lucide-react';
 import {

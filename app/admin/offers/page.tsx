@@ -4,7 +4,7 @@
 import { columns } from './columns';
 import { Button } from 'components/ui/button';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ArrowDown, ArrowUp, Activity, Trash, Loader2, RefreshCcw } from 'lucide-react';
 import { Input } from 'components/ui/input';
 import { Label } from 'components/ui/label';
@@ -36,13 +36,23 @@ import {
     MaterialReactTable
 } from 'material-react-table';
 import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
+import {
+    useTableColumnVisibility,
+    useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 export default function OffersPage() {
 
     const router = useRouter();
     const { offers, fetchOffers, multiDeleteOffers, isLoading } = useOfferStore();
 
+    const {
+        data: tableColumnVisibility = {},
+    } = useTableColumnVisibility("offers");
 
+    const {
+        mutate: updateTableColumnVisibility
+    } = useUpdateTableColumnVisibility("offers");
     const [lockBack, setLockBack] = useState(false);
     useBackNavigation(lockBack);
     const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
@@ -53,6 +63,8 @@ export default function OffersPage() {
     const [activeOffers, setActiveOffers] = useState(0);
     const [inactiveOffers, setInactiveOffers] = useState(0)
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+    const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
     const [filters, setFilters] = useState({
         search: '',
         category: '',
@@ -114,6 +126,25 @@ export default function OffersPage() {
             console.error('Error refreshing data:', error);
         }
     };
+
+
+    // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+    const columnVisibility = useMemo(() => {
+        const serverVisibility = tableColumnVisibility.preferences || {};
+        return { ...serverVisibility, ...localColumnVisibility };
+    }, [tableColumnVisibility, localColumnVisibility]);
+
+    useEffect(() => {
+        // 🌟 Only update server when local or server visibility changes
+        const serverVisibility = tableColumnVisibility.preferences || {};
+        const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+        if (isColumnVisibilityUpdated) {
+            updateTableColumnVisibility(finalVisibility);
+            setIsColumnVisibilityUpdated(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [localColumnVisibility, isColumnVisibilityUpdated]);
+
 
     const unFilteredData = [...offersData].sort((a, b) => {
         const acreatedAt = new Date(a.createdAt).getTime();
@@ -497,16 +528,22 @@ export default function OffersPage() {
                         enableRowSelection
                         positionGlobalFilter="left"
                         onRowSelectionChange={setRowSelection}
-                        state={{ rowSelection, sorting }}
+                        state={{ rowSelection, sorting, columnVisibility }}
+                        onColumnVisibilityChange={(newVisibility) => {
+                            setIsColumnVisibilityUpdated(true);
+                            setLocalColumnVisibility(newVisibility);
+                        }}
                         onSortingChange={setSorting}
                         enableSorting
+                        enableColumnPinning={false}
                         initialState={{
                             density: 'compact',
                             pagination: { pageIndex: 0, pageSize: 10 },
+                            columnPinning: { right: ["actions"] },
                             showGlobalFilter: true,
                         }}
                         muiSearchTextFieldProps={{
-                            placeholder: 'Search offers...',
+                            placeholder: 'Search ...',
                             variant: 'outlined',
                             fullWidth: true, // 🔥 Makes the search bar take full width
                             sx: {

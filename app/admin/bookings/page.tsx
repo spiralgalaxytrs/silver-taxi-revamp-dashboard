@@ -43,6 +43,11 @@ import {
   MaterialReactTable,
   type MRT_ColumnDef
 } from 'material-react-table'
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
+import dayjs from 'dayjs';
 
 export default function BookingsPage() {
   const router = useRouter();
@@ -61,11 +66,21 @@ export default function BookingsPage() {
     mutate: bulkDeleteBookings
   } = useBulkDeleteBookings()
 
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("bookings");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("bookings");
+
 
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [isSpinning, setIsSpinning] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
     status: '',
@@ -82,6 +97,24 @@ export default function BookingsPage() {
   });
   const [showFilters, setShowFilters] = useState(false);
 
+  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+  const columnVisibility = useMemo(() => {
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    return { ...serverVisibility, ...localColumnVisibility };
+  }, [tableColumnVisibility, localColumnVisibility]);
+
+  useEffect(() => {
+    // 🌟 Only update server when local or server visibility changes
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+    if (isColumnVisibilityUpdated) {
+      updateTableColumnVisibility(finalVisibility);
+      setIsColumnVisibilityUpdated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localColumnVisibility, isColumnVisibilityUpdated]);
+
+
   const bookingData = useMemo(() => {
     return bookings.map((booking: any) => ({
       ...booking,
@@ -91,15 +124,10 @@ export default function BookingsPage() {
     }))
   }, [bookings])
 
-  const unFilteredData = [...bookingData].sort((a, b) => {
-    const abookingDate = new Date(a.bookingDate || "").getTime();
-    const bbookingDate = new Date(b.bookingDate || "").getTime();
-    return bbookingDate - abookingDate; // Descending order
-  });
 
   const applyFilters = () => {
 
-    let filteredData = [...unFilteredData];
+    let filteredData = [...bookingData];
 
     if (filters.search) {
       filteredData = filteredData.filter(booking =>
@@ -176,35 +204,49 @@ export default function BookingsPage() {
   const filteredData = applyFilters();
 
 
-
-
   const stats = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-
     return filteredData.reduce(
       (acc, booking) => {
-        const amount = Number(booking.finalAmount) || 0;
-        const bookingYear = new Date(booking.createdAt).getFullYear();
-
-        acc.totalBookings += 1;
-        acc.totalBookingValue += amount;
-        if (bookingYear === currentYear) acc.yearlyBookings += 1;
-        if (booking.status === 'Completed') acc.completedBookings += 1;
-        if (booking.type === 'Manual') acc.manualBookings += 1;
-        if (booking.createdBy === 'Vendor') acc.vendorBookings += 1;
-
+        // Check if booking.createdAt is today
+        if (dayjs(booking.createdAt).isSame(dayjs(), 'day')) {
+          acc.todayBookings += 1;
+        }
+  
+        // Check if booking.pickupDate is today (make sure pickupDate exists)
+        if (booking.pickupDate && dayjs(booking.pickupDate).isSame(dayjs(), 'day')) {
+          acc.todayPickups += 1;
+        }
+  
+        // Count by status
+        switch (booking.status) {
+          case "Not-Started":
+            acc.nonStarted += 1;
+            break;
+          case "Started":
+            acc.started += 1;
+            break;
+          case "Completed":
+            acc.completed += 1;
+            break;
+          case "Cancelled":
+            acc.cancelled += 1;
+            break;
+        }
+  
         return acc;
       },
       {
-        totalBookings: 0,
-        totalBookingValue: 0,
-        yearlyBookings: 0,
-        completedBookings: 0,
-        manualBookings: 0,
-        vendorBookings: 0,
+        todayBookings: 0,
+        todayPickups: 0,
+        nonStarted: 0,
+        started: 0,
+        completed: 0,
+        cancelled: 0,
       }
     );
   }, [filteredData]);
+  
+
 
 
   const handleFilterChange = (key: string, value: string) => {
@@ -304,6 +346,9 @@ export default function BookingsPage() {
     }
   };
 
+
+  // console.log("columnVisibility >", columnVisibility)
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -320,20 +365,12 @@ export default function BookingsPage() {
             <div className="flex items-center justify-between border-b-1 mb-5">
               <h1 className="text-2xl font-bold tracking-tight">Booking Page</h1>
               <div className="flex items-center gap-2">
-           
+
                 <Button
                   className='bg-[rgb(0,159,127)] inline-flex items-center justify-center flex-shrink-0 font-medium leading-none rounded-full outline-none transition duration-300 ease-in-out focus:outline-none focus:shadow text-white border border-solid border-accent hover:bg-[rgb(0,159,135)] hover:text-white hover:border-transparent px-5 py-0 h-12 text-[15px] lg:text-bas w-full md:w-auto md:ms-6'
                   onClick={handleCreateBooking}
                 >
                   Create Booking
-                </Button>
-                <Button
-                  variant="none"
-                  className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  {showFilters ? 'Hide Filters' : 'Show Filters'}
-                  {showFilters ? <ArrowDown className="ml-2" /> : <ArrowUp className="ml-2" />}
                 </Button>
                 <div className="flex items-center gap-2">
                   {Object.keys(rowSelection).length > 0 && (
@@ -373,8 +410,8 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-emerald-100"
                     icon={Activity}
-                    count={stats.totalBookings.toLocaleString()}
-                    label="Total Bookings"
+                    count={stats.todayBookings.toLocaleString()}
+                    label="Today's Bookings"
                     className="relative z-10 p-6"
                   //cardSize="w-[200px] h-[100px]"
                   />
@@ -387,8 +424,8 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-blue-100"
                     icon={Activity}
-                    count={stats.totalBookingValue.toLocaleString()}
-                    label="Total Booking Value"
+                    count={stats.todayPickups.toLocaleString()}
+                    label="Today's Pickups"
                     //cardSize="w-[200px] h-[100px]"
                     format="currency"
                   />
@@ -401,8 +438,8 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-purple-100"
                     icon={Activity}
-                    count={stats.yearlyBookings.toLocaleString()}
-                    label="This Year's Bookings"
+                    count={stats.nonStarted.toLocaleString()}
+                    label="Non Started Bookings"
                   //cardSize="w-[200px] h-[100px]"
                   />
                 </div>
@@ -414,8 +451,8 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-emerald-100"
                     icon={Activity}
-                    count={stats.completedBookings.toLocaleString()}
-                    label="Completed Bookings"
+                    count={stats.started.toLocaleString()}
+                    label="Started Bookings"
                   //cardSize="w-[200px] h-[100px]"
                   />
                 </div>
@@ -427,8 +464,8 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-blue-100"
                     icon={Activity}
-                    count={stats.manualBookings.toLocaleString()}
-                    label="Manual Bookings"
+                    count={stats.completed.toLocaleString()}
+                    label="Completed Bookings"
                   //cardSize="w-[200px] h-[100px]"
                   />
                 </div>
@@ -440,8 +477,8 @@ export default function BookingsPage() {
                   <CounterCard
                     color="bg-purple-100"
                     icon={Activity}
-                    count={stats.vendorBookings.toLocaleString()}
-                    label="Vendor Bookings"
+                    count={stats.cancelled.toLocaleString()}
+                    label="Cancelled Bookings"
                   />
                 </div>
                 <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500 transform scale-x-100" />
@@ -547,16 +584,22 @@ export default function BookingsPage() {
             enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
+            state={{ rowSelection, sorting, columnVisibility }}
             onSortingChange={setSorting}
             enableSorting
+            enableColumnPinning={false}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },
+              columnPinning: { right: ["actions"] },
               showGlobalFilter: true,
             }}
             muiSearchTextFieldProps={{
-              placeholder: 'Search enquiries...',
+              placeholder: 'Search ...',
               variant: 'outlined',
               fullWidth: true, // 🔥 Makes the search bar take full width
               sx: {

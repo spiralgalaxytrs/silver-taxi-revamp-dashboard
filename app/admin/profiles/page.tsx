@@ -14,29 +14,41 @@ import {
   Trash,
   Loader2,
 } from "lucide-react"
-
+import { toast } from "sonner";
 import { Button } from "components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs"
-
-// Add type imports at the top
-import { CompanyProfile } from "types/profile"
-import { useProfileStore } from "stores/-profileStore"
+import { useAdminProfile, useDeleteProfile } from "hooks/react-query/useProfile"
 
 // Update the store hook with types
 
+
 function TaxiCompanyProfile() {
-  const { profile, fetchProfile, deleteProfile, isLoading } = useProfileStore()
 
-  useEffect(() => {
-    fetchProfile()
-  }, [fetchProfile])
-
+  const { data: profile, isLoading } = useAdminProfile()
+  const { mutate: deleteProfile } = useDeleteProfile()
 
   const handleDelete = (companyId: string | undefined) => {
     if (companyId) {
-      deleteProfile(companyId)
+      deleteProfile(companyId, {
+        onSuccess: () => {
+          toast.success("Profile deleted successfully", {
+            style: {
+              background: "#009F7F",
+              color: "#fff",
+            }
+          })
+        },
+        onError: () => {
+          toast.error("Failed to delete profile", {
+            style: {
+              background: "#FF0000",
+              color: "#fff",
+            }
+          })
+        }
+      })
     }
   }
 
@@ -89,7 +101,7 @@ function TaxiCompanyProfile() {
                   </Button>
                 </Link>
               )}
-              {profile && (
+              {/* {profile && (
                 <Button
                   variant="destructive"
                   size="sm"
@@ -98,7 +110,7 @@ function TaxiCompanyProfile() {
                 >
                   <Trash className="w-4 h-4" />
                 </Button>
-              )}
+              )} */}
             </CardHeader>
 
             <CardContent>
@@ -134,10 +146,25 @@ function TaxiCompanyProfile() {
                       </CardHeader>
                       <CardContent className="space-y-2">
                         <InfoItem label="GST Number" content={profile?.GSTNumber || "Not Available"} />
+                        <InfoItem label="Company Commission Percentage" content={`${profile?.companyCommissionPercentage || "-"}%`} />
                         <InfoItem label="UPI ID" content={profile?.UPI?.id || "Not Available"} />
                         <InfoItem label="UPI Number" content={profile?.UPI?.number || "Not Available"} />
                         <InfoItem label="Driver Minimum Wallet Amount" content={profile?.driverWalletAmount} />
                         <InfoItem label="Vendor Minimum Wallet Amount" content={profile?.vendorWalletAmount} />
+                        <div>
+                          <h5 className="text-base font-bold">Customer Referral</h5>
+                          <div className="flex items-center gap-2">
+                            <InfoItem label="Sender Amount" content={`${profile?.customerReferral?.senderAmount || "-"}`} />
+                            <InfoItem label="Receiver Amount" content={`${profile?.customerReferral?.receiverAmount || "-"}`} />
+                          </div>
+                        </div>
+                        <div>
+                          <h5 className="text-base font-bold">Driver Referral</h5>
+                          <div className="flex items-center gap-2">
+                            <InfoItem label="Sender Amount" content={`${profile?.driverReferral?.senderAmount || "-"}`} />
+                            <InfoItem label="Receiver Amount" content={`${profile?.driverReferral?.receiverAmount || "-"}`} />
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
                   </div>

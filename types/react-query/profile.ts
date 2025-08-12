@@ -22,6 +22,9 @@ export interface CompanyProfile {
     };
     driverWalletAmount: number;
     vendorWalletAmount: number;
+    customerReferral: { senderAmount: number; receiverAmount: number };
+    vendorReferral: { senderAmount: number; receiverAmount: number };
+    driverReferral: { senderAmount: number; receiverAmount: number };
 } 
 
 export interface Profile {
@@ -48,4 +51,9 @@ export interface Profile {
         instagram: string;
         youtube: string;
     };
+    companyCommission: number;
+    companyCommissionPercentage: number;
+    customerReferral: { senderAmount: number; receiverAmount: number };
+    vendorReferral: { senderAmount: number; receiverAmount: number };
+    driverReferral: { senderAmount: number; receiverAmount: number };
 } 

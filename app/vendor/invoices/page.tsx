@@ -38,6 +38,10 @@ import {
   useVendorInvoices,
   useMultiDeleteInvoice
 } from 'hooks/react-query/useInvoice';
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 export default function InvoicesPage() {
   const router = useRouter();
@@ -47,6 +51,14 @@ export default function InvoicesPage() {
     refetch
   } = useVendorInvoices();
   const { mutate: multiDeleteInvoice } = useMultiDeleteInvoice();
+
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("vendor-invoices");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("vendor-invoices");
 
   const [lockBack, setLockBack] = useState(false);
   useBackNavigation(lockBack);
@@ -58,6 +70,8 @@ export default function InvoicesPage() {
   const [paidInvoices, setPaidInvoices] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [unpaidInvoices, setUnpaidInvoices] = useState(0);
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
 
   const [sortConfig, setSortConfig] = useState<{
     columnId: string | null;
@@ -98,6 +112,24 @@ export default function InvoicesPage() {
       createdAt: invoice.createdAt ? invoice.createdAt : ""
     }));
   }, [invoices]);
+
+    // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+    const columnVisibility = useMemo(() => {
+      const serverVisibility = tableColumnVisibility.preferences || {};
+      return { ...serverVisibility, ...localColumnVisibility };
+    }, [tableColumnVisibility, localColumnVisibility]);
+  
+    useEffect(() => {
+      // 🌟 Only update server when local or server visibility changes
+      const serverVisibility = tableColumnVisibility.preferences || {};
+      const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+      if (isColumnVisibilityUpdated) {
+        updateTableColumnVisibility(finalVisibility);
+        setIsColumnVisibilityUpdated(false);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [localColumnVisibility, isColumnVisibilityUpdated]);
+  
 
   const unFilteredData = [...invoiceData].sort((a, b) => {
     const aCreatedAt = new Date(a.createdAt || "").getTime();
@@ -440,16 +472,22 @@ export default function InvoicesPage() {
             enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
+            state={{ rowSelection, sorting, columnVisibility }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
             onSortingChange={setSorting}
             enableSorting
+            enableColumnPinning={false}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },
               showGlobalFilter: true,
+              columnPinning: { right: ["actions"] },
             }}
             muiSearchTextFieldProps={{
-              placeholder: 'Search Invoices...',
+              placeholder: 'Search ...',
               variant: 'outlined',
               fullWidth: true, // 🔥 Makes the search bar take full width
               sx: {

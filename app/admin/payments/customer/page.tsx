@@ -25,6 +25,10 @@ import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
 import {
   useFetchBookings
 } from "hooks/react-query/useBooking";
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 export default function CustomerPaymentPage() {
   const router = useRouter();
@@ -33,6 +37,13 @@ export default function CustomerPaymentPage() {
     data: bookings = []
   } = useFetchBookings();
 
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("payments-customer");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("payments-customer");
 
   const [lockBack, setLockBack] = useState(false);
   useBackNavigation(lockBack);
@@ -43,6 +54,8 @@ export default function CustomerPaymentPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [totalPayments, setTotalPayments] = useState(0);
   const [todayPayments, setTodayPayments] = useState(0);
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
     columnId: string | null;
     direction: 'asc' | 'desc' | null;
@@ -67,6 +80,23 @@ export default function CustomerPaymentPage() {
       })),
     [bookings]
   );
+
+  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+  const columnVisibility = useMemo(() => {
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    return { ...serverVisibility, ...localColumnVisibility };
+  }, [tableColumnVisibility, localColumnVisibility]);
+
+  useEffect(() => {
+    // 🌟 Only update server when local or server visibility changes
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+    if (isColumnVisibilityUpdated) {
+      updateTableColumnVisibility(finalVisibility);
+      setIsColumnVisibilityUpdated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localColumnVisibility, isColumnVisibilityUpdated]);
 
 
   const unFiltered = [...bookingData].sort((a, b) => {
@@ -298,12 +328,18 @@ export default function CustomerPaymentPage() {
             // enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
+            state={{ rowSelection, sorting, columnVisibility }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
             onSortingChange={setSorting}
             enableSorting
+            enableColumnPinning={false}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },
+              columnPinning: { right: ["actions"] },
               showGlobalFilter: true,
             }}
             muiSearchTextFieldProps={{

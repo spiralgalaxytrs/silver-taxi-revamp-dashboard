@@ -16,6 +16,9 @@ import {
   adjustDriverWallet,
   verificationStatus,
   expiryCheck,
+  approveOrRejectDriverWalletRequest,
+  getAllDriverWalletRequests,
+  getDriverWalletRequestById,
 } from "services/driver";
 
 // 🚚 Get all drivers
@@ -137,3 +140,34 @@ export const useDriverExpiryCheck = (id: string) =>
     queryFn: () => expiryCheck(id),
     enabled: !!id,
   });
+
+// ✅ Approve or Reject Driver Wallet Request
+export const useApproveOrRejectDriverWalletRequest = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: approveOrRejectDriverWalletRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["driver-wallet-requests"] });
+    },
+  });
+};
+
+// ✅ Get All Driver Wallet Requests
+export const useAllDriverWalletRequests = () => {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ["driver-wallet-requests"],
+    queryFn: getAllDriverWalletRequests,
+  });
+};
+
+// ✅ Get Driver Wallet Request By ID
+export const useDriverWalletRequestById = (id: string) => {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ["driver-wallet-request", id],
+    queryFn: () => getDriverWalletRequestById(id),
+    enabled: !!id,
+  });
+};
+

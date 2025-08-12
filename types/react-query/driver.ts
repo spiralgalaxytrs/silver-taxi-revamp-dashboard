@@ -35,6 +35,20 @@ export interface Driver {
     licenseImageBackVerified?:  "pending" | "accepted" | "rejected";
     licenseImageFrontRemark?: string;
     licenseImageBackRemark?: string;
+    createdBy: "Vendor" | "Admin" | "Driver";
+    fcmToken?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    state?: string;
+    pinCode?: string;
+    city?: string;
+
+
+    onlineTime?: Date | null;
+    offlineTime?: Date | null;
+
+    geoLocation?: any;
+    referralCode?: string;
 
     wallet?: {
         balance: number;
@@ -95,6 +109,7 @@ export interface VehicleAttributes {
     pollutionExpiryDate?: string;
     pollutionImageVerified  ?: "pending" | "accepted" | "rejected";
     pollutionImageRemark?: string;
+
 }
 
 export interface wallet {
@@ -137,4 +152,24 @@ export interface ExpiryStatus {
 export interface ErrorResponse {
     message: string;
     success: boolean;
+}
+
+export interface DriverWalletRequest {
+    adminId: string;
+    requestId?: string;
+    driverId: string;
+    name?: string;
+    phone?: string;
+    walletId: string;
+    type: "add" | "withdraw";
+    amount: number;
+    reason?: string;
+    remark?: string | null;
+    description?: string;
+    transId?: string;
+    paymentMethod?: string;
+    tnxPaymentId?: string | null;
+    transactionDate?: Date;
+    status: "pending" | "approved" | "rejected";
+    createdAt?: string;
 }

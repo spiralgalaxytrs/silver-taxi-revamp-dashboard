@@ -30,6 +30,10 @@ import {
   MRT_ColumnDef,
   MaterialReactTable
 } from 'material-react-table'
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 interface Customer {
   customerId?: string;
@@ -48,7 +52,6 @@ interface Customer {
 export default function CustomersPage() {
   const router = useRouter()
 
-
   const {
     data: customers = [],
     isLoading,
@@ -60,6 +63,14 @@ export default function CustomersPage() {
     mutate: multiDeleteCustomers
   } = useBulkDeleteCustomers();
 
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("customers");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("customers");
+
 
   const [filters, setFilters] = useState({
     search: "",
@@ -67,8 +78,11 @@ export default function CustomersPage() {
     createdEndDate: '',
   });
 
+
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false)
   const [showFilters, setShowFilters] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -101,6 +115,24 @@ export default function CustomersPage() {
     });
     setSortConfig({ columnId: null, direction: null });
   };
+
+    // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+    const columnVisibility = useMemo(() => {
+      const serverVisibility = tableColumnVisibility.preferences || {};
+      return { ...serverVisibility, ...localColumnVisibility };
+    }, [tableColumnVisibility, localColumnVisibility]);
+  
+    useEffect(() => {
+      // 🌟 Only update server when local or server visibility changes
+      const serverVisibility = tableColumnVisibility.preferences || {};
+      const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+      if (isColumnVisibilityUpdated) {
+        updateTableColumnVisibility(finalVisibility);
+        setIsColumnVisibilityUpdated(false);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [localColumnVisibility, isColumnVisibilityUpdated]);
+  
 
   const unFiltered = [...customerData].sort((a, b) => {
     const aCreatedAt = new Date(a.createdAt || "").getTime();
@@ -390,16 +422,22 @@ export default function CustomersPage() {
             enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
+            state={{ rowSelection, sorting, columnVisibility }}
             onSortingChange={setSorting}
             enableSorting
+            enableColumnPinning={false}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },
+              columnPinning: { right: ["actions"] },
               showGlobalFilter: true,
             }}
             muiSearchTextFieldProps={{
-              placeholder: 'Search customers...',
+              placeholder: 'Search ...',
               variant: 'outlined',
               fullWidth: true, // 🔥 Makes the search bar take full width
               sx: {

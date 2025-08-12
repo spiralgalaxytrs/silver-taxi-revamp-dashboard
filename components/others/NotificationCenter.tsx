@@ -17,6 +17,7 @@ import { useSocket } from 'providers/websocket/SocketProvider';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { playNotificationSound } from 'lib/capitalize';
 
 
 const notificationImage = {
@@ -48,6 +49,7 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
         // Listen for incoming notifications
         socket.on('notification', (notification: any) => {
             addNotification(notification)
+            playNotificationSound();
             toast.info(notification.title, {
                 duration: 5000,
                 position: "top-right",
@@ -122,7 +124,7 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
                     )}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <ScrollArea className="h-[600px] overflow-y-auto">
+                <ScrollArea className="h-[450px] overflow-y-auto">
 
                     {data.slice(0, 8).map((notification) => (
                         <button

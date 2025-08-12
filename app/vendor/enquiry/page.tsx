@@ -33,6 +33,10 @@ import {
   useNavigationStore
 } from 'stores/navigationStore'
 import { useBackNavigation } from 'hooks/navigation/useBackNavigation'
+import {
+  useTableColumnVisibility,
+  useUpdateTableColumnVisibility
+} from 'hooks/react-query/useImageUpload';
 
 export default function EnquiryPage() {
   const router = useRouter()
@@ -48,6 +52,14 @@ export default function EnquiryPage() {
   const {
     mutate: bulkDeleteEnquiries
   } = useBulkDeleteEnquiries();
+
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("vendor-enquiry");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("vendor-enquiry");
 
   const [filters, setFilters] = useState({
     search: '',
@@ -73,6 +85,8 @@ export default function EnquiryPage() {
   const [manualEnquiries, setManualEnquiries] = useState(0)
   const [websiteEnquiries, setWebsiteEnquiries] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
+  const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
 
   const enquiryData = useMemo(() => {
     return enquiries.map((enquiry) => ({
@@ -86,6 +100,24 @@ export default function EnquiryPage() {
   const handleFilterChange = (key: string, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
   }
+
+  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
+  const columnVisibility = useMemo(() => {
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    return { ...serverVisibility, ...localColumnVisibility };
+  }, [tableColumnVisibility, localColumnVisibility]);
+
+  useEffect(() => {
+    // 🌟 Only update server when local or server visibility changes
+    const serverVisibility = tableColumnVisibility.preferences || {};
+    const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
+    if (isColumnVisibilityUpdated) {
+      updateTableColumnVisibility(finalVisibility);
+      setIsColumnVisibilityUpdated(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localColumnVisibility, isColumnVisibilityUpdated]);
+
 
   const categorizeEnquiries = (enquiries: any[]) => {
     const today = dayjs().startOf('day')
@@ -508,16 +540,22 @@ export default function EnquiryPage() {
             enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting }}
+            state={{ rowSelection, sorting, columnVisibility }}
+            onColumnVisibilityChange={(newVisibility) => {
+              setIsColumnVisibilityUpdated(true);
+              setLocalColumnVisibility(newVisibility);
+            }}
             onSortingChange={setSorting}
             enableSorting
+            enableColumnPinning={false}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },
               showGlobalFilter: true,
+              columnPinning: { right: ["actions"] },
             }}
             muiSearchTextFieldProps={{
-              placeholder: 'Search enquiries...',
+              placeholder: 'Search ...',
               variant: 'outlined',
               fullWidth: true, // 🔥 Makes the search bar take full width
               sx: {

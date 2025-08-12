@@ -5,8 +5,7 @@ export interface Booking {
   email: string;
   pickup: string;
   drop: string;
-  pickupDate: string;
-  pickupTime: string;
+  pickupDateTime: string;
   vehicleType: string;
   discountAmount: number | null;
   dropDate: string | null;
@@ -40,7 +39,7 @@ export interface Booking {
   vehicleName: string;
   amount: number | null;
   bookingDate: string;
-  status: "Completed" | "Cancelled" | "Not-Started" | "Started";
+  status: "Completed" | "Cancelled" | "Not-Started" | "Started" | "Reassign" | "Manual Completed";
   createdBy: "Admin" | "Vendor";
   createdAt?: string | null;
   offers: Record<string, any>;

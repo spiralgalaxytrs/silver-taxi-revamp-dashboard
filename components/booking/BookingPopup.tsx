@@ -93,6 +93,7 @@ export function BookingPopup({
   ? booking.stops.map(s => s.location || s).join(", ")
   : "-",
 
+      "Pickup Date & Time": formatDate(booking.pickupDateTime || "") || "-",
       "Pickup Date": formatDate(booking.pickupDateTime || "") || "-",
       "Pickup Time": formattedTime(booking.pickupDateTime || "") || "-",
       "Drop Date": booking.dropDate ? formatDate(booking.dropDate) : "-",

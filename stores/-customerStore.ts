@@ -160,6 +160,7 @@ export const useCustomerStore = create<CustomerState>()(
                         email: booking.email,
                         phone: booking.phone,
                         serviceType: booking.serviceType,
+                        pickupDateTime: booking.pickupDateTime,
                         pickupDate: booking.pickupDateTime,
                         pickupTime: booking.pickupDateTime,
                         dropDate: booking.dropDate,

@@ -89,6 +89,7 @@ export function VendorBookingPopup({
       "Email": booking.email || "-",
       "Pick Up": booking.pickup || "-",
       "Drop": booking.drop || "-",
+      "Pickup Date & Time": formatDate(booking.pickupDateTime || "") || "-",
       "Pickup Date": formatDate(booking.pickupDateTime || "") || "-",
       "Pickup Time": formattedTime(booking.pickupDateTime || "") || "-",
       "Drop Date": booking.dropDate ? formatDate(booking.dropDate) : "-",

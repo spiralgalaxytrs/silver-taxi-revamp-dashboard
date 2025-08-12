@@ -40,7 +40,7 @@ instance.interceptors.response.use(
         if (error?.response) {
             if (error.response.status === 401) {
                 localStorage.clear();
-                window.location.reload();
+                window.location.href = '/login';
                 console.error('Unauthorized: Redirect to login page');
             } else if (error.response.status === 403) { // Use 403 for forbidden access
                 alert("Access denied.");
