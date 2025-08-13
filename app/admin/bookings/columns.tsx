@@ -2,7 +2,11 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "components/ui/button"
-import { Edit, SendHorizontal, Trash, Eye, ChevronDown, FileText } from "lucide-react"
+import {
+  Edit, SendHorizontal, Trash, Eye,
+  ChevronDown, FileText, CheckCircle,
+  HelpCircle
+} from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "components/ui/badge"
 import { BookingPopup } from "components/booking/BookingPopup"
@@ -542,9 +546,23 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       return (
         <DriverSelectionPopup
           trigger={
-            <Button variant="outline" size="sm" disabled={isLoading}>
-              {assignedDriver ? assignedDriver.name : "Assign Driver"}
-            </Button>
+            <TooltipComponent name={booking?.driverAccepted || "Assign Driver"}>
+              <Button variant="outline" size="sm" disabled={isLoading}>
+                {assignedDriver ?
+                  <p className="flex items-center gap-2 text-sm font-medium">
+                    {assignedDriver.name}
+                    {currentBooking.driverAccepted === "accepted" ?
+                      <span className="text-xs text-green-500">
+                        <CheckCircle className="h-4 w-4" />
+                      </span>
+                      : <span className="text-xs text-red-500">
+                        <HelpCircle className="h-4 w-4" />
+                      </span>
+                    }
+                  </p>
+                  : "Assign Driver"}
+              </Button>
+            </TooltipComponent>
           }
           onSelectDriver={handleDriverAssignment}
           assignAllDriver={handleAllDriverAssign}
