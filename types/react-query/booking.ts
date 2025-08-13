@@ -72,5 +72,8 @@ export interface Booking {
 
   adminCommission?: number;
   vendorCommission?: number;
+
+  geoLocation?: any;
+  isContacted?: boolean;
 }
 

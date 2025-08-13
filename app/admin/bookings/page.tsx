@@ -8,17 +8,10 @@ import { Button } from 'components/ui/button';
 import { Card } from 'components/ui/card';
 import CounterCard from 'components/cards/CounterCard';
 import { Input } from 'components/ui/input';
-import { ArrowDown, ArrowUp, Activity, Trash, RefreshCcw } from 'lucide-react';
+import { ArrowDown, ArrowUp, Activity, Trash, RefreshCcw, Filter } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { Label } from 'components/ui/label';
 import { toast } from "sonner"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from 'components/ui/select';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -82,20 +75,16 @@ export default function BookingsPage() {
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
   const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [filters, setFilters] = useState({
-    search: '',
-    status: '',
-    vehicleType: '',
-    pickupStartDate: '',
-    pickupEndDate: '',
-    dropStartDate: '',
-    dropEndDate: '',
-    bookingStartDate: '',
-    bookingEndDate: '',
-    distance: '',
-    amount: '',
-    serviceType: ''
+    todayBookings: false,
+    todayPickups: false,
+    notStarted: false,
+    started: false,
+    completed: false,
+    cancelled: false,
+    contact: false,
+    notContact: false,
   });
-  const [showFilters, setShowFilters] = useState(false);
+  const [isFilterApplied, setIsFilterApplied] = useState(false);
 
   // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
   const columnVisibility = useMemo(() => {
@@ -129,73 +118,30 @@ export default function BookingsPage() {
 
     let filteredData = [...bookingData];
 
-    if (filters.search) {
-      filteredData = filteredData.filter(booking =>
-        booking.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-        booking.bookingId?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        booking.phone.toLowerCase().includes(filters.search.toLowerCase()) ||
-        booking.pickup.toLowerCase().includes(filters.search.toLowerCase()) ||
-        booking.drop.toLowerCase().includes(filters.search.toLowerCase()) ||
-        booking.serviceType.toLowerCase().includes(filters.search.toLowerCase())
-      );
+
+    if (filters.todayBookings) {
+      filteredData = filteredData.filter(booking => dayjs(booking.createdAt).isSame(dayjs(), 'day'));
     }
-
-    if (filters.status && filters.status !== "all") {
-      filteredData = filteredData.filter(booking => booking.status === filters.status);
+    if (filters.todayPickups) {
+      filteredData = filteredData.filter(booking => booking.pickupDate && dayjs(booking.pickupDate).isSame(dayjs(), 'day'));
     }
-
-    if (filters.serviceType && filters.serviceType !== "all") {
-      filteredData = filteredData.filter(booking =>
-        booking.serviceType?.toLowerCase() === filters.serviceType.toLowerCase()
-      );
+    if (filters.notStarted) {
+      filteredData = filteredData.filter(booking => booking.status === "Not-Started");
     }
-
-    if (filters.vehicleType) {
-      filteredData = filteredData.filter(booking => booking.vehicleType === filters.vehicleType);
+    if (filters.started) {
+      filteredData = filteredData.filter(booking => booking.status === "Started");
     }
-
-    if (filters.bookingStartDate || filters.bookingEndDate) {
-      filteredData = filteredData.filter(booking => {
-        const bookingDate = new Date(booking.bookingDate).setHours(0, 0, 0, 0);
-        const startDate = filters.bookingStartDate ? new Date(filters.bookingStartDate).setHours(0, 0, 0, 0) : null;
-        const endDate = filters.bookingEndDate ? new Date(filters.bookingEndDate).setHours(0, 0, 0, 0) : null;
-
-        return (!startDate || bookingDate >= startDate) && (!endDate || bookingDate <= endDate);
-      });
+    if (filters.completed) {
+      filteredData = filteredData.filter(booking => booking.status === "Completed");
     }
-
-    if (filters.pickupStartDate || filters.pickupEndDate) {
-      filteredData = filteredData.filter(booking => {
-        const pickupDate = new Date(booking.pickupDate).setHours(0, 0, 0, 0);
-        const startDate = filters.pickupStartDate ? new Date(filters.pickupStartDate).setHours(0, 0, 0, 0) : null;
-        const endDate = filters.pickupEndDate ? new Date(filters.pickupEndDate).setHours(0, 0, 0, 0) : null;
-
-        return (!startDate || pickupDate >= startDate) && (!endDate || pickupDate <= endDate);
-      });
+    if (filters.cancelled) {
+      filteredData = filteredData.filter(booking => booking.status === "Cancelled");
     }
-
-    if (filters.dropStartDate || filters.dropEndDate) {
-      filteredData = filteredData.filter(booking => {
-        const dropDate = booking.dropDate ? new Date(booking.dropDate).setHours(0, 0, 0, 0) : null;
-        const startDate = filters.dropStartDate ? new Date(filters.dropStartDate).setHours(0, 0, 0, 0) : null;
-        const endDate = filters.dropEndDate ? new Date(filters.dropEndDate).setHours(0, 0, 0, 0) : null;
-
-        return (!startDate || (dropDate && dropDate >= startDate)) && (!endDate || (dropDate && dropDate <= endDate));
-      });
+    if (filters.contact) {
+      filteredData = filteredData.filter(booking => booking.isContacted === true);
     }
-
-    if (filters.distance) {
-      const distanceFilter = Number(filters.distance);
-      filteredData = filteredData.filter(booking =>
-        booking.distance === distanceFilter
-      );
-    }
-
-    if (filters.amount) {
-      const amountFilter = Number(filters.amount);
-      filteredData = filteredData.filter(booking =>
-        booking.amount === amountFilter
-      );
+    if (filters.notContact) {
+      filteredData = filteredData.filter(booking => booking.isContacted === false);
     }
 
     return filteredData;
@@ -211,16 +157,22 @@ export default function BookingsPage() {
         if (dayjs(booking.createdAt).isSame(dayjs(), 'day')) {
           acc.todayBookings += 1;
         }
-  
+
         // Check if booking.pickupDate is today (make sure pickupDate exists)
         if (booking.pickupDate && dayjs(booking.pickupDate).isSame(dayjs(), 'day')) {
           acc.todayPickups += 1;
         }
-  
+
+        if (booking.contacted) {
+          acc.contact += 1;
+        } else {
+          acc.notContact += 1;
+        }
+
         // Count by status
         switch (booking.status) {
           case "Not-Started":
-            acc.nonStarted += 1;
+            acc.notStarted += 1;
             break;
           case "Started":
             acc.started += 1;
@@ -232,43 +184,83 @@ export default function BookingsPage() {
             acc.cancelled += 1;
             break;
         }
-  
+
         return acc;
       },
       {
         todayBookings: 0,
         todayPickups: 0,
-        nonStarted: 0,
+        notStarted: 0,
         started: 0,
         completed: 0,
         cancelled: 0,
+        contact: 0,
+        notContact: 0,
       }
     );
   }, [filteredData]);
-  
 
 
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+
+  const handleFilterChange = (key: keyof typeof filters, value: boolean) => {
+    setFilters(prev => {
+      const bookingStatusKeys: Array<keyof typeof filters> = [
+        "notStarted",
+        "started",
+        "completed",
+        "cancelled",
+      ];
+      const contactStatusKeys: Array<keyof typeof filters> = [
+        "contact",
+        "notContact",
+      ];
+
+      // Handle booking status filters (mutually exclusive)
+      if (bookingStatusKeys.includes(key)) {
+        const next = {
+          ...prev,
+          notStarted: false,
+          started: false,
+          completed: false,
+          cancelled: false,
+        };
+        if (value) next[key] = true;
+        return next;
+      }
+
+      // Handle contact status filters (mutually exclusive)
+      if (contactStatusKeys.includes(key)) {
+        const next = {
+          ...prev,
+          contact: false,
+          notContact: false,
+        };
+        if (value) next[key] = true;
+        return next;
+      }
+
+      // Default: toggle any other filter normally
+      return { ...prev, [key]: value };
+    });
+
+    setIsFilterApplied(true);
   };
+
 
   const handleClear = async () => {
     try {
       setFilters({
-        search: '',
-        status: '',
-        vehicleType: '',
-        pickupStartDate: '',
-        pickupEndDate: '',
-        dropStartDate: '',
-        dropEndDate: '',
-        bookingStartDate: '',
-        bookingEndDate: '',
-        distance: '',
-        amount: '',
-        serviceType: ''
+        todayBookings: false,
+        todayPickups: false,
+        notStarted: false,
+        started: false,
+        completed: false,
+        cancelled: false,
+        contact: false,
+        notContact: false,
       });
+      setIsFilterApplied(false);
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
@@ -279,23 +271,23 @@ export default function BookingsPage() {
     router.push('/admin/bookings/create');
   };
 
-  const getFormattedBookingDateRange = () => {
-    const start = filters.bookingStartDate ? new Date(filters.bookingStartDate).toLocaleDateString() : '';
-    const end = filters.bookingEndDate ? new Date(filters.bookingEndDate).toLocaleDateString() : '';
-    return start && end ? `${start} - ${end}` : 'Pick a range';
-  };
+  // const getFormattedBookingDateRange = () => {
+  //   const start = filters.bookingStartDate ? new Date(filters.bookingStartDate).toLocaleDateString() : '';
+  //   const end = filters.bookingEndDate ? new Date(filters.bookingEndDate).toLocaleDateString() : '';
+  //   return start && end ? `${start} - ${end}` : 'Pick a range';
+  // };
 
-  const getFormattedDateRange = () => {
-    const start = filters.pickupStartDate ? new Date(filters.pickupStartDate).toLocaleDateString() : '';
-    const end = filters.pickupEndDate ? new Date(filters.pickupEndDate).toLocaleDateString() : '';
-    return start && end ? `${start} - ${end}` : 'Pick a range';
-  };
+  // const getFormattedDateRange = () => {
+  //   const start = filters.pickupStartDate ? new Date(filters.pickupStartDate).toLocaleDateString() : '';
+  //   const end = filters.pickupEndDate ? new Date(filters.pickupEndDate).toLocaleDateString() : '';
+  //   return start && end ? `${start} - ${end}` : 'Pick a range';
+  // };
 
-  const getFormattedDropDateRange = () => {
-    const start = filters.dropStartDate ? new Date(filters.dropStartDate).toLocaleDateString() : '';
-    const end = filters.dropEndDate ? new Date(filters.dropEndDate).toLocaleDateString() : '';
-    return start && end ? `${start} - ${end}` : 'Pick a range';
-  };
+  // const getFormattedDropDateRange = () => {
+  //   const start = filters.dropStartDate ? new Date(filters.dropStartDate).toLocaleDateString() : '';
+  //   const end = filters.dropEndDate ? new Date(filters.dropEndDate).toLocaleDateString() : '';
+  //   return start && end ? `${start} - ${end}` : 'Pick a range';
+  // };
 
   const handleBulkDelete = () => {
     const selectedIds = Object.keys(rowSelection);
@@ -367,11 +359,21 @@ export default function BookingsPage() {
               <div className="flex items-center gap-2">
 
                 <Button
-                  className='bg-[rgb(0,159,127)] inline-flex items-center justify-center flex-shrink-0 font-medium leading-none rounded-full outline-none transition duration-300 ease-in-out focus:outline-none focus:shadow text-white border border-solid border-accent hover:bg-[rgb(0,159,135)] hover:text-white hover:border-transparent px-5 py-0 h-12 text-[15px] lg:text-bas w-full md:w-auto md:ms-6'
+                  variant={"primary"}
+                  className='py-6'
                   onClick={handleCreateBooking}
                 >
                   Create Booking
                 </Button>
+
+                {isFilterApplied && <Button
+                  variant={"primary"}
+                  className='py-6'
+                  onClick={handleClear}
+                >
+                  Clear Filters
+                </Button>}
+
                 <div className="flex items-center gap-2">
                   {Object.keys(rowSelection).length > 0 && (
                     <>
@@ -403,89 +405,166 @@ export default function BookingsPage() {
                 </div>
               </div>
             </div>
-            <div className="grid ml-10 gap-5 md:grid-cols-3 lg:grid-cols-3">
-              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 w-full" />
-                <div className="h-[150PX] w-full">
-                  <CounterCard
-                    color="bg-emerald-100"
-                    icon={Activity}
-                    count={stats.todayBookings.toLocaleString()}
-                    label="Today's Bookings"
-                    className="relative z-10 p-6"
-                  //cardSize="w-[200px] h-[100px]"
-                  />
-                </div>
-                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500 transform scale-x-100" />
-              </Card>
-              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 opacity-0 w-full" />
-                <div className="h-[150PX] w-full">
-                  <CounterCard
-                    color="bg-blue-100"
-                    icon={Activity}
-                    count={stats.todayPickups.toLocaleString()}
-                    label="Today's Pickups"
-                    //cardSize="w-[200px] h-[100px]"
-                    format="currency"
-                  />
-                </div>
-                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500 transform scale-x-100" />
-              </Card>
-              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-100 w-full" />
-                <div className="h-[150px] w-full">
-                  <CounterCard
-                    color="bg-purple-100"
-                    icon={Activity}
-                    count={stats.nonStarted.toLocaleString()}
-                    label="Non Started Bookings"
-                  //cardSize="w-[200px] h-[100px]"
-                  />
-                </div>
-                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500 transform scale-x-100" />
-              </Card>
-              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 w-full" />
-                <div className="h-[150PX] w-full">
-                  <CounterCard
-                    color="bg-emerald-100"
-                    icon={Activity}
-                    count={stats.started.toLocaleString()}
-                    label="Started Bookings"
-                  //cardSize="w-[200px] h-[100px]"
-                  />
-                </div>
-                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500 transform scale-x-100" />
-              </Card>
-              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 opacity-0 w-full" />
-                <div className="h-[150PX] w-full">
-                  <CounterCard
-                    color="bg-blue-100"
-                    icon={Activity}
-                    count={stats.completed.toLocaleString()}
-                    label="Completed Bookings"
-                  //cardSize="w-[200px] h-[100px]"
-                  />
-                </div>
-                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500 transform scale-x-100" />
-              </Card>
-              <Card className="relative overflow-hidden border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-100 w-full" />
-                <div className="h-[150px] w-full">
-                  <CounterCard
-                    color="bg-purple-100"
-                    icon={Activity}
-                    count={stats.cancelled.toLocaleString()}
-                    label="Cancelled Bookings"
-                  />
-                </div>
-                <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500 transform scale-x-100" />
-              </Card>
+            <div className="grid ml-10 gap-5 md:grid-cols-3 lg:grid-cols-4">
+              <button onClick={() => handleFilterChange('todayBookings', !filters.todayBookings)}>
+                <Card className="border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105 ">
+                  {filters.todayBookings && <div className='absolute top-[-6] right-0 '>
+                    <span className='text-[5px] text-red-500'>
+                      <Filter className='w-5 h-5' />
+                    </span>
+                  </div>}
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded ">
+                    <CounterCard
+                      color="bg-emerald-100"
+                      icon={Activity}
+                      count={stats.todayBookings.toLocaleString()}
+                      label="Today's Bookings"
+                      className="rounded"
+                      cardSize="w-[180px] h-[90px]"
+                    />
+                    <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500" />
+                  </div>
+                </Card>
+              </button>
+              {/* Today's Pickups */}
+              <button onClick={() => handleFilterChange('todayPickups', !filters.todayPickups)}>
+                <Card className="border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                  {filters.todayPickups && <div className='absolute top-[-6] right-0 '>
+                    <span className='text-[5px] text-red-500'>
+                      <Filter className='w-5 h-5' />
+                    </span>
+                  </div>}
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded">
+                    <CounterCard
+                      color="bg-blue-100"
+                      icon={Activity}
+                      count={stats.todayPickups.toLocaleString()}
+                      label="Today's Pickups"
+                      className="rounded"
+                      cardSize="w-[180px] h-[90px]"
+                    />
+                    <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500" />
+                  </div>
+                </Card>
+              </button>
+              {/* Non Started Bookings */}
+              <button onClick={() => handleFilterChange('notStarted', !filters.notStarted)}>
+                <Card className="border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                  {filters.notStarted && <div className='absolute top-[-6] right-0 '>
+                    <span className='text-[5px] text-red-500'>
+                      <Filter className='w-5 h-5' />
+                    </span>
+                  </div>}
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded">
+                    <CounterCard
+                      color="bg-purple-100"
+                      icon={Activity}
+                      count={stats.notStarted.toLocaleString()}
+                      label="Non Started Bookings"
+                    />
+                    <div className="h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500" />
+                  </div>
+                </Card>
+              </button>
+              {/* Started Bookings */}
+              <button onClick={() => handleFilterChange('started', !filters.started)}>
+                <Card className="border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                  {filters.started && <div className='absolute top-[-6] right-0 '>
+                    <span className='text-[5px] text-red-500'>
+                      <Filter className='w-5 h-5' />
+                    </span>
+                  </div>}
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded">
+                    <CounterCard
+                      color="bg-emerald-100"
+                      icon={Activity}
+                      count={stats.started.toLocaleString()}
+                      label="Started Bookings"
+                      className="rounded"
+                    />
+                    <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500" />
+                  </div>
+                </Card>
+              </button>
+              {/* Completed Bookings */}
+              <button onClick={() => handleFilterChange('completed', !filters.completed)}>
+                <Card className="border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                  {filters.completed && <div className='absolute top-[-6] right-0 '>
+                    <span className='text-[5px] text-red-500'>
+                      <Filter className='w-5 h-5' />
+                    </span>
+                  </div>}
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded">
+                    <CounterCard
+                      color="bg-blue-100"
+                      icon={Activity}
+                      count={stats.completed.toLocaleString()}
+                      label="Completed Bookings"
+                    />
+                    <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500" />
+                  </div>
+                </Card>
+              </button>
+              {/* Cancelled Bookings */}
+              <button onClick={() => handleFilterChange('cancelled', !filters.cancelled)}>
+                <Card className="border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                  {filters.cancelled && <div className='absolute top-[-6] right-0 '>
+                    <span className='text-[5px] text-red-500'>
+                      <Filter className='w-5 h-5' />
+                    </span>
+                  </div>}
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded">
+                    <CounterCard
+                      color="bg-purple-100"
+                      icon={Activity}
+                      count={stats.cancelled.toLocaleString()}
+                      label="Cancelled Bookings"
+                    />
+                    <div className="h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500" />
+                  </div>
+                </Card>
+              </button>
+              {/* Contacted Bookings */}
+              <button onClick={() => handleFilterChange('contact', !filters.contact)}>
+                <Card className="border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                  {filters.contact && <div className='absolute top-[-6] right-0 '>
+                    <span className='text-[5px] text-red-500'>
+                      <Filter className='w-5 h-5' />
+                    </span>
+                  </div>}
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded">
+                    <CounterCard
+                      color="bg-blue-100"
+                      icon={Activity}
+                      count={stats.contact.toLocaleString()}
+                      label="Contacted Bookings"
+                    />
+                    <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500" />
+                  </div>
+                </Card>
+              </button>
+              {/* Not Contacted Bookings */}
+              <button onClick={() => handleFilterChange('notContact', !filters.notContact)}>
+                <Card className="border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                  {filters.notContact && <div className='absolute top-[-6] right-0 '>
+                    <span className='text-[5px] text-red-500'>
+                      <Filter className='w-5 h-5' />
+                    </span>
+                  </div>}
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded">
+                    <CounterCard
+                      color="bg-purple-100"
+                      icon={Activity}
+                      count={stats.notContact.toLocaleString()}
+                      label="Not Contacted Bookings"
+                    />
+                    <div className="h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500" />
+                  </div>
+                </Card>
+              </button>
             </div>
           </div>
-          {showFilters && (
+          {/* {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-t-2 mt-4 p-3 pt-8">
               <div>
                 <label htmlFor="search" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -575,7 +654,7 @@ export default function BookingsPage() {
                 </Button>
               </div>
             </div>
-          )}
+          )} */}
         </div>
         <div className="rounded bg-white shadow">
           <MaterialReactTable
