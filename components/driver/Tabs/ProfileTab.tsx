@@ -172,10 +172,10 @@ export default function ProfileTab({
                         <span className="font-semibold w-32">Full Name:</span>
                         <p className="text-gray-900">{editedDriver?.name || "-"}</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    {/* <div className="flex items-center gap-3">
                         <span className="font-semibold w-32">Email Address:</span>
                         <p className="text-gray-900 break-all">{editedDriver?.email || "-"}</p>
-                    </div>
+                    </div> */}
                     <div className="flex items-center gap-3">
                         <span className="font-semibold w-32">Phone Number:</span>
                         <p className="text-gray-900">{editedDriver?.phone || "-"}</p>

@@ -124,10 +124,10 @@ export default function ViewCustomerPage({ params }: { params: Promise<{ id: str
                       <span className="font-semibold w-24">Name:</span>
                       <p className="text-gray-900">{customer?.name || '-'}</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    {/* <div className="flex items-center gap-3">
                       <span className="font-semibold w-24">Email:</span>
                       <p className="text-gray-900 break-all">{customer?.email || '-'}</p>
-                    </div>
+                    </div> */}
                     <div className="flex items-center gap-3">
                       <span className="font-semibold w-24">Phone:</span>
                       <p className="text-gray-900">{customer?.phone || '-'}</p>

@@ -323,7 +323,7 @@ export function VendorForm({ id }: VendorFormProps) {
                                 />
                             </div>
 
-                            <div className="mb-4">
+                            {/* <div className="mb-4">
                                 <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
                                 <Input
                                     id="email"
@@ -334,7 +334,7 @@ export function VendorForm({ id }: VendorFormProps) {
                                     placeholder="Email"
                                     className='w-full border-black py-6'
                                 />
-                            </div>
+                            </div> */}
 
                             <div className="mb-4">
                                 <Label htmlFor="password">

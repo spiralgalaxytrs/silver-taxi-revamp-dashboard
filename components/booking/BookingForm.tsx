@@ -180,7 +180,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
     let pastTimeToastShown = false;
 
 
-    const MAX_STOPS = 5;
+    const MAX_STOPS = 9999;
 
 
     const handleAddStop = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -1000,14 +1000,14 @@ console.log("Total Duration:", totalDuration);
                                     />
                                 </div>
 
-                                <div className="space-y-2">
+                                {/* <div className="space-y-2">
                                     <Label>Email <span className='text-red-500'>*</span></Label>
                                     <Input
                                         value={formData.email}
                                         onChange={e => handleInputChange('email', e.target.value)}
                                         className="h-12"
                                     />
-                                </div>
+                                </div> */}
 
                                 <div className="space-y-2">
                                     <Label>Pickup Location <span className="text-red-500">*</span></Label>
