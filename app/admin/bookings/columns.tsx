@@ -546,8 +546,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       return (
         <DriverSelectionPopup
           trigger={
-            <TooltipComponent name={booking?.driverAccepted || "Assign Driver"}>
-              <Button variant="outline" size="sm" disabled={isLoading}>
+            <Button variant="outline" size="sm" disabled={isLoading}>
                 {assignedDriver ?
                   <p className="flex items-center gap-2 text-sm font-medium">
                     {assignedDriver.name}
@@ -561,8 +560,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
                     }
                   </p>
                   : "Assign Driver"}
-              </Button>
-            </TooltipComponent>
+            </Button>
           }
           onSelectDriver={handleDriverAssignment}
           assignAllDriver={handleAllDriverAssign}
