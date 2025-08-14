@@ -550,6 +550,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
                 {assignedDriver ?
                   <p className="flex items-center gap-2 text-sm font-medium">
                     {assignedDriver.name}
+                    <TooltipComponent name={booking?.driverId ? booking?.driverAccepted || "" : "Assign Driver"}>
                     {currentBooking.driverAccepted === "accepted" ?
                       <span className="text-xs text-green-500">
                         <CheckCircle className="h-4 w-4" />
@@ -558,6 +559,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
                         <HelpCircle className="h-4 w-4" />
                       </span>
                     }
+                    </TooltipComponent>
                   </p>
                   : "Assign Driver"}
             </Button>
