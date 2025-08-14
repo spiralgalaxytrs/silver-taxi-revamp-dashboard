@@ -327,14 +327,14 @@ export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryForm
                                     />
                                 </div>
 
-                                <div className="space-y-2">
+                          { /*     <div className="space-y-2">
                                     <Label>Email</Label>
                                     <Input
                                         value={formData.email || ''}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         className="h-12"
                                     />
-                                </div>
+                                </div>*/}
 
                                 <div className="space-y-2">
                                     <Label>Mobile Number <span className='text-red-500'>*</span></Label>
