@@ -94,6 +94,14 @@ export const togglePaymentMethod = async (id: string, method: string) => {
   return response.data;
 };
 
+// Toggle contact status
+export const toggleContactStatus = async (id: string, status: boolean) => {
+  const response = await axios.post(`/v1/bookings/toggle-changes/${id}`, {
+    contacted: status,
+  });
+  return response.data;
+};
+
 // Toggle payment status
 export const togglePaymentStatus = async (id: string, status: string) => {
   const response = await axios.post(`/v1/bookings/toggle-changes/${id}`, {
