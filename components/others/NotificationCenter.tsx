@@ -18,7 +18,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { playNotificationSound } from 'lib/capitalize';
-
+import { useQueryClient } from '@tanstack/react-query';
 
 const notificationImage = {
     logo: "/img/icon.png",
@@ -28,6 +28,7 @@ const notificationImage = {
     customer: "/img/customer.png",
 }
 export function NotificationCenter({ createdBy }: { createdBy: string }) {
+    const queryClient = useQueryClient();
     const { socket, isConnected } = useSocket();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
@@ -42,13 +43,25 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
         markAllAsReadVendor
     } = useNotificationStore();
     const [data, setData] = useState<any[]>(notifications);
-
     useEffect(() => {
         if (!socket || !isConnected) return;
 
         // Listen for incoming notifications
         socket.on('notification', (notification: any) => {
             addNotification(notification)
+            switch (notification.type) {
+                case "booking":
+                    queryClient.invalidateQueries({ queryKey: ["bookings"] });
+                    break;
+                case "enquiry":
+                    queryClient.invalidateQueries({ queryKey: ["enquiries"] });
+                    break;
+                case "driver":
+                    queryClient.invalidateQueries({ queryKey: ["drivers"] });
+                    break;
+                default:
+                    console.log("No matching query invalidation for type:", notification.type);
+            }
             playNotificationSound();
             toast.info(notification.title, {
                 duration: 5000,

@@ -14,6 +14,7 @@ import {
   togglePaymentStatus,
   togglePaymentMethod,
   fetchVendorBookingsById,
+  toggleContactStatus,
 } from "services/booking";
 import type { Booking } from "types/react-query/booking";
 
@@ -145,6 +146,18 @@ export const useTogglePaymentStatus = () => {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       togglePaymentStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    }
+  });
+};
+
+
+export const useToggleContactStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: boolean }) =>
+      toggleContactStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
     }
