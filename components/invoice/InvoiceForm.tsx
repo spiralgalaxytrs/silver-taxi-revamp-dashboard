@@ -454,7 +454,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              {/* <div>
                 <Label>Email</Label>
                 <Input
                   type="text"
@@ -462,7 +462,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                   value={shippingAddress.email}
                   onChange={(e) => setShippingAddress({ ...shippingAddress, email: e.target.value })}
                 />
-              </div>
+              </div> */}
               <div>
                 <Label>GST Number</Label>
                 <Input

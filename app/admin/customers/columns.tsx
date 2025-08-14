@@ -93,12 +93,12 @@ export const columns: MRT_ColumnDef<Customer>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
-  {
-    accessorKey: "email",
-    header: "Email",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-  },
+  // {
+  //   accessorKey: "email",
+  //   header: "Email",
+  //   muiTableHeadCellProps: { align: 'center' },
+  //   muiTableBodyCellProps: { align: 'center' },
+  // },
   {
     accessorKey: "bookingCount",
     header: "Booking Count",

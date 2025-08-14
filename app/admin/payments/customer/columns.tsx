@@ -64,12 +64,13 @@ export const columns: MRT_ColumnDef<GeneralTransaction>[] = [
     header: "Phone",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
-  }, {
-    accessorKey: "email",
-    header: "Email",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-  },
+  }, 
+  // {
+  //   accessorKey: "email",
+  //   header: "Email",
+  //   muiTableHeadCellProps: { align: 'center' },
+  //   muiTableBodyCellProps: { align: 'center' },
+  // },
   {
     accessorKey: "paymentMethod",
     header: "Payment Method",
