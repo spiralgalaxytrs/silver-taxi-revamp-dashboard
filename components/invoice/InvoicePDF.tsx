@@ -135,7 +135,7 @@ const InvoicePDF = ({ id }: { id: string }) => {
                 <h3 className="text-lg font-semibold text-[#00775F] mb-2">BILLING ADDRESS</h3>
                 <p className="font-medium text-lg mb-2">{invoice?.name}</p>
                 <p className="flex items-center mt-3">{invoice?.phone}</p>
-                <p className="flex items-center mt-3">{invoice?.email}</p>
+                {/* <p className="flex items-center mt-3">{invoice?.email}</p> */}
                 <p className="flex items-center mt-3">{invoice?.address}</p>
                 <p className="flex items-center mt-3">{invoice?.GSTNumber}</p>
               </div>

@@ -80,12 +80,12 @@ export const columns: MRT_ColumnDef<Invoice>[] = [
       );
     },
   },
-  {
-    accessorKey: "email",
-    header: "Email",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-  },
+  // {
+  //   accessorKey: "email",
+  //   header: "Email",
+  //   muiTableHeadCellProps: { align: 'center' },
+  //   muiTableBodyCellProps: { align: 'center' },
+  // },
   {
     accessorKey: "totalAmount",
     header: "Amount",

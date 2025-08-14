@@ -84,7 +84,7 @@ export default function BookingDetailsPage() {
     { key: 'bookingId', label: 'Booking ID' },
     { key: 'name', label: 'Name' },
     { key: 'phone', label: 'Phone' },
-    { key: 'email', label: 'Email' },
+    // { key: 'email', label: 'Email' },
     { key: 'serviceType', label: 'Service Type' },
     { key: 'pickupDateTime', label: 'Pickup Date & Time', format: formatDateTime },
     { key: 'pickup', label: 'Pickup Location' },

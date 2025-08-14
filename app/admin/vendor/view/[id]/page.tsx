@@ -340,10 +340,10 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
                                             <span className="font-semibold w-14">Name:</span>
                                             <p className="text-gray-900">{vendor?.name || '-'}</p>
                                         </div>
-                                        <div className="flex items-center gap-3">
+                                        {/* <div className="flex items-center gap-3">
                                             <span className="font-semibold w-14">Email:</span>
                                             <p className="text-gray-900 break-all">{vendor?.email || '-'}</p>
-                                        </div>
+                                        </div> */}
                                         <div className="flex items-center gap-3">
                                             <span className="font-semibold w-14">Phone:</span>
                                             <p className="text-gray-900">{vendor?.phone || '-'}</p>
