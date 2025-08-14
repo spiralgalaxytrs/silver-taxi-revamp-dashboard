@@ -276,7 +276,7 @@ export default function DriversPage(): JSX.Element {
               <h1 className="text-3xl font-bold tracking-tight">Drivers</h1>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-3">
-                  <DriverWalletRequest />
+                  {/* <DriverWalletRequest /> */}
                   <Button
                     variant="none"
                     className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"

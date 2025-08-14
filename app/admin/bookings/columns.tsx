@@ -2,7 +2,11 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "components/ui/button"
-import { Edit, SendHorizontal, Trash, Eye, ChevronDown, FileText } from "lucide-react"
+import {
+  Edit, SendHorizontal, Trash, Eye,
+  ChevronDown, FileText, CheckCircle,
+  HelpCircle
+} from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "components/ui/badge"
 import { BookingPopup } from "components/booking/BookingPopup"
@@ -35,6 +39,7 @@ import {
   useTogglePaymentStatus,
   useDeleteBooking,
   useFetchBookings,
+  useToggleContactStatus,
 } from "hooks/react-query/useBooking";
 import { useInvoiceById } from "hooks/react-query/useInvoice";
 import {
@@ -107,9 +112,86 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       );
     },
   },
+  {
+    accessorKey: "isContacted",
+    header: "Contact Status",
+    Cell: ({ row }) => {
 
+      const {
+        mutate: toggleContactStatus,
+        isPending: isLoading
+      } = useToggleContactStatus();
 
+      const id = row.original?.bookingId as string ?? "";
+      const handleContactToggle = async (newStatus: boolean) => {
+        toggleContactStatus({ id, status: newStatus }, {
+          onSuccess: (data: any) => {
+            toast.success(data?.message || 'Contact status updated successfully', {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Contact status update failed', {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          }
+        });
+      };
 
+      const isContacted = row.getValue("isContacted") as boolean;
+      const getStatusColor = (status: boolean) => {
+        switch (status) {
+          case false:
+            return "bg-[#D89216] text-white";
+          case true:
+            return "bg-[#009F7F] text-white";
+          default:
+            return "bg-gray-100";
+        }
+      };
+
+      return (
+        <div className="flex items-center justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+              >
+                <Badge variant="outline" className={getStatusColor(isContacted)}>
+                  {isContacted ? "Contacted" : "Not Contacted"}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Badge>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {/* Dropdown options for updating the status */}
+              <DropdownMenuItem
+                onClick={() => handleContactToggle(true)}
+                disabled={isLoading}
+              >
+                Contacted
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleContactToggle(false)}
+                disabled={isLoading}
+              >
+                Not Contacted
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      );
+    },
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
   {
     accessorKey: "name",
     header: "Customer Name",
@@ -464,9 +546,23 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       return (
         <DriverSelectionPopup
           trigger={
-            <Button variant="outline" size="sm" disabled={isLoading}>
-              {assignedDriver ? assignedDriver.name : "Assign Driver"}
-            </Button>
+            <TooltipComponent name={booking?.driverAccepted || "Assign Driver"}>
+              <Button variant="outline" size="sm" disabled={isLoading}>
+                {assignedDriver ?
+                  <p className="flex items-center gap-2 text-sm font-medium">
+                    {assignedDriver.name}
+                    {currentBooking.driverAccepted === "accepted" ?
+                      <span className="text-xs text-green-500">
+                        <CheckCircle className="h-4 w-4" />
+                      </span>
+                      : <span className="text-xs text-red-500">
+                        <HelpCircle className="h-4 w-4" />
+                      </span>
+                    }
+                  </p>
+                  : "Assign Driver"}
+              </Button>
+            </TooltipComponent>
           }
           onSelectDriver={handleDriverAssignment}
           assignAllDriver={handleAllDriverAssign}
