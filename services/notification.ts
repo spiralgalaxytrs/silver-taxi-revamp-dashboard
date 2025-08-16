@@ -1,29 +1,29 @@
 // services/notifications.ts
 import axios from "lib/http-common";
-import type { Notification } from "types/react-query/notification";
+import type { Notification, PaginatedResponse } from "types/react-query/notification";
 
 // 📥 Fetch all notifications
-export const getNotifications = async (): Promise<Notification[]> => {
+export const getNotifications = async (): Promise<PaginatedResponse> => {
   const res = await axios.get("/v1/notifications");
-  return res.data.data;
+  return res.data;
 };
 
 // 📥 Fetch paginated notifications
-export const getPageNotifications = async (offset: number): Promise<Notification[]> => {
+export const getPageNotifications = async (offset: number): Promise<PaginatedResponse> => {
   const res = await axios.get(`/v1/notifications/offset?offset=${offset}`);
-  return res.data.data;
+  return res.data;
 };
 
 // 📥 Fetch all vendor notifications
-export const getVendorNotifications = async (): Promise<Notification[]> => {
+export const getVendorNotifications = async (): Promise<PaginatedResponse> => {
   const res = await axios.get("/v1/notifications/vendor");
-  return res.data.data;
+  return res.data;
 };
 
 // 📥 Fetch paginated vendor notifications
-export const getVendorPageNotifications = async (offset: number): Promise<Notification[]> => {
+export const getVendorPageNotifications = async (offset: number): Promise<PaginatedResponse> => {
   const res = await axios.get(`/v1/notifications/vendor/offset?offset=${offset}`);
-  return res.data.data;
+  return res.data;
 };
 
 // ✅ Mark as read
