@@ -125,6 +125,7 @@ export default function BookingDetailsPage() {
     { key: 'statePermit', label: 'State Permit', format: formatCurrency, optional: true },
     { key: 'tollCharges', label: 'Toll Charges', format: formatCurrency, optional: true },
     { key: 'hillCharges', label: 'Hill Charges', format: formatCurrency, optional: true },
+    { key: 'discountAmount', label: 'Discount Amount', format: formatCurrency },
     { key: 'tripCompletedFinalAmount', label: 'Total Amount', format: formatCurrency },
   ];
 
@@ -132,7 +133,8 @@ export default function BookingDetailsPage() {
     'pricePerKm', 'tripCompletedDuration',
     'tripCompletedEstimatedAmount',
     "tripCompletedDriverBeta",
-    'tripCompletedFinalAmount', 'tripCompletedTaxAmount'
+    'tripCompletedFinalAmount', 'tripCompletedTaxAmount',
+    'discountAmount'
   ];
 
   const calculateEstimatedFare = (distance: number) => {
@@ -236,7 +238,7 @@ export default function BookingDetailsPage() {
 
         // Always recalculate tripCompletedFinalAmount fresh:
         const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta || 0, driverCharges);
-        updated.tripCompletedFinalAmount = totalFinal;
+        updated.tripCompletedFinalAmount = totalFinal - (updated.discountAmount || 0);
       }
 
       return updated;
@@ -674,33 +676,33 @@ export default function BookingDetailsPage() {
                 < div className="grid grid-cols-2 gap-4" >
                   <div className="space-y-1">
                     <Label className="text-sm text-gray-600">Start OTP</Label>
-                    <div className="font-medium">{booking?.startOtp || '-'}</div>
+                    <div className="font-medium">{booking?.startOtp ?? '-'}</div>
                   </div>
                   <div className="space-y-1">
                     <Label className="text-sm text-gray-600">End OTP</Label>
-                    <div className="font-medium">{booking?.endOtp || '-'}</div>
+                    <div className="font-medium">{booking?.endOtp ?? '-'}</div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label className="text-sm text-gray-600">Start Odometer Value</Label>
-                    <div className="font-medium">{booking?.startOdometerValue || '-'}</div>
+                    <div className="font-medium">{booking?.startOdometerValue ?? '-'}</div>
                   </div>
                   <div className="space-y-1">
                     <Label className="text-sm text-gray-600">End Odometer Value</Label>
-                    <div className="font-medium">{booking?.endOdometerValue || '-'}</div>
+                    <div className="font-medium">{booking?.endOdometerValue ?? '-'}</div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label className="text-sm text-gray-600">Start Odometer</Label>
-                    <ImagePreview src={booking?.startOdometerImage || null} alt="Start Odometer" />
+                    <ImagePreview src={booking?.startOdometerImage ?? null} alt="Start Odometer" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-sm text-gray-600">End Odometer</Label>
-                    <ImagePreview src={booking?.endOdometerImage || null} alt="End Odometer" />
+                    <ImagePreview src={booking?.endOdometerImage ?? null} alt="End Odometer" />
                   </div>
                 </div>
 
