@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { Bell } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Bell, Loader2 } from 'lucide-react';
 import { Button } from 'components/ui/button';
 import {
     DropdownMenu,
@@ -12,13 +12,17 @@ import {
     DropdownMenuTrigger,
 } from 'components/ui/dropdown-menu';
 import { ScrollArea } from 'components/ui/scroll-area';
-import { useNotificationStore } from 'stores/-notificationStore';
 import { useSocket } from 'providers/websocket/SocketProvider';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { playNotificationSound } from 'lib/capitalize';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+    useNotifications, useVendorNotifications,
+    useMarkAsRead, useMarkAllAsRead,
+    useMarkAllAsReadVendor
+} from 'hooks/react-query/useNotification';
 
 const notificationImage = {
     logo: "/img/icon.png",
@@ -32,23 +36,35 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
     const { socket, isConnected } = useSocket();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
-    const {
-        notifications,
-        unreadCount,
-        markAsRead,
-        markAllAsRead,
-        fetchNotifications,
-        addNotification,
-        fetchVendorNotifications,
-        markAllAsReadVendor
-    } = useNotificationStore();
-    const [data, setData] = useState<any[]>(notifications);
+
+    const { data: notifications, isLoading } = useNotifications();
+    const { data: vendorNotifications, isLoading: vendorIsLoading } = useVendorNotifications();
+    const { mutate: markAsRead } = useMarkAsRead();
+    const { mutate: markAllAsRead } = useMarkAllAsRead();
+    const { mutate: markAllAsReadVendor } = useMarkAllAsReadVendor();
+
+
+    const data = useMemo(() => {
+        if (createdBy === 'vendor') {
+            return vendorNotifications?.map((notification: any) => ({
+                ...notification,
+                date: new Date(notification.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            })) ?? [];
+        }
+        return notifications?.map((notification: any) => ({
+            ...notification,
+            date: new Date(notification.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+        })) ?? [];
+    }, [createdBy, notifications, vendorNotifications]);
+
+
     useEffect(() => {
         if (!socket || !isConnected) return;
 
         // Listen for incoming notifications
         socket.on('notification', (notification: any) => {
-            addNotification(notification)
+            queryClient.invalidateQueries({ queryKey: ["notifications"] });
+            queryClient.invalidateQueries({ queryKey: ["vendor-notifications"] });
             switch (notification.type) {
                 case "booking":
                     queryClient.invalidateQueries({ queryKey: ["bookings"] });
@@ -85,29 +101,19 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
         };
     }, [socket, isConnected]);
 
-    // Sync data state with notifications from the store
-    useEffect(() => {
-        const notificationData = notifications.map((notification: any) => ({
-            ...notification,
-            date: new Date(notification.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-        }));
-        setData(notificationData);
-    }, [notifications]);
 
-    // Fetch notifications on mount
-    useEffect(() => {
+    const unreadCount = useMemo(() => {
         if (createdBy === 'vendor') {
-            fetchVendorNotifications();
-        } else {
-            fetchNotifications();
+            return vendorNotifications?.filter((notification: any) => !notification.read).length ?? 0;
         }
-    }, [fetchNotifications, fetchVendorNotifications]);
+        return notifications?.filter((notification: any) => !notification.read).length ?? 0;
+    }, [createdBy, notifications, vendorNotifications]);
+
 
     const handleViewAllNotifications = () => {
         router.push(`/${createdBy}/notifications`);
         setIsOpen(false);
     };
-
 
     return (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -139,7 +145,7 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
                 <DropdownMenuSeparator />
                 <ScrollArea className="h-[450px] overflow-y-auto">
 
-                    {data.slice(0, 8).map((notification) => (
+                    {data.map((notification: any) => (
                         <button
                             key={notification.notificationId}
                             onClick={() => markAsRead(notification.notificationId)}

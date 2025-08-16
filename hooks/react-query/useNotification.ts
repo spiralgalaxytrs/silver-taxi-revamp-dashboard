@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import {
-    getNotifications,
+    getUnReadNotifications,
     getVendorNotifications,
     getPageNotifications,
     getVendorPageNotifications,
@@ -13,7 +13,7 @@ import {
 export const useNotifications = () =>
     useQuery({
         queryKey: ["notifications"],
-        queryFn: getNotifications,
+        queryFn: getUnReadNotifications,
     });
 
 // 🔍 Fetch all vendor notifications
@@ -24,17 +24,27 @@ export const useVendorNotifications = () =>
     });
 
 // 📄 Fetch paginated notifications
-export const usePageNotifications = (offset: number) =>
-    useQuery({
-        queryKey: ["page-notifications", offset],
-        queryFn: () => getPageNotifications(offset),
+export const usePageNotifications = () =>
+    useInfiniteQuery({
+        queryKey: ["page-notifications"],
+        queryFn: ({ pageParam = 0 }) => getPageNotifications(pageParam),
+        getNextPageParam: (lastPage) => {
+            if (lastPage.offset >= lastPage.total) return undefined;
+            return lastPage.offset;
+        },
+        initialPageParam: 0,
     });
 
 // 📄 Fetch paginated vendor notifications
-export const useVendorPageNotifications = (offset: number) =>
-    useQuery({
-        queryKey: ["vendor-page-notifications", offset],
-        queryFn: () => getVendorPageNotifications(offset),
+export const useVendorPageNotifications = () =>
+    useInfiniteQuery({
+        queryKey: ["vendor-page-notifications"],
+        queryFn: ({ pageParam = 0 }) => getVendorPageNotifications(pageParam),
+        getNextPageParam: (lastPage) => {
+            if (lastPage.offset >= lastPage.total) return undefined;
+            return lastPage.offset;
+        },
+        initialPageParam: 0,
     });
 
 // ✅ Mark a single notification as read
