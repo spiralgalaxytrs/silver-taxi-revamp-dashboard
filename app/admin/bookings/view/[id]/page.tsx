@@ -125,6 +125,7 @@ export default function BookingDetailsPage() {
     { key: 'statePermit', label: 'State Permit', format: formatCurrency, optional: true },
     { key: 'tollCharges', label: 'Toll Charges', format: formatCurrency, optional: true },
     { key: 'hillCharges', label: 'Hill Charges', format: formatCurrency, optional: true },
+    { key: 'discountAmount', label: 'Discount Amount', format: formatCurrency},
     { key: 'tripCompletedFinalAmount', label: 'Total Amount', format: formatCurrency },
   ];
 
@@ -132,7 +133,8 @@ export default function BookingDetailsPage() {
     'pricePerKm', 'tripCompletedDuration',
     'tripCompletedEstimatedAmount',
     "tripCompletedDriverBeta",
-    'tripCompletedFinalAmount', 'tripCompletedTaxAmount'
+    'tripCompletedFinalAmount', 'tripCompletedTaxAmount',
+    'discountAmount'
   ];
 
   const calculateEstimatedFare = (distance: number) => {
@@ -236,7 +238,7 @@ export default function BookingDetailsPage() {
 
         // Always recalculate tripCompletedFinalAmount fresh:
         const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta || 0, driverCharges);
-        updated.tripCompletedFinalAmount = totalFinal;
+        updated.tripCompletedFinalAmount = totalFinal - (updated.discountAmount || 0);
       }
 
       return updated;
@@ -717,7 +719,7 @@ export default function BookingDetailsPage() {
           </div>
 
           {/* Trip Calculation Card (Full Width) */}
-          {booking.tripCompletedFinalAmount > 0 && (
+          {booking.tripCompletedFinalAmount > 0  && (
             <Card className="bg-white rounded-lg border border-gray-200">
               <CardHeader className="pb-4 border-b text-center">
                 <h2 className="text-lg font-semibold text-gray-800">Trip Summary</h2>
