@@ -1,7 +1,7 @@
 'use client'
 import Sidebar from 'components/menubar/Sidebar'
 import { UserNav } from 'components/menubar/UserNav'
-import { NotificationCenter } from 'components/others/NotificationCenter'
+import { NotificationCenter } from 'components/menubar/NotificationCenter'
 import { useEffect, useState } from 'react'
 import Unauthorized from 'components/others/UnAuthorized'
 import Loading from 'app/Loading'

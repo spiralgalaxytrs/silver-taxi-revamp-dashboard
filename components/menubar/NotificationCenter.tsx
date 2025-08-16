@@ -115,7 +115,7 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
                 <Button variant="ghost" className="relative">
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                        <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-red-500 text-xs text-white flex items-center justify-center">
+                        <span className="absolute top-[-4] right-[-4] px-1 rounded-sm bg-red-500 text-xs text-white flex items-center justify-center">
                             {unreadCount}
                         </span>
                     )}
