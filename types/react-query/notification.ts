@@ -12,5 +12,6 @@ export interface PaginatedResponse {
     message: string;
     data: Notification[];
     total: number;
+    unReadCount: number;
     offset: number; // backend gives updated offset
 };

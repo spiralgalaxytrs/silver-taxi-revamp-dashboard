@@ -24,8 +24,6 @@ const NotificationsPage = () => {
     const { mutateAsync: markAsRead } = useMarkAsRead();
     const { mutateAsync: markAllAsRead } = useMarkAllAsRead();
 
-    console.log("page notifications data >>", data);
-
     // Flatten all pages of notifications
     const notifications =
         data?.pages.flatMap((page: any) => page.data) ?? [];

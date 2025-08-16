@@ -3,9 +3,9 @@ import axios from "lib/http-common";
 import type { Notification, PaginatedResponse } from "types/react-query/notification";
 
 // 📥 Fetch all notifications
-export const getUnReadNotifications = async (): Promise<Notification[]> => {
+export const getNotifications = async (): Promise<PaginatedResponse> => {
   const res = await axios.get("/v1/notifications");
-  return res.data.data;
+  return res.data;
 };
 
 // 📥 Fetch paginated notifications
@@ -15,9 +15,9 @@ export const getPageNotifications = async (offset: number): Promise<PaginatedRes
 };
 
 // 📥 Fetch all vendor notifications
-export const getVendorNotifications = async (): Promise<Notification[]> => {
+export const getVendorNotifications = async (): Promise<PaginatedResponse> => {
   const res = await axios.get("/v1/notifications/vendor");
-  return res.data.data;
+  return res.data;
 };
 
 // 📥 Fetch paginated vendor notifications

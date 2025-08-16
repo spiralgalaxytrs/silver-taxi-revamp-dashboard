@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import {
-    getUnReadNotifications,
+    getNotifications,
     getVendorNotifications,
     getPageNotifications,
     getVendorPageNotifications,
@@ -13,7 +13,7 @@ import {
 export const useNotifications = () =>
     useQuery({
         queryKey: ["notifications"],
-        queryFn: getUnReadNotifications,
+        queryFn: getNotifications,
     });
 
 // 🔍 Fetch all vendor notifications

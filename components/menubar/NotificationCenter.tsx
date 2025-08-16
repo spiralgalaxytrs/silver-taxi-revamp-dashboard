@@ -46,12 +46,12 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
 
     const data = useMemo(() => {
         if (createdBy === 'vendor') {
-            return vendorNotifications?.map((notification: any) => ({
+            return vendorNotifications?.data?.map((notification: any) => ({
                 ...notification,
                 date: new Date(notification.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
             })) ?? [];
         }
-        return notifications?.map((notification: any) => ({
+        return notifications?.data?.map((notification: any) => ({
             ...notification,
             date: new Date(notification.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
         })) ?? [];
@@ -104,9 +104,9 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
 
     const unreadCount = useMemo(() => {
         if (createdBy === 'vendor') {
-            return vendorNotifications?.filter((notification: any) => !notification.read).length ?? 0;
+            return vendorNotifications?.unReadCount ?? 0;
         }
-        return notifications?.filter((notification: any) => !notification.read).length ?? 0;
+        return notifications?.unReadCount ?? 0;
     }, [createdBy, notifications, vendorNotifications]);
 
 
@@ -127,7 +127,7 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
                     )}
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-[500px]">
+            <DropdownMenuContent className="w-[400px] relative right-4">
                 <DropdownMenuLabel className="flex justify-between items-center">
                     <h1 className="text-lg font-bold">Notifications</h1>
                     {unreadCount > 0 && (
@@ -143,7 +143,7 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
                     )}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <ScrollArea className="h-[450px] overflow-y-auto">
+                <ScrollArea className="h-[500px] overflow-y-auto">
 
                     {data.map((notification: any) => (
                         <button
@@ -171,12 +171,14 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
                     ))}
 
                     {data.length === 0 && (
-                        <DropdownMenuItem className="p-4 text-center text-gray-500">
-                            No notifications
-                        </DropdownMenuItem>
+                        <div className="h-[450px]">
+                            <DropdownMenuItem className="p-4 text-center text-gray-500">
+                                No unread notifications
+                            </DropdownMenuItem>
+                        </div>
                     )}
 
-                    {data.length > 8 && <div className="flex justify-center m-3">
+                    {<div className="flex justify-center m-3 sticky bottom-0 bg-white p-2">
                         <Button variant={"outline"} onClick={handleViewAllNotifications}>View all notifications</Button>
                     </div>}
                 </ScrollArea>
