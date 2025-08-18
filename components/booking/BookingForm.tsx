@@ -105,6 +105,7 @@ type Booking = {
     pricePerKm?: number | null;
     breakFareDetails?: Record<string, any>;
     vehicleType?: string;
+    extraCharges?: Record<string, any>;
 }
 
 export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
@@ -174,6 +175,16 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         duration: "",
         pricePerKm: 0,
         breakFareDetails: {},
+        extraCharges:{
+            "Toll":0,
+            "Hill":0,
+            "Permit Charge":0,
+            "Parking Charge":0,
+            "Pet Charge":0,
+            "Waiting Charges":0,
+            "Night Charges":0,
+            "Luggage Charges":0,
+        },
         vehicleType: ""
     });
 
