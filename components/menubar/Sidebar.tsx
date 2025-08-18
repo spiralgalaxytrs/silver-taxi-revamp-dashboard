@@ -92,14 +92,14 @@ const AdminSidebarItems: {
             { name: "Round Trip", href: "/admin/services/round-trip", icon: SquareChevronRight },
           ],
         },
-        // {
-        //   name: "Packages",
-        //   icon: SquareChevronDown,
-        //   subDropdown: [
-        //     { name: "Day Packages", href: "/admin/services/packages/days", icon: SquareChevronRight },
-        //     { name: "Hourly Packages", href: "/admin/services/packages/hourly", icon: SquareChevronRight },
-        //   ],
-        // },
+        {
+          name: "Packages",
+          icon: SquareChevronDown,
+          subDropdown: [
+            // { name: "Day Packages", href: "/admin/services/packages/days", icon: SquareChevronRight },
+            { name: "Hourly Packages", href: "/admin/services/packages/hourly", icon: SquareChevronRight },
+          ],
+        },
         // {
         //   name: "Airport",
         //   icon: SquareChevronDown,
