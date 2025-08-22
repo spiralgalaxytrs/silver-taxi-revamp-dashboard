@@ -1,8 +1,9 @@
 export interface Notification {
-    id: string;
+    notificationId: string;
     title: string;
     description: string;
     date: string;
+    time?: string;
     read: boolean;
     type: string; // e.g., 'Booking', 'Vendor', 'Enquiry'
 };
