@@ -1,12 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from 'components/ui/tabs';
-import { Card, CardContent, CardHeader } from 'components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from 'components/ui/card';
 import { Label } from 'components/ui/label';
 import { Button } from 'components/ui/button';
 import { Input } from 'components/ui/input';
 import { Dialog, DialogContent, DialogTrigger } from 'components/ui/dialog';
-import { Eye, Edit, X, Loader2, Info, BookOpen, Plus } from 'lucide-react';
+import { Eye, Edit, X, Loader2, Info, Plus, TriangleAlert, Edit2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useFetchBookingById, useUpdateBooking } from 'hooks/react-query/useBooking';
 import { toast } from 'sonner';
@@ -61,6 +61,7 @@ export default function BookingDetailsPage() {
 
   const [newChargeKey, setNewChargeKey] = useState('');
   const [newChargeValue, setNewChargeValue] = useState('');
+  const [isManualCompleted, setIsManualCompleted] = useState(false);
 
 
   const { data: booking, isLoading } = useFetchBookingById(bookingId || "");
@@ -137,6 +138,19 @@ export default function BookingDetailsPage() {
     'discountAmount'
   ];
 
+  // Fields that are editable in manual completion mode
+  const manualCompletionEditableFields = [
+    'startOdometerValue',
+    'endOdometerValue',
+    'tripCompletedDistance',
+    'tripCompletedDriverBeta',
+    'tripCompletedDuration',
+    'tripCompletedEstimatedAmount',
+    'tripCompletedTaxAmount',
+    'discountAmount',
+    'tripCompletedFinalAmount',
+  ];
+
   const calculateEstimatedFare = (distance: number) => {
     if (!formData) return 0;
     return distance * (formData.pricePerKm || 0);
@@ -168,6 +182,8 @@ export default function BookingDetailsPage() {
         const data = {
           ...formData,
           driverCharges,
+          extraCharges,
+          isManualCompleted: isManualCompleted,
           tripCompletedFinalAmount: Number(formData.tripCompletedFinalAmount) || 0,
         }
 
@@ -180,6 +196,10 @@ export default function BookingDetailsPage() {
               },
             });
             setEditMode(null);
+            // Reset manual completion mode after successful save
+            if (isManualCompleted) {
+              setIsManualCompleted(false);
+            }
           },
           onError: (error: any) => {
             toast.error(error?.response?.data?.message || 'Failed to update details', {
@@ -207,8 +227,11 @@ export default function BookingDetailsPage() {
     if (booking) {
       setFormData(booking);
       setDriverCharges(booking?.driverCharges || {});
+      setExtraCharges(booking?.extraCharges || {});
     }
     setEditMode(null);
+    // Reset manual completion mode
+    setIsManualCompleted(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
@@ -216,7 +239,7 @@ export default function BookingDetailsPage() {
 
     const value = e.target.value;
     const parsedValue =
-      field.includes('Distance') || field.includes('Amount') || field.includes('Charge')
+      field.includes('Distance') || field.includes('Amount') || field.includes('Charge') || field.includes('Value')
         ? parseFloat(value) || 0
         : value;
 
@@ -225,7 +248,8 @@ export default function BookingDetailsPage() {
 
       const updated = { ...prev, [field]: parsedValue };
 
-      if (editMode === 'after') {
+      // Handle calculations for both edit mode and manual completion mode
+      if (editMode === 'after' || isManualCompleted) {
         // If tripCompletedDistance is updated:
         const distance = field === 'tripCompletedDistance' ? parsedValue : updated.tripCompletedDistance;
         const estimatedFare = Number(distance) * (updated.pricePerKm || 0);
@@ -234,10 +258,10 @@ export default function BookingDetailsPage() {
         // Always recalculate tripCompletedEstimatedAmount if distance changes:
         updated.tripCompletedEstimatedAmount = estimatedFare;
         updated.tripCompletedTaxAmount = taxAmount > 0 ? taxAmount : updated.tripCompletedTaxAmount || 0;
-        const driverBeta = Number(updated.driverBeta) || 0;
+        const driverBeta = Number(updated.tripCompletedDriverBeta) || 0;
 
         // Always recalculate tripCompletedFinalAmount fresh:
-        const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta || 0, driverCharges);
+        const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta || 0, driverCharges, extraCharges);
         updated.tripCompletedFinalAmount = totalFinal - (updated.discountAmount || 0);
       }
 
@@ -426,21 +450,28 @@ export default function BookingDetailsPage() {
       );
     }
 
+    // Check if field is editable in normal edit mode
     const isEditable = !(
       section === 'after' &&
       editMode === 'after' &&
       nonEditableAfterFields.includes(field.key)
     );
 
+    // Check if field is editable in manual completion mode
+    const isManualCompletionEditable = isManualCompleted && manualCompletionEditableFields.includes(field.key);
+
+    // Field is editable if it's in normal edit mode OR manual completion mode
+    const shouldShowInput = ((section === 'before' || section === 'after') && editMode === section && isEditable) || isManualCompletionEditable;
+
     return (
       <div key={field.key} className="space-y-1">
         <Label className="text-sm text-gray-600">{field.label}</Label>
-        {(section === 'before' || section === 'after') && editMode === section && isEditable ? (
+        {shouldShowInput ? (
           <Input
             value={value || ''}
             onChange={(e) => handleChange(e, field.key)}
-            type={field.key.includes('Amount') || field.key.includes('Charge') || field.key.includes('Distance') ? 'number' : 'text'}
-            min={field.key.includes('Distance') || field.key.includes('Amount') || field.key.includes('Charge') ? 0 : undefined}
+            type={field.key.includes('Amount') || field.key.includes('Charge') || field.key.includes('Distance') || field.key.includes('Value') ? 'number' : 'text'}
+            min={field.key.includes('Distance') || field.key.includes('Amount') || field.key.includes('Charge') || field.key.includes('Value') ? 0 : undefined}
           />
         ) : (
           <div className="font-medium">
@@ -486,13 +517,49 @@ export default function BookingDetailsPage() {
 
         <TabsContent value="details">
           {/* Basic Information Card (Full Width) */}
-          <Card className="bg-white rounded-lg border border-gray-200 mb-6">
+          <Card className={`bg-white rounded-lg border ${isManualCompleted ? 'border-orange-300 bg-orange-50' : 'border-gray-200'} mb-6`}>
             <CardHeader className="pb-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-800">Basic Information</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-800">Basic Information</h2>
+                {isManualCompleted && (
+                  <div className="flex items-center gap-2 text-orange-600">
+                    <TriangleAlert className="w-4 h-4" />
+                    <span className="text-sm font-medium">Manual Completion Mode Active</span>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
               {basicInfoFields.map((field) => renderField(field, 'basic'))}
             </CardContent>
+            {<CardFooter className='justify-end'>
+              <div className="flex justify-end gap-2">
+                {isManualCompleted ? (
+                  <>
+                    <Button variant="outline" onClick={handleCancel}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSave}>
+                      Save Manual Completion
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {booking?.status === 'Started' &&
+                      <Button variant="outline" onClick={() => {
+                        setIsManualCompleted(!isManualCompleted)
+                        if (isManualCompleted) {
+                          handleEdit('after')
+                        }
+                      }
+                      }>
+                        <TriangleAlert className='w-4 h-4 text-red-500' />
+                        Manual Complete
+                      </Button>}
+                  </>
+                )}
+              </div>
+            </CardFooter>}
           </Card>
 
           {/* Before/After Trip Cards (Side by Side) */}
@@ -538,9 +605,17 @@ export default function BookingDetailsPage() {
             </Card>
 
             {/* After Trip Card */}
-            <Card className="bg-white rounded-lg border border-gray-200">
+            <Card className={`bg-white rounded-lg border ${isManualCompleted ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`}>
               <div className="flex justify-between items-center p-4 border-b">
-                <h2 className="text-lg font-semibold text-gray-800">After Trip Details</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-gray-800">After Trip Details</h2>
+                  {isManualCompleted && (
+                    <div className="flex items-center gap-1 text-orange-600">
+                      <TriangleAlert className="w-3 h-3" />
+                      <span className="text-xs font-medium">Manual Mode</span>
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   {editMode === 'after' && (
                     <Button
@@ -555,7 +630,9 @@ export default function BookingDetailsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleEdit('after')}
+                    onClick={() => {
+                      handleEdit('after')
+                    }}
                     disabled={isAfterDisabled}
                     className={isAfterDisabled ? 'text-gray-400' : 'text-blue-600 hover:text-blue-700'}
                   >
@@ -567,7 +644,7 @@ export default function BookingDetailsPage() {
                 {afterTripFields.map((field) => renderField(field, 'after'))}
 
                 {/* Driver Charges Section */}
-                {editMode === 'after' ? (
+                {(editMode === 'after' || isManualCompleted) ? (
                   <div className="space-y-2 w-1/2">
                     <Label className="text-sm text-gray-600">Driver Charges</Label>
                     {Object.entries(driverCharges).map(([key, value]) => (
@@ -602,7 +679,7 @@ export default function BookingDetailsPage() {
                   </>
                 )}
 
-                {editMode === 'after' ? (
+                {(editMode === 'after' || isManualCompleted) ? (
                   <div className="space-y-2 w-2/3">
                     <Label className="text-sm text-gray-600">Extra Charges</Label>
 
@@ -685,14 +762,8 @@ export default function BookingDetailsPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">Start Odometer Value</Label>
-                    <div className="font-medium">{booking?.startOdometerValue ?? '-'}</div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">End Odometer Value</Label>
-                    <div className="font-medium">{booking?.endOdometerValue ?? '-'}</div>
-                  </div>
+                  {renderField({ key: 'startOdometerValue', label: 'Start Odometer Value' }, 'after')}
+                  {renderField({ key: 'endOdometerValue', label: 'End Odometer Value' }, 'after')}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -719,7 +790,7 @@ export default function BookingDetailsPage() {
           </div>
 
           {/* Trip Calculation Card (Full Width) */}
-          {booking.tripCompletedFinalAmount > 0 && (
+          {(booking.tripCompletedFinalAmount > 0) && (
             <Card className="bg-white rounded-lg border border-gray-200">
               <CardHeader className="pb-4 border-b text-center">
                 <h2 className="text-lg font-semibold text-gray-800">Trip Summary</h2>
@@ -744,7 +815,7 @@ export default function BookingDetailsPage() {
                       </div>
                       <div className="flex justify-between">
                         <span>Driver Beta</span>
-                        <span>{formatCurrency(booking?.driverBeta)}</span>
+                        <span>{formatCurrency(formData?.tripCompletedDriverBeta || booking?.tripCompletedDriverBeta || 0)}</span>
                       </div>
                       {/* <div className="flex justify-between">
                         <span>Offer Amount</span>
