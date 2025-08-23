@@ -24,7 +24,8 @@ import {
   MapPin,
   BookOpenCheck,
   HandCoins,
-  TicketPercent
+  TicketPercent,
+  Bell
 } from "lucide-react";
 import Image from "next/image";
 import { useProfileStore } from "stores/-profileStore";
@@ -196,6 +197,14 @@ const AdminSidebarItems: {
       dropdown: [
         { name: "Promo Code", href: "/admin/promo-codes", icon: SquareChevronRight },
         { name: "Create Promo Code", href: "/admin/promo-codes/create", icon: SquareChevronRight },
+      ],
+    },
+    {
+      name: "Custom Notifications",
+      icon: Bell,
+      dropdown: [
+        { name: "Notifications", href: "/admin/custom-notifications", icon: SquareChevronRight },
+        { name: "Create Notification", href: "/admin/custom-notifications/create", icon: SquareChevronRight },
       ],
     },
 
