@@ -44,7 +44,7 @@ export default function AdminCreateCustomNotificationPage() {
         </div>
         
         <CustomNotificationForm
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit as any} // Type assertion to fix type mismatch
           isLoading={createMutation.isPending}
           isEdit={false}
         />

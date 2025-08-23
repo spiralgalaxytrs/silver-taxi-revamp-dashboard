@@ -8,6 +8,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import CustomNotificationForm from "components/notification/CustomNotificationForm";
 import { useCustomNotification, useUpdateCustomNotification } from "hooks/react-query/useCustomNotification";
 import type { UpdateCustomNotificationRequest } from "types/react-query/customNotification";
+import type { CreateCustomNotificationRequest } from "types/react-query/customNotification";
 
 interface EditCustomNotificationPageProps {
   params: Promise<{
@@ -27,9 +28,11 @@ export default function AdminEditCustomNotificationPage({ params }: EditCustomNo
     error: notificationError,
   } = useCustomNotification(templateId);
 
-  const handleSubmit = async (data: UpdateCustomNotificationRequest) => {
+  const handleSubmit = async (data: CreateCustomNotificationRequest | UpdateCustomNotificationRequest) => {
     try {
-      await updateMutation.mutateAsync({ templateId, data });
+      // Since this is an edit page, we know it's an UpdateCustomNotificationRequest
+      const updateData = data as UpdateCustomNotificationRequest;
+      await updateMutation.mutateAsync({ templateId, data: updateData });
       toast.success("Notification updated successfully");
       router.push("/admin/custom-notifications");
     } catch (error: any) {

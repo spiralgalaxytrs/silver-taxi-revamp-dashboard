@@ -11,11 +11,11 @@ interface CustomNotificationState {
   
   // Actions
   fetchNotifications: () => Promise<void>;
-  fetchNotification: (id: string) => Promise<void>;
+  fetchNotification: (templateId: string) => Promise<void>;
   createNotification: (data: CreateCustomNotificationRequest) => Promise<void>;
-  updateNotification: (id: string, data: UpdateCustomNotificationRequest) => Promise<void>;
-  deleteNotification: (id: string) => Promise<void>;
-  sendNotification: (id: string) => Promise<void>;
+  updateNotification: (templateId: string, data: UpdateCustomNotificationRequest) => Promise<void>;
+  deleteNotification: (templateId: string) => Promise<void>;
+  sendNotification: (templateId: string) => Promise<void>;
   clearError: () => void;
   setCurrentNotification: (notification: CustomNotification | null) => void;
 }
@@ -31,7 +31,7 @@ export const useCustomNotificationStore = create<CustomNotificationState>()(
       fetchNotifications: async () => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.get("/v1/custom-notifications");
+          const response = await axios.get("/v1/notifications/custom");
           set({
             notifications: response.data.data,
             isLoading: false,
@@ -45,10 +45,10 @@ export const useCustomNotificationStore = create<CustomNotificationState>()(
         }
       },
 
-      fetchNotification: async (id: string) => {
+      fetchNotification: async (templateId: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.get(`/v1/custom-notifications/${id}`);
+          const response = await axios.get(`/v1/notifications/custom/${templateId}`);
           set({
             currentNotification: response.data.data,
             isLoading: false,
@@ -65,24 +65,49 @@ export const useCustomNotificationStore = create<CustomNotificationState>()(
       createNotification: async (data: CreateCustomNotificationRequest) => {
         set({ isLoading: true, error: null });
         try {
-          const formData = new FormData();
-          formData.append('title', data.title);
-          formData.append('message', data.message);
-          formData.append('targetAudience', data.targetAudience);
-          
+          let requestData: any;
+          let headers: any = {};
+
           if (data.image) {
-            formData.append('image', data.image);
-          }
-          
-          if (data.customerIds && data.customerIds.length > 0) {
-            data.customerIds.forEach(id => formData.append('customerIds[]', id));
+            // Use FormData for multipart/form-data
+            const formData = new FormData();
+            formData.append('title', data.title);
+            formData.append('message', data.message);
+            formData.append('target', data.target || 'customer');
+            
+            if (data.type) formData.append('type', data.type);
+            if (data.route) formData.append('route', data.route);
+            if (data.image) formData.append('image', data.image);
+            if (data.particularIds && data.particularIds.length > 0) {
+              data.particularIds.forEach(id => formData.append('particularIds[]', id));
+            }
+            if (data.targetAudience) formData.append('targetAudience', data.targetAudience);
+            if (data.targetCustomerIds && data.targetCustomerIds.length > 0) {
+              data.targetCustomerIds.forEach(id => formData.append('targetCustomerIds[]', id));
+            }
+            if (data.scheduledAt) formData.append('scheduledAt', data.scheduledAt);
+            if (data.time) formData.append('time', data.time);
+
+            requestData = formData;
+            headers['Content-Type'] = 'multipart/form-data';
+          } else {
+            // Use JSON for application/json
+            requestData = {
+              title: data.title,
+              message: data.message,
+              target: data.target || 'customer',
+              type: data.type,
+              route: data.route,
+              particularIds: data.particularIds,
+              targetAudience: data.targetAudience,
+              targetCustomerIds: data.targetCustomerIds,
+              scheduledAt: data.scheduledAt,
+              time: data.time,
+            };
+            headers['Content-Type'] = 'application/json';
           }
 
-          const response = await axios.post("/v1/custom-notifications", formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
+          const response = await axios.post("/v1/notifications/custom", requestData, { headers });
 
           set((state) => ({
             notifications: [response.data.data, ...state.notifications],
@@ -97,29 +122,58 @@ export const useCustomNotificationStore = create<CustomNotificationState>()(
         }
       },
 
-      updateNotification: async (id: string, data: UpdateCustomNotificationRequest) => {
+      updateNotification: async (templateId: string, data: UpdateCustomNotificationRequest) => {
         set({ isLoading: true, error: null });
         try {
-          const formData = new FormData();
-          
-          if (data.title) formData.append('title', data.title);
-          if (data.message) formData.append('message', data.message);
-          if (data.targetAudience) formData.append('targetAudience', data.targetAudience);
-          if (data.image) formData.append('image', data.image);
-          
-          if (data.customerIds && data.customerIds.length > 0) {
-            data.customerIds.forEach(id => formData.append('customerIds[]', id));
+          let requestData: any;
+          let headers: any = {};
+
+          if (data.image) {
+            // Use FormData for multipart/form-data
+            const formData = new FormData();
+            formData.append('templateId', templateId);
+            
+            if (data.title) formData.append('title', data.title);
+            if (data.message) formData.append('message', data.message);
+            if (data.target) formData.append('target', data.target);
+            if (data.type) formData.append('type', data.type);
+            if (data.route) formData.append('route', data.route);
+            if (data.image) formData.append('image', data.image);
+            if (data.particularIds && data.particularIds.length > 0) {
+              data.particularIds.forEach(id => formData.append('particularIds[]', id));
+            }
+            if (data.targetAudience) formData.append('targetAudience', data.targetAudience);
+            if (data.targetCustomerIds && data.targetCustomerIds.length > 0) {
+              data.targetCustomerIds.forEach(id => formData.append('targetCustomerIds[]', id));
+            }
+            if (data.scheduledAt) formData.append('scheduledAt', data.scheduledAt);
+            if (data.time) formData.append('time', data.time);
+
+            requestData = formData;
+            headers['Content-Type'] = 'multipart/form-data';
+          } else {
+            // Use JSON for application/json
+            requestData = {
+              templateId,
+              title: data.title,
+              message: data.message,
+              target: data.target,
+              type: data.type,
+              route: data.route,
+              particularIds: data.particularIds,
+              targetAudience: data.targetAudience,
+              targetCustomerIds: data.targetCustomerIds,
+              scheduledAt: data.scheduledAt,
+              time: data.time,
+            };
+            headers['Content-Type'] = 'application/json';
           }
 
-          const response = await axios.put(`/v1/custom-notifications/${id}`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
+          const response = await axios.put(`/v1/notifications/custom/${templateId}`, requestData, { headers });
 
           set((state) => ({
             notifications: state.notifications.map(n => 
-              n.id === id ? response.data.data : n
+              n.templateId === templateId ? response.data.data : n
             ),
             currentNotification: response.data.data,
             isLoading: false,
@@ -133,13 +187,13 @@ export const useCustomNotificationStore = create<CustomNotificationState>()(
         }
       },
 
-      deleteNotification: async (id: string) => {
+      deleteNotification: async (templateId: string) => {
         set({ isLoading: true, error: null });
         try {
-          await axios.delete(`/v1/custom-notifications/${id}`);
+          await axios.delete(`/v1/notifications/custom/${templateId}`);
           set((state) => ({
-            notifications: state.notifications.filter(n => n.id !== id),
-            currentNotification: state.currentNotification?.id === id ? null : state.currentNotification,
+            notifications: state.notifications.filter(n => n.templateId !== templateId),
+            currentNotification: state.currentNotification?.templateId === templateId ? null : state.currentNotification,
             isLoading: false,
             error: null,
           }));
@@ -151,13 +205,15 @@ export const useCustomNotificationStore = create<CustomNotificationState>()(
         }
       },
 
-      sendNotification: async (id: string) => {
+      sendNotification: async (templateId: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.post(`/v1/custom-notifications/${id}/send`);
+          const response = await axios.post(`/v1/notifications/custom/${templateId}/send`, {
+            templateId
+          });
           set((state) => ({
             notifications: state.notifications.map(n => 
-              n.id === id ? response.data.data : n
+              n.templateId === templateId ? response.data.data : n
             ),
             currentNotification: response.data.data,
             isLoading: false,
