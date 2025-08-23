@@ -264,6 +264,7 @@ export function PackageTariffSection({
     };
 
     const selectedVehicle = vehicles.find((v) => v.vehicleId === vehicleId);
+    console.log("selectedVehicle", vehicles);
     const currentTariffs = localTariffs[vehicleId] || [];
     const currentExtraPrice = currentTariffs[0]?.extraPrice || 0;
 
