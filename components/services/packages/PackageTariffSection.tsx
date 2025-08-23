@@ -51,6 +51,13 @@ export function PackageTariffSection({
     const { vehicles } = useVehicleStore();
     const { fetchPackageTariffs, createPackageTariff, fetchPackageTariffByVehicleId, updatePackageTariff, packageTariffs } = useTariffStore();
 
+    // Fetch vehicles if not loaded
+    useEffect(() => {
+        if (vehicles.length === 0) {
+            useVehicleStore.getState().fetchVehicles();
+        }
+    }, [vehicles.length]);
+
     useEffect(() => {
         if (vehicleId && serviceId) {
             fetchPackageTariffByVehicleId(vehicleId, serviceId, type);
@@ -275,7 +282,7 @@ export function PackageTariffSection({
                     <div>
                         <Label>Vehicle Type</Label>
                         {isEditing ? (
-                            <Input value={selectedVehicle?.type} readOnly className="mt-3" />
+                            <Input value={selectedVehicle?.type} readOnly className="mt-3 cursor-not-allowed bg-gray-100 text-gray-500 " />
                         ) : (
                             <p className="mt-3">{selectedVehicle?.type}</p>
                         )}
@@ -417,7 +424,7 @@ export function PackageTariffSection({
                         {isEditing ? (
                             <>
                                 <Label>
-                                    Extra Price (Per {type === "day" ? "Day" : "Hour"}){" "}
+                                    Extra Price (Per {type === "day" ? "Day" : "KM"}){" "}
                                     <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
@@ -430,7 +437,7 @@ export function PackageTariffSection({
                         ) : (
                             <>
                                 <h2 className="text-base mb-1">
-                                    Extra Price (Per {type === "day" ? "Day" : "Hour"})
+                                    Extra Price (Per {type === "day" ? "Day" : "KM"})
                                 </h2>
                                 <p className="mt-3">₹{currentExtraPrice} per {type === "day" ? "Day" : "Hour"}</p>
                             </>
