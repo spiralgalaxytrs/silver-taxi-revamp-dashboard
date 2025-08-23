@@ -777,7 +777,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
           case "Reassign":
             return "bg-[#327bf0] text-white";
           case "Manual Completed":
-            return "bg-[#009F7F] text-white";
+            return "bg-[#18d5db] text-white";
           default:
             return "bg-gray-100";
         }
@@ -817,7 +817,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return (
         <div className="flex items-center justify-center">
-          {booking.status !== "Completed" && <DropdownMenu>
+          {booking.status !== "Completed" && booking.status !== "Manual Completed" && <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
@@ -861,7 +861,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
               )}
 
               {/* Show "Completed" only if the trip is started and a driver is assigned */}
-              {booking.status === "Started" && booking.driverId !== null && (
+              {/* {booking.status === "Started" && booking.driverId !== null && (
                 <>
                   <DropdownMenuItem
                     onClick={() => setIsDialogOpen(true)}
@@ -881,7 +881,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
                     Manual Completed
                   </DropdownMenuItem>
                 </>
-              )}
+              )} */}
 
               {/* Show "Cancelled" only if the trip is not completed */}
               {booking.status !== "Cancelled" && (
@@ -896,10 +896,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
           </DropdownMenu>
           }
 
-          {booking.status === "Completed"
+          {booking.status === "Completed" || booking.status === "Manual Completed"
             && <Badge variant="outline" className={`${getStatusColor(status)} cursor-default`}>{status}</Badge>}
-          {booking.status === "Manual Completed"
-            && <Badge variant="outline" className={`${getStatusColor(status)} cursor-default`}>{status}</Badge>}
+      
 
           {/* Status Completed Confirmation */}
           <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
