@@ -33,6 +33,8 @@ import {
 import {
   MRT_ColumnDef
 } from 'material-react-table'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "components/ui/dialog"
+import { Input } from "components/ui/input"
 
 export type WalletAttributes = {
   balance: number;
@@ -49,6 +51,7 @@ export type Driver = {
   createdAt: string;
   isActive: boolean | null;
   wallet?: WalletAttributes;
+  inActiveReason?: string;
 }
 
 
@@ -78,23 +81,23 @@ export const columns: MRT_ColumnDef<Driver>[] = [
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-  accessorKey: "driverId",
-  header: "Driver ID",
-  muiTableHeadCellProps: { align: 'center' },
-  muiTableBodyCellProps: { align: 'center' },
-  Cell: ({ row }) => {
-    const driver = row.original;
+    accessorKey: "driverId",
+    header: "Driver ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+    Cell: ({ row }) => {
+      const driver = row.original;
 
-    return (
-      <Link
-        href={`/admin/drivers/view/${driver.driverId}`}
-        className="text-blue-600 hover:underline"
-      >
-        {driver.driverId}
-      </Link>
-    );
+      return (
+        <Link
+          href={`/admin/drivers/view/${driver.driverId}`}
+          className="text-blue-600 hover:underline"
+        >
+          {driver.driverId}
+        </Link>
+      );
+    },
   },
-},
   {
     accessorKey: "name",
     header: "Driver Name",
@@ -154,13 +157,16 @@ export const columns: MRT_ColumnDef<Driver>[] = [
     header: "Status",
     Cell: ({ row }) => {
       const isActive = row.getValue("isActive")
+      const inActiveReason = row.original.inActiveReason || "";
 
       const { mutate: toggleDriverStatus } = useToggleDriverStatus();
       const id = row.original.id;
-
+      const [isDialogOpen, setIsDialogOpen] = useState(false);
+      const [reason, setReason] = useState("");
+      const [status, setStatus] = useState(isActive);
       const handleToggleStatus = (newStatus: boolean) => {
         toggleDriverStatus(
-          { id: id || "", status: newStatus },
+          { id: id || "", status: newStatus, reason: reason },
           {
             onSuccess: () => {
               toast.success("Driver status updated successfully", {
@@ -170,7 +176,7 @@ export const columns: MRT_ColumnDef<Driver>[] = [
                 },
               });
             },
-            onError: (error:any) => {
+            onError: (error: any) => {
               toast.error(error?.response?.data?.message || "Failed to update status", {
                 style: {
                   backgroundColor: "#FF0000",
@@ -183,33 +189,78 @@ export const columns: MRT_ColumnDef<Driver>[] = [
       };
 
       return (
-        <div className="flex items-center justify-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-              ><Badge variant={isActive === true ? 'default' : 'destructive'}>
-                  {isActive === true ? 'Active' : 'Inactive'}
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Badge>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              {/* Dropdown options for updating the status */}
-              <DropdownMenuItem
-                onClick={() => handleToggleStatus(true)}
-              >
-                Active
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleToggleStatus(false)}
-              >
-                Inactive
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <React.Fragment>
+          <div className="flex items-center justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                ><Badge variant={isActive === true ? 'default' : 'destructive'}>
+                    {isActive === true ? 'Active' : 'Inactive'}
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Badge>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {/* Dropdown options for updating the status */}
+                <DropdownMenuItem
+                  onClick={() => {
+                    setIsDialogOpen(true);
+                    setStatus(true);
+                  }}
+                >
+                  Active
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setIsDialogOpen(true);
+                    setStatus(false);
+                  }}
+                >
+                  Inactive
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="flex items-center justify-center">
+            <Dialog
+              open={isDialogOpen}
+              onOpenChange={setIsDialogOpen}
+            >
+              <DialogContent className="max-w-[400px]">
+                <DialogHeader>
+                  <DialogTitle>Are you sure you want to change the status?</DialogTitle>
+                  <div>
+                    <div className="flex flex-col gap-2">
+                      {/* <h4 className="text-sm font-semibold">Reason</h4> */}
+                      <p className="text-sm"><span className="font-semibold">Old Reason:</span> {inActiveReason}</p>
+                      <Input
+                        type="text"
+                        placeholder="Enter Reason"
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                      />
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm">Status</p>
+                        <Badge variant={status === true ? 'default' : 'destructive'}>
+                          {status === true ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>No</Button>
+                  <Button onClick={() => {
+                    handleToggleStatus(status as boolean);
+                    setIsDialogOpen(false);
+                  }}>Yes</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </React.Fragment>
       )
     },
     muiTableHeadCellProps: { align: 'center' },
@@ -243,7 +294,7 @@ export const columns: MRT_ColumnDef<Driver>[] = [
 
         deleteDriver(driver.driverId, {
           onSuccess: () => {
-            toast.success("Driver deleted successfully!",{
+            toast.success("Driver deleted successfully!", {
               style: {
                 backgroundColor: "#009F7F",
                 color: "#fff",
