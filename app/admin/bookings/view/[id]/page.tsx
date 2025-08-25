@@ -493,8 +493,8 @@ export default function BookingDetailsPage() {
 
   if (!booking) return <div className="text-center py-8">Booking not found</div>;
 
-  const isBeforeDisabled = booking?.status === 'Started' || booking?.status === 'Completed';
-  const isAfterDisabled = booking?.endOdometerValue === 0 || booking?.endOdometerValue === null || booking?.status === 'Completed';
+  const isBeforeDisabled = booking?.status === 'Started' || booking?.status === 'Completed' || booking?.status === 'Manual Completed';
+  const isAfterDisabled = booking?.endOdometerValue === 0 || booking?.endOdometerValue === null || booking?.status === 'Completed' || booking?.status === 'Manual Completed';
 
   return (
     <div className="container mx-auto p-4 space-y-6">

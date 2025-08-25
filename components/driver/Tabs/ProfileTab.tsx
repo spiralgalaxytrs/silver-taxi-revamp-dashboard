@@ -97,7 +97,7 @@ export default function ProfileTab({
         if (!editedDriver?.driverId) return;
 
         try {
-            toggleDriverStatus({ id: editedDriver?.driverId, status: newStatus }, {
+            toggleDriverStatus({ id: editedDriver?.driverId, status: newStatus, reason: "" }, {
                 onSuccess: () => {
                     toast.success("Driver status updated successfully", {
                         style: { backgroundColor: "#009F7F", color: "#fff" },
