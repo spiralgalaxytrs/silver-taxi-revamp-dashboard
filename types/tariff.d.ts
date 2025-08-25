@@ -37,6 +37,7 @@ export interface TariffUseState {
   noOfDays?: number;
   price: number;
   extraPrice: number;
+  driverBeta: number;
 }
 
 export interface Includes {
