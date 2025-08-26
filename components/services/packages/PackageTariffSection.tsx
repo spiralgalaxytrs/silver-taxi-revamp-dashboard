@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "components/ui/card";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
@@ -9,7 +9,11 @@ import { Button } from "components/ui/button";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { useVehicleStore } from "stores/-vehicleStore";
-import { useTariffStore } from "stores/-tariffStore";
+import {
+    usePackageTariffByVehicle,
+    useCreatePackageTariff,
+    useUpdatePackageTariff
+} from "hooks/react-query/useTariff";
 
 interface PackageVehicleSectionProps {
     isEditing: boolean;
@@ -31,6 +35,7 @@ type PackageVehicleTariff = {
     vehicleId: string;
     type: "day" | "hourly";
     packageId?: string;
+    driverBeta?: number;
 };
 
 export function PackageTariffSection({
@@ -47,9 +52,18 @@ export function PackageTariffSection({
     const [distanceLimit, setDistanceLimit] = useState("");
     const [priceInput, setPriceInput] = useState("");
     const [status, setStatus] = useState(true);
+    const [driverBeta, setDriverBeta] = useState<number>(0);
+
+    // Use ref to store latest localTariffs to avoid dependency issues
+    const localTariffsRef = useRef(localTariffs);
+    localTariffsRef.current = localTariffs;
 
     const { vehicles } = useVehicleStore();
-    const { fetchPackageTariffs, createPackageTariff, fetchPackageTariffByVehicleId, updatePackageTariff, packageTariffs } = useTariffStore();
+
+    // React Query hooks
+    const { data: packageTariffs = [], refetch: refetchPackageTariffs } = usePackageTariffByVehicle(vehicleId, serviceId, type);
+    const createPackageTariffMutation = useCreatePackageTariff();
+    const updatePackageTariffMutation = useUpdatePackageTariff();
 
     // Fetch vehicles if not loaded
     useEffect(() => {
@@ -58,15 +72,11 @@ export function PackageTariffSection({
         }
     }, [vehicles.length]);
 
-    useEffect(() => {
-        if (vehicleId && serviceId) {
-            fetchPackageTariffByVehicleId(vehicleId, serviceId, type);
-        }
-    }, [vehicleId, serviceId, type, fetchPackageTariffByVehicleId]);
+    // React Query automatically handles fetching when vehicleId, serviceId, or type changes
 
     useEffect(() => {
-        const packageTariffs = useTariffStore.getState().packageTariffs;
         if (packageTariffs && packageTariffs.length > 0) {
+            console.log("packageTariffs >> ", packageTariffs);
             const filteredTariffs = packageTariffs
                 .filter((t: PackageVehicleTariff) => t.type === type && t.createdBy === createdBy)
                 .map((t: PackageVehicleTariff) => ({
@@ -81,6 +91,7 @@ export function PackageTariffSection({
                     vehicleId: t.vehicleId,
                     type: t.type,
                     packageId: t.packageId,
+                    driverBeta: Number(t.driverBeta),
                 }));
 
             const filteredAdminTariffs = packageTariffs
@@ -97,29 +108,46 @@ export function PackageTariffSection({
                     vehicleId: t.vehicleId,
                     type: t.type,
                     packageId: t.packageId,
+                    driverBeta: Number(t.driverBeta),
                 }));
 
-            setLocalTariffs((prev) => ({
-                ...prev,
-                [vehicleId]: filteredTariffs.length > 0 ? filteredTariffs : filteredAdminTariffs,
-            }));
+            const newTariffs = filteredTariffs.length > 0 ? filteredTariffs : filteredAdminTariffs;
+
+            // Only update if the data has actually changed
+            setLocalTariffs((prev) => {
+                const currentTariffs = prev[vehicleId] || [];
+                const hasChanged = JSON.stringify(currentTariffs) !== JSON.stringify(newTariffs);
+
+                if (hasChanged) {
+                    return {
+                        ...prev,
+                        [vehicleId]: newTariffs,
+                    };
+                }
+                return prev;
+            });
         } else {
-            setLocalTariffs((prev) => ({
-                ...prev,
-                [vehicleId]: [],
-            }));
+            setLocalTariffs((prev) => {
+                const currentTariffs = prev[vehicleId] || [];
+                if (currentTariffs.length > 0) {
+                    return {
+                        ...prev,
+                        [vehicleId]: [],
+                    };
+                }
+                return prev;
+            });
         }
     }, [packageTariffs, type, createdBy, vehicleId]);
 
     useEffect(() => {
-        useTariffStore.getState().packageTariffs;
         return () => {
             if (hasUnsavedChanges && isEditing && lastEditedVehicleId && lastEditedVehicleId !== vehicleId) {
-                handleTariffUpdate(lastEditedVehicleId, localTariffs[lastEditedVehicleId], true);
+                handleTariffUpdate(lastEditedVehicleId, localTariffsRef.current[lastEditedVehicleId], true);
                 setHasUnsavedChanges(false);
             }
         };
-    }, [vehicleId, hasUnsavedChanges, lastEditedVehicleId, packageTariffs]);
+    }, [vehicleId, hasUnsavedChanges, lastEditedVehicleId]);
 
     const handleExtraPriceChange = (value: string) => {
         const cleaned = String(value).replace(/[^0-9.]/g, '');
@@ -128,6 +156,18 @@ export function PackageTariffSection({
             [vehicleId]: prev[vehicleId].map((t) => ({
                 ...t,
                 extraPrice: Number(cleaned),
+            })),
+        }));
+        setHasUnsavedChanges(true);
+        setLastEditedVehicleId(vehicleId);
+    };
+    const handleDriverBetaChange = (value: string) => {
+        const cleaned = String(value).replace(/[^0-9.]/g, '');
+        setLocalTariffs((prev) => ({
+            ...prev,
+            [vehicleId]: prev[vehicleId].map((t) => ({
+                ...t,
+                driverBeta: Number(cleaned),
             })),
         }));
         setHasUnsavedChanges(true);
@@ -155,6 +195,7 @@ export function PackageTariffSection({
             vehicleId,
             type,
             createdBy,
+            driverBeta: Number(driverBeta),
         };
         setLocalTariffs((prev) => ({
             ...prev,
@@ -210,6 +251,7 @@ export function PackageTariffSection({
                 vehicleId: targetVehicleId,
                 type,
                 createdBy,
+                driverBeta: Number(driverBeta),
             };
 
             const existingTariff = packageTariffs.find(
@@ -222,33 +264,26 @@ export function PackageTariffSection({
 
             try {
                 if (existingTariff && existingTariff.id) {
-                    await updatePackageTariff(existingTariff.id, tariffDataToSend);
+                    await updatePackageTariffMutation.mutateAsync({ id: existingTariff.id, data: tariffDataToSend });
                 } else {
-                    await createPackageTariff(tariffDataToSend);
+                    await createPackageTariffMutation.mutateAsync(tariffDataToSend);
                 }
 
-                const status = useTariffStore.getState().statusCode;
-                const message = useTariffStore.getState().message;
-
-                if (status === 200 || status === 201) {
-                    if (!silent) {
-                        toast.success("Tariff updated successfully!", {
-                            style: {
-                                backgroundColor: "#009F7F",
-                                color: "#fff",
-                            },
-                        });
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 2000);
-                    }
-                } else {
-                    if (!silent) toast.error(message);
+                if (!silent) {
+                    toast.success("Tariff updated successfully!", {
+                        style: {
+                            backgroundColor: "#009F7F",
+                            color: "#fff",
+                        },
+                    });
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
                 }
 
             } catch (error) {
                 // console.error("Save error:", error);
-                if (!silent) toast.error(useTariffStore.getState().message, {
+                if (!silent) toast.error("Failed to update tariff", {
                     style: {
                         backgroundColor: "#FF0000",
                         color: "#fff",
@@ -257,11 +292,11 @@ export function PackageTariffSection({
             } finally {
                 setHasUnsavedChanges(false);
                 if (!silent) setLastEditedVehicleId(null);
-                await fetchPackageTariffByVehicleId(vehicleId, serviceId, type);
+                await refetchPackageTariffs();
             }
         } catch (error) {
             // console.error("Save error:", error);
-            if (!silent) toast.error(useTariffStore.getState().message, {
+            if (!silent) toast.error("Failed to update tariff", {
                 style: {
                     backgroundColor: "#FF0000",
                     color: "#fff",
@@ -271,9 +306,11 @@ export function PackageTariffSection({
     };
 
     const selectedVehicle = vehicles.find((v) => v.vehicleId === vehicleId);
-    console.log("selectedVehicle", vehicles);
+    // console.log("selectedVehicle", vehicles);
     const currentTariffs = localTariffs[vehicleId] || [];
+    // console.log("currentTariffs >> ", currentTariffs);
     const currentExtraPrice = currentTariffs[0]?.extraPrice || 0;
+    const currentDriverBeta = currentTariffs[0]?.driverBeta || 0;
 
     return (
         <Card className="p-6">
@@ -440,6 +477,29 @@ export function PackageTariffSection({
                                     Extra Price (Per {type === "day" ? "Day" : "KM"})
                                 </h2>
                                 <p className="mt-3">₹{currentExtraPrice} per {type === "day" ? "Day" : "Hour"}</p>
+                            </>
+                        )}
+                    </div>
+                    <div>
+                        {isEditing ? (
+                            <>
+                                <Label>
+                                    Driver Beta
+                                    <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    type="text"
+                                    value={currentDriverBeta}
+                                    className="mt-3"
+                                    onChange={(e) => handleDriverBetaChange(e.target.value)}
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <h2 className="text-base mb-1">
+                                    Driver Beta
+                                </h2>
+                                <p className="mt-3">₹{currentDriverBeta}</p>
                             </>
                         )}
                     </div>
