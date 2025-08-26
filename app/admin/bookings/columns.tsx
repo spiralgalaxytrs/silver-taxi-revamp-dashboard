@@ -775,7 +775,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
           case "Started":
             return "bg-[#327bf0] text-white";
           case "Reassign":
-            return "bg-[#327bf0] text-white";
+            return "bg-[#8B5DFF] text-white";
           case "Manual Completed":
             return "bg-[#18d5db] text-white";
           default:
@@ -896,7 +896,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
           </DropdownMenu>
           }
 
-          {booking.status === "Completed" || booking.status === "Manual Completed"
+          {(booking.status === "Completed" || booking.status === "Manual Completed")
             && <Badge variant="outline" className={`${getStatusColor(status)} cursor-default`}>{status}</Badge>}
       
 
