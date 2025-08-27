@@ -647,7 +647,7 @@ export default function BookingDetailsPage() {
                 {(editMode === 'after' || isManualCompleted) ? (
                   <div className="space-y-2 w-1/2">
                     <Label className="text-sm text-gray-600">Driver Charges</Label>
-                    {Object.entries(driverCharges).map(([key, value]) => (
+                    {Object.entries(driverCharges).filter(([key, value]) => Number(value) > 0).map(([key, value]) => (
                       <div key={key} className="flex justify-center items-center gap-2">
                         <span className="text-sm font-medium w-1/2">{capitalizeLabel(key)}</span>
                         <Input
@@ -666,7 +666,7 @@ export default function BookingDetailsPage() {
                     {Object.keys(driverCharges).length > 0 && (
                       <div className="space-y-2 w-1/2">
                         <Label className="text-sm"><span className=' text-sm font-semibold'> Driver Charges : </span></Label>
-                        {Object.entries(driverCharges).map(([key, value]) => (
+                        {Object.entries(driverCharges).filter(([key, value]) => Number(value) > 0).map(([key, value]) => (
                           <div key={key} className="flex justify-between items-center gap-2 ">
                             <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
                             <span className="text-sm font-medium">
@@ -708,7 +708,7 @@ export default function BookingDetailsPage() {
                     </div>
 
                     {/* Existing Extra Charges List */}
-                    {Object.entries(extraCharges).map(([key, value]) => (
+                    {Object.entries(extraCharges).filter(([key, value]) => Number(value) > 0).map(([key, value]) => (
                       <div key={key} className="flex justify-center items-center gap-2">
                         <span className="text-sm font-medium w-1/2">{capitalizeLabel(key)}</span>
                         <Input
@@ -735,7 +735,7 @@ export default function BookingDetailsPage() {
                         <Label className="text-sm">
                           <span className="text-sm font-semibold">Extra Charges:</span>
                         </Label>
-                        {Object.entries(extraCharges).map(([key, value]) => (
+                        {Object.entries(extraCharges).filter(([key, value]) => Number(value) > 0).map(([key, value]) => (
                           <div key={key} className="flex justify-between items-center gap-2">
                             <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
                             <span className="text-sm font-medium">
@@ -827,14 +827,14 @@ export default function BookingDetailsPage() {
                       </div>
 
                       {/* Driver Charges Display */}
-                      {Object.entries(driverCharges).map(([key, value]) => (
+                      {Object.entries(driverCharges).filter(([key, value]) => parseFloat(value) > 0).map(([key, value]) => (
                         <div key={key} className="flex justify-between">
                           <span>{capitalizeLabel(key)}</span>
                           <span>{formatCurrency(parseFloat(value) || 0)}</span>
                         </div>
                       ))}
 
-                      {Object.entries(extraCharges).map(([key, value]) => (
+                      {Object.entries(extraCharges).filter(([key, value]) => parseFloat(value) > 0).map(([key, value]) => (
                         <div key={key} className="flex justify-between">
                           <span>{capitalizeLabel(key)}</span>
                           <span>{formatCurrency(parseFloat(value) || 0)}</span>
