@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import CustomNotificationView from "components/notification/CustomNotificationView";
 import type { CustomNotification } from "types/react-query/customNotification";
 import { useCustomNotifications, useDeleteCustomNotification, useSendCustomNotification } from "hooks/react-query/useCustomNotification";
+import { toast } from "sonner";
 
 interface ColumnsProps {
   onEdit: (templateId: string) => void;
@@ -34,17 +35,47 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
 
   const handleDelete = async () => {
     if (selectedNotification) {
-      await deleteMutation.mutateAsync(selectedNotification.templateId || '');
-      setDeleteDialogOpen(false);
-      setSelectedNotification(null);
+      try {
+        await deleteMutation.mutateAsync(selectedNotification.templateId || '');
+        toast.success("Notification deleted successfully!", {
+          style: {
+            backgroundColor: "#009F7F",
+            color: "#fff",
+          },
+        });
+        setDeleteDialogOpen(false);
+        setSelectedNotification(null);
+      } catch (error) {
+        toast.error("Failed to delete notification", {
+          style: {
+            backgroundColor: "#FF0000",
+            color: "#fff",
+          },
+        });
+      }
     }
   };
 
   const handleSend = async () => {
     if (selectedNotification) {
-      await sendMutation.mutateAsync({ templateId: selectedNotification.templateId || '' });
-      setSendDialogOpen(false);
-      setSelectedNotification(null);
+      try {
+        await sendMutation.mutateAsync({ templateId: selectedNotification.templateId || '' });
+        toast.success("Notification sent successfully!", {
+          style: {
+            backgroundColor: "#009F7F",
+            color: "#fff",
+          },
+        });
+        setSendDialogOpen(false);
+        setSelectedNotification(null);
+      } catch (error) {
+        toast.error("Failed to send notification", {
+          style: {
+            backgroundColor: "#FF0000",
+            color: "#fff",
+          },
+        });
+      }
     }
   };
 
@@ -99,7 +130,11 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
       Cell: ({ row }) => (
         <div className="flex items-center gap-1">
           <CustomNotificationView notification={row.original}>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0"
+            >
               <Eye className="w-4 h-4" />
             </Button>
           </CustomNotificationView>
