@@ -1,5 +1,5 @@
 import axios from "lib/http-common";
-import type { Driver, wallet, ExpiryStatus, DriverWalletRequest } from "types/react-query/driver";
+import type { Driver, wallet, ExpiryStatus, DriverWalletRequest, DriverActivityLog } from "types/react-query/driver";
 
 export const getDrivers = async (): Promise<Driver[]> => {
   const res = await axios.get("/v1/drivers");
@@ -66,11 +66,13 @@ export const bulkDeleteDrivers = async (driverIds: string[]): Promise<void> => {
 export const toggleDriverStatus = async ({
   id,
   status,
+  reason,
 }: {
   id: string;
   status: boolean;
+  reason: string;
 }): Promise<any> => {
-  const res = await axios.post(`/v1/toggles-change/driver`, { id, status });
+  const res = await axios.post(`/v1/toggles-change/driver`, { id, status, reason });
   return res.data.data;
 };
 
@@ -130,6 +132,11 @@ export const getAllDriverWalletRequests = async (): Promise<DriverWalletRequest[
 
 export const getDriverWalletRequestById = async (id: string): Promise<DriverWalletRequest> => {
   const res = await axios.get(`/v1/drivers/wallet/request/${id}`);
+  return res.data.data;
+};
+
+export const getDriverActivityLogs = async (id: string): Promise<DriverActivityLog[]> => {
+  const res = await axios.get(`/v1/drivers/activity-logs/${id}`);
   return res.data.data;
 };
 

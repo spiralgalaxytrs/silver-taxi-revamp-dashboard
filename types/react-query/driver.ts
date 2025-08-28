@@ -67,6 +67,8 @@ export interface Driver {
     minusAmount?: number;
     totalAmount?: number;
     startAmount?: number;
+
+    inActiveReason?: string;
 }
 
 
@@ -172,4 +174,17 @@ export interface DriverWalletRequest {
     transactionDate?: Date;
     status: "pending" | "approved" | "rejected";
     createdAt?: string;
+}
+
+export interface DriverActivityLog {
+    id: number;
+    adminId: string;
+    driverId: string;
+    action: string;
+    message: string;
+    fieldChanged: string;
+    oldValue?: string;
+    newValue?: string;
+    timestamp: Date;
+    additionalInfo?: any;
 }

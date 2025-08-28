@@ -108,7 +108,7 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
 
     const handleTariffChange = (key: keyof Tariff, value: any) => {
         const updatedValue =
-            key === "price" || key === "extraPrice" ?
+            key === "price" || key === "extraPrice" || key === 'driverBeta' ?
                 String(value).replace(/[^0-9.]/g, "") :
                 value;
 
@@ -150,7 +150,7 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                 vehicleId: targetVehicleId,
                 serviceId,
                 createdBy,
-                driverBeta: 0
+                driverBeta: tariffData.driverBeta
             };
 
             const existingTariff = tariffs?.find(
@@ -294,7 +294,7 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                                 <Input
                                     id="driverBeta"
                                     type="text"
-                                    value={currentTariff.driverBeta?.toString() || '0'}
+                                    value={currentTariff.driverBeta?.toString()}
                                     className="mt-3"
                                     onChange={(e) => handleTariffChange("driverBeta", e.target.value)}
                                 />
