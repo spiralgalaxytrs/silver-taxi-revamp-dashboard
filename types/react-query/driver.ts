@@ -129,28 +129,7 @@ export interface wallet {
 
 
 
-export interface ExpiryStatus {
-    license: {
-        expiry: string;
-        isExpired: boolean;
-    };
-    vehicles: Array<{
-        id: number;
-        vehicleId: string;
-        rcBook: {
-            expiry: string;
-            isExpired: boolean;
-        };
-        insurance: {
-            expiry: string;
-            isExpired: boolean;
-        };
-        pollution: {
-            expiry: string;
-            isExpired: boolean;
-        };
-    }>;
-}
+
 export interface ErrorResponse {
     message: string;
     success: boolean;

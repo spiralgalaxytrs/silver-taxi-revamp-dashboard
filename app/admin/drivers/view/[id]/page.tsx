@@ -22,8 +22,7 @@ import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";
 import {
     useAdjustWallet,
-    useDriverById,
-    useDriverExpiryCheck
+    useDriverById
 } from 'hooks/react-query/useDriver';
 import {
     useDriverTransactions
@@ -31,7 +30,7 @@ import {
 import {
     useFetchDriverBookings
 } from "hooks/react-query/useBooking";
-import { Driver, ExpiryStatus } from "types/react-query/driver";
+import { Driver } from "types/react-query/driver";
 import { toast } from "sonner";
 import ProfileTab from "components/driver/Tabs/ProfileTab";
 import VehicleTab from "components/driver/Tabs/VehicleTab";
@@ -57,9 +56,7 @@ export default function ViewDriverPage() {
         isError: error,
         refetch
     } = useDriverById(id as string || "");
-    const {
-        data: expiryStatus = null
-    } = useDriverExpiryCheck(id as string);
+
     const [totalTrips, setTotalTrips] = useState(0);
     const [totalEarnings, setTotalEarnings] = useState(0);
     const [walletAmount, setWalletAmount] = useState(0);
@@ -323,8 +320,8 @@ export default function ViewDriverPage() {
             type: "licenseFront",
             url: editedDriver?.licenseImageFront,
             label: "License Front",
-            expiry: expiryStatus?.license?.expiry,
-            isExpired: expiryStatus?.license?.isExpired,
+            expiry: editedDriver?.licenseValidity,
+            isExpired: editedDriver?.licenseValidity ? new Date(editedDriver.licenseValidity) < new Date() : false,
             status: editedDriver?.licenseImageFrontVerified,
             remark: editedDriver?.licenseImageFrontRemark,
         },
@@ -332,8 +329,8 @@ export default function ViewDriverPage() {
             type: "licenseBack",
             url: editedDriver?.licenseImageBack,
             label: "License Back",
-            expiry: expiryStatus?.license?.expiry,
-            isExpired: expiryStatus?.license?.isExpired,
+            expiry: editedDriver?.licenseValidity,
+            isExpired: editedDriver?.licenseValidity ? new Date(editedDriver.licenseValidity) < new Date() : false,
             status: editedDriver?.licenseImageBackVerified,
             remark: editedDriver?.licenseImageBackRemark,
         },
@@ -467,7 +464,6 @@ export default function ViewDriverPage() {
                                 <ProfileTab
                                     editedDriver={editedDriver}
                                     driverDocuments={driverDocuments as any[]}
-                                    expiryStatus={expiryStatus}
                                     id={id as string}
                                     refetch={refetch}
                                     handleImageClick={handleImageClick}
@@ -490,7 +486,6 @@ export default function ViewDriverPage() {
                             <TabsContent value="vehicle">
                                 <VehicleTab
                                     editedDriver={editedDriver}
-                                    expiryStatus={expiryStatus}
                                     id={id as string}
                                     refetch={refetch}
                                     handleImageClick={handleImageClick}

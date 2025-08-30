@@ -228,7 +228,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
             tariffs.some(
                 tariff =>
                     tariff.vehicleId === vehicle.vehicleId &&
-                    tariff.price > 0 &&
+                    tariff.price > 0 && 
                     tariff.services?.name === formData.serviceType
             )
 

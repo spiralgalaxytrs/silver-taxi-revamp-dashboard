@@ -296,8 +296,8 @@ export function CreateOfferForm() {
                                             <SelectItem value="All">All</SelectItem>
                                             <SelectItem value="One way">One Way</SelectItem>
                                             <SelectItem value="Round trip">Round Trip</SelectItem>
-                                            <SelectItem value="Airport Pickup">Airport Pickup</SelectItem>
-                                            <SelectItem value="Airport Drop">Airport Drop</SelectItem>
+                                            {/* <SelectItem value="Airport Pickup">Airport Pickup</SelectItem> */}
+                                            {/* <SelectItem value="Airport Drop">Airport Drop</SelectItem> */}
                                             {/* <SelectItem value="Day Packages">Day Packages</SelectItem> */}
                                             <SelectItem value="Hourly Packages">Hourly Packages</SelectItem>
                                         </SelectContent>

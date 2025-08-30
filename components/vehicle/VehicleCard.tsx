@@ -114,10 +114,10 @@ export function VehicleCard({ vehicleId, name, fuelType, isActive, type, seats, 
                     <div>{seats}</div>
                     <div>Luggage:</div>
                     <div>{bags}</div>
-                    <div>Permit Charge:</div>
-                    <div>{permitCharge}</div>
-                    <div>Driver Beta:</div>
-                    <div>{driverBeta}</div>
+                    {/* <div>Permit Charge:</div>
+                    <div>{permitCharge}</div> */}
+                    {/* <div>Driver Beta:</div>
+                    <div>{driverBeta}</div> */}
                 </div>
             </CardContent>
             <CardFooter>
