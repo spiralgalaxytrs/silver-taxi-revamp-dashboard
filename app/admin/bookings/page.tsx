@@ -75,25 +75,21 @@ export default function BookingsPage() {
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
   const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [filters, setFilters] = useState({
-    todayBookings: false,
-    todayPickups: false,
+    bookingConfirmed: true, // Default filter
     notStarted: false,
     started: false,
     completed: false,
     cancelled: false,
-    contact: false,
-    notContact: false,
+    notContacted: false,
   });
-  const [isFilterApplied, setIsFilterApplied] = useState(false);
+  const [isFilterApplied, setIsFilterApplied] = useState(true); 
 
-  // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
   const columnVisibility = useMemo(() => {
     const serverVisibility = tableColumnVisibility.preferences || {};
     return { ...serverVisibility, ...localColumnVisibility };
   }, [tableColumnVisibility, localColumnVisibility]);
 
   useEffect(() => {
-    // 🌟 Only update server when local or server visibility changes
     const serverVisibility = tableColumnVisibility.preferences || {};
     const finalVisibility = { ...serverVisibility, ...localColumnVisibility };
     if (isColumnVisibilityUpdated) {
@@ -115,33 +111,24 @@ export default function BookingsPage() {
 
 
   const applyFilters = () => {
-
     let filteredData = [...bookingData];
 
-
-    if (filters.todayBookings) {
-      filteredData = filteredData.filter(booking => dayjs(booking.createdAt).isSame(dayjs(), 'day'));
-    }
-    if (filters.todayPickups) {
-      filteredData = filteredData.filter(booking => booking.pickupDate && dayjs(booking.pickupDate).isSame(dayjs(), 'day'));
-    }
-    if (filters.notStarted) {
-      filteredData = filteredData.filter(booking => booking.status === "Not-Started");
-    }
-    if (filters.started) {
-      filteredData = filteredData.filter(booking => booking.status === "Started");
-    }
-    if (filters.completed) {
-      filteredData = filteredData.filter(booking => booking.status === "Completed");
-    }
-    if (filters.cancelled) {
-      filteredData = filteredData.filter(booking => booking.status === "Cancelled");
-    }
-    if (filters.contact) {
-      filteredData = filteredData.filter(booking => booking.isContacted === true);
-    }
-    if (filters.notContact) {
+    // Check if contacted filter is active
+    if (filters.notContacted) {
       filteredData = filteredData.filter(booking => booking.isContacted === false);
+    }
+
+    // Apply status filters (mutually exclusive)
+    if (filters.bookingConfirmed) {
+      filteredData = filteredData.filter(booking => booking.status === "Booking Confirmed");
+    } else if (filters.notStarted) {
+      filteredData = filteredData.filter(booking => booking.status === "Not-Started");
+    } else if (filters.started) {
+      filteredData = filteredData.filter(booking => booking.status === "Started");
+    } else if (filters.completed) {
+      filteredData = filteredData.filter(booking => booking.status === "Completed");
+    } else if (filters.cancelled) {
+      filteredData = filteredData.filter(booking => booking.status === "Cancelled");
     }
 
     return filteredData;
@@ -151,27 +138,21 @@ export default function BookingsPage() {
 
 
   const stats = useMemo(() => {
-    return filteredData.reduce(
-      (acc, booking) => {
-        // Check if booking.createdAt is today
-        if (dayjs(booking.createdAt).isSame(dayjs(), 'day')) {
-          acc.todayBookings += 1;
-        }
+    interface StatsType {
+      bookingConfirmed: number;
+      notStarted: number;
+      started: number;
+      completed: number;
+      cancelled: number;
+      notContacted: number;
+    }
 
-        // Check if booking.pickupDate is today (make sure pickupDate exists)
-        if (booking.pickupDate && dayjs(booking.pickupDate).isSame(dayjs(), 'day')) {
-          acc.todayPickups += 1;
-        }
-
-        if (booking.contacted) {
-          acc.contact += 1;
-        } else {
-          acc.notContact += 1;
-        }
-
+    return bookingData.reduce(
+      (acc: StatsType, booking: any) => {
         // Count by status
         switch (booking.status) {
           case "Not-Started":
+            // acc.bookingConfirmed += 1;
             acc.notStarted += 1;
             break;
           case "Started":
@@ -183,22 +164,28 @@ export default function BookingsPage() {
           case "Cancelled":
             acc.cancelled += 1;
             break;
+          case "Booking Confirmed":
+            acc.bookingConfirmed += 1;
+            break;
+        }
+
+        // Count contacted status
+        if (booking.isContacted === false) {
+          acc.notContacted += 1;
         }
 
         return acc;
       },
       {
-        todayBookings: 0,
-        todayPickups: 0,
+        bookingConfirmed: 0,
         notStarted: 0,
         started: 0,
         completed: 0,
         cancelled: 0,
-        contact: 0,
-        notContact: 0,
+        notContacted: 0,
       }
     );
-  }, [filteredData]);
+  }, [bookingData]);
 
 
 
@@ -206,35 +193,27 @@ export default function BookingsPage() {
   const handleFilterChange = (key: keyof typeof filters, value: boolean) => {
     setFilters(prev => {
       const bookingStatusKeys: Array<keyof typeof filters> = [
+        "bookingConfirmed",
         "notStarted",
         "started",
         "completed",
         "cancelled",
       ];
-      const contactStatusKeys: Array<keyof typeof filters> = [
-        "contact",
-        "notContact",
-      ];
+
+      // Handle contacted filter separately (can be combined with status filters)
+      if (key === "notContacted") {
+        return { ...prev, notContacted: value };
+      }
 
       // Handle booking status filters (mutually exclusive)
       if (bookingStatusKeys.includes(key)) {
         const next = {
           ...prev,
+          bookingConfirmed: false,
           notStarted: false,
           started: false,
           completed: false,
           cancelled: false,
-        };
-        if (value) next[key] = true;
-        return next;
-      }
-
-      // Handle contact status filters (mutually exclusive)
-      if (contactStatusKeys.includes(key)) {
-        const next = {
-          ...prev,
-          contact: false,
-          notContact: false,
         };
         if (value) next[key] = true;
         return next;
@@ -251,16 +230,14 @@ export default function BookingsPage() {
   const handleClear = async () => {
     try {
       setFilters({
-        todayBookings: false,
-        todayPickups: false,
+        bookingConfirmed: true, // Reset to default
         notStarted: false,
         started: false,
         completed: false,
         cancelled: false,
-        contact: false,
-        notContact: false,
+        notContacted: false,
       });
-      setIsFilterApplied(false);
+      setIsFilterApplied(true);
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
@@ -365,14 +342,14 @@ export default function BookingsPage() {
                 >
                   Create Booking
                 </Button>
-
+{/* 
                 {isFilterApplied && <Button
                   variant={"primary"}
                   className='py-6'
                   onClick={handleClear}
                 >
                   Clear Filters
-                </Button>}
+                </Button>} */}
 
                 <div className="flex items-center gap-2">
                   {Object.keys(rowSelection).length > 0 && (
@@ -405,20 +382,21 @@ export default function BookingsPage() {
                 </div>
               </div>
             </div>
-            <div className="grid ml-10 gap-5 md:grid-cols-3 lg:grid-cols-4">
-              <button onClick={() => handleFilterChange('todayBookings', !filters.todayBookings)}>
-                <Card className="border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105 ">
-                  {filters.todayBookings && <div className='absolute top-[-6] right-0 '>
+            <div className="grid ml-10 gap-5 md:grid-cols-3 lg:grid-cols-3">
+              {/* Booking Confirmed (Default) */}
+              <button onClick={() => handleFilterChange('bookingConfirmed', !filters.bookingConfirmed)}>
+                <Card className="border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                  {filters.bookingConfirmed && <div className='absolute top-[-6] right-0'>
                     <span className='text-[5px] text-red-500'>
                       <Filter className='w-5 h-5' />
                     </span>
                   </div>}
-                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded ">
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded">
                     <CounterCard
                       color="bg-emerald-100"
                       icon={Activity}
-                      count={stats.todayBookings.toLocaleString()}
-                      label="Today's Bookings"
+                      count={stats.bookingConfirmed.toLocaleString()}
+                      label="Booking Confirmed"
                       className="rounded"
                       cardSize="w-[180px] h-[90px]"
                     />
@@ -426,31 +404,10 @@ export default function BookingsPage() {
                   </div>
                 </Card>
               </button>
-              {/* Today's Pickups */}
-              <button onClick={() => handleFilterChange('todayPickups', !filters.todayPickups)}>
-                <Card className="border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                  {filters.todayPickups && <div className='absolute top-[-6] right-0 '>
-                    <span className='text-[5px] text-red-500'>
-                      <Filter className='w-5 h-5' />
-                    </span>
-                  </div>}
-                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded">
-                    <CounterCard
-                      color="bg-blue-100"
-                      icon={Activity}
-                      count={stats.todayPickups.toLocaleString()}
-                      label="Today's Pickups"
-                      className="rounded"
-                      cardSize="w-[180px] h-[90px]"
-                    />
-                    <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500" />
-                  </div>
-                </Card>
-              </button>
-              {/* Non Started Bookings */}
+              {/* Non Started */}
               <button onClick={() => handleFilterChange('notStarted', !filters.notStarted)}>
                 <Card className="border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                  {filters.notStarted && <div className='absolute top-[-6] right-0 '>
+                  {filters.notStarted && <div className='absolute top-[-6] right-0'>
                     <span className='text-[5px] text-red-500'>
                       <Filter className='w-5 h-5' />
                     </span>
@@ -460,36 +417,17 @@ export default function BookingsPage() {
                       color="bg-purple-100"
                       icon={Activity}
                       count={stats.notStarted.toLocaleString()}
-                      label="Non Started Bookings"
+                      label="Non Started"
+                      cardSize="w-[180px] h-[90px]"
                     />
                     <div className="h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500" />
                   </div>
                 </Card>
               </button>
-              {/* Started Bookings */}
+              {/* Started */}
               <button onClick={() => handleFilterChange('started', !filters.started)}>
-                <Card className="border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                  {filters.started && <div className='absolute top-[-6] right-0 '>
-                    <span className='text-[5px] text-red-500'>
-                      <Filter className='w-5 h-5' />
-                    </span>
-                  </div>}
-                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded">
-                    <CounterCard
-                      color="bg-emerald-100"
-                      icon={Activity}
-                      count={stats.started.toLocaleString()}
-                      label="Started Bookings"
-                      className="rounded"
-                    />
-                    <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500" />
-                  </div>
-                </Card>
-              </button>
-              {/* Completed Bookings */}
-              <button onClick={() => handleFilterChange('completed', !filters.completed)}>
                 <Card className="border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                  {filters.completed && <div className='absolute top-[-6] right-0 '>
+                  {filters.started && <div className='absolute top-[-6] right-0'>
                     <span className='text-[5px] text-red-500'>
                       <Filter className='w-5 h-5' />
                     </span>
@@ -498,67 +436,72 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-blue-100"
                       icon={Activity}
-                      count={stats.completed.toLocaleString()}
-                      label="Completed Bookings"
+                      count={stats.started.toLocaleString()}
+                      label="Started"
+                      className="rounded"
+                      cardSize="w-[180px] h-[90px]"
                     />
                     <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500" />
                   </div>
                 </Card>
               </button>
-              {/* Cancelled Bookings */}
-              <button onClick={() => handleFilterChange('cancelled', !filters.cancelled)}>
-                <Card className="border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                  {filters.cancelled && <div className='absolute top-[-6] right-0 '>
+              {/* Completed */}
+              <button onClick={() => handleFilterChange('completed', !filters.completed)}>
+                <Card className="border-none bg-gradient-to-br from-green-50 to-emerald-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                  {filters.completed && <div className='absolute top-[-6] right-0'>
                     <span className='text-[5px] text-red-500'>
                       <Filter className='w-5 h-5' />
                     </span>
                   </div>}
-                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded">
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded">
                     <CounterCard
-                      color="bg-purple-100"
+                      color="bg-green-100"
+                      icon={Activity}
+                      count={stats.completed.toLocaleString()}
+                      label="Completed"
+                      cardSize="w-[180px] h-[90px]"
+                    />
+                    <div className="h-1 w-full bg-gradient-to-r from-green-500 to-emerald-500" />
+                  </div>
+                </Card>
+              </button>
+              {/* Cancelled */}
+              <button onClick={() => handleFilterChange('cancelled', !filters.cancelled)}>
+                <Card className="border-none bg-gradient-to-br from-red-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                  {filters.cancelled && <div className='absolute top-[-6] right-0'>
+                    <span className='text-[5px] text-red-500'>
+                      <Filter className='w-5 h-5' />
+                    </span>
+                  </div>}
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-red-500/10 to-pink-500/10 rounded">
+                    <CounterCard
+                      color="bg-red-100"
                       icon={Activity}
                       count={stats.cancelled.toLocaleString()}
-                      label="Cancelled Bookings"
+                      label="Cancelled"
+                      cardSize="w-[180px] h-[90px]"
                     />
-                    <div className="h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500" />
+                    <div className="h-1 w-full bg-gradient-to-r from-red-500 to-pink-500" />
                   </div>
                 </Card>
               </button>
-              {/* Contacted Bookings */}
-              <button onClick={() => handleFilterChange('contact', !filters.contact)}>
-                <Card className="border-none bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                  {filters.contact && <div className='absolute top-[-6] right-0 '>
+              {/* Not Contacted */}
+              <button onClick={() => handleFilterChange('notContacted', !filters.notContacted)}>
+                <Card className="border-none bg-gradient-to-br from-orange-50 to-amber-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
+                  {filters.notContacted && <div className='absolute top-[-6] right-0'>
                     <span className='text-[5px] text-red-500'>
                       <Filter className='w-5 h-5' />
                     </span>
                   </div>}
-                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded">
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-orange-500/10 to-amber-500/10 rounded">
                     <CounterCard
-                      color="bg-blue-100"
+                      color="bg-orange-100"
                       icon={Activity}
-                      count={stats.contact.toLocaleString()}
-                      label="Contacted Bookings"
+                      count={stats.notContacted.toLocaleString()}
+                      label="Not Contacted"
+                      cardSize="w-[180px] h-[90px]"
                     />
-                    <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500" />
-                  </div>
-                </Card>
-              </button>
-              {/* Not Contacted Bookings */}
-              <button onClick={() => handleFilterChange('notContact', !filters.notContact)}>
-                <Card className="border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                  {filters.notContact && <div className='absolute top-[-6] right-0 '>
-                    <span className='text-[5px] text-red-500'>
-                      <Filter className='w-5 h-5' />
-                    </span>
-                  </div>}
-                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded">
-                    <CounterCard
-                      color="bg-purple-100"
-                      icon={Activity}
-                      count={stats.notContact.toLocaleString()}
-                      label="Not Contacted Bookings"
-                    />
-                    <div className="h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500" />
+                    <div className="h-1 w-full bg-gradient-to-r from-orange-500 to-amber-500" />
                   </div>
                 </Card>
               </button>

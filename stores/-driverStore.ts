@@ -74,28 +74,7 @@ interface wallet {
 
 
 
-interface ExpiryStatus {
-    license: {
-        expiry: string;
-        isExpired: boolean;
-    };
-    vehicles: Array<{
-        id: number;
-        vehicleId: string;
-        rcBook: {
-            expiry: string;
-            isExpired: boolean;
-        };
-        insurance: {
-            expiry: string;
-            isExpired: boolean;
-        };
-        pollution: {
-            expiry: string;
-            isExpired: boolean;
-        };
-    }>;
-}
+
 interface ErrorResponse {
     message: string;
     success: boolean;
@@ -134,7 +113,7 @@ interface DriverState {
     multiDeleteDrivers: (driverIds: string[]) => Promise<void>;
     toggleDriverStatus: (id: string, status: boolean) => Promise<void>;
     verificationStatus: (id: string, data: any) => Promise<string>;
-    expiryCheck: (id: string) => Promise<void>;
+
 
 }
 
@@ -483,28 +462,7 @@ export const useDriverStore = create<DriverState>()(
                     throw new Error(message);
                 }
             },
-            expiryCheck: async (id: string) => {
-                set({ isLoading: true, error: null });
 
-                try {
-                    const response = await axios.get(`/v1/drivers/expiry-check/${id}`);
-                    const expiryData = response.data.data; // expected to be an object like: { license: { isExpired: true, expiryDate: "..." }, ... }
-
-                    set((state) => ({
-                        expiryResults: expiryData, // Optional: if you're storing it in the state
-                        isLoading: false,
-                        message: response.data.message || "Expiry check completed",
-                        statusCode: response.status,
-                    }));
-
-                    return expiryData;
-                } catch (error) {
-                    const axiosError = error as AxiosError<ErrorResponse>;
-                    const message = axiosError.response?.data?.message || "Expiry check failed";
-                    set({ message, error: message, isLoading: false });
-                    throw new Error(message);
-                }
-            },
 
 
 
@@ -516,6 +474,6 @@ export const useDriverStore = create<DriverState>()(
     )
 );
 
-export type { Driver, ExpiryStatus };
+export type { Driver };
 
 

@@ -26,6 +26,7 @@ import {
   useCustomers,
   useBulkDeleteCustomers
 } from "hooks/react-query/useCustomer";
+import CreateCustomerForm from "components/customer/CreateCustomerForm";
 import {
   MRT_ColumnDef,
   MaterialReactTable
@@ -295,6 +296,7 @@ export default function CustomersPage() {
             <div className="flex justify-between items-center mb-5">
               <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
               <div className="flex items-center gap-2">
+                <CreateCustomerForm onSuccess={refetch} />
                 {/* {showFilters && <Button variant="outline" onClick={handleClear}>
                   Clear
                 </Button>} */}

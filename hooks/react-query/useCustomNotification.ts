@@ -88,10 +88,10 @@ export const useSendCustomNotification = () => {
   
   return useMutation({
     mutationFn: (data: SendNotificationRequest) => sendCustomNotification(data),
-    onSuccess: (_, { templateId }) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["custom-notifications"] });
       queryClient.invalidateQueries({ queryKey: ["custom-notifications-paginated"] });
-      queryClient.invalidateQueries({ queryKey: ["custom-notification", templateId] });
+      queryClient.invalidateQueries({ queryKey: ["custom-notification", variables.templateId] });
     },
   });
 };

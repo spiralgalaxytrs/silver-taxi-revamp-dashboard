@@ -20,11 +20,10 @@ import { Badge } from "components/ui/badge";
 import { Layout, Eye, ZoomIn, ZoomOut } from "lucide-react";
 import Image from "next/image";
 import VerificationActionGroup, { VerificationField } from "components/driver/VerificationActionGroup";
-import { Driver, ExpiryStatus } from "types/react-query/driver";
+import { Driver } from "types/react-query/driver";
 
 interface VehicleTabProps {
   editedDriver: Driver | null;
-  expiryStatus: ExpiryStatus | null;
   id: string | string[];
   handleImageClick: (url: string, label: string) => void;
   selectedImage: string | null;
@@ -46,7 +45,6 @@ interface VehicleTabProps {
 
 export default function VehicleTab({
   editedDriver,
-  expiryStatus,
   id,
   handleImageClick,
   selectedImage,
@@ -72,9 +70,6 @@ export default function VehicleTab({
         {editedDriver?.vehicle && editedDriver.vehicle.length > 0 ? (
           <Accordion type="single" collapsible className="space-y-4" defaultValue="vehicle-0">
             {editedDriver.vehicle.map((vehicle, index) => {
-              const vehicleExpiry = expiryStatus?.vehicles?.find(
-                (v) => v.vehicleId === vehicle.vehicleId
-              );
               return (
                 <AccordionItem
                   key={index}
@@ -181,9 +176,7 @@ export default function VehicleTab({
                           <span className="font-semibold w-32">RC Expiry:</span>
                           <div className="flex items-center gap-2">
                             <p className="text-gray-900">
-                              {vehicleExpiry?.rcBook?.expiry
-                                ? new Date(vehicleExpiry?.rcBook?.expiry).toLocaleDateString()
-                                : vehicle.rcExpiryDate
+                              {vehicle.rcExpiryDate
                                   ? new Date(vehicle.rcExpiryDate).toLocaleDateString()
                                   : "-"}
                             </p>
@@ -193,9 +186,7 @@ export default function VehicleTab({
                           <span className="font-semibold w-32">Insurance Expiry:</span>
                           <div className="flex items-center gap-2">
                             <p className="text-gray-900">
-                              {vehicleExpiry?.insurance?.expiry
-                                ? new Date(vehicleExpiry?.insurance?.expiry).toLocaleDateString()
-                                : vehicle.insuranceExpiryDate
+                              {vehicle.insuranceExpiryDate
                                   ? new Date(vehicle.insuranceExpiryDate).toLocaleDateString()
                                   : "-"}
                             </p>
@@ -205,9 +196,7 @@ export default function VehicleTab({
                           <span className="font-semibold w-32">Pollution Expiry:</span>
                           <div className="flex items-center gap-2">
                             <p className="text-gray-900">
-                              {vehicleExpiry?.pollution?.expiry
-                                ? new Date(vehicleExpiry?.pollution?.expiry).toLocaleDateString()
-                                : vehicle.pollutionExpiryDate
+                              {vehicle.pollutionExpiryDate
                                   ? new Date(vehicle.pollutionExpiryDate).toLocaleDateString()
                                   : "-"}
                             </p>
@@ -236,8 +225,8 @@ export default function VehicleTab({
                                 type: "rcFront" as VerificationField,
                                 url: vehicle.rcBookImageFront,
                                 label: "RC Book Front",
-                                expiry: vehicleExpiry?.rcBook?.expiry,
-                                isExpired: vehicleExpiry?.rcBook?.isExpired,
+                                expiry: vehicle.rcExpiryDate,
+                                isExpired: vehicle.rcExpiryDate ? new Date(vehicle.rcExpiryDate) < new Date() : false,
                                 status: vehicle.rcFrontVerified as "accepted" | "rejected" | "pending" | undefined,
                                 remark: vehicle.rcFrontRemark,
                               },
@@ -245,8 +234,8 @@ export default function VehicleTab({
                                 type: "rcBack" as VerificationField,
                                 url: vehicle.rcBookImageBack,
                                 label: "RC Book Back",
-                                expiry: vehicleExpiry?.rcBook?.expiry,
-                                isExpired: vehicleExpiry?.rcBook?.isExpired,
+                                expiry: vehicle.rcExpiryDate,
+                                isExpired: vehicle.rcExpiryDate ? new Date(vehicle.rcExpiryDate) < new Date() : false,
                                 status: vehicle.rcBackVerified as "accepted" | "rejected" | "pending" | undefined,
                                 remark: vehicle.rcBackRemark,
                               },
@@ -254,8 +243,8 @@ export default function VehicleTab({
                                 type: "insurance" as VerificationField,
                                 url: vehicle.insuranceImage,
                                 label: "Insurance",
-                                expiry: vehicleExpiry?.insurance?.expiry,
-                                isExpired: vehicleExpiry?.insurance?.isExpired,
+                                expiry: vehicle.insuranceExpiryDate,
+                                isExpired: vehicle.insuranceExpiryDate ? new Date(vehicle.insuranceExpiryDate) < new Date() : false,
                                 status: vehicle.insuranceVerified as "accepted" | "rejected" | "pending" | undefined,
                                 remark: vehicle.insuranceRemark,
                               },
@@ -263,8 +252,8 @@ export default function VehicleTab({
                                 type: "pollution" as VerificationField,
                                 url: vehicle.pollutionImage,
                                 label: "Pollution Certificate",
-                                expiry: vehicleExpiry?.pollution?.expiry,
-                                isExpired: vehicleExpiry?.pollution?.isExpired,
+                                expiry: vehicle.pollutionExpiryDate,
+                                isExpired: vehicle.pollutionExpiryDate ? new Date(vehicle.pollutionExpiryDate) < new Date() : false,
                                 status: vehicle.pollutionImageVerified as "accepted" | "rejected" | "pending" | undefined,
                                 remark: vehicle.pollutionImageRemark,
                               },
@@ -299,6 +288,33 @@ export default function VehicleTab({
                                       )}
                                     </div>
                                   </div>
+                                  {doc.expiry && (
+                                    <div className="mt-2">
+                                      <p className="text-sm text-black mr-2">
+                                        Expiry Status:
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger>
+                                              <Badge
+                                                variant={doc.isExpired ? "destructive" : "default"}
+                                                className="text-xs ml-2"
+                                              >
+                                                {doc.isExpired ? "Expired" : "Valid"}
+                                              </Badge>
+                                            </TooltipTrigger>
+                                            <TooltipContent
+                                              side="top"
+                                              align="center"
+                                              className="bg-gray-800 text-white p-2 rounded text-sm"
+                                            >
+                                              <p>Expiry Date: {new Date(doc.expiry).toLocaleDateString()}</p>
+                                              <p>{doc.isExpired ? "Document has expired" : "Document is valid"}</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      </p>
+                                    </div>
+                                  )}
                                   <Dialog
                                     onOpenChange={(open) => {
                                       if (!open) {
@@ -411,40 +427,7 @@ export default function VehicleTab({
                                       </div>
                                     </DialogContent>
                                   </Dialog>
-                                  {doc.expiry && (
-                                    <div className="mt-2">
-                                      <p className="text-sm text-black mr-2">
-                                        Expiry Status:
 
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger >
-                                              {/* <span className="text-sm text-gray-600">
-                                            {new Date(doc.expiry).toLocaleDateString()}
-                                          </span> */}
-                                              <Badge
-                                                variant={doc.isExpired ? "destructive" : "default"}
-                                                className="text-xs"
-                                              >
-                                                {doc.isExpired ? "Expired" : "Valid"}
-                                              </Badge>
-                                            </TooltipTrigger>
-                                            <TooltipContent
-                                              side="top"
-                                              align="center"
-                                              className="bg-gray-800 text-white p-2 rounded text-sm"
-                                            >
-                                              Document Expiry Status ({new Date(doc.expiry).toLocaleDateString()})
-                                            </TooltipContent>
-
-                                          </Tooltip>
-                                        </TooltipProvider>
-
-
-
-                                      </p>
-                                    </div>
-                                  )}
                                 </div>
                               ))}
                           </div>

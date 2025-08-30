@@ -133,18 +133,6 @@ export default function AirportServiceSection({ isEditing, serviceId, title }: S
                     <div className="grid grid-cols-2 gap-8">
                         <div className="space-y-6">
                             <div>
-                                <Label>Service Type</Label>
-                                {isEditing ? (
-                                    <Input
-                                        value={title}
-                                        readOnly
-                                        className="mt-3"
-                                    />
-                                ) : (
-                                    <p className="mt-3">{title}</p>
-                                )}
-                            </div>
-                            <div>
                                 <h3 className="text-base mb-1">Tax</h3>
                                 {isEditing ? (
                                     <>

@@ -39,8 +39,8 @@ export interface Booking {
   vehicleName: string;
   amount: number | null;
   bookingDate: string;
-  status: "Completed" | "Cancelled" | "Not-Started" | "Started" | "Reassign" | "Manual Completed";
-  createdBy: "Admin" | "Vendor";
+  status: "Completed" | "Cancelled" | "Not-Started" | "Started" | "Reassign" | "Manual Completed" | "Booking Confirmed";
+  createdBy: "Admin" | "Vendor" | "User";
   createdAt?: string | null;
   offers: Record<string, any>;
   vehicles: Record<string, any>;
