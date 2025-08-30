@@ -20,6 +20,8 @@ export interface Vendor {
     createdAt: string;
   };
   createdAt: string;
+
+  reason?: string;
 }
 
 export interface wallet {

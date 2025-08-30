@@ -35,8 +35,8 @@ export const bulkDeleteVendors = async (vendorIds: string[]) => {
   return axios.delete("/v1/vendors", { data: { vendorIds } });
 };
 
-export const toggleVendorStatus = async ({ id, status }: { id: string; status: boolean }) => {
-  const res = await axios.put(`/v1/vendors/toggle-changes/${id}`, { status });
+export const toggleVendorStatus = async ({ id, status, reason }: { id: string; status: boolean, reason: string }) => {
+  const res = await axios.put(`/v1/vendors/toggle-changes/${id}`, { status, reason });
   return res.data.data;
 };
 

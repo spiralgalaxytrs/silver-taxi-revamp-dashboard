@@ -13,7 +13,17 @@ import {
   DropdownMenuTrigger,
 } from "components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogFooter, AlertDialogDescription, AlertDialogTitle, AlertDialogHeader, AlertDialogContent } from "components/ui/alert-dialog";
+import {
+  AlertDialog, AlertDialogAction,
+  AlertDialogCancel, AlertDialogFooter,
+  AlertDialogDescription, AlertDialogTitle,
+  AlertDialogHeader, AlertDialogContent
+} from "components/ui/alert-dialog";
+import {
+  Dialog, DialogContent,
+  DialogFooter, DialogHeader,
+  DialogTitle
+} from "components/ui/dialog"
 import {
   MRT_ColumnDef,
 } from 'material-react-table'
@@ -23,6 +33,7 @@ import {
   useToggleVendorStatus,
   useDeleteVendor
 } from 'hooks/react-query/useVendor'
+import { Input } from "components/ui/input";
 
 
 export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
@@ -53,23 +64,23 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-  accessorKey: "vendorId",
-  header: "Vendor ID",
-  muiTableHeadCellProps: { align: 'center' },
-  muiTableBodyCellProps: { align: 'center' },
-  Cell: ({ row }) => {
-    const vendor = row.original;
+    accessorKey: "vendorId",
+    header: "Vendor ID",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+    Cell: ({ row }) => {
+      const vendor = row.original;
 
-    return (
-      <Link
-        href={`/admin/vendor/view/${vendor?.vendorId}`}
-        className="text-blue-600 hover:underline"
-      >
-        {vendor?.vendorId}
-      </Link>
-    );
+      return (
+        <Link
+          href={`/admin/vendor/view/${vendor?.vendorId}`}
+          className="text-blue-600 hover:underline"
+        >
+          {vendor?.vendorId}
+        </Link>
+      );
+    },
   },
-},
   // {
   //   accessorKey: "vendorId",
   //   header: "Vendor ID",
@@ -113,16 +124,21 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
     header: "Status",
     Cell: ({ row }) => {
       const isActive = row.getValue("isLogin");
+      const inActiveReason = row.original.reason || "";
 
       const {
         mutate: toggleVendorStatus,
         isPending: isLoading
       } = useToggleVendorStatus();
 
+      const [isDialogOpen, setIsDialogOpen] = useState(false);
+      const [reason, setReason] = useState("");
+      const [status, setStatus] = useState(isActive);
+
       const id = row.original.vendorId ?? "";
       const handleToggleStatus = async (newStatus: boolean) => {
         try {
-          toggleVendorStatus({ id, status: newStatus }, {
+          toggleVendorStatus({ id, status: newStatus, reason }, {
             onSuccess: () => {
               toast.success("Vendor status updated successfully", {
                 style: {
@@ -131,8 +147,8 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
                 },
               });
             },
-            onError: () => {
-              toast.error("Failed to update vendor status", {
+            onError: (error: any) => {
+              toast.error(error?.response?.data?.message || "Failed to update vendor status", {
                 style: {
                   backgroundColor: "#FF0000",
                   color: "#fff",
@@ -152,32 +168,79 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
       };
 
       return (
-        <div className="flex items-center justify-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                onClick={() => handleToggleStatus(!isActive)}
-                disabled={isLoading}
-              >
-                <Badge variant={isActive ? 'default' : 'destructive'}>
-                  {isActive ? 'Active' : 'Inactive'}
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Badge>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => handleToggleStatus(true)} disabled={isLoading}>
-                Active
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleToggleStatus(false)} disabled={isLoading}>
-                Inactive
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      );
+        <React.Fragment>
+          <div className="flex items-center justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                ><Badge variant={isActive === true ? 'default' : 'destructive'}>
+                    {isActive === true ? 'Active' : 'Inactive'}
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Badge>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {/* Dropdown options for updating the status */}
+                <DropdownMenuItem
+                  onClick={() => {
+                    setIsDialogOpen(true);
+                    setStatus(true);
+                  }}
+                >
+                  Active
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setIsDialogOpen(true);
+                    setStatus(false);
+                  }}
+                >
+                  Inactive
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="flex items-center justify-center">
+            <Dialog
+              open={isDialogOpen}
+              onOpenChange={setIsDialogOpen}
+            >
+              <DialogContent className="max-w-[400px]">
+                <DialogHeader>
+                  <DialogTitle>Are you sure you want to change the status?</DialogTitle>
+                  <div>
+                    <div className="flex flex-col gap-2">
+                      {/* <h4 className="text-sm font-semibold">Reason</h4> */}
+                      {inActiveReason && <p className="text-sm"><span className="font-semibold">Old Reason:</span> {inActiveReason}</p>}
+                      <Input
+                        type="text"
+                        placeholder="Enter Reason"
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                      />
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm">Status change to : </p>
+                        <Badge variant={status === true ? 'default' : 'destructive'}>
+                          {status === true ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>No</Button>
+                  <Button onClick={() => {
+                    handleToggleStatus(status as boolean);
+                    setIsDialogOpen(false);
+                  }}>Yes</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </React.Fragment>
+      )
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
@@ -232,7 +295,7 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
       }
 
       const confirmDelete = async (id: string) => {
-        deleteVendor(id,{
+        deleteVendor(id, {
           onSuccess: () => {
             setIsDialogOpen(false);
             toast.success("Vendor deleted successfully", {
