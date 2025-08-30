@@ -40,7 +40,7 @@ export interface Booking {
   amount: number | null;
   bookingDate: string;
   status: "Completed" | "Cancelled" | "Not-Started" | "Started" | "Reassign" | "Manual Completed";
-  createdBy: "Admin" | "Vendor";
+  createdBy: "Admin" | "Vendor" | "User";
   createdAt?: string | null;
   offers: Record<string, any>;
   vehicles: Record<string, any>;

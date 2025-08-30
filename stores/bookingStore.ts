@@ -47,7 +47,7 @@ interface Booking {
   amount: number | null;
   bookingDate: string;
   status: "Completed" | "Cancelled" | "Not-Started" | "Started";
-  createdBy: "Admin" | "Vendor";
+  createdBy: "Admin" | "Vendor" ;
   createdAt?: string | null;
   offers: Record<string, any>;
   vehicles: Record<string, any>;

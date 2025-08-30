@@ -213,6 +213,16 @@ export const deleteCustomNotification = async (templateId: string): Promise<void
 
 // 📤 Send FCM notification to customers
 export const sendCustomNotification = async (data: SendNotificationRequest): Promise<CustomNotificationResponse> => {
-  const res = await axios.post(`/v1/notifications/custom/${data.templateId}/send`);
-  return res.data;
+  console.log("Sending notification with data:", data);
+  console.log("API URL:", `/v1/notifications/custom/${data.templateId}/send`);
+  
+  try {
+    const res = await axios.post(`/v1/notifications/custom/${data.templateId}/send`);
+    console.log("API response:", res.data);
+    return res.data;
+  } catch (error: any) {
+    console.error("API error:", error);
+    console.error("API error response:", error?.response?.data);
+    throw error;
+  }
 };

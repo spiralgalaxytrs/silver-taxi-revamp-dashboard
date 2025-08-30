@@ -5,7 +5,8 @@ import {
   getCustomerById,
   getCustomerBooking,
   deleteCustomer,
-  multiDeleteCustomers
+  multiDeleteCustomers,
+  createCustomer
 } from "services/customer";
 import type { Customer, CustomerBooking } from "types/react-query/customer";
 
@@ -53,6 +54,17 @@ export const useBulkDeleteCustomers = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (ids: string[]) => multiDeleteCustomers(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+    }
+  });
+};
+
+// ➕ Create customer
+export const useCreateCustomer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createCustomer,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
     }

@@ -62,3 +62,14 @@ export const deleteCustomer = async (id: string) => {
 export const multiDeleteCustomers = async (customerIds: string[]) => {
   return axios.delete(`/v1/customers/`, { data: { customerIds } });
 };
+
+// ➕ Create customer
+export const createCustomer = async (customerData: {
+  name: string;
+  email?: string;
+  phone: string;
+  createdBy?: "Admin" | "Vendor";
+}) => {
+  const res = await axios.post("/v1/customers", customerData);
+  return res.data.data;
+};

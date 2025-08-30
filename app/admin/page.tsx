@@ -80,9 +80,9 @@ export default function AdminDashboard() {
               hoverColor: "group-hover:from-emerald-600 group-hover:to-teal-700",
             },
             {
-              title: "Create Enquiry",
-              href: "/admin/enquiry/create",
-              icon: MessageSquare,
+              title: "Create Customer",
+              href: "/admin/customers/create",
+              icon: Users,
               color: "from-amber-500 to-orange-600",
               hoverColor: "group-hover:from-amber-600 group-hover:to-orange-700",
             },

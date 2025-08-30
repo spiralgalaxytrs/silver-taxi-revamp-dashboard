@@ -30,7 +30,7 @@ import VerificationActionGroup, { VerificationField } from "components/driver/Ve
 import {
     useToggleDriverStatus,
 } from 'hooks/react-query/useDriver';
-import { Driver, ExpiryStatus } from "types/react-query/driver";
+import { Driver } from "types/react-query/driver";
 
 
 interface ProfileTabProps {
@@ -44,7 +44,7 @@ interface ProfileTabProps {
         status?: "accepted" | "rejected" | "pending";
         remark?: string;
     }>;
-    expiryStatus: ExpiryStatus | null;
+
     id: string | string[];
     handleImageClick: (url: string, label: string) => void;
     selectedImage: string | null;
@@ -67,7 +67,6 @@ interface ProfileTabProps {
 export default function ProfileTab({
     editedDriver,
     driverDocuments,
-    expiryStatus,
     id,
     handleImageClick,
     selectedImage,
@@ -188,9 +187,7 @@ export default function ProfileTab({
                         <span className="font-semibold w-32">License Validity:</span>
                         <div className="flex items-center gap-2">
                             <p className="text-gray-900">
-                                {expiryStatus?.license?.expiry
-                                    ? new Date(expiryStatus?.license?.expiry).toLocaleDateString()
-                                    : editedDriver?.licenseValidity
+                                {editedDriver?.licenseValidity
                                         ? new Date(editedDriver.licenseValidity).toLocaleDateString()
                                         : "-"}
                             </p>
@@ -286,6 +283,30 @@ export default function ProfileTab({
                                         )}
                                     </div>
                                 </div>
+                                {doc.expiry && (
+                                    <div className="mt-2">
+                                        <p className="text-sm text-black-500">Expiry Status:
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <Badge
+                                                        variant={doc.isExpired ? "destructive" : "default"}
+                                                        className="text-xs ml-2"
+                                                    >
+                                                        {doc.isExpired ? "Expired" : "Valid"}
+                                                    </Badge>
+                                                </TooltipTrigger>
+                                                <TooltipContent
+                                                    side="top"
+                                                    align="center"
+                                                    className="bg-gray-800 text-white p-2 rounded text-sm"
+                                                >
+                                                    <p>Expiry Date: {new Date(doc.expiry).toLocaleDateString()}</p>
+                                                    <p>{doc.isExpired ? "Document has expired" : "Document is valid"}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </p>
+                                    </div>
+                                )}
                                 <Dialog>
                                     <DialogTrigger asChild>
                                         <div
@@ -390,29 +411,7 @@ export default function ProfileTab({
                                     </DialogContent>
                                 </Dialog>
 
-                                {doc.expiry && (
-                                    <div className="mt-2">
-                                        <p className="text-sm text-black-500">Expiry Status:
-                                            <Tooltip>
-                                                <TooltipTrigger>
-                                                    <Badge
-                                                        variant={doc.isExpired ? "destructive" : "default"}
-                                                        className="text-xs"
-                                                    >
-                                                        {doc.isExpired ? "Expired" : "Valid"}
-                                                    </Badge>
-                                                </TooltipTrigger>
-                                                <TooltipContent
-                                                    side="top"
-                                                    align="center"
-                                                    className="bg-gray-800 text-white p-2 rounded text-sm"
-                                                >
-                                                    Document Expiry Status ({new Date(doc.expiry).toLocaleDateString()})
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </p>
-                                    </div>
-                                )}
+
                             </div>
                         ))}
                     </div>

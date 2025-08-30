@@ -57,9 +57,13 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
   };
 
   const handleSend = async () => {
+    console.log("handleSend called with selectedNotification:", selectedNotification);
+    
     if (selectedNotification) {
       try {
-        await sendMutation.mutateAsync({ templateId: selectedNotification.templateId || '' });
+        console.log("Sending notification with templateId:", selectedNotification.templateId);
+        const result = await sendMutation.mutateAsync({ templateId: selectedNotification.templateId || '' });
+        console.log("Send notification result:", result);
         toast.success("Notification sent successfully!", {
           style: {
             backgroundColor: "#009F7F",
@@ -68,14 +72,24 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
         });
         setSendDialogOpen(false);
         setSelectedNotification(null);
-      } catch (error) {
-        toast.error("Failed to send notification", {
+      } catch (error: any) {
+        console.error("Send notification error:", error);
+        console.error("Error response:", error?.response?.data);
+        toast.error(error?.response?.data?.message || "Failed to send notification", {
           style: {
             backgroundColor: "#FF0000",
             color: "#fff",
           },
         });
       }
+    } else {
+      console.error("No notification selected for sending");
+      toast.error("No notification selected", {
+        style: {
+          backgroundColor: "#FF0000",
+          color: "#fff",
+        },
+      });
     }
   };
 
@@ -153,6 +167,7 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
             size="sm"
             className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
             onClick={() => {
+              console.log("Send button clicked for notification:", row.original);
               setSelectedNotification(row.original);
               setSendDialogOpen(true);
             }}
@@ -220,24 +235,36 @@ const DeleteDialog = ({
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   loading: boolean;
-}) => (
-  <AlertDialog open={open} onOpenChange={onOpenChange}>
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>Delete Notification</AlertDialogTitle>
-        <AlertDialogDescription>
-          Are you sure you want to delete this notification? This action cannot be undone.
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
-        <AlertDialogAction onClick={onConfirm} disabled={loading}>
-          {loading ? "Deleting..." : "Delete"}
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
-);
+}) => {
+  const handleConfirm = () => {
+    console.log("Delete dialog confirm clicked");
+    onConfirm();
+  };
+
+  const handleCancel = () => {
+    console.log("Delete dialog cancel clicked");
+    onOpenChange(false);
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Notification</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this notification? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={handleCancel} disabled={loading}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirm} disabled={loading}>
+            {loading ? "Deleting..." : "Delete"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
 
 // Send Dialog Component
 const SendDialog = ({
@@ -250,23 +277,35 @@ const SendDialog = ({
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   loading: boolean;
-}) => (
-  <AlertDialog open={open} onOpenChange={onOpenChange}>
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>Send Notification</AlertDialogTitle>
-        <AlertDialogDescription>
-          Are you sure you want to send this notification to all customers? This action cannot be undone.
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
-        <AlertDialogAction onClick={onConfirm} disabled={loading}>
-          {loading ? "Sending..." : "Send"}
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
-);
+}) => {
+  const handleConfirm = () => {
+    console.log("Send dialog confirm clicked");
+    onConfirm();
+  };
+
+  const handleCancel = () => {
+    console.log("Send dialog cancel clicked");
+    onOpenChange(false);
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Send Notification</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to send this notification to all customers? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={handleCancel} disabled={loading}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirm} disabled={loading}>
+            {loading ? "Sending..." : "Send"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
 
 export { DeleteDialog, SendDialog };

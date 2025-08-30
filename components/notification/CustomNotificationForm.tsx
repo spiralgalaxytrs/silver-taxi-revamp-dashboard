@@ -273,13 +273,13 @@ export default function CustomNotificationForm({
                 <SelectItem value="customer">All Customers</SelectItem>
                 <SelectItem value="driver">All Drivers</SelectItem>
                 <SelectItem value="vendor">All Vendors</SelectItem>
-                <SelectItem value="none">None</SelectItem>
+                {/* <SelectItem value="none">None</SelectItem> */}
               </SelectContent>
             </Select>
           </div>
 
           {/* Type */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="type">Notification Type</Label>
             <Input
               id="type"
@@ -287,10 +287,10 @@ export default function CustomNotificationForm({
               onChange={(e) => setType(e.target.value)}
               placeholder="Enter notification type (optional)"
             />
-          </div>
+          </div> */}
 
           {/* Route */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="route">Route</Label>
             <Input
               id="route"
@@ -298,10 +298,10 @@ export default function CustomNotificationForm({
               onChange={(e) => setRoute(e.target.value)}
               placeholder="Enter route (optional)"
             />
-          </div>
+          </div> */}
 
           {/* Target Audience */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="targetAudience">Target Audience Type</Label>
             <Select value={targetAudience} onValueChange={setTargetAudience}>
               <SelectTrigger>
@@ -312,10 +312,10 @@ export default function CustomNotificationForm({
                 <SelectItem value="specific">Specific Users</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           {/* Target Customer IDs */}
-          {targetAudience === "specific" && target === "customer" && (
+          {/* {targetAudience === "specific" && target === "customer" && (
             <div className="space-y-2">
               <Label>Target Customer IDs</Label>
               <div className="flex flex-wrap gap-2 mt-2">
@@ -335,9 +335,8 @@ export default function CustomNotificationForm({
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Particular IDs Selection */}
+          )} */}
+{/* 
           {target !== 'none' && (
             <div className="space-y-2">
               <Label>Particular IDs (Optional)</Label>
@@ -358,7 +357,6 @@ export default function CustomNotificationForm({
                 isError={getErrorState()}
               />
               
-              {/* Show selected particular IDs */}
               {particularIds.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {particularIds.map((id, index) => (
@@ -378,10 +376,10 @@ export default function CustomNotificationForm({
                 </div>
               )}
             </div>
-          )}
+          )} */}
 
           {/* Scheduled At */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="scheduledAt">Scheduled At</Label>
             <Input
               id="scheduledAt"
@@ -390,10 +388,10 @@ export default function CustomNotificationForm({
               onChange={(e) => setScheduledAt(e.target.value)}
               placeholder="Schedule notification (optional)"
             />
-          </div>
+          </div> */}
 
           {/* Time */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="time">Time</Label>
             <Input
               id="time"
@@ -401,7 +399,7 @@ export default function CustomNotificationForm({
               onChange={(e) => setTime(e.target.value)}
               placeholder="Enter time (optional)"
             />
-          </div>
+          </div> */}
 
           {/* Image Upload */}
           <div className="space-y-2">
