@@ -51,14 +51,14 @@ const AdminSidebarItems: {
   dropdown?: DropdownItem[];
 }[] = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-    {
-      name: "Enquiries",
-      icon: Calendar,
-      dropdown: [
-        { name: "Enquiry", href: "/admin/enquiry", icon: SquareChevronRight },
-        { name: "Manual Enquiry", href: "/admin/enquiry/create", icon: SquareChevronRight },
-      ],
-    },
+    // {
+    //   name: "Enquiries",
+    //   icon: Calendar,
+    //   dropdown: [
+    //     { name: "Enquiry", href: "/admin/enquiry", icon: SquareChevronRight },
+    //     { name: "Manual Enquiry", href: "/admin/enquiry/create", icon: SquareChevronRight },
+    //   ],
+    // },
     {
       name: "Bookings",
       icon: Calendar,

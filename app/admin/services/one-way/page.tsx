@@ -42,7 +42,7 @@ export default function OneWayPage() {
       <div className="min-h-screen bg-white">
         <div className="p-8">
           <div className="mb-3 flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">Outstation</h1>
+            <h1 className="text-2xl font-semibold">Outstation - One Way</h1>
             <button
               onClick={() => setIsEditing(!isEditing)}
               className="text-green-600 hover:text-green-800 h-6 w-6"

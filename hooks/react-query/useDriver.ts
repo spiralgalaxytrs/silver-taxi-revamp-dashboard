@@ -15,7 +15,7 @@ import {
   toggleDriverStatus,
   adjustDriverWallet,
   verificationStatus,
-  expiryCheck,
+
   approveOrRejectDriverWalletRequest,
   getAllDriverWalletRequests,
   getDriverWalletRequestById,
@@ -133,13 +133,8 @@ export const useDriverVerification = () => {
   });
 };
 
-// ⌛ Expiry Check (license, RC, pollution, etc.)
-export const useDriverExpiryCheck = (id: string) =>
-  useQuery({
-    queryKey: ["driver-expiry", id],
-    queryFn: () => expiryCheck(id),
-    enabled: !!id,
-  });
+
+
 
 // ✅ Approve or Reject Driver Wallet Request
 export const useApproveOrRejectDriverWalletRequest = () => {

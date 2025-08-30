@@ -116,34 +116,6 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     accessorKey: "isContacted",
     header: "Contact Status",
     Cell: ({ row }) => {
-
-      const {
-        mutate: toggleContactStatus,
-        isPending: isLoading
-      } = useToggleContactStatus();
-
-      const id = row.original?.bookingId as string ?? "";
-      const handleContactToggle = async (newStatus: boolean) => {
-        toggleContactStatus({ id, status: newStatus }, {
-          onSuccess: (data: any) => {
-            toast.success(data?.message || 'Contact status updated successfully', {
-              style: {
-                backgroundColor: "#009F7F",
-                color: "#fff",
-              },
-            });
-          },
-          onError: (error: any) => {
-            toast.error(error?.response?.data?.message || 'Contact status update failed', {
-              style: {
-                backgroundColor: "#FF0000",
-                color: "#fff",
-              },
-            });
-          }
-        });
-      };
-
       const isContacted = row.getValue("isContacted") as boolean;
       const getStatusColor = (status: boolean) => {
         switch (status) {
@@ -158,34 +130,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return (
         <div className="flex items-center justify-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-              >
                 <Badge variant="outline" className={getStatusColor(isContacted)}>
                   {isContacted ? "Contacted" : "Not Contacted"}
-                  <ChevronDown className="ml-2 h-4 w-4" />
                 </Badge>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {/* Dropdown options for updating the status */}
-              <DropdownMenuItem
-                onClick={() => handleContactToggle(true)}
-                disabled={isLoading}
-              >
-                Contacted
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleContactToggle(false)}
-                disabled={isLoading}
-              >
-                Not Contacted
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       );
     },
@@ -746,8 +693,26 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "type",
-    header: "Booking Type",
+    id: "createdType",
+    header: "Created Type",
+    Cell: ({ row }) => {
+      const type = row.original.type;
+      const createdBy = row.original.createdBy;
+      
+      // Simple mapping based on API data
+      if (type === "App" && createdBy === "Vendor") {
+        return <div>Vendor App</div>;
+      } else if (type === "App" && createdBy === "User") {
+        return <div>Customer App</div>;
+      } else if (type === "Website") {
+        return <div>Website</div>;
+      } else if (type === "Manual" || createdBy === "Admin") {
+        return <div>Admin Panel</div>;
+      } else {
+        // Fallback to show the actual values if they don't match expected patterns
+        return <div>{type || createdBy || "-"}</div>;
+      }
+    },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
@@ -774,6 +739,8 @@ export const columns: MRT_ColumnDef<Booking>[] = [
             return "bg-[#e31e1e] text-white";
           case "Started":
             return "bg-[#327bf0] text-white";
+          case "Booking Confirmed":
+            return "bg-[#5BFF1A] text-black-100";
           case "Reassign":
             return "bg-[#8B5DFF] text-white";
           case "Manual Completed":
@@ -923,12 +890,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
-  {
-    accessorKey: "createdBy",
-    header: "Created By",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-  },
+
   {
     id: "createdAt",
     header: "Bookings At",

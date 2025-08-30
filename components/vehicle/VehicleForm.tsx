@@ -284,7 +284,7 @@ const VehicleForm = ({ id }: { id?: string }) => {
                                         onChange={(e) => handleInputChange('bags', Number(e.target.value))}
                                     />
 
-                                    <Label htmlFor="bags">Permit Charge</Label>
+                                    {/* <Label htmlFor="bags">Permit Charge</Label>
                                     <Input
                                         id="permitCharge"
                                         className='w-full border-grey py-7'
@@ -292,9 +292,9 @@ const VehicleForm = ({ id }: { id?: string }) => {
                                         placeholder="Enter extra kilometer price mt-1"
                                         value={formData.permitCharge}
                                         onChange={(e) => handleInputChange('permitCharge', Number(e.target.value))}
-                                    />
+                                    /> */}
 
-                                    <Label htmlFor="driverBeta">Driver Beta</Label>
+                                    {/* <Label htmlFor="driverBeta">Driver Beta</Label>
                                     <Input
                                         id="driverBeta"
                                         className='w-full border-grey py-7'
@@ -302,7 +302,7 @@ const VehicleForm = ({ id }: { id?: string }) => {
                                         placeholder="Enter driver beta"
                                         value={formData.driverBeta}
                                         onChange={(e) => handleInputChange('driverBeta', Number(e.target.value))}
-                                    />
+                                    /> */}
                                     <div className='pt-3' />
 
                                     <Label htmlFor="vehicleImage">Vehicle Image</Label>

@@ -31,16 +31,22 @@ import {
   useToggleTripStatus,
   useTogglePaymentStatus,
   useDeleteBooking,
-  useFetchBookings
+  useFetchBookings,
+  useToggleContactStatus
 } from "hooks/react-query/useBooking";
+import {
+  useDrivers
+} from 'hooks/react-query/useDriver';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from "components/ui/dropdown-menu";
-import { Eye, Pencil, Trash } from 'lucide-react';
+import { Eye, Pencil, Trash, CheckCircle, HelpCircle } from 'lucide-react';
 import ActionDropdown from 'components/others/ActionComponent';
+import { DriverSelectionPopup } from "components/driver/SelectDriver";
+import TooltipComponent from "components/others/TooltipComponent";
 interface BookingPopupProps {
   trigger: React.ReactNode;
   booking: Record<string, any> | null;
@@ -60,6 +66,102 @@ export function BookingPopup({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const router = useRouter();
+
+  const {
+    mutate: toggleContactStatus,
+  } = useToggleContactStatus();
+
+  // Driver assignment functionality
+  const { data: drivers = [], isPending: isLoading, isError } = useDrivers({ enabled: open });
+  const { mutate: assignDriver } = useAssignDriver();
+  const { mutate: assignAllDriver } = useAssignAllDriver();
+
+  const handleDriverAssignment = async (driverId: string) => {
+    try {
+      if (!booking?.bookingId) return;
+
+      assignDriver({ bookingId: booking.bookingId, driverId }, {
+        onSuccess: (data: any) => {
+          toast.success(data?.message || 'Driver assigned successfully', {
+            style: {
+              backgroundColor: "#009F7F",
+              color: "#fff",
+            },
+          });
+        },
+        onError: (error: any) => {
+          toast.error(error?.response?.data?.message || 'Assignment failed', {
+            style: {
+              backgroundColor: "#FF0000",
+              color: "#fff",
+            },
+          });
+        }
+      });
+
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Assignment failed', {
+        style: {
+          backgroundColor: "#FF0000",
+          color: "#fff",
+        },
+      });
+    }
+  };
+
+  const handleAllDriverAssign = async () => {
+    try {
+      if (!booking?.bookingId) return;
+
+      assignAllDriver({ id: booking.bookingId }, {
+        onSuccess: (data: any) => {
+          toast.success(data?.message || 'Notification sent to eligible drivers successfully', {
+            style: {
+              backgroundColor: "#009F7F",
+              color: "#fff",
+            },
+          });
+        },
+        onError: (error: any) => {
+          toast.error(error?.response?.data?.message || 'Assign All drivers failed', {
+            style: {
+              backgroundColor: "#FF0000",
+              color: "#fff",
+            },
+          });
+        }
+      });
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Assign All drivers failed', {
+        style: {
+          backgroundColor: "#FF0000",
+          color: "#fff",
+        },
+      });
+    }
+  };
+
+  // Auto-set contact status to "Contacted" when popup opens
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    
+    // When popup opens and booking is not contacted, automatically set to contacted
+    if (newOpen && booking && !booking.isContacted) {
+      toggleContactStatus({ 
+        id: booking.bookingId, 
+        status: true 
+      }, {
+        onSuccess: (data: any) => {
+          // Silently update the contact status without showing toast
+          // The table will automatically refresh and show the updated status
+        },
+        onError: (error: any) => {
+          // Silently handle error without showing toast
+          console.error('Failed to update contact status:', error);
+        }
+      });
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -152,7 +254,7 @@ export function BookingPopup({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent
         className="w-[800px] max-h-[90vh] overflow-y-auto rounded-lg p-8"
@@ -167,6 +269,48 @@ export function BookingPopup({
 
           {bookingDetails && (
             <div className="grid gap-4">
+              {/* Driver Assignment Button - Top Left */}
+              <div className="flex items-center gap-3 mb-4">
+                <Label className="text-sm font-medium">Assign Driver:</Label>
+                {(() => {
+                  const currentBooking = booking;
+                  const bookedDriverId = currentBooking?.driverId;
+                  const assignedDriver = drivers.find((driver: any) => String(driver.driverId) === String(bookedDriverId));
+
+                  return (
+                    <DriverSelectionPopup
+                      trigger={
+                        <Button variant="outline" size="sm" disabled={isLoading}>
+                          {assignedDriver ?
+                            <p className="flex items-center gap-2 text-sm font-medium">
+                              {assignedDriver.name}
+                              <TooltipComponent name={booking?.driverId ? booking?.driverAccepted || "" : "Assign Driver"}>
+                                {currentBooking?.driverAccepted === "accepted" ?
+                                  <span className="text-xs text-green-500">
+                                    <CheckCircle className="h-4 w-4" />
+                                  </span>
+                                  : <span className="text-xs text-red-500">
+                                    <HelpCircle className="h-4 w-4" />
+                                  </span>
+                                }
+                              </TooltipComponent>
+                            </p>
+                            : "Assign Driver"}
+                        </Button>
+                      }
+                      onSelectDriver={handleDriverAssignment}
+                      assignAllDriver={handleAllDriverAssign}
+                      assignedDriver={assignedDriver}
+                      bookedDriverId={bookedDriverId || ""}
+                      status={booking?.status || ""}
+                      drivers={drivers}
+                      isLoading={isLoading}
+                      isError={isError}
+                    />
+                  );
+                })()}
+              </div>
+
               <ActionDropdown
                 id={booking?.bookingId}
                 type="booking"
