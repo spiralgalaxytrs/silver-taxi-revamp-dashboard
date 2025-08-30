@@ -502,7 +502,7 @@ export default function BookingDetailsPage() {
         <Button variant="ghost" size="icon">
           {/* Back button icon would go here */}
         </Button>
-        <h1 className="text-2xl font-bold text-gray-800">Trip Details</h1>
+        {/* <h1 className="text-2xl font-bold text-gray-800">Trip Details</h1> */}
       </div>
 
       <Tabs defaultValue="details">
@@ -510,9 +510,9 @@ export default function BookingDetailsPage() {
           <TabsTrigger className="tabs-trigger" value="details">
             Trip Details
           </TabsTrigger>
-          <TabsTrigger className="tabs-trigger" value="activity">
+          {/* <TabsTrigger className="tabs-trigger" value="activity">
             Activity
-          </TabsTrigger>
+          </TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="details">
