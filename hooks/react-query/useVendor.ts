@@ -79,8 +79,8 @@ export const useBulkDeleteVendors = () => {
 export const useToggleVendorStatus = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, status }: { id: string; status: boolean }) =>
-            toggleVendorStatus({ id, status }),
+        mutationFn: ({ id, status, reason }: { id: string; status: boolean, reason: string  }) =>
+            toggleVendorStatus({ id, status, reason }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['vendors'] });
         },

@@ -234,7 +234,7 @@ export const columns: MRT_ColumnDef<Driver>[] = [
                   <div>
                     <div className="flex flex-col gap-2">
                       {/* <h4 className="text-sm font-semibold">Reason</h4> */}
-                      <p className="text-sm"><span className="font-semibold">Old Reason:</span> {inActiveReason}</p>
+                      {inActiveReason && <p className="text-sm"><span className="font-semibold">Old Reason:</span> {inActiveReason}</p>}
                       <Input
                         type="text"
                         placeholder="Enter Reason"
@@ -242,7 +242,7 @@ export const columns: MRT_ColumnDef<Driver>[] = [
                         onChange={(e) => setReason(e.target.value)}
                       />
                       <div className="flex items-center gap-2">
-                        <p className="text-sm">Status</p>
+                        <p className="text-sm">Status change to :</p>
                         <Badge variant={status === true ? 'default' : 'destructive'}>
                           {status === true ? 'Active' : 'Inactive'}
                         </Badge>
