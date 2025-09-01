@@ -342,6 +342,13 @@ export default function BookingsPage() {
                 >
                   Create Booking
                 </Button>
+                {/* <Button
+                  variant={"outline"}
+                  className='py-6'
+                  onClick={() => router.push('/admin/bookings/new')}
+                >
+                  New Booking Form
+                </Button> */}
 {/* 
                 {isFilterApplied && <Button
                   variant={"primary"}

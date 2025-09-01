@@ -124,8 +124,8 @@ export function DriverSelectionPopup({
         : { lat: 11.1271, lng: 78.6569 };
 
     return (
-        <Dialog open={open} onOpenChange={status === "Not-Started" ? setOpen : undefined}>
-            <DialogTrigger asChild className={status === "Not-Started" ? "" : "pointer-events-none"}>
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
                 {trigger}
             </DialogTrigger>
             <DialogContent
@@ -165,7 +165,7 @@ export function DriverSelectionPopup({
                                         lat: driver.geoLocation?.latitude || 0,
                                         lng: driver.geoLocation?.longitude || 0,
                                     }}
-                                    onClick={() => handleSelectDriver(driver.driverId)}
+                                    onClick={() => handleSelectDriver({driverId: driver.driverId, geoLocation: driver.geoLocation})}
                                 />
                             );
                         })}

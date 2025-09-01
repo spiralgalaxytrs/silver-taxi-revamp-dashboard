@@ -16,8 +16,11 @@ import { useEnquiries } from 'hooks/react-query/useEnquiry';
 import { useDrivers } from 'hooks/react-query/useDriver';
 import { useInvoices } from 'hooks/react-query/useInvoice';
 import ShortcutSection from "components/others/ShortCut"
+import CreateCustomerForm from "components/customer/CreateCustomerForm";
+import { useState } from "react";
 
 export default function AdminDashboard() {
+  const [showCreateCustomerModal, setShowCreateCustomerModal] = useState(false);
 
   const { data: bookings = [], isPending: isLoading, refetch: refetchBookings } = useFetchBookings();
   const { data: enquiries = [], isPending: isEnquiriesLoading, refetch: refetchEnquiries } = useEnquiries();
@@ -44,6 +47,7 @@ export default function AdminDashboard() {
 
   return (
     <>
+      <CreateCustomerForm open={showCreateCustomerModal} onOpenChange={setShowCreateCustomerModal} showTrigger={false} />
       <div className="min-h-screen space-y-8 bg-slate-50 p-8">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard</h2>
 
@@ -81,10 +85,11 @@ export default function AdminDashboard() {
             },
             {
               title: "Create Customer",
-              href: "/admin/customers/create",
+              href: "#",
               icon: Users,
               color: "from-amber-500 to-orange-600",
               hoverColor: "group-hover:from-amber-600 group-hover:to-orange-700",
+              onClick: () => setShowCreateCustomerModal(true),
             },
             {
               title: "Create Vehicle",
@@ -152,7 +157,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card className="border-none bg-white shadow-md">
             <CardContent className="p-6">
-              <BarChartComponent createdBy='Admin' bookings={bookings} isLoading={isLoading} enquiries={enquiries} />
+              <BarChartComponent createdBy='Admin' bookings={bookings} isLoading={isLoading} />
             </CardContent>
           </Card>
           <Card className="border-none bg-white shadow-md">
@@ -199,7 +204,7 @@ export default function AdminDashboard() {
 
         {/* Enquiries */}
 
-        <EnquiryTable enquiries={enquiries} refetch={refetchEnquiries} isLoading={isEnquiriesLoading} />
+        {/* <EnquiryTable enquiries={enquiries} refetch={refetchEnquiries} isLoading={isEnquiriesLoading} /> */}
       </div>
     </>
   )

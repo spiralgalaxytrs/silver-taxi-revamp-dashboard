@@ -17,10 +17,15 @@ import { useCreateCustomer } from "hooks/react-query/useCustomer";
 
 interface CreateCustomerFormProps {
   onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
-export default function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function CreateCustomerForm({ onSuccess, open, onOpenChange, showTrigger = true }: CreateCustomerFormProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = open !== undefined ? open : internalOpen;
+  const setIsOpen = onOpenChange || setInternalOpen;
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -53,10 +58,7 @@ export default function CreateCustomerForm({ onSuccess }: CreateCustomerFormProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     const customerData = {
       name: formData.name.trim(),
@@ -77,15 +79,12 @@ export default function CreateCustomerForm({ onSuccess }: CreateCustomerFormProp
         onSuccess?.();
       },
       onError: (error: any) => {
-        toast.error(
-          error?.response?.data?.message || "Failed to create customer",
-          {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
-          }
-        );
+        toast.error(error?.response?.data?.message || "Failed to create customer", {
+          style: {
+            backgroundColor: "#FF0000",
+            color: "#fff",
+          },
+        });
       },
     });
   };
@@ -104,14 +103,10 @@ export default function CreateCustomerForm({ onSuccess }: CreateCustomerFormProp
   };
 
   const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
     const phoneNumber = value.replace(/\D/g, '');
-    
-    // Limit to 10 digits
     if (phoneNumber.length <= 10) {
       return phoneNumber;
     }
-    
     return phoneNumber.slice(0, 10);
   };
 
@@ -122,12 +117,14 @@ export default function CreateCustomerForm({ onSuccess }: CreateCustomerFormProp
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-[#009F7F] hover:bg-[#008F6F] text-white">
-          <Plus className="h-4 w-4 mr-2" />
-          Create Customer
-        </Button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button className="bg-[#009F7F] hover:bg-[#008F6F] text-white">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Customer
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New Customer</DialogTitle>

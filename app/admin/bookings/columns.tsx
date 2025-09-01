@@ -493,7 +493,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       return (
         <DriverSelectionPopup
           trigger={
-            <Button variant="outline" size="sm" disabled={isLoading}>
+            <Button variant="outline" size="sm" disabled={false}>
                 {assignedDriver ?
                   <p className="flex items-center gap-2 text-sm font-medium">
                     {assignedDriver.name}

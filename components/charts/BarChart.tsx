@@ -25,10 +25,10 @@ const chartConfig = {
     label: "Booking",
     color: "hsl(var(--chart-1))",
   },
-  Enquiry: {
-    label: "Enquiry",
-    color: "hsl(var(--chart-2))",
-  },
+  // Enquiry: {
+  //   label: "Enquiry",
+  //   color: "hsl(var(--chart-2))",
+  // },
 } satisfies ChartConfig
 
 type TimeFilter = 'day' | 'week' | 'month' | 'year' | 'lastYear'
@@ -52,12 +52,12 @@ const ChartLegend = ({ config }: { config: ChartConfig }) => {
 interface BarChartProps {
   createdBy: string
   bookings: any[],
-  enquiries: any[],
+  // enquiries: any[],
   isLoading: boolean
 }
 
-export function BarChartComponent({ createdBy, bookings, enquiries, isLoading }: BarChartProps) {
-  const [data, setData] = useState<{ category: string; Booking: number; Enquiry: number }[]>([])
+export function BarChartComponent({ createdBy, bookings, isLoading }: BarChartProps) {
+  const [data, setData] = useState<{ category: string; Booking: number;}[]>([])
   const [filter, setFilter] = useState<TimeFilter>('week')
 
   const formatHourToAMPM = (hour: number) => {
@@ -109,7 +109,7 @@ export function BarChartComponent({ createdBy, bookings, enquiries, isLoading }:
       const result = categories.map(category => ({
         category,
         Booking: 0,
-        Enquiry: 0
+        // Enquiry: 0
       }))
 
       if (createdBy === "Vendor") {
@@ -122,14 +122,14 @@ export function BarChartComponent({ createdBy, bookings, enquiries, isLoading }:
           if (index !== -1) result[index].Booking++
         })
 
-        const filteredEnquiries = enquiries.filter(enquiry => enquiry.createdBy === 'Vendor');
-        filteredEnquiries.forEach(enquiry => {
-          const date = dayjs(enquiry.createdAt)
-          if (!date.isAfter(startDate)) return
+        // const filteredEnquiries = enquiries.filter((enquiry: any) => enquiry.createdBy === 'Vendor');
+        // filteredEnquiries.forEach(enquiry => {
+        //   const date = dayjs(enquiry.createdAt)
+        //   if (!date.isAfter(startDate)) return
 
-          const index = getCategoryIndex(date, filter, categories, startDate)
-          if (index !== -1) result[index].Enquiry++
-        })
+        //   const index = getCategoryIndex(date, filter, categories, startDate)
+        //       if (index !== -1) result[index].Enquiry++
+        // })
       }
 
       if (createdBy === "Admin") {
@@ -142,20 +142,20 @@ export function BarChartComponent({ createdBy, bookings, enquiries, isLoading }:
         })
 
         // Process enquiries
-        enquiries.forEach(enquiry => {
-          const date = dayjs(enquiry.createdAt)
-          if (!date.isAfter(startDate)) return
+        // enquiries.forEach((enquiry: any) => {
+        //   const date = dayjs(enquiry.createdAt)
+        //   if (!date.isAfter(startDate)) return
 
-          const index = getCategoryIndex(date, filter, categories, startDate)
-          if (index !== -1) result[index].Enquiry++
-        })
+        //   const index = getCategoryIndex(date, filter, categories, startDate)
+        //   if (index !== -1) result[index].Enquiry++
+        // })
       }
 
       setData(result)
     }
 
     processData()
-  }, [bookings, enquiries, filter, createdBy]) // Dependencies for data processing
+  }, [bookings, filter, createdBy]) // Dependencies for data processing
 
   const getCategoryIndex = (date: dayjs.Dayjs, filter: TimeFilter, categories: string[], startDate: dayjs.Dayjs): number => {
     switch (filter) {
@@ -178,7 +178,7 @@ export function BarChartComponent({ createdBy, bookings, enquiries, isLoading }:
     <Card>
       <CardHeader className="flex flex-row justify-between items-center">
         <div>
-          <CardTitle>Booking & Enquiry</CardTitle>
+          <CardTitle>Booking</CardTitle>
           <CardDescription className="mt-2">
             {filter === 'lastYear' ? 'Last Year' : `Current ${filter.charAt(0).toUpperCase() + filter.slice(1)}`}
           </CardDescription>
@@ -211,7 +211,7 @@ export function BarChartComponent({ createdBy, bookings, enquiries, isLoading }:
               content={<ChartTooltipContent indicator="dashed" />}
             />
             <Bar dataKey="Booking" fill="var(--color-Booking)" radius={4} />
-            <Bar dataKey="Enquiry" fill="var(--color-Enquiry)" radius={4} />
+            {/* <Bar dataKey="Enquiry" fill="var(--color-Enquiry)" radius={4} /> */}
           </BarChart>
         </ChartContainer>
         <ChartLegend config={chartConfig} />
