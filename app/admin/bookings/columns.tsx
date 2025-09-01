@@ -740,7 +740,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
           case "Started":
             return "bg-[#327bf0] text-white";
           case "Booking Confirmed":
-            return "bg-[#5BFF1A] text-black-100";
+            return "bg-[#FF637C] text-white";
           case "Reassign":
             return "bg-[#8B5DFF] text-white";
           case "Manual Completed":

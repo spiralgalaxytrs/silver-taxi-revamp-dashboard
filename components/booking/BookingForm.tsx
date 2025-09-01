@@ -93,7 +93,7 @@ type Booking = {
     type: "Website" | "App" | "Manual";
     paymentStatus: "Unpaid" | "Paid" | "Partial Paid";
     serviceType: "One way" | "Round trip" | "Airport Pickup" | "Airport Drop" | "Day Packages" | "Hourly Packages";
-    status: "Completed" | "Cancelled" | "Not-Started" | "Started";
+    status: "Booking Confirmed" |"Completed" | "Cancelled" | "Not-Started" | "Started";
     createdBy: "Admin" | "Vendor";
     toll?: number | null;
     hill?: number | null;
@@ -163,7 +163,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         advanceAmount: 0,
         type: 'Manual',
         paymentMethod: 'Cash',
-        status: 'Not-Started',
+        status: 'Booking Confirmed',
         createdBy: createdBy as "Admin" | "Vendor",
         paymentStatus: 'Unpaid',
         toll: 0,
