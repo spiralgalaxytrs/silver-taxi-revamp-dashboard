@@ -191,9 +191,9 @@ export function BookingPopup({
       "Email": booking.email || "-",
       "Pick Up": booking.pickup || "-",
       "Drop": booking.drop || "-",
-    "Stops": Array.isArray(booking.stops) && booking.stops.length
-  ? booking.stops.map(s => s.location || s).join(", ")
-  : "-",
+      "Stops": Array.isArray(booking.stops) && booking.stops.length
+        ? booking.stops.map(s => s.location || s).join(", ")
+        : "-",
 
       "Pickup Date & Time": formatDate(booking.pickupDateTime || "") || "-",
       "Pickup Date": formatDate(booking.pickupDateTime || "") || "-",
@@ -280,7 +280,7 @@ export function BookingPopup({
                   return (
                     <DriverSelectionPopup
                       trigger={
-                        <Button variant="outline" size="sm" disabled={isLoading}>
+                        <Button variant="outline" size="sm" disabled={false}>
                           {assignedDriver ?
                             <p className="flex items-center gap-2 text-sm font-medium">
                               {assignedDriver.name}

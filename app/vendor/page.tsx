@@ -127,7 +127,9 @@ export default function VendorDashboard() {
         <div className="flex justify-center w-full gap-8">
           <Card className="border-none bg-white shadow-md w-[60%]">
             <CardContent className="p-6">
-              <BarChartComponent createdBy="Vendor" bookings={bookings} enquiries={enquiries} isLoading={isLoading} />
+              <BarChartComponent createdBy="Vendor" bookings={bookings} 
+              // enquiries={enquiries} 
+              isLoading={isLoading} />
             </CardContent>
           </Card>
         </div>
