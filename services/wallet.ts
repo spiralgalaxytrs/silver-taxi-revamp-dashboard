@@ -30,3 +30,8 @@ export const fetchAllDriverTransactions = async (): Promise<WalletTransaction[]>
   const res = await axios.get(`/v1/drivers/wallet/transactions`);
   return res.data.data;
 };
+
+export const vendorTransactionsReasonAdd = async (walletTransactionId: string, reason: string): Promise<WalletTransaction[]> => {
+  const res = await axios.post(`/v1/vendors/wallet/${walletTransactionId}/transactions`, { reason });
+  return res.data.data;
+};

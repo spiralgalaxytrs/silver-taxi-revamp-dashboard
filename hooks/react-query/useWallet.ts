@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   fetchVendorTransactions,
   fetchDriverTransactions,
@@ -6,6 +6,7 @@ import {
   fetchAllDriverTransactions,
   fetchVendorTransactionsByVendor,
   fetchVendorWalletAmount,
+  vendorTransactionsReasonAdd
 } from 'services/wallet';
 
 // Fetch transactions of a specific vendor by ID
@@ -49,6 +50,18 @@ export const useVendorTransactionsByVendor = () => {
     queryFn: fetchVendorTransactionsByVendor,
   });
 };
+
+// Fetch all vendor wallet transactions by vendor
+export const useVendorTransactionsReasonAdd = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      vendorTransactionsReasonAdd(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+    }
+  });
+}
 
 // Fetch all driver wallet transactions
 export const useAllDriverTransactions = () => {

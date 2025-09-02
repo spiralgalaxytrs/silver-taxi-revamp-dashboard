@@ -33,6 +33,9 @@ export interface wallet {
     vendorId: string;
     // driverId: string;
     amount: number;
+
+    status: "Paid" | "Unpaid";
+
     createdAt: string;
     updatedAt: string;
 }

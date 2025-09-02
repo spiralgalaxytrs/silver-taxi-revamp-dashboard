@@ -133,7 +133,8 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
                 amount: transaction.amount,
                 description: transaction.description,
                 createdAt: transaction.createdAt,
-                remark: transaction.remark
+                remark: transaction.remark,
+                status: transaction.status
             }));
     }, [id, showVendorTransactions, vendorTransactions]);
 
