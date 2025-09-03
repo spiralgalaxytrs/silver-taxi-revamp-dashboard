@@ -150,7 +150,7 @@ export default function PackageServiceSection({ isEditing, serviceId, title }: S
                                             <Label className="text-sm">SGST %<span className="text-red-500 ml-1">*</span></Label>
                                             <Input
                                                 type="number"
-                                                value={updatedService.tax.SGST || 0}
+                                                value={updatedService?.tax?.SGST || 0}
                                                 className="mt-3"
                                                 onChange={(e) => handleTaxChange("SGST", Number(e.target.value))}
                                             />
@@ -159,7 +159,7 @@ export default function PackageServiceSection({ isEditing, serviceId, title }: S
                                             <Label className="text-sm">IGST %<span className="text-red-500 ml-1">*</span></Label>
                                             <Input
                                                 type="number"
-                                                value={updatedService.tax.IGST || 0}
+                                                value={updatedService?.tax?.IGST || 0}
                                                 className="mt-3"
                                                 onChange={(e) => handleTaxChange("IGST", Number(e.target.value))}
                                             />
