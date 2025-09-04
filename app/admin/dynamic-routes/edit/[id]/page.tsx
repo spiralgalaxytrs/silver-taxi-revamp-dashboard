@@ -158,7 +158,7 @@ const EditRoutePage: React.FC = () => {
                                             {!imageURL && (
                                                 <>
                                                     <Upload className="text-gray-600 text-4xl mb-2" />
-                                                    <p className="text-gray-600 text-sm mb-2">Click to upload or drag and drop</p>
+                                                    <p className="text-gray-600 text-sm mb-2">Click to upload</p>
                                                     <span className="text-xs text-gray-400">Only image files (JPG, PNG, etc.)</span>
                                                     <input
                                                         id="routeImage"

@@ -52,7 +52,7 @@ export function PackageTariffSection({
     const [distanceLimit, setDistanceLimit] = useState("");
     const [priceInput, setPriceInput] = useState("");
     const [status, setStatus] = useState(true);
-    const [driverBeta, setDriverBeta] = useState<number>(0);
+    
 
     // Use ref to store latest localTariffs to avoid dependency issues
     const localTariffsRef = useRef(localTariffs);
@@ -195,7 +195,6 @@ export function PackageTariffSection({
             vehicleId,
             type,
             createdBy,
-            driverBeta: Number(driverBeta),
         };
         setLocalTariffs((prev) => ({
             ...prev,
@@ -251,8 +250,11 @@ export function PackageTariffSection({
                 vehicleId: targetVehicleId,
                 type,
                 createdBy,
-                driverBeta: Number(driverBeta),
+                driverBeta: tariffData[0]?.driverBeta,
             };
+
+            console.log("Tariff data: >> ", tariffData[0]?.driverBeta);
+            console.log("Tariff data to send: >> ", tariffDataToSend);
 
             const existingTariff = packageTariffs.find(
                 (t: PackageVehicleTariff) =>
