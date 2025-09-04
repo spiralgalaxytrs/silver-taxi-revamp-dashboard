@@ -274,7 +274,7 @@ export default function AddDriverPage() {
                                     <Label htmlFor="licenseImageFile" className="flex flex-col items-center cursor-pointer">
                                         {!formData.licenseImage && <>
                                             <Upload className="text-gray-600 text-4xl mb-2" />
-                                            <p className="text-gray-600 text-sm mb-2">Click to upload or drag and drop</p>
+                                            <p className="text-gray-600 text-sm mb-2">Click to upload</p>
                                             <span className="text-xs text-gray-400">Only image files (Webp,SVG, PNG, etc.) max size 2MB</span>
                                             <input
                                                 id="licenseImageFile"

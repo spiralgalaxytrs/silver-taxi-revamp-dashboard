@@ -58,7 +58,7 @@ export function OfferPopup({ trigger, id, title = 'Offer Details', width, size =
             const offer = offers.find((offer) => offer.offerId === id);
             if (offer) {
                 const formattedOffer = {
-                    "Offer Id": offer.offerId || '-',
+                    // "Offer Id": offer.offerId || '-',
                     "Name": offer.offerName || '-',
                     "Description": offer.description || '-',
                     "Keywords": offer.keywords || '-',

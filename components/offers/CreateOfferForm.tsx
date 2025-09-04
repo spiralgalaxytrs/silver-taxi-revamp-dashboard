@@ -125,9 +125,9 @@ export function CreateOfferForm() {
 
             await createOffer(offerData);
 
-             const { statusCode, message } = useOfferStore.getState();
+            const { statusCode, message } = useOfferStore.getState();
 
-             if (statusCode === 400) {
+            if (statusCode === 400) {
                 toast.error(message || "An active offer already exists", {
                     style: {
                         background: '#FF0000',
@@ -141,7 +141,7 @@ export function CreateOfferForm() {
                         color: '#fff'
                     }
                 });
-    
+
                 // Reset form
                 setFormData({
                     offerName: '',
@@ -253,7 +253,7 @@ export function CreateOfferForm() {
                                     />
                                 </div>
 
-                                 <div className="space-y-2">
+                                <div className="space-y-2">
                                     <Label htmlFor="title">Title <span className='text-red-500'>*</span></Label>
                                     <Input
                                         required
@@ -353,7 +353,7 @@ export function CreateOfferForm() {
                                         <Label htmlFor="bannerImage" className="flex flex-col items-center w-full">
                                             {!bannerImageURL && <>
                                                 <Upload className="text-gray-600 text-4xl mb-2" />
-                                                <p className="text-gray-600 text-sm mb-2">Click to upload or drag and drop</p>
+                                                <p className="text-gray-600 text-sm mb-2">Click to upload</p>
                                                 <span className="text-xs text-gray-400">Only image files (JPG, PNG, etc.)</span>
                                                 <input
                                                     id="bannerImage"
