@@ -316,7 +316,7 @@ const VehicleForm = ({ id }: { id?: string }) => {
                                         <Label htmlFor="vehicleImageFile" className="flex flex-col items-center cursor-pointer">
                                             {!formData.imageUrl && <>
                                                 <Upload className="text-gray-600 text-4xl mb-2" />
-                                                <p className="text-gray-600 text-sm mb-2">Click to upload or drag and drop</p>
+                                                <p className="text-gray-600 text-sm mb-2">Click to upload</p>
                                                 <span className="text-xs text-gray-400">Only image files (Webp,SVG, PNG, etc.) max size 200KB</span>
                                                 <input
                                                     id="vehicleImageFile"
