@@ -1,4 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogFooter,
+  DialogHeader
+} from 'components/ui/dialog';
+import { Button } from 'components/ui/button';
+
+
 
 interface OptionType {
   label: string;
@@ -69,7 +79,7 @@ const InputPicker: React.FC<InputPickerProps> = ({
       {isDropdownOpen && (
         <div className="absolute top-full left-0 w-full bg-white border mt-1 shadow-md">
           <ul>
-            {data.map((option,index) => (
+            {data.map((option, index) => (
               <li
                 key={index}
                 onClick={() => {
@@ -98,21 +108,27 @@ const InputPicker: React.FC<InputPickerProps> = ({
       )}
 
       {isCreateMode && (
-        <div className="mt-2 flex items-center">
-          <button
-            onClick={handleCreateNewValue}
-            className="bg-blue-500 text-white py-1 px-2 rounded"
-          >
-            Create
-          </button>
-          <button
-            onClick={() => setIsCreateMode(false)}
-            className="ml-2 text-gray-500"
-          >
-            Cancel
-          </button>
-        </div>
+        <Dialog open={isCreateMode} onOpenChange={setIsCreateMode}>
+          <DialogContent className="rounded-2xl max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Create New Vehicle Type</DialogTitle>
+            </DialogHeader>
+
+            <div className="py-4">
+              {/* Optional: add form fields here if needed */}
+              Are you sure you want to create a new type?
+            </div>
+
+            <DialogFooter>
+              <Button onClick={handleCreateNewValue}>Create</Button>
+              <Button variant="ghost" onClick={() => setIsCreateMode(false)}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
+
     </div>
   );
 };

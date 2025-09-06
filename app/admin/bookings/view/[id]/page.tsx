@@ -105,7 +105,7 @@ export default function BookingDetailsPage() {
     { key: 'pricePerKm', label: 'Per Km', format: formatCurrency },
     { key: 'driverBeta', label: 'Driver Beta', format: formatCurrency },
     { key: 'duration', label: 'Total Duration' },
-    { key: 'estimatedAmount', label: 'Estimation Fare', format: formatCurrency },
+    { key: 'estimatedAmount', label: 'Km Base Fare', format: formatCurrency },
     { key: 'taxAmount', label: 'Tax Amount', format: formatCurrency },
     { key: 'discountAmount', label: 'Discount Amount', format: formatCurrency },
     { key: 'advanceAmount', label: 'Advance Amount', format: formatCurrency },
@@ -121,7 +121,7 @@ export default function BookingDetailsPage() {
     { key: 'pricePerKm', label: 'Per Km', format: formatCurrency },
     { key: 'tripCompletedDriverBeta', label: 'Driver Beta', format: formatCurrency },
     { key: 'tripCompletedDuration', label: 'Total Duration' },
-    { key: 'tripCompletedEstimatedAmount', label: 'Estimation Fare', format: formatCurrency },
+    { key: 'tripCompletedEstimatedAmount', label: 'Km Base Fare', format: formatCurrency },
     { key: 'tripCompletedTaxAmount', label: 'Tax Amount', format: formatCurrency },
     { key: 'statePermit', label: 'State Permit', format: formatCurrency, optional: true },
     { key: 'tollCharges', label: 'Toll Charges', format: formatCurrency, optional: true },
@@ -131,7 +131,7 @@ export default function BookingDetailsPage() {
   ];
 
   const nonEditableAfterFields = [
-    'pricePerKm', 'tripCompletedDuration',
+    'tripCompletedDistance', 'pricePerKm', 'tripCompletedDuration',
     'tripCompletedEstimatedAmount',
     "tripCompletedDriverBeta",
     'tripCompletedFinalAmount', 'tripCompletedTaxAmount',
@@ -762,8 +762,14 @@ export default function BookingDetailsPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  {renderField({ key: 'startOdometerValue', label: 'Start Odometer Value' }, 'after')}
-                  {renderField({ key: 'endOdometerValue', label: 'End Odometer Value' }, 'after')}
+                  <div className="space-y-1">
+                    <Label className="text-sm text-gray-600">Start Odometer Value</Label>
+                    <div className="font-medium">{booking?.startOdometerValue ?? '-'}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm text-gray-600">End Odometer Value</Label>
+                    <div className="font-medium">{booking?.endOdometerValue ?? '-'}</div>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

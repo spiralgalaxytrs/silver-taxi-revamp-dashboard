@@ -248,6 +248,7 @@ const VehicleForm = ({ id }: { id?: string }) => {
                                                             color: "#fff",
                                                         },
                                                     })
+                                                    setFormData({ ...formData, type: value })
                                                 },
                                                 onError: (error: any) => {
                                                     toast.error(error?.response?.data?.message || "Failed to create vehicle type", {
