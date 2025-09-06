@@ -890,7 +890,6 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
-
   {
     id: "createdAt",
     header: "Bookings At",
