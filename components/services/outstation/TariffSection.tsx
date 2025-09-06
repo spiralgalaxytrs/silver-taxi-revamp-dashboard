@@ -289,27 +289,6 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                         {isEditing ? (
                             <>
                                 <Label>
-                                    Driver Beta <span className="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                    id="driverBeta"
-                                    type="text"
-                                    value={currentTariff.driverBeta?.toString()}
-                                    className="mt-3"
-                                    onChange={(e) => handleTariffChange("driverBeta", e.target.value)}
-                                />
-                            </>
-                        ) : (
-                            <>
-                                <h2 className="text-base mb-1">Driver Beta</h2>
-                                <p className="mt-3">₹{currentTariff.driverBeta || 0}</p>
-                            </>
-                        )}
-                    </div>
-                    <div>
-                        {isEditing ? (
-                            <>
-                                <Label>
                                     Description
                                 </Label>
                                 <Textarea
@@ -356,6 +335,27 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                         {isEditing ? (
                             <>
                                 <Label>
+                                    Driver Beta <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    id="driverBeta"
+                                    type="text"
+                                    value={currentTariff.driverBeta?.toString()}
+                                    className="mt-3"
+                                    onChange={(e) => handleTariffChange("driverBeta", e.target.value)}
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <h2 className="text-base mb-1">Driver Beta</h2>
+                                <p className="mt-3">₹{currentTariff.driverBeta || 0}</p>
+                            </>
+                        )}
+                    </div>
+                    {/* <div>
+                        {isEditing ? (
+                            <>
+                                <Label>
                                     Extra KM Price
                                 </Label>
                                 <Input
@@ -372,7 +372,7 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
                                 <p className="mt-3">₹{currentTariff.extraPrice} per Km</p>
                             </>
                         )}
-                    </div>
+                    </div> */}
 
 
                 </div>

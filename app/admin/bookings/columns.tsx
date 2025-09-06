@@ -307,7 +307,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
   },
   {
     accessorKey: "estimatedAmount",
-    header: "Estimated Amount",
+    header: "Km Base Fare",
     Cell: ({ row }) => {
       const amount = Number(row.getValue("estimatedAmount"))
       const tripCompletedAmount = Number(row.original.tripCompletedEstimatedAmount)
