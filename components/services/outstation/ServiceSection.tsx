@@ -248,7 +248,7 @@ export function ServiceSection({ isEditing, serviceId, title, isLoading = false 
         </div>
 
         {/* include and exclude Section */}
-        <div className="mt-8 space-y-6">
+        {/* <div className="mt-8 space-y-6">
           <div className="flex space-x-4">
             <div className="flex-1">
               <Label>include</Label>
@@ -292,8 +292,7 @@ export function ServiceSection({ isEditing, serviceId, title, isLoading = false 
               )}
             </div>
           </div>
-        </div>
-        
+        </div> */}
 
         {isEditing && (
           <div className="flex justify-center">

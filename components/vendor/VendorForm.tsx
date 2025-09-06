@@ -8,7 +8,7 @@ import { Label } from "components/ui/label";
 import { toast } from "sonner";
 import { Textarea } from "components/ui/textarea";
 import { Card, CardContent } from "components/ui/card";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Eye, EyeClosed } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogTrigger,
@@ -68,6 +68,7 @@ export function VendorForm({ id }: VendorFormProps) {
     const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
     const [adjustmentRemarks, setAdjustmentRemarks] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (vendor && id) {
@@ -348,15 +349,24 @@ export function VendorForm({ id }: VendorFormProps) {
                                         </>
                                     )}
                                 </Label>
-                                <Input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    value={formData.password}
-                                    onChange={handleInputChange}
-                                    className='w-full border-black py-6'
-                                    required={!id} // Required only for creating, optional for updating
-                                />
+                                <div className="flex gap-3 items-center border border-black rounded px-2">
+                                    <Input
+                                        id="password"
+                                        name="password"
+                                        type={showPassword ? "text" : "password"}
+                                        value={formData.password}
+                                        onChange={handleInputChange}
+                                        className='w-full border-none shadow-none py-6'
+                                        required={!id} // Required only for creating, optional for updating
+                                    />
+                                    <Button
+                                        variant={"none"}
+                                        className="w-10 h-10"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                       {showPassword ? <Eye className="w-5 h-5 text-black" /> : <EyeClosed className="w-5 h-5 text-black" />}
+                                    </Button>
+                                </div>
                             </div>
                             <div className="mb-4">
                                 <Label htmlFor="remark">Remarks <span className="text-[10px]">( optional )</span></Label>
