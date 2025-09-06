@@ -81,6 +81,7 @@ export default function BookingsPage() {
     completed: false,
     cancelled: false,
     notContacted: false,
+    contacted: false,
   });
   const [isFilterApplied, setIsFilterApplied] = useState(true); 
 
@@ -101,7 +102,7 @@ export default function BookingsPage() {
 
   // Ensure at least one status filter is always selected
   useEffect(() => {
-    const hasActiveStatusFilter = filters.bookingConfirmed || filters.notStarted || filters.started || filters.completed || filters.cancelled || filters.notContacted;
+    const hasActiveStatusFilter = filters.bookingConfirmed || filters.notStarted || filters.started || filters.completed || filters.cancelled || filters.notContacted || filters.contacted;
     if (!hasActiveStatusFilter) {
       setFilters(prev => ({
         ...prev,
@@ -111,9 +112,10 @@ export default function BookingsPage() {
         completed: false,
         cancelled: false,
         notContacted: false,
+        contacted: false,
       }));
     }
-  }, [filters.bookingConfirmed, filters.notStarted, filters.started, filters.completed, filters.cancelled, filters.notContacted]);
+  }, [filters.bookingConfirmed, filters.notStarted, filters.started, filters.completed, filters.cancelled, filters.notContacted, filters.contacted]);
 
 
   const bookingData = useMemo(() => {
@@ -129,21 +131,47 @@ export default function BookingsPage() {
   const applyFilters = () => {
     let filteredData = [...bookingData];
 
-    // Apply status filters (mutually exclusive - only one can be true)
-    if (filters.bookingConfirmed) {
+    // Debug: Log current filter state
+    console.log('Current filters:', filters);
+
+    // Special case: Both bookingConfirmed and contacted are selected
+    if (filters.bookingConfirmed && filters.contacted) {
+      console.log('Applying both bookingConfirmed and contacted filters');
+      filteredData = filteredData.filter(booking => 
+        booking.status === "Booking Confirmed" && booking.isContacted === true && booking.createdBy !== "Vendor"
+      );
+    }
+    // Apply individual status filters
+    else if (filters.bookingConfirmed) {
+      console.log('Applying bookingConfirmed filter');
       filteredData = filteredData.filter(booking => booking.status === "Booking Confirmed");
+    } else if (filters.contacted) {
+      console.log('Applying contacted filter');
+      // Contacted filter: show ONLY contacted bookings (exclude vendor bookings)
+      filteredData = filteredData.filter(booking => 
+        booking.isContacted === true && booking.createdBy !== "Vendor"
+      );
     } else if (filters.notStarted) {
+      console.log('Applying notStarted filter');
       filteredData = filteredData.filter(booking => booking.status === "Not-Started");
     } else if (filters.started) {
+      console.log('Applying started filter');
       filteredData = filteredData.filter(booking => booking.status === "Started");
     } else if (filters.completed) {
+      console.log('Applying completed filter');
       filteredData = filteredData.filter(booking => booking.status === "Completed");
     } else if (filters.cancelled) {
+      console.log('Applying cancelled filter');
       filteredData = filteredData.filter(booking => booking.status === "Cancelled");
     } else if (filters.notContacted) {
-      filteredData = filteredData.filter(booking => booking.isContacted === false);
+      console.log('Applying notContacted filter');
+      // Not Contacted filter: show ONLY not contacted bookings (exclude vendor bookings)
+      filteredData = filteredData.filter(booking => 
+        booking.isContacted === false && booking.createdBy !== "Vendor"
+      );
     }
 
+    console.log('Filtered data count:', filteredData.length);
     return filteredData;
   };
 
@@ -158,6 +186,7 @@ export default function BookingsPage() {
       completed: number;
       cancelled: number;
       notContacted: number;
+      contacted: number;
     }
 
     return bookingData.reduce(
@@ -165,7 +194,6 @@ export default function BookingsPage() {
         // Count by status
         switch (booking.status) {
           case "Not-Started":
-            // acc.bookingConfirmed += 1;
             acc.notStarted += 1;
             break;
           case "Started":
@@ -180,11 +208,18 @@ export default function BookingsPage() {
           case "Booking Confirmed":
             acc.bookingConfirmed += 1;
             break;
+          case "Contacted":
+            acc.contacted += 1;
+            break;
         }
 
-        // Count contacted status
-        if (booking.isContacted === false) {
-          acc.notContacted += 1;
+        // Count contacted status (exclude vendor bookings)
+        if (booking.createdBy !== "Vendor") {
+          if (booking.isContacted === false) {
+            acc.notContacted += 1;
+          } else if (booking.isContacted === true) {
+            acc.contacted += 1;
+          }
         }
 
         return acc;
@@ -196,49 +231,88 @@ export default function BookingsPage() {
         completed: 0,
         cancelled: 0,
         notContacted: 0,
-      }
+        contacted: 0,
+        }
     );
   }, [bookingData]);
+
+  // Calculate dynamic stats based on current filter state
+  const dynamicStats = useMemo(() => {
+    const baseStats = { ...stats };
+    
+    // If both bookingConfirmed and contacted are selected, adjust contacted count
+    if (filters.bookingConfirmed && filters.contacted) {
+      baseStats.contacted = bookingData.filter((booking: any) => 
+        booking.status === "Booking Confirmed" && booking.isContacted === true && booking.createdBy !== "Vendor"
+      ).length;
+    }
+    
+    return baseStats;
+  }, [stats, filters.bookingConfirmed, filters.contacted, bookingData]);
 
 
 
 
   const handleFilterChange = (key: keyof typeof filters, value: boolean) => {
     setFilters(prev => {
-      // If selecting a new filter, deselect all others and set the new one
-      if (value) {
-        const newFilters = {
+      let newFilters = { ...prev };
+      
+      // Special handling for bookingConfirmed and contacted
+      if (key === 'bookingConfirmed') {
+        // When clicking bookingConfirmed, keep contacted if it was selected, remove all others
+        newFilters = {
+          bookingConfirmed: value,
+          notStarted: false,
+          started: false,
+          completed: false,
+          cancelled: false,
+          notContacted: false,
+          contacted: prev.contacted, // Keep contacted as is
+        };
+        
+        // If both are false, default to bookingConfirmed
+        if (!newFilters.bookingConfirmed && !newFilters.contacted) {
+          newFilters.bookingConfirmed = true;
+        }
+      } else if (key === 'contacted') {
+        // When clicking contacted, keep bookingConfirmed if it was selected, remove all others
+        newFilters = {
+          bookingConfirmed: prev.bookingConfirmed, // Keep bookingConfirmed as is
+          notStarted: false,
+          started: false,
+          completed: false,
+          cancelled: false,
+          notContacted: false,
+          contacted: value,
+        };
+        
+        // If both are false, default to bookingConfirmed
+        if (!newFilters.bookingConfirmed && !newFilters.contacted) {
+          newFilters.bookingConfirmed = true;
+        }
+      } else {
+        // For all other filters, reset ALL filters (including bookingConfirmed and contacted) and set only the selected one
+        newFilters = {
           bookingConfirmed: false,
           notStarted: false,
           started: false,
           completed: false,
           cancelled: false,
           notContacted: false,
-          [key]: true, // Set only the selected filter to true
+          contacted: false,
+          [key]: value,
         };
         
-        // Log the filter change for debugging
-        console.log(`Filter changed: ${key} = ${value}`, newFilters);
-        
-        return newFilters;
+        // If no filter is selected, default to bookingConfirmed
+        if (!value) {
+          newFilters.bookingConfirmed = true;
+        }
       }
       
-      // If trying to deselect the currently active filter, don't allow it
-      if (prev[key] && !value) {
-        console.log(`Preventing deselection of ${key}`);
-        return prev; // Keep current state
-      }
+      // Log the filter change for debugging
+      console.log(`Filter changed: ${key} = ${value}`, newFilters);
       
-      // If somehow no filter is selected, default to bookingConfirmed
-      console.log('No filter selected, defaulting to bookingConfirmed');
-      return {
-        bookingConfirmed: true,
-        notStarted: false,
-        started: false,
-        completed: false,
-        cancelled: false,
-        notContacted: false,
-      };
+      return newFilters;
     });
 
     setIsFilterApplied(true);
@@ -378,10 +452,10 @@ export default function BookingsPage() {
                 </div>
               </div>
             </div>
-            <div className="grid ml-10 gap-5 md:grid-cols-3 lg:grid-cols-3">
+            <div className="grid ml-10 gap-5 md:grid-cols-2 lg:grid-cols-4">
               {/* Booking Confirmed (Default) */}
               <button 
-                onClick={() => handleFilterChange('bookingConfirmed', true)}
+                onClick={() => handleFilterChange('bookingConfirmed', !filters.bookingConfirmed)}
                 className={`transition-all duration-200 ${filters.bookingConfirmed ? 'scale-105' : 'hover:scale-102'}`}
               >
                 <Card className="border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
@@ -394,7 +468,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-emerald-100"
                       icon={Activity}
-                      count={stats.bookingConfirmed.toLocaleString()}
+                      count={dynamicStats.bookingConfirmed.toLocaleString()}
                       label="Booking Confirmed"
                       className="rounded"
                       cardSize="w-[180px] h-[90px]"
@@ -418,7 +492,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-purple-100"
                       icon={Activity}
-                      count={stats.notStarted.toLocaleString()}
+                      count={dynamicStats.notStarted.toLocaleString()}
                       label="Non Started"
                       cardSize="w-[180px] h-[90px]"
                     />
@@ -441,7 +515,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-blue-100"
                       icon={Activity}
-                      count={stats.started.toLocaleString()}
+                      count={dynamicStats.started.toLocaleString()}
                       label="Started"
                       className="rounded"
                       cardSize="w-[180px] h-[90px]"
@@ -465,7 +539,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-green-100"
                       icon={Activity}
-                      count={stats.completed.toLocaleString()}
+                      count={dynamicStats.completed.toLocaleString()}
                       label="Completed"
                       className="rounded"
                       cardSize="w-[180px] h-[90px]"
@@ -489,7 +563,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-red-100"
                       icon={Activity}
-                      count={stats.cancelled.toLocaleString()}
+                      count={dynamicStats.cancelled.toLocaleString()}
                       label="Cancelled"
                       cardSize="w-[180px] h-[90px]"
                     />
@@ -499,7 +573,7 @@ export default function BookingsPage() {
               </button>
               {/* Not Contacted */}
               <button 
-                onClick={() => handleFilterChange('notContacted', !filters.notContacted)}
+                onClick={() => handleFilterChange('notContacted', true)}
                 className={`transition-all duration-200 ${filters.notContacted ? 'scale-105' : 'hover:scale-102'}`}
               >
                 <Card className="border-none bg-gradient-to-br from-orange-50 to-amber-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
@@ -512,8 +586,30 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-orange-100"
                       icon={Activity}
-                      count={stats.notContacted.toLocaleString()}
+                      count={dynamicStats.notContacted.toLocaleString()}
                       label="Not Contacted"
+                      cardSize="w-[180px] h-[90px]"
+                    />
+                    <div className="h-1 w-full bg-gradient-to-r from-orange-500 to-amber-500" />
+                  </div>
+                </Card>
+              </button>
+              <button 
+                onClick={() => handleFilterChange('contacted', true)}
+                className={`transition-all duration-200 ${filters.contacted ? 'scale-105' : 'hover:scale-102'}`}
+              >
+                <Card className="border-none bg-gradient-to-br from-orange-50 to-amber-50 shadow-md w-[230px] h-[130px] transform transition duration-300 ease-in-out hover:scale-105">
+                  {filters.contacted && <div className='absolute top-[-6] right-0'>
+                    <span className='text-[5px] text-red-500'>
+                      <Filter className='w-5 h-5' />
+                    </span>
+                  </div>}
+                  <div className="h-full w-full flex flex-col justify-between bg-gradient-to-r from-orange-500/10 to-amber-500/10 rounded">
+                    <CounterCard
+                      color="bg-orange-100"
+                      icon={Activity}
+                      count={dynamicStats.contacted.toLocaleString()}
+                      label="Booking Confirmed-Contacted"
                       cardSize="w-[180px] h-[90px]"
                     />
                     <div className="h-1 w-full bg-gradient-to-r from-orange-500 to-amber-500" />

@@ -293,6 +293,7 @@ export function ServiceSection({ isEditing, serviceId, title, isLoading = false 
             </div>
           </div>
         </div>
+        
 
         {isEditing && (
           <div className="flex justify-center">

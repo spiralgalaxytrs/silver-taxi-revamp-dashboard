@@ -171,6 +171,7 @@ export function PackageTariffSection({
             })),
         }));
         setHasUnsavedChanges(true);
+        setDriverBeta(Number(cleaned));
         setLastEditedVehicleId(vehicleId);
     };
 
@@ -253,6 +254,7 @@ export function PackageTariffSection({
                 createdBy,
                 driverBeta: Number(driverBeta),
             };
+            console.log("tariffDataToSend >> ", tariffDataToSend);
 
             const existingTariff = packageTariffs.find(
                 (t: PackageVehicleTariff) =>
@@ -276,9 +278,9 @@ export function PackageTariffSection({
                             color: "#fff",
                         },
                     });
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
+                    // setTimeout(() => {
+                    //     window.location.reload();
+                    // }, 2000);
                 }
 
             } catch (error) {

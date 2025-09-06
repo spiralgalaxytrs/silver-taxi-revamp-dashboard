@@ -367,16 +367,45 @@ const results = await Promise.all(
     )
 );
 
+// Helper function to parse duration string to minutes
+const parseDurationToMinutes = (durationStr: string): number => {
+    if (typeof durationStr === 'number') return durationStr;
+    
+    const hoursMatch = durationStr.match(/(\d+)\s*hours?/i);
+    const minsMatch = durationStr.match(/(\d+)\s*mins?/i);
+    
+    const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
+    const minutes = minsMatch ? parseInt(minsMatch[1]) : 0;
+    
+    return hours * 60 + minutes;
+};
+
+// Helper function to format minutes back to duration string
+const formatMinutesToDuration = (totalMinutes: number): string => {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
+    if (hours > 0 && minutes > 0) {
+        return `${hours} hours ${minutes} mins`;
+    } else if (hours > 0) {
+        return `${hours} hours`;
+    } else {
+        return `${minutes} mins`;
+    }
+};
+
 // Sum total distance and duration
-const { totalDistance, totalDuration } = results.reduce(
+const { totalDistance, totalDurationMinutes } = results.reduce(
     (acc, res) => {
         const { distance, duration } = res.data.data;
         acc.totalDistance += distance;
-        acc.totalDuration += duration;
+        acc.totalDurationMinutes += parseDurationToMinutes(duration);
         return acc;
     },
-    { totalDistance: 0, totalDuration: 0 }
+    { totalDistance: 0, totalDurationMinutes: 0 }
 );
+
+const totalDuration = formatMinutesToDuration(totalDurationMinutes);
 
 console.log("Total Distance:", totalDistance);
 console.log("Total Duration:", totalDuration);
