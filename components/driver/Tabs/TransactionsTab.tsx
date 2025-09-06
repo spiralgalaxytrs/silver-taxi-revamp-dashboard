@@ -23,6 +23,7 @@ import {
 } from 'material-react-table';
 import { useDriverTransactions } from "hooks/react-query/useWallet";
 import { RefreshCcw } from "lucide-react";
+import { StatsCard } from "./StatsCard";
 
 interface TransactionsTabProps {
   walletTransactions: DriverTransaction[];
@@ -250,6 +251,15 @@ export default function TransactionsTab({
               </div>
             </DialogContent>
           </Dialog>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 my-3">
+          <StatsCard
+            count={editedDriver?.wallet?.balance ?? 0}
+            label="Wallet Balance"
+            gradientFrom="purple"
+            gradientTo="pink"
+            color="purple"
+          />
         </div>
         <MaterialReactTable
           columns={walletColumns as MRT_ColumnDef<any>[]}
