@@ -171,7 +171,6 @@ export function PackageTariffSection({
             })),
         }));
         setHasUnsavedChanges(true);
-        setDriverBeta(Number(cleaned));
         setLastEditedVehicleId(vehicleId);
     };
 
