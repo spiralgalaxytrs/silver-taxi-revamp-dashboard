@@ -1,21 +1,11 @@
 "use client";
 
+import { dateRangeFilter } from 'lib/dateFunctions';
 import {
   MRT_ColumnDef
 } from 'material-react-table'
+import { Booking } from "types/react-query/booking";
 
-export type Booking = {
-  id: string | undefined;
-  bookingId?: string;
-  name: string;
-  phone: string;
-  estimatedAmount: number | null;
-  bookingDate: string;
-  pickup: string;
-  drop: string;
-  pickupDate: string;
-  dropDate: string | null;
-};
 
 export const columns: MRT_ColumnDef<Booking>[] = [
   {
@@ -23,7 +13,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     Cell: ({ row }) => row.index + 1,
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
-    
+
   },
   {
     accessorKey: "bookingId",
@@ -71,10 +61,11 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "pickupDate",
+    id: "pickupDateTime",
     header: "PickUp Date",
+    // filterVariant: "date",
     Cell: ({ row }) => {
-      const pickupDate: string = row.getValue("pickupDate");
+      const pickupDate: string = row.original.pickupDateTime || "";
       if (!pickupDate) {
         return <div>-</div>;
       }
@@ -92,20 +83,52 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         year: "numeric",
       });
 
-      return (
-        <div>
-          <div>{formattedDate}</div>
-        </div>
-      );
+      return <div>{formattedDate}</div>;
+    },
+    accessorFn: (row) => new Date(row.pickupDateTime || ""),
+    // filterFn: dateRangeFilter,
+    // filterVariant: "date-range",
+    // sortingFn: "datetime",
+    muiTableHeadCellProps: { align: 'center' },
+    muiTableBodyCellProps: { align: 'center' },
+  },
+  {
+    accessorKey: "pickupDateTime",
+    id: "pickupTime",
+    header: "PickUp Time",
+
+    Cell: ({ row }) => {
+      const pickupTime: string = row.getValue("pickupTime");
+      if (!pickupTime) {
+        return <div>-</div>;
+      }
+
+      // Parse the stored UTC date
+      const utcDate = new Date(pickupTime);
+
+      // Adjust back to IST (Subtract 5.5 hours)
+      const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+      // Format the corrected IST time
+      const options: Intl.DateTimeFormatOptions = {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      };
+
+      const amPmTime = new Intl.DateTimeFormat("en-IN", options).format(istDate);
+
+      return <div>{amPmTime}</div>;
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "dropDate",
+    id: "dropDate",
     header: "Drop Date",
     Cell: ({ row }) => {
-      const dropDate: string = row.getValue("dropDate");
+      const dropDate: string = row.original.dropDate || "";
+
       if (!dropDate) {
         return <div>-</div>;
       }
@@ -117,7 +140,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
 
       // Format the corrected IST date
-      const formattedDate = istDate.toLocaleDateString("en-IN", {
+      const formattedDate = istDate.toLocaleString("en-IN", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -125,14 +148,18 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return <div>{formattedDate}</div>;
     },
+    accessorFn: (row) => new Date(row.dropDate || ""),
+    // filterFn: dateRangeFilter,
+    // filterVariant: "date-range",
+    // sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
   {
-    accessorKey: "bookingDate",
+    id: "createdAt",
     header: "Bookings At",
     Cell: ({ row }) => {
-      const bookingDate: string = row.getValue("bookingDate");
+      const bookingDate: string = row.original.createdAt || "";
       if (!bookingDate) {
         return <div>-</div>;
       }
@@ -156,7 +183,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         year: "numeric",
       });
 
-      const amPmTime = new Intl.DateTimeFormat("en-IN", options).format(istDate);
+      const amPmTime = new Intl.DateTimeFormat("en-IN", options).format(utcDate);
 
       return (
         <div>
@@ -165,6 +192,10 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         </div>
       )
     },
+    accessorFn: (row) => new Date(row.createdAt || ""),
+    // filterFn: dateRangeFilter,
+    // filterVariant: "date-range",
+    // sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },

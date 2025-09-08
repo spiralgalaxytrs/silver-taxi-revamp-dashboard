@@ -19,16 +19,16 @@ export default function Page() {
   } = useVehiclesAdmin()
 
   // Sort vehicles by createdAt in descending order
-  const sortedVehicles = useMemo(() => {
-    if (!vehicles || vehicles.length === 0) return [];
+  // const sortedVehicles = useMemo(() => {
+  //   if (!vehicles || vehicles.length === 0) return [];
 
-    // Create a copy of the vehicles array to avoid mutating the original array
-    return [...vehicles].sort((a, b) => {
-      const aCreatedAt = new Date(a.createdAt).getTime();
-      const bCreatedAt = new Date(b.createdAt).getTime();
-      return bCreatedAt - aCreatedAt; // Descending order
-    });
-  }, [vehicles]);
+  //   // Create a copy of the vehicles array to avoid mutating the original array
+  //   return [...vehicles].sort((a, b) => {
+  //     const aCreatedAt = new Date(a.createdAt).getTime();
+  //     const bCreatedAt = new Date(b.createdAt).getTime();
+  //     return bCreatedAt - aCreatedAt; // Descending order
+  //   });
+  // }, [vehicles]);
 
   if (isLoading) {
     return (
@@ -54,9 +54,9 @@ export default function Page() {
             <VehicleTypeConfig />
           </div>
         </div>
-        {sortedVehicles.length > 0 ? (
+        {vehicles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedVehicles.map((vehicle, index) => (
+            {vehicles.map((vehicle, index) => (
               <VehicleCard
                 key={index}
                 vehicleId={vehicle.vehicleId || ""}
