@@ -415,7 +415,7 @@ export default function BookingDetailsPage() {
 
 
 
-  const calculateCommisionTax = () => {
+  const calculateCommissionTax = () => {
 
     const adminCommission = booking?.adminCommission || 0;
     const commissionTax = (adminCommission * 18) / 100;
@@ -883,7 +883,7 @@ export default function BookingDetailsPage() {
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-1">
                               <span>{booking?.createdBy === "User" ? "Admin" : booking?.createdBy}  Commission</span>
-                              <TooltipComponent name={`Commission Tax Amount = ${calculateCommisionTax()} `}>
+                              <TooltipComponent name={`Commission Tax Amount = ${calculateCommissionTax()} `}>
                                 <Info className="w-4 h-4" />
                               </TooltipComponent>
                             </div>
