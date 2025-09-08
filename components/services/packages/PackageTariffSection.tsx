@@ -51,8 +51,8 @@ export function PackageTariffSection({
     const [dayInput, setDayInput] = useState("");
     const [distanceLimit, setDistanceLimit] = useState("");
     const [priceInput, setPriceInput] = useState("");
-    const [status, setStatus] = useState(true);
-    
+    const [status, setStatus] = useState(false);
+
 
     // Use ref to store latest localTariffs to avoid dependency issues
     const localTariffsRef = useRef(localTariffs);
@@ -112,6 +112,8 @@ export function PackageTariffSection({
                 }));
 
             const newTariffs = filteredTariffs.length > 0 ? filteredTariffs : filteredAdminTariffs;
+            const vehicleStatus = newTariffs.some((t: PackageVehicleTariff) => t.status);
+            setStatus(vehicleStatus);
 
             // Only update if the data has actually changed
             setLocalTariffs((prev) => {
@@ -247,6 +249,7 @@ export function PackageTariffSection({
                 extraPrice: Number(extraPrice),
                 distanceLimits: tariffData.map((t) => t.distanceLimit),
                 serviceId,
+                status,
                 vehicleId: targetVehicleId,
                 type,
                 createdBy,
@@ -279,9 +282,9 @@ export function PackageTariffSection({
                             color: "#fff",
                         },
                     });
-                    // setTimeout(() => {
-                    //     window.location.reload();
-                    // }, 2000);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
                 }
 
             } catch (error) {
@@ -455,7 +458,6 @@ export function PackageTariffSection({
                             onCheckedChange={(value) => {
                                 setStatus(value);
                                 setHasUnsavedChanges(true);
-                                setLastEditedVehicleId(vehicleId);
                             }}
                         />
                     </div>
