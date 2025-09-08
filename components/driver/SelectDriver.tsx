@@ -300,7 +300,7 @@ export function DriverSelectionPopup({
                         </>
                     )}
                     {/* Footer */}
-                    <DialogFooter className="mt-auto gap-2 sm:gap-0 sticky bottom-[-20] bg-white py-4">
+                    <DialogFooter className="mt-auto gap-2 sm:gap-0 sticky bottom-[-20px] bg-white py-4">
                         <Button
                             variant="outline"
                             onClick={() => {
