@@ -252,6 +252,7 @@ export function PackageTariffSection({
                 createdBy,
                 driverBeta: tariffData[0]?.driverBeta,
             };
+            console.log("tariffDataToSend >> ", tariffDataToSend);
 
             console.log("Tariff data: >> ", tariffData[0]?.driverBeta);
             console.log("Tariff data to send: >> ", tariffDataToSend);
@@ -278,9 +279,9 @@ export function PackageTariffSection({
                             color: "#fff",
                         },
                     });
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
+                    // setTimeout(() => {
+                    //     window.location.reload();
+                    // }, 2000);
                 }
 
             } catch (error) {

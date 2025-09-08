@@ -117,6 +117,19 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     header: "Contact Status",
     Cell: ({ row }) => {
       const isContacted = row.getValue("isContacted") as boolean;
+      const createdBy = row.original.createdBy;
+      
+      // If created by vendor, show dash
+      if (createdBy === "Vendor") {
+        return (
+          <div className="flex items-center justify-center">
+            <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">
+              -
+            </Badge>
+          </div>
+        );
+      }
+      
       const getStatusColor = (status: boolean) => {
         switch (status) {
           case false:
@@ -890,7 +903,6 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
   },
-
   {
     id: "createdAt",
     header: "Bookings At",

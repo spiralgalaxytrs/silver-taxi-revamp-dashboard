@@ -33,7 +33,7 @@ interface FormDataType {
     seats: number;
     bags: number;
     permitCharge?: number;
-    driverBeta: number;
+    order?: number;
 }
 
 const VehicleForm = ({ id }: { id?: string }) => {
@@ -64,7 +64,7 @@ const VehicleForm = ({ id }: { id?: string }) => {
         seats: 0,
         bags: 0,
         permitCharge: 0,
-        driverBeta: 0,
+        order: 0,
     })
 
     useEffect(() => {
@@ -77,7 +77,7 @@ const VehicleForm = ({ id }: { id?: string }) => {
                 seats: vehicle?.seats || 0,
                 bags: vehicle?.bags || 0,
                 permitCharge: vehicle?.permitCharge,
-                driverBeta: vehicle?.driverBeta || 0,
+                order: vehicle?.order || 0,
             })
         }
     }, [vehicle])
@@ -111,7 +111,7 @@ const VehicleForm = ({ id }: { id?: string }) => {
     const handleInputChange = (field: keyof FormDataType, value: any) => {
         setFormData(prev => ({
             ...prev,
-            [field]: (field === "seats" || field === "bags" || field === "driverBeta")
+            [field]: (field === "seats" || field === "bags" || field === "order")
                 ? String(value).replace(/[^0-9]/g, '')
                 : value
         }))
@@ -295,15 +295,15 @@ const VehicleForm = ({ id }: { id?: string }) => {
                                         onChange={(e) => handleInputChange('permitCharge', Number(e.target.value))}
                                     /> */}
 
-                                    {/* <Label htmlFor="driverBeta">Driver Beta</Label>
+                                    <Label htmlFor="order">Order</Label>
                                     <Input
-                                        id="driverBeta"
+                                        id="order"
                                         className='w-full border-grey py-7'
                                         type="text"
-                                        placeholder="Enter driver beta"
-                                        value={formData.driverBeta}
-                                        onChange={(e) => handleInputChange('driverBeta', Number(e.target.value))}
-                                    /> */}
+                                        placeholder="Enter the order of vehicle"
+                                        value={formData.order}
+                                        onChange={(e) => handleInputChange('order', Number(e.target.value))}
+                                    />
                                     <div className='pt-3' />
 
                                     <Label htmlFor="vehicleImage">Vehicle Image</Label>
