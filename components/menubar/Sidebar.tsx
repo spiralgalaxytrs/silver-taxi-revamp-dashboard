@@ -51,14 +51,15 @@ const AdminSidebarItems: {
   dropdown?: DropdownItem[];
 }[] = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-    // {
-    //   name: "Enquiries",
-    //   icon: Calendar,
-    //   dropdown: [
-    //     { name: "Enquiry", href: "/admin/enquiry", icon: SquareChevronRight },
-    //     { name: "Manual Enquiry", href: "/admin/enquiry/create", icon: SquareChevronRight },
-    //   ],
-    // },
+    {
+      name: "Enquiries",
+      icon: Calendar,
+      href: "/admin/enquiry",
+      // dropdown: [
+      //   { name: "Enquiry", href: "/admin/enquiry", icon: SquareChevronRight },
+      //   { name: "Manual Enquiry", href: "/admin/enquiry/create", icon: SquareChevronRight },
+      // ],
+    },
     {
       name: "Bookings",
       icon: Calendar,
@@ -208,18 +209,18 @@ const AdminSidebarItems: {
       ],
     },
 
-    {
-      name: "Payments",
-      icon: CreditCard,
-      dropdown: [
-        // { name: "All Payment", href: "/admin/payments", icon:   SquareChevronRight },
-        { name: "Customer Payment", href: "/admin/payments/customer", icon: SquareChevronRight },
-        // { name: "Customer Payment", href: "/admin/payments/customer", icon: SquareChevronRight },
-        { name: "Driver Payment", href: "/admin/payments/driver", icon: SquareChevronRight },
-        // { name: "Service Payment", href: "/admin/payments/service", icon: SquareChevronRight },
-        { name: "Vendor Payment", href: "/admin/payments/vendor", icon: SquareChevronRight },
-      ],
-    },
+    // {
+    //   name: "Payments",
+    //   icon: CreditCard,
+    //   dropdown: [
+    //     // { name: "All Payment", href: "/admin/payments", icon:   SquareChevronRight },
+    //     { name: "Customer Payment", href: "/admin/payments/customer", icon: SquareChevronRight },
+    //     // { name: "Customer Payment", href: "/admin/payments/customer", icon: SquareChevronRight },
+    //     { name: "Driver Payment", href: "/admin/payments/driver", icon: SquareChevronRight },
+    //     // { name: "Service Payment", href: "/admin/payments/service", icon: SquareChevronRight },
+    //     { name: "Vendor Payment", href: "/admin/payments/vendor", icon: SquareChevronRight },
+    //   ],
+    // },
   ];
 
 const VendorSidebarItems: {

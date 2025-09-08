@@ -37,6 +37,10 @@ const chartConfig = {
     label: "Round trip",
     color: colorMap["Round trip"],
   },
+  "Hourly Packages": {
+    label: "Hourly Packages",
+    color: colorMap["Package"],
+  },
   // "Airport": {
   //   label: "Airport",
   //   color: colorMap["Airport"],
@@ -79,6 +83,7 @@ export function AreaChart({ createdBy, bookings, isLoading }: AreaChartProps) {
     const initial = [
       { service: "One way", bookings: 0, fill: colorMap["One way"] },
       { service: "Round trip", bookings: 0, fill: colorMap["Round trip"] },
+      { service: "Hourly Packages", bookings: 0, fill: colorMap["Package"] },
       // { service: "Package", bookings: 0, fill: colorMap["Package"] },
       // { service: "Airport", bookings: 0, fill: colorMap["Airport"] },
     ];
@@ -117,10 +122,13 @@ export function AreaChart({ createdBy, bookings, isLoading }: AreaChartProps) {
               accessibilityLayer
               data={chartData}
               layout="vertical"
-              barCategoryGap={30}
+              barGap={40}
               margin={{
-                left: 10,
+                left: 15,
               }}
+              barSize={46}
+              height={90}
+              
             >
               <YAxis
                 dataKey="service"

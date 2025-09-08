@@ -144,7 +144,7 @@ export default function BookingsPage() {
     // Apply individual status filters
     else if (filters.bookingConfirmed) {
       console.log('Applying bookingConfirmed filter');
-      filteredData = filteredData.filter(booking => booking.status === "Booking Confirmed");
+      filteredData = filteredData.filter(booking => booking.status === "Booking Confirmed" || booking.status === "Reassign");
     } else if (filters.contacted) {
       console.log('Applying contacted filter');
       // Contacted filter: show ONLY contacted bookings (exclude vendor bookings)
@@ -159,7 +159,7 @@ export default function BookingsPage() {
       filteredData = filteredData.filter(booking => booking.status === "Started");
     } else if (filters.completed) {
       console.log('Applying completed filter');
-      filteredData = filteredData.filter(booking => booking.status === "Completed");
+      filteredData = filteredData.filter(booking => booking.status === "Completed" || booking.status === "Manual Completed");
     } else if (filters.cancelled) {
       console.log('Applying cancelled filter');
       filteredData = filteredData.filter(booking => booking.status === "Cancelled");
@@ -170,8 +170,6 @@ export default function BookingsPage() {
         booking.isContacted === false && booking.createdBy !== "Vendor"
       );
     }
-
-    console.log('Filtered data count:', filteredData.length);
     return filteredData;
   };
 
@@ -187,6 +185,8 @@ export default function BookingsPage() {
       cancelled: number;
       notContacted: number;
       contacted: number;
+
+
     }
 
     return bookingData.reduce(
@@ -202,11 +202,17 @@ export default function BookingsPage() {
           case "Completed":
             acc.completed += 1;
             break;
+          case "Manual Completed":
+            acc.completed += 1; // Include Manual Completed in completed count
+            break;
           case "Cancelled":
             acc.cancelled += 1;
             break;
           case "Booking Confirmed":
             acc.bookingConfirmed += 1;
+            break;
+          case "Reassign":
+            acc.bookingConfirmed += 1; // Include Reassign in booking confirmed count
             break;
           case "Contacted":
             acc.contacted += 1;
@@ -232,6 +238,7 @@ export default function BookingsPage() {
         cancelled: 0,
         notContacted: 0,
         contacted: 0,
+
         }
     );
   }, [bookingData]);
@@ -539,7 +546,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-green-100"
                       icon={Activity}
-                      count={dynamicStats.completed.toLocaleString()}
+                      count={dynamicStats.completed.toLocaleString() }
                       label="Completed"
                       className="rounded"
                       cardSize="w-[180px] h-[90px]"
