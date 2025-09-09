@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -39,8 +39,9 @@ type FormData = {
     endDate: string;
     keywords: string;
     status: boolean;
-    claimedCount: number;
+    usedCount: number;
     bannerImage: File | undefined | string;
+    limit: number;
 }
 
 export function CreateOfferForm() {
@@ -57,8 +58,9 @@ export function CreateOfferForm() {
         endDate: '',
         keywords: '',
         status: true,
-        claimedCount: 0,
-        bannerImage: undefined
+        usedCount: 0,
+        bannerImage: undefined,
+        limit: 1,
     });
 
     const [bannerImageURL, setBannerImageURL] = useState<string | null>(null);
@@ -88,8 +90,9 @@ export function CreateOfferForm() {
             endDate: '',
             keywords: '',
             status: true,
-            claimedCount: 0,
-            bannerImage: undefined
+            usedCount: 0,
+            bannerImage: undefined,
+            limit: 1,
         };
 
         const currentData = formData;
@@ -153,8 +156,9 @@ export function CreateOfferForm() {
                     endDate: '',
                     keywords: '',
                     status: true,
-                    claimedCount: 0,
-                    bannerImage: undefined
+                    usedCount: 0,
+                    bannerImage: undefined,
+                    limit: 1,
                 });
                 setBannerImageURL(null);
                 // Optionally, navigate to another page
@@ -303,6 +307,23 @@ export function CreateOfferForm() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                 <div className="space-y-2">
+                                                                    <Label htmlFor="value">
+                                                                        Limit Per User
+                                                                        <span className='text-red-500'>*</span>
+                                                                    </Label>
+                                                                    <Input
+                                                                        required
+                                                                        id="limit"
+                                                                        name="limit"
+                                                                        type="number"
+                                                                        placeholder="Enter the limit per user"
+                                                                        value={formData.limit}
+                                                                        onChange={handleInputChange}
+                                                                        className="h-12"
+                                                                    />
+                                                                </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="description">Description</Label>
