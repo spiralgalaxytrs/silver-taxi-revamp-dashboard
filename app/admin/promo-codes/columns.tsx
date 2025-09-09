@@ -32,6 +32,7 @@ type PromoCodes = {
   codeId?: string;
   promoName?: string;
   category: string;
+  code?: string;
   //bannerImage?: string;
   description?: string;
   keywords?: string;
@@ -378,7 +379,7 @@ export const columns: MRT_ColumnDef<PromoCodes>[] = [
               size="icon"
               className="text-gray-500 hover:text-gray-700 tool-tip"
               data-tooltip="Copy"
-              onClick={() => handleCopy(promoCode.codeId)}
+              onClick={() => handleCopy(promoCode.code)}
             >
               <Copy className="h-5 w-5" />
             </Button>
