@@ -453,7 +453,7 @@ export default function ViewDriverPage() {
                                     Vehicle Details
                                 </TabsTrigger>
                                 <TabsTrigger className="tabs-trigger mx-1" value="transactions">
-                                    Transactions
+                                    Wallet
                                 </TabsTrigger>
                                 <TabsTrigger className="tabs-trigger mx-1" value="bookings">
                                     Booking History
