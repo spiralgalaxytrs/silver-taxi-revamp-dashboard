@@ -61,6 +61,7 @@ export default function Page() {
                 driverBeta={vehicle.driverBeta ?? 0}
                 imageUrl={vehicle.imageUrl as string}
                 createdBy={"Vendor"}
+                order={vehicle.order || 0}
               />
             ))}
           </div>
