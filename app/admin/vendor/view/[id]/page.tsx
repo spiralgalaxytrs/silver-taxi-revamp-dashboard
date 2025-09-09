@@ -331,7 +331,15 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
             <div className="rounded bg-white p-5 shadow">
                 <Card className='rounded-none'>
                     <CardContent>
-                        <div className="flex gap-20">
+                        <div className="flex justify-end">
+                            <Link href="/admin/vendor">
+                                <Button
+                                    variant={"outline"}
+                                    className="px-6 py-2"
+                                >Back to Vendors</Button>
+                            </Link>
+                        </div>
+                        <div className="flex gap-60">
                             {/* Details Section */}
                             <div className="flex flex-col py-4 gap-4">
                                 <h2 className='text-black text-lg font-bold'>Vendor Information</h2>
@@ -354,7 +362,7 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
                             </div>
 
                             {/* Statistics Section */}
-                            <div className="grid gap-5 md:grid-cols-3 lg:grid-cols-3 mt-14">
+                            <div className="grid gap-28 md:grid-cols-2 lg:grid-cols-3 mt-14">
                                 <Card className="relative overflow-hidden border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
                                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 w-full" />
                                     <div className="h-[150PX] w-full">
@@ -383,158 +391,10 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
                                     </div>
                                     <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500 transform scale-x-100" />
                                 </Card>
-                                <Card className="relative overflow-hidden border-none bg-gradient-to-br from-purple-50 to-pink-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-100 w-full" />
-                                    <div className="h-[150px] w-full">
-                                        <CounterCard
-                                            color="bg-purple-100"
-                                            icon={Activity}
-                                            count={walletAmount}
-                                            label="Wallet Balance"
-                                        //cardSize="w-[200px] h-[100px]"
-                                        />
-                                    </div>
-                                    <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500 transform scale-x-100" />
-                                </Card>
+
                             </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-black text-lg font-bold invisible">Wallet Transactions</h2>
-                            <Dialog onOpenChange={handleClose} >
-                                <DialogTrigger asChild>
-                                    <Button
-                                        type="button"
-                                        className="flex items-center gap-2 group bg-transparent hover:bg-transparent my-2"
-                                    >
-                                        <span className="text-sm font-semibold text-gray-700 group-hover:text-indigo-600 transition-colors duration-300">
-                                            Adjust Wallet Balance
-                                        </span>
-                                        <div className="relative w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center overflow-hidden">
-                                            <svg
-                                                className="w-4 h-4 text-white group-hover:scale-110 transition-transform duration-300"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                                            </svg>
-                                            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
-                                        </div>
-                                    </Button>
-                                </DialogTrigger>
 
-                                <DialogContent className="w-full max-w-lg rounded-xl">
-                                    <div className="p-6 overflow-y-auto max-h-[80vh] space-y-4 scrollbar-hide">
-                                        <DialogHeader className="flex justify-between items-center">
-                                            <DialogTitle className="text-lg font-semibold text-gray-900">Adjust Wallet Balance</DialogTitle>
-                                        </DialogHeader>
-
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-gray-700">Current Balance</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <Input
-                                                        id="walletAmount"
-                                                        name="walletAmount"
-                                                        type="number"
-                                                        value={vendor?.wallet?.balance ?? 0}
-                                                        disabled
-                                                        className="h-10 bg-gray-100 font-semibold text-lg text-gray-900 border border-gray-300 rounded-lg"
-                                                    />
-                                                    <span className="text-xl font-bold text-gray-900">₹</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-gray-700">Adjustment Type</Label>
-                                                <Select
-                                                    value={adjustmentType}
-                                                    onValueChange={(value) => {
-                                                        setAdjustmentType(value);
-                                                        setAdjustmentReason("");
-                                                    }}
-                                                >
-                                                    <SelectTrigger className="h-10 border-gray-300 focus:ring-2 focus:ring-indigo-500">
-                                                        <SelectValue placeholder="Select type" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="add">Add to Wallet</SelectItem>
-                                                        <SelectItem value="subtract">Take from Wallet</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            {adjustmentType && (
-                                                <div className="space-y-2">
-                                                    <Label className="text-sm font-medium text-gray-700">Reason</Label>
-                                                    <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
-                                                        <SelectTrigger className="h-10 border-gray-300 focus:ring-2 focus:ring-indigo-500">
-                                                            <SelectValue placeholder="Select reason" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {(adjustmentType === "add" ? creditReasons : debitReasons).map((reason) => (
-                                                                <SelectItem key={reason.value} value={reason.value}>
-                                                                    {reason.label}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                            )}
-
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-gray-700">Amount</Label>
-                                                <Input
-                                                    id="adjustmentAmount"
-                                                    name="adjustmentAmount"
-                                                    type="text"
-                                                    value={adjustmentAmount}
-                                                    onChange={handleAdjustmentChange}
-                                                    placeholder="Enter amount"
-                                                    className="h-10 text-center border-gray-300 rounded-lg"
-                                                    min="0"
-                                                />
-                                                {localError && <p className="text-sm text-red-500">{localError}</p>}
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-gray-700">Remarks (Optional)</Label>
-                                                <Input
-                                                    id="adjustmentRemarks"
-                                                    name="adjustmentRemarks"
-                                                    value={adjustmentRemarks}
-                                                    onChange={(e) => setAdjustmentRemarks(e.target.value)}
-                                                    placeholder="Enter remarks"
-                                                    className="h-10 border-gray-300 rounded-lg"
-                                                />
-                                                {remarkError && <p className="text-sm text-red-500">{remarkError}</p>}
-
-                                            </div>
-
-                                            <Button
-                                                onClick={handleSubmit}
-                                                className="w-full bg-indigo-600 text-white hover:bg-indigo-700 h-10 rounded-lg"
-                                                disabled={isLoading || !!localError}
-                                            >
-                                                {isLoading ? (
-                                                    <>
-                                                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                                        Processing...
-                                                    </>
-                                                ) : (
-                                                    "Apply Adjustment"
-                                                )}
-                                            </Button>
-
-                                            {walletMessage && (
-                                                <p className="text-sm text-green-500 text-center">{walletMessage}</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
                         {/* Booking History Section */}
                         <div className="flex flex-col gap-4">
                             <div className="flex justify-between items-center">
@@ -552,9 +412,7 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
                                         </span>
                                     </div>
                                 </div>
-                                <Link href="/admin/vendor">
-                                    <Button className="px-6 py-2">Back to Vendors</Button>
-                                </Link>
+
                             </div>
                             <div>
                                 {showVendorTransactions ? (
