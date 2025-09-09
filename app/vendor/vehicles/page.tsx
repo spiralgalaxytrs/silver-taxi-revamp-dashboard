@@ -16,18 +16,6 @@ export default function Page() {
     isLoading,
   } = useVehiclesAdmin()
 
-  // Sort vehicles by createdAt in descending order
-  const sortedVehicles = useMemo(() => {
-    if (!vehicles || vehicles.length === 0) return [];
-
-    // Create a copy of the vehicles array to avoid mutating the original array
-    return [...vehicles].sort((a, b) => {
-      const aCreatedAt = new Date(a.createdAt).getTime();
-      const bCreatedAt = new Date(b.createdAt).getTime();
-      return bCreatedAt - aCreatedAt; // Descending order
-    });
-  }, [vehicles]);
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -45,9 +33,9 @@ export default function Page() {
             <Button>Create Vehicle</Button>
           </Link> */}
         </div>
-        {sortedVehicles.length > 0 ? (
+        {vehicles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedVehicles.map((vehicle, index) => (
+            {vehicles.map((vehicle, index) => (
               <VehicleCard
                 key={index}
                 vehicleId={vehicle.vehicleId || ""}
@@ -61,7 +49,7 @@ export default function Page() {
                 driverBeta={vehicle.driverBeta ?? 0}
                 imageUrl={vehicle.imageUrl as string}
                 createdBy={"Vendor"}
-                order={vehicle.order || 0}
+                order={vehicle.order ?? 0}
               />
             ))}
           </div>

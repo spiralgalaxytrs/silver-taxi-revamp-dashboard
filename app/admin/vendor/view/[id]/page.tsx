@@ -331,9 +331,14 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
             <div className="rounded bg-white p-5 shadow">
                 <Card className='rounded-none'>
                     <CardContent>
-                                    <Link href="/admin/vendor">
-                                    <Button className="px-6 py-2">Back to Vendors</Button>
-                                </Link>
+                        <div className="flex justify-end">
+                            <Link href="/admin/vendor">
+                                <Button
+                                    variant={"outline"}
+                                    className="px-6 py-2"
+                                >Back to Vendors</Button>
+                            </Link>
+                        </div>
                         <div className="flex gap-60">
                             {/* Details Section */}
                             <div className="flex flex-col py-4 gap-4">
@@ -386,10 +391,10 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
                                     </div>
                                     <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500 transform scale-x-100" />
                                 </Card>
-                        
+
                             </div>
                         </div>
-                 
+
                         {/* Booking History Section */}
                         <div className="flex flex-col gap-4">
                             <div className="flex justify-between items-center">
@@ -407,7 +412,7 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
                                         </span>
                                     </div>
                                 </div>
-                    
+
                             </div>
                             <div>
                                 {showVendorTransactions ? (
