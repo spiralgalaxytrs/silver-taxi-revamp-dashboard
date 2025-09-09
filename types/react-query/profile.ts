@@ -56,4 +56,5 @@ export interface Profile {
     customerReferral: { senderAmount: number; receiverAmount: number };
     vendorReferral: { senderAmount: number; receiverAmount: number };
     driverReferral: { senderAmount: number; receiverAmount: number };
+    convenienceFee: number;
 } 
