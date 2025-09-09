@@ -49,6 +49,7 @@ type FormData = {
     driverReferral: { senderAmount: number; receiverAmount: number };
     companyCommission: number;
     companyCommissionPercentage: number;
+    convenienceFee: number;
 };
 
 const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
@@ -80,6 +81,7 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
         driverReferral: { senderAmount: 0, receiverAmount: 0 },
         companyCommission: 0,
         companyCommissionPercentage: 0,
+        convenienceFee: 0
     });
 
     const [phoneNumber, setPhoneNumber] = useState({
@@ -137,6 +139,7 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
                 driverReferral: profile.driverReferral || { senderAmount: 0, receiverAmount: 0 },
                 companyCommission: profile.companyCommission || 0,
                 companyCommissionPercentage: profile.companyCommissionPercentage || 0,
+                convenienceFee: profile.convenienceFee || 0
             });
             setPhoneNumber({
                 phone1: profile.phone?.[0] || '',
@@ -265,6 +268,7 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
         if ([
             'driverWalletAmount', 'vendorWalletAmount',
             'companyCommission', 'companyCommissionPercentage',
+            'convenienceFee',
             'customerReferral.senderAmount', 'customerReferral.receiverAmount',
             'vendorReferral.senderAmount', 'vendorReferral.receiverAmount',
             'driverReferral.senderAmount', 'driverReferral.receiverAmount'].includes(field)) {
@@ -422,6 +426,18 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
                                 />
                             </div>
 
+                            {/* Convenience Fee */}
+                            <div>
+                                <Label htmlFor="convenienceFee">Platform Fee</Label>
+                                <Input
+                                    id="convenienceFee"
+                                    placeholder="Enter Platform Fee"
+                                    className="w-full border-grey py-7 mt-1"
+                                    value={formData.convenienceFee}
+                                    onChange={(e) => handleInputChange('convenienceFee', e.target.value)}
+                                />
+                            </div>
+
                             {/*Company Commission Percentage */}
                             <div>
                                 <Label htmlFor="commission">Commission GST %</Label>
@@ -533,12 +549,12 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
                                             <div className='flex flex-col gap-3'>
                                                 <Label>Receiver Amount</Label>
                                                 <Input
-                                                id="customer-receiver"
-                                                placeholder="Receiver Amount"
-                                                className="w-full border-grey py-7"
-                                                value={formData.customerReferral?.receiverAmount}
-                                                onChange={(e) => handleInputChange('customerReferral.receiverAmount', e.target.value)}
-                                            />
+                                                    id="customer-receiver"
+                                                    placeholder="Receiver Amount"
+                                                    className="w-full border-grey py-7"
+                                                    value={formData.customerReferral?.receiverAmount}
+                                                    onChange={(e) => handleInputChange('customerReferral.receiverAmount', e.target.value)}
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -570,27 +586,27 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
                                         <div className="flex space-x-2 mt-2">
                                             <div className='flex flex-col gap-3'>
                                                 <Label>Sender Amount</Label>
-                                            <Input
-                                                id="driver-sender"
-                                                placeholder="Sender Amount"
-                                                className="w-full border-grey py-7"
-                                                value={formData.driverReferral?.senderAmount}
-                                                onChange={(e) => handleInputChange('driverReferral.senderAmount', e.target.value)}
-                                            />
+                                                <Input
+                                                    id="driver-sender"
+                                                    placeholder="Sender Amount"
+                                                    className="w-full border-grey py-7"
+                                                    value={formData.driverReferral?.senderAmount}
+                                                    onChange={(e) => handleInputChange('driverReferral.senderAmount', e.target.value)}
+                                                />
                                             </div>
                                             <div className='flex flex-col gap-3'>
                                                 <Label>Receiver Amount</Label>
-                                            <Input
-                                                id="driver-receiver"
-                                                placeholder="Receiver Amount"
-                                                className="w-full border-grey py-7"
-                                                value={formData.driverReferral?.receiverAmount}
-                                                onChange={(e) => handleInputChange('driverReferral.receiverAmount', e.target.value)}
-                                            />
+                                                <Input
+                                                    id="driver-receiver"
+                                                    placeholder="Receiver Amount"
+                                                    className="w-full border-grey py-7"
+                                                    value={formData.driverReferral?.receiverAmount}
+                                                    onChange={(e) => handleInputChange('driverReferral.receiverAmount', e.target.value)}
+                                                />
                                             </div>
                                         </div>
                                     </div>
-                                    <div>
+                                    {/* <div>
                                         <Label htmlFor="driverWalletAmount">Driver Minimum Wallet Amount</Label>
                                         <Input
                                             id="driverWalletAmount"
@@ -609,7 +625,7 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
                                             value={formData.vendorWalletAmount}
                                             onChange={(e) => handleInputChange('vendorWalletAmount', e.target.value)}
                                         />
-                                    </div>
+                                    </div> */}
                                 </>
                             )}
 

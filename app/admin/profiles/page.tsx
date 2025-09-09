@@ -149,8 +149,9 @@ function TaxiCompanyProfile() {
                         <InfoItem label="Company Commission Percentage" content={`${profile?.companyCommissionPercentage || "-"}%`} />
                         <InfoItem label="UPI ID" content={profile?.UPI?.id || "Not Available"} />
                         <InfoItem label="UPI Number" content={profile?.UPI?.number || "Not Available"} />
-                        <InfoItem label="Driver Minimum Wallet Amount" content={profile?.driverWalletAmount} />
-                        <InfoItem label="Vendor Minimum Wallet Amount" content={profile?.vendorWalletAmount} />
+                        {/* <InfoItem label="Driver Minimum Wallet Amount" content={profile?.driverWalletAmount} />
+                        <InfoItem label="Vendor Minimum Wallet Amount" content={profile?.vendorWalletAmount} /> */}
+                        <InfoItem label="Platform Fee" content={profile?.convenienceFee} />
                         <div>
                           <h5 className="text-base font-bold">Customer Referral</h5>
                           <div className="flex items-center gap-2">
