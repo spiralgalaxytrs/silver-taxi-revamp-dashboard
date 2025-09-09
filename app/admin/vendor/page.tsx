@@ -235,14 +235,14 @@ export default function VendorPage() {
                 {/* {showFilters && <Button variant="outline" onClick={handleClear}>
                   Clear
                 </Button>} */}
-                <Button
+                {/* <Button
                   variant="none"
                   className='text-[#009F7F] hover:bg-[#009F7F] hover:text-white'
                   onClick={() => setShowFilters(!showFilters)}
                 >
                   {showFilters ? 'Hide Filters' : 'Show Filters'}
                   {showFilters ? <ArrowDown className="ml-2" /> : <ArrowUp className="ml-2" />}
-                </Button>
+                </Button> */}
                 <div className="flex items-center gap-2">
                   {Object.keys(rowSelection).length > 0 && (
                     <>

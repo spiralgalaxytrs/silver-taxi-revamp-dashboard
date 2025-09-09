@@ -52,17 +52,17 @@ export default function AdminDashboard() {
         <h2 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard</h2>
 
         {/* Charts - Pie */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-1">
           <Card className="overflow-hidden border-none bg-white shadow-md">
             <CardContent className="p-6">
               <AreaChart createdBy="Admin" bookings={bookings} isLoading={isLoading} />
             </CardContent>
           </Card>
-          <Card className="overflow-hidden border-none bg-white shadow-md">
+          {/* <Card className="overflow-hidden border-none bg-white shadow-md">
             <CardContent className="p-6">
               <PaymentComponent createdBy="Admin" bookings={bookings} isLoading={isLoading} />
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* Overall shortcuts */}
