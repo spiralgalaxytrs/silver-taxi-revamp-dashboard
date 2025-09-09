@@ -66,6 +66,7 @@ export default function Page() {
                 type={vehicle.type}
                 seats={vehicle.seats ?? 0}
                 bags={vehicle.bags ?? 0}
+                order={vehicle.order ?? 0}
                 permitCharge={vehicle.permitCharge ?? 0}
                 driverBeta={vehicle.driverBeta ?? 0}
                 imageUrl={vehicle.imageUrl as string}

@@ -19,11 +19,12 @@ interface VehicleCardProps {
     bags: number
     permitCharge: number
     driverBeta: number
+    order: number
     imageUrl: string
     createdBy: "Admin" | "Vendor"
 }
 
-export function VehicleCard({ vehicleId, name, fuelType, isActive, type, seats, bags, permitCharge, driverBeta, imageUrl, createdBy }: VehicleCardProps) {
+export function VehicleCard({ vehicleId, name, fuelType, isActive, type, seats, bags, permitCharge, driverBeta,order, imageUrl, createdBy }: VehicleCardProps) {
 
     const { vehicleToggleChange, deleteVehicle, message, statusCode } = useVehicleStore()
 
@@ -114,6 +115,8 @@ export function VehicleCard({ vehicleId, name, fuelType, isActive, type, seats, 
                     <div>{seats}</div>
                     <div>Luggage:</div>
                     <div>{bags}</div>
+                    <div>Order:</div>
+                    <div>{order}</div>
                     {/* <div>Permit Charge:</div>
                     <div>{permitCharge}</div> */}
                     {/* <div>Driver Beta:</div>
