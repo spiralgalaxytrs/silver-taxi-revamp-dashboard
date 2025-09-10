@@ -75,5 +75,17 @@ export interface Booking {
 
   geoLocation?: any;
   isContacted?: boolean;
+
+  lastAdminNotifyTime?: Date;
+
+  normalFare?: any;
+  modifiedFare?: any;
+  driverCommissionBreakup?: any;
+  vendorCommissionBreakup?: any;
+
+  commissionTaxPercentage?: number;
+  minKm?: number;
+
+  convenienceFee?: number;
 }
 
