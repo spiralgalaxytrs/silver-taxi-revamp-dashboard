@@ -481,7 +481,7 @@ export function PackageTariffSection({
                                 <h2 className="text-base mb-1">
                                     Extra Price (Per {type === "day" ? "Day" : "KM"})
                                 </h2>
-                                <p className="mt-3">₹{currentExtraPrice} per {type === "day" ? "Day" : "Hour"}</p>
+                                <p className="mt-3">₹{currentExtraPrice} per {type === "day" ? "Day" : "KM"}</p>
                             </>
                         )}
                     </div>
