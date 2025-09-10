@@ -12,6 +12,12 @@ export const getVendorById = async (id: string): Promise<Vendor> => {
   return res.data.data;
 };
 
+
+export const getVendorUPI = async (id: string): Promise<Vendor> => {
+  const res = await axios.get(`/v1/vendors/bank-details/${id}`);
+  return res.data.data;
+};
+
 export const getVendorWalletAmount = async (): Promise<number> => {
   const res = await axios.get("/v1/vendors/wallet-amount");
   return res.data.data;
