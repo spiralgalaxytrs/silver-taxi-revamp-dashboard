@@ -847,6 +847,11 @@ export default function BookingDetailsPage() {
                         </div>
                       ))}
 
+                      <div className="flex justify-between">
+                        <span>Convenience Fee</span>
+                        <span>{formatCurrency(formData?.convenienceFee || 0)}</span>
+                      </div>
+
                       <div className="border-y border-gray-200 pt-2">
                         <div className="flex justify-between font-bold">
                           <span>Total Amount</span>
@@ -863,7 +868,7 @@ export default function BookingDetailsPage() {
                         </div>
                       )}
 
-                      {booking?.advanceAmount > 0 && (
+                      {booking?.upPaidAmount > 0 && (
                         <div className="flex justify-between font-bold">
                           <span>Remaining Amount</span>
                           <span>
@@ -902,6 +907,10 @@ export default function BookingDetailsPage() {
                               <div className="flex justify-between">
                                 <span>Admin Commission</span>
                                 <span className='text-red-500'>- {formatCurrency(booking?.adminCommission)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Platform Fee</span>
+                                <span className='text-red-500'>- {formatCurrency(booking?.convenienceFee)}</span>
                               </div>
                               <div className="border-t border-b border-gray-200 pt-2">
                                 <div className="flex justify-between font-bold">
