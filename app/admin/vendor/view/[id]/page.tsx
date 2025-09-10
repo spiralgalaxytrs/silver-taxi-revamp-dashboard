@@ -30,7 +30,8 @@ import {
 import { walletColumns, VendorTransaction } from "./walletColumns";
 import {
     useVendorById,
-    useAdjustWallet
+    useAdjustWallet,
+    useVendorUPI
 } from 'hooks/react-query/useVendor';
 import {
     useFetchVendorBookings,
@@ -40,6 +41,7 @@ import {
     useVendorTransactions
 } from 'hooks/react-query/useWallet';
 import { toast } from "sonner";
+import { BankDetailsPopup } from "components/others/BankDetailsPopup";
 
 
 export default function ViewDVendorPage({ params }: { params: Promise<{ id: string }> }) {
@@ -72,6 +74,11 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
     const {
         data: vendorTransactions = [],
     } = useVendorTransactions(id ?? '');
+
+    const {
+        data: vendorBankDetails,
+        isLoading: isBankDetailsLoading,
+    } = useVendorUPI(id ?? '');
 
     console.log("vendorTransactions >> ", vendorTransactions);
     console.log("bookings >> ", bookings);
@@ -356,6 +363,34 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
                                         <div className="flex items-center gap-3">
                                             <span className="font-semibold w-14">Phone:</span>
                                             <p className="text-gray-900">{vendor?.phone || '-'}</p>
+                                       
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                        <span className="font-semibold w-14">Bank Details:</span>
+
+                                        <BankDetailsPopup
+                                                trigger={
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="ml-2 h-8 px-3 text-xs"
+                                                        disabled={isBankDetailsLoading}
+                                                    >
+                                                        {isBankDetailsLoading ? "Loading..." : "View"}
+                                                    </Button>
+                                                }
+                                                data={vendorBankDetails || {}}
+                                                title="Bank Details"
+                                                isLoading={isBankDetailsLoading}
+                                                allowedFields={[
+                                                    'bankAccountNumber',
+                                                    'accountHolderName', 
+                                                    'bankName',
+                                                    'ifscCode',
+                                                    'upiId',
+                                                    'upiNumber'
+                                                ]}
+                                            />
                                         </div>
                                     </div>
                                 </div>

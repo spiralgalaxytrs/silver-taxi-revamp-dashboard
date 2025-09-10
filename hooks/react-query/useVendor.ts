@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     getVendors,
     getVendorById,
+    getVendorUPI,
     getVendorWalletAmount,
     createVendor,
     updateVendor,
@@ -31,6 +32,13 @@ export const useVendorWalletAmount = () => {
     return useQuery({
         queryKey: ['vendor-wallet-amount'],
         queryFn: getVendorWalletAmount,
+    });
+};
+
+export const useVendorUPI = (id: string) => {
+    return useQuery({
+        queryKey: ['vendor-upi', id],
+        queryFn: () => getVendorUPI(id),
     });
 };
 
