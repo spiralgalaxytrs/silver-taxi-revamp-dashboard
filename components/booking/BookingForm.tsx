@@ -1070,12 +1070,13 @@ const totalDuration = formatMinutesToDuration(totalDurationMinutes);
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {allPkgTariffs
-                                                    .filter(pkg => pkg.createdBy === 'Admin')
                                                     .filter((pkg, index, self) => 
                                                         // Remove duplicates based on hours and distance only
                                                         index === self.findIndex(p => 
                                                             p.noOfHours === pkg.noOfHours && 
-                                                            p.distanceLimit === pkg.distanceLimit
+                                                            p.distanceLimit === pkg.distanceLimit &&
+                                                            p.status === true &&
+                                                            p.createdBy === 'Admin'
                                                         )
                                                     )
                                                     .map(pkg => (
