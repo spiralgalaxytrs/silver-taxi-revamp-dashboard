@@ -94,7 +94,7 @@ type Booking = {
     type: "Website" | "App" | "Manual";
     paymentStatus: "Unpaid" | "Paid" | "Partial Paid";
     serviceType: "One way" | "Round trip" | "Airport Pickup" | "Airport Drop" | "Day Packages" | "Hourly Packages";
-    status: "Booking Confirmed" |"Completed" | "Cancelled" | "Not-Started" | "Started";
+    status: "Booking Confirmed" | "Completed" | "Cancelled" | "Not-Started" | "Started";
     createdBy: "Admin" | "Vendor";
     toll?: number | null;
     hill?: number | null;
@@ -182,15 +182,15 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         duration: "",
         pricePerKm: 0,
         breakFareDetails: {},
-        extraCharges:{
-            "Toll":0,
-            "Hill":0,
-            "Permit Charge":0,
-            "Parking Charge":0,
-            "Pet Charge":0,
-            "Waiting Charges":0,
-            "Night Charges":0,
-            "Luggage Charges":0,
+        extraCharges: {
+            "Toll": 0,
+            "Hill": 0,
+            "Permit Charge": 0,
+            "Parking Charge": 0,
+            "Pet Charge": 0,
+            "Waiting Charges": 0,
+            "Night Charges": 0,
+            "Luggage Charges": 0,
         },
         vehicleType: ""
     });
@@ -200,8 +200,8 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         data: allPkgTariffs = [],
         isLoading: isPkgTariffsLoading
     } = usePackageTariffs(
-        formData.serviceType === 'Hourly Packages' ? 'hourly' : 
-        formData.serviceType === 'Day Packages' ? 'day' : ''
+        formData.serviceType === 'Hourly Packages' ? 'hourly' :
+            formData.serviceType === 'Day Packages' ? 'day' : ''
     );
 
     // Fetch specific package tariffs when vehicle is selected
@@ -209,10 +209,10 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         data: pkgTariffs = [],
         isLoading: isPkgTariffsLoadingSpecific
     } = usePackageTariffByVehicle(
-        formData.vehicleId, 
-        findServiceId(formData.serviceType) as string, 
-        formData.serviceType === 'Hourly Packages' ? 'hourly' : 
-        formData.serviceType === 'Day Packages' ? 'day' : ''
+        formData.vehicleId,
+        findServiceId(formData.serviceType) as string,
+        formData.serviceType === 'Hourly Packages' ? 'hourly' :
+            formData.serviceType === 'Day Packages' ? 'day' : ''
     );
 
     let pastTimeToastShown = false;
@@ -346,71 +346,71 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         if (pickup && drop) {
             setLocalLoading(true);
             try {
-              // Ensure stops are strings (adjust if stops already strings)
-const stopsList = (formData.stops || []).map((s: any) => s.location || s);
+                // Ensure stops are strings (adjust if stops already strings)
+                const stopsList = (formData.stops || []).map((s: any) => s.location || s);
 
-// Build location sequence
-let allLocations = [pickup, ...stopsList, drop];
+                // Build location sequence
+                let allLocations = [pickup, ...stopsList, drop];
 
-// For round trips, add pickup again at end if stops exist
-if (formData.serviceType === "Round trip" && stopsList.length > 0) {
-    allLocations.push(pickup);
-}
+                // For round trips, add pickup again at end if stops exist
+                if (formData.serviceType === "Round trip" && stopsList.length > 0) {
+                    allLocations.push(pickup);
+                }
 
-// Build origin-destination pairs
-const locationPairs = allLocations.slice(0, -1).map((loc, index) => ({
-    origin: loc,
-    destination: allLocations[index + 1]
-}));
+                // Build origin-destination pairs
+                const locationPairs = allLocations.slice(0, -1).map((loc, index) => ({
+                    origin: loc,
+                    destination: allLocations[index + 1]
+                }));
 
-// Fetch all distances in parallel
-const results = await Promise.all(
-    locationPairs.map(pair =>
-        axios.get(`/global/distance`, {
-            params: { origin: pair.origin, destination: pair.destination }
-        })
-    )
-);
+                // Fetch all distances in parallel
+                const results = await Promise.all(
+                    locationPairs.map(pair =>
+                        axios.get(`/global/distance`, {
+                            params: { origin: pair.origin, destination: pair.destination }
+                        })
+                    )
+                );
 
-// Helper function to parse duration string to minutes
-const parseDurationToMinutes = (durationStr: string): number => {
-    if (typeof durationStr === 'number') return durationStr;
-    
-    const hoursMatch = durationStr.match(/(\d+)\s*hours?/i);
-    const minsMatch = durationStr.match(/(\d+)\s*mins?/i);
-    
-    const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
-    const minutes = minsMatch ? parseInt(minsMatch[1]) : 0;
-    
-    return hours * 60 + minutes;
-};
+                // Helper function to parse duration string to minutes
+                const parseDurationToMinutes = (durationStr: string): number => {
+                    if (typeof durationStr === 'number') return durationStr;
 
-// Helper function to format minutes back to duration string
-const formatMinutesToDuration = (totalMinutes: number): string => {
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    
-    if (hours > 0 && minutes > 0) {
-        return `${hours} hours ${minutes} mins`;
-    } else if (hours > 0) {
-        return `${hours} hours`;
-    } else {
-        return `${minutes} mins`;
-    }
-};
+                    const hoursMatch = durationStr.match(/(\d+)\s*hours?/i);
+                    const minsMatch = durationStr.match(/(\d+)\s*mins?/i);
 
-// Sum total distance and duration
-const { totalDistance, totalDurationMinutes } = results.reduce(
-    (acc, res) => {
-        const { distance, duration } = res.data.data;
-        acc.totalDistance += distance;
-        acc.totalDurationMinutes += parseDurationToMinutes(duration);
-        return acc;
-    },
-    { totalDistance: 0, totalDurationMinutes: 0 }
-);
+                    const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
+                    const minutes = minsMatch ? parseInt(minsMatch[1]) : 0;
 
-const totalDuration = formatMinutesToDuration(totalDurationMinutes);
+                    return hours * 60 + minutes;
+                };
+
+                // Helper function to format minutes back to duration string
+                const formatMinutesToDuration = (totalMinutes: number): string => {
+                    const hours = Math.floor(totalMinutes / 60);
+                    const minutes = totalMinutes % 60;
+
+                    if (hours > 0 && minutes > 0) {
+                        return `${hours} hours ${minutes} mins`;
+                    } else if (hours > 0) {
+                        return `${hours} hours`;
+                    } else {
+                        return `${minutes} mins`;
+                    }
+                };
+
+                // Sum total distance and duration
+                const { totalDistance, totalDurationMinutes } = results.reduce(
+                    (acc, res) => {
+                        const { distance, duration } = res.data.data;
+                        acc.totalDistance += distance;
+                        acc.totalDurationMinutes += parseDurationToMinutes(duration);
+                        return acc;
+                    },
+                    { totalDistance: 0, totalDurationMinutes: 0 }
+                );
+
+                const totalDuration = formatMinutesToDuration(totalDurationMinutes);
 
 
                 // Save to form state
@@ -520,7 +520,7 @@ const totalDuration = formatMinutesToDuration(totalDurationMinutes);
 
             const response = await axios.post(`/v1/bookings/fair-calculation`, payload);
             let { basePrice, driverBeta, pricePerKm, finalPrice, taxAmount, taxPercentage, breakFareDetails, totalDistance } = response.data.data;
-            
+
             setFormData(prev => ({
                 ...prev,
                 estimatedAmount: basePrice,
@@ -694,16 +694,16 @@ const totalDuration = formatMinutesToDuration(totalDurationMinutes);
             await fetchDistance(formData.pickup, formData.drop);
         } else if ((formData.serviceType === 'Hourly Packages' || formData.serviceType === 'Day Packages') && formData.packageId) {
             // For package services, trigger fare calculation with package details
-    
+
             await handleFairCalculation(
                 formData.serviceType,
                 formData.vehicleId,
                 formData.distanceLimit || 0,
                 formData.pickupDateTime,
-                formData.dropDate || ''         
-               );
+                formData.dropDate || ''
+            );
         } else {
-        
+
         }
         setCurrentStep(2);
         setFinalTax('');
@@ -851,7 +851,7 @@ const totalDuration = formatMinutesToDuration(totalDurationMinutes);
                 tariffs.some(
                     tariff =>
                         tariff.vehicleId === vehicle.vehicleId &&
-                        tariff.price > 0 && 
+                        tariff.price > 0 &&
                         tariff.services?.name === formData.serviceType
                 )
             );
@@ -1070,10 +1070,10 @@ const totalDuration = formatMinutesToDuration(totalDurationMinutes);
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {allPkgTariffs
-                                                    .filter((pkg, index, self) => 
+                                                    .filter((pkg, index, self) =>
                                                         // Remove duplicates based on hours and distance only
-                                                        index === self.findIndex(p => 
-                                                            p.noOfHours === pkg.noOfHours && 
+                                                        index === self.findIndex(p =>
+                                                            p.noOfHours === pkg.noOfHours &&
                                                             p.distanceLimit === pkg.distanceLimit &&
                                                             p.status === true &&
                                                             p.createdBy === 'Admin'
@@ -1254,7 +1254,14 @@ const totalDuration = formatMinutesToDuration(totalDurationMinutes);
                                     }
 
                                     // Add Drop
-                                    routeParts.push({ label: formData.drop || "Drop", type: "drop" });
+                                    // routeParts.push({ label: formData.drop || "Drop", type: "drop" });
+
+                                    
+                                    // Add Drop only if exists
+                                    if (formData.drop) {
+                                        routeParts.push({ label: formData.drop, type: "drop" });
+                                    }
+
 
                                     // Add Pickup again for round trip with stops
                                     if (formData.serviceType === "Round trip" && Array.isArray(formData.stops) && formData.stops.length > 0) {
@@ -1295,16 +1302,16 @@ const totalDuration = formatMinutesToDuration(totalDurationMinutes);
                                 <div className="grid grid-cols-2 gap-4">
                                     {formData.serviceType === 'Hourly Packages' ? (
                                         <>
-                                            <div className="space-y-2">
+                                            {/* <div className="space-y-2">
                                                 <Label>Base Price</Label>
                                                 <Input
                                                     value={formData.price || ""}
                                                     className="h-12 bg-muted"
                                                     readOnly
                                                 />
-                                            </div>
+                                            </div> */}
                                             <div className="space-y-2">
-                                                <Label>Distance Limit (KM)</Label>
+                                                <Label>Distance (KM)</Label>
                                                 <Input
                                                     value={formData.distanceLimit || ""}
                                                     className="h-12 bg-muted"
@@ -1325,7 +1332,7 @@ const totalDuration = formatMinutesToDuration(totalDurationMinutes);
                                             <div className="space-y-2">
                                                 <Label>Distance (KM) <span className='text-red-500'>*</span></Label>
                                                 <Input
-                                                    value={formData.distance}
+                                                    value={formData?.distance}
                                                     className="h-12 bg-muted"
                                                     onChange={e => handleInputChange('distance', e.target.value)}
                                                 />
@@ -1334,9 +1341,9 @@ const totalDuration = formatMinutesToDuration(totalDurationMinutes);
                                     )}
 
                                     <div className="space-y-2">
-                                        <Label>Estimated Amount <span className='text-red-500'>*</span></Label>
+                                        <Label>KM Price <span className='text-red-500'>*</span></Label>
                                         <Input
-                                            value={formData.estimatedAmount}
+                                            value={formData?.estimatedAmount ?? formData?.price}
                                             className="h-12 bg-muted"
                                             onChange={e => handleInputChange('estimatedAmount', e.target.value)}
                                             readOnly
