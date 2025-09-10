@@ -83,6 +83,7 @@ type Booking = {
     upPaidAmount: number;
     price: number;
     extraPrice: number;
+    extraPricePerKm?: number;
     distanceLimit: number;
     discountAmount: number;
     advanceAmount: number;
@@ -123,6 +124,10 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
     const { mutate: createBooking, isPending: isCreatePending } = useCreateBooking();
     const { mutate: updateBooking, isPending: isUpdatePending } = useUpdateBooking();
 
+    const findServiceId = (serviceType: string) => {
+        const foundService: any = services.find(service => service.name === serviceType);
+        return foundService ? foundService.serviceId as string : "";
+    }
 
     const [currentStep, setCurrentStep] = useState(1);
     const [localLoading, setLocalLoading] = useState(false);
@@ -134,6 +139,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
     const [finalTax, setFinalTax] = useState("");
     // const [filteredVehicles, setFilteredVehicles] = useState<any[]>([]);
+
 
 
     const [formData, setFormData] = useState<Booking>({
@@ -155,6 +161,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         dayOrHour: '',
         price: 0,
         extraPrice: 0,
+        extraPricePerKm: 0,
         distanceLimit: 0,
         finalAmount: 0,
         estimatedAmount: 0,
@@ -187,6 +194,26 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         },
         vehicleType: ""
     });
+
+    // Fetch all package tariffs for the service type
+    const {
+        data: allPkgTariffs = [],
+        isLoading: isPkgTariffsLoading
+    } = usePackageTariffs(
+        formData.serviceType === 'Hourly Packages' ? 'hourly' : 
+        formData.serviceType === 'Day Packages' ? 'day' : ''
+    );
+
+    // Fetch specific package tariffs when vehicle is selected
+    const {
+        data: pkgTariffs = [],
+        isLoading: isPkgTariffsLoadingSpecific
+    } = usePackageTariffByVehicle(
+        formData.vehicleId, 
+        findServiceId(formData.serviceType) as string, 
+        formData.serviceType === 'Hourly Packages' ? 'hourly' : 
+        formData.serviceType === 'Day Packages' ? 'day' : ''
+    );
 
     let pastTimeToastShown = false;
 
@@ -222,25 +249,8 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         });
     };
 
-    const filteredVehicles = useMemo(() => {
-        return vehicles.filter(vehicle =>
-            vehicle.isActive &&
-            tariffs.some(
-                tariff =>
-                    tariff.vehicleId === vehicle.vehicleId &&
-                    tariff.price > 0 && 
-                    tariff.services?.name === formData.serviceType
-            )
-
-        );
-    }, [vehicles, tariffs, formData.serviceType]);
 
 
-
-    const findServiceId = (serviceType: string) => {
-        const foundService: any = services.find(service => service.name === serviceType);
-        return foundService ? foundService.serviceId as string : "";
-    }
 
     const findServiceType = (serviceId: string) => {
         const gotService = services.find(service => service.serviceId === serviceId);
@@ -299,6 +309,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                 upPaidAmount: booking.upPaidAmount || 0,
                 price: booking.price || 0,
                 extraPrice: booking.extraPrice || 0,
+                extraPricePerKm: booking.extraPricePerKm || 0,
                 distanceLimit: booking.distanceLimit || 0,
                 createdBy: booking.createdBy as "Admin" | "Vendor",
                 serviceType: booking.serviceType as
@@ -319,12 +330,6 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
             setUpdatedOffers(offers.filter((offer: any) => offer.status === true));
         }
     }, [offers]);
-
-    // Add this useEffect to fetch package tariffs when service type and vehicle are selected
-    const {
-        data: pkgTariffs = [],
-        isLoading: isPkgTariffsLoading
-    } = usePackageTariffByVehicle(formData.vehicleId, findServiceId(formData.serviceType) as string, 'hourly');
 
     useEffect(() => {
         const initialData = { ...formData }; // same as before
@@ -406,9 +411,6 @@ const { totalDistance, totalDurationMinutes } = results.reduce(
 );
 
 const totalDuration = formatMinutesToDuration(totalDurationMinutes);
-
-console.log("Total Distance:", totalDistance);
-console.log("Total Duration:", totalDuration);
 
 
                 // Save to form state
@@ -518,7 +520,7 @@ console.log("Total Duration:", totalDuration);
 
             const response = await axios.post(`/v1/bookings/fair-calculation`, payload);
             let { basePrice, driverBeta, pricePerKm, finalPrice, taxAmount, taxPercentage, breakFareDetails, totalDistance } = response.data.data;
-            console.log("basePrice", totalDistance);
+            
             setFormData(prev => ({
                 ...prev,
                 estimatedAmount: basePrice,
@@ -567,6 +569,18 @@ console.log("Total Duration:", totalDuration);
             }
 
             const newState = { ...prev, [name]: newValue };
+
+            // Skip client-side calculations for package services (Hourly/Day Packages)
+            // as they use API-calculated amounts
+            if (newState.serviceType === 'Hourly Packages' || newState.serviceType === 'Day Packages') {
+                // Only update payment status and unpaid amount for package services
+                if (name === "advanceAmount") {
+                    newState.paymentStatus = Number(newValue) > 0 ? "Partial Paid" : "Unpaid";
+                }
+                // Always recalc unpaid amount
+                newState.upPaidAmount = Number(newState.finalAmount || 0) - Number(newState.advanceAmount || 0);
+                return newState;
+            }
 
             let pricePerKm = Number(newState.pricePerKm || 0);
             let totalDistance = 0;
@@ -677,9 +691,19 @@ console.log("Total Duration:", totalDuration);
 
         // Only calculate distance for non-package bookings
         if (formData.serviceType !== 'Day Packages' && formData.serviceType !== 'Hourly Packages') {
-            await fetchDistance(formData.pickup, formData.drop,
-                // formData.stops
-            );
+            await fetchDistance(formData.pickup, formData.drop);
+        } else if ((formData.serviceType === 'Hourly Packages' || formData.serviceType === 'Day Packages') && formData.packageId) {
+            // For package services, trigger fare calculation with package details
+    
+            await handleFairCalculation(
+                formData.serviceType,
+                formData.vehicleId,
+                formData.distanceLimit || 0,
+                formData.pickupDateTime,
+                formData.dropDate || ''         
+               );
+        } else {
+        
         }
         setCurrentStep(2);
         setFinalTax('');
@@ -796,6 +820,44 @@ console.log("Total Duration:", totalDuration);
         }));
     }
 
+    const filteredVehicles = useMemo(() => {
+        if (formData.serviceType === 'Hourly Packages' || formData.serviceType === 'Day Packages') {
+            // For package services, show vehicles that support the selected package
+            if (formData.packageId) {
+                return vehicles.filter(vehicle =>
+                    vehicle.isActive &&
+                    allPkgTariffs.some(
+                        pkgTariff =>
+                            pkgTariff.vehicleId === vehicle.vehicleId &&
+                            pkgTariff.packageId === formData.packageId &&
+                            pkgTariff.price > 0
+                    )
+                );
+            } else {
+                // If no package selected, show all vehicles that have packages
+                return vehicles.filter(vehicle =>
+                    vehicle.isActive &&
+                    allPkgTariffs.some(
+                        pkgTariff =>
+                            pkgTariff.vehicleId === vehicle.vehicleId &&
+                            pkgTariff.price > 0
+                    )
+                );
+            }
+        } else {
+            // For regular services, check regular tariffs
+            return vehicles.filter(vehicle =>
+                vehicle.isActive &&
+                tariffs.some(
+                    tariff =>
+                        tariff.vehicleId === vehicle.vehicleId &&
+                        tariff.price > 0 && 
+                        tariff.services?.name === formData.serviceType
+                )
+            );
+        }
+    }, [vehicles, tariffs, allPkgTariffs, formData.serviceType, formData.packageId]);
+
     const isAnyLoading = localLoading || isTariffsLoading || isVehiclesLoading;
     if (isAnyLoading) {
         return (
@@ -847,8 +909,11 @@ console.log("Total Duration:", totalDuration);
                                         value={formData.serviceType}
                                         onValueChange={(v) => {
                                             handleInputChange('serviceType', v);
-                                            // Reset vehicleId when service type changes to ensure valid selection
+                                            // Reset vehicleId and packageId when service type changes to ensure valid selection
                                             handleInputChange('vehicleId', '');
+                                            if (v === 'Hourly Packages' || v === 'Day Packages') {
+                                                handleInputChange('packageId', '');
+                                            }
                                         }}
                                     >
                                         <SelectTrigger className="h-12">
@@ -906,87 +971,95 @@ console.log("Total Duration:", totalDuration);
                                 )} */}
 
 
-                                <div className="space-y-2">
-                                    <Label>Vehicle Name <span className='text-red-500'>*</span></Label>
-                                    <Select
-                                        value={formData.vehicleId || ""} // Ensure this is not an empty string
-                                        onValueChange={async (v) => {
-                                            const selectedVehicle = filteredVehicles.find(vehicle => vehicle.vehicleId === v);
+                                {/* Show vehicle selection only if not hourly packages or if package is selected */}
+                                {formData.serviceType !== 'Hourly Packages' || formData.packageId ? (
+                                    <div className="space-y-2">
+                                        <Label>Vehicle Name <span className='text-red-500'>*</span></Label>
+                                        <Select
+                                            value={formData.vehicleId || ""} // Ensure this is not an empty string
+                                            onValueChange={async (v) => {
+                                                const selectedVehicle = filteredVehicles.find(vehicle => vehicle.vehicleId === v);
 
-                                            // Update all related fields at once
-                                            setFormData(prev => {
-                                                const newState = {
-                                                    ...prev,
-                                                    vehicleId: v,
-                                                    vehicleType: selectedVehicle?.type || '',
-                                                    // Add any other vehicle-related fields you want to update
-                                                };
-                                                return newState;
-                                            });
-                                        }}
-                                    >
-                                        <SelectTrigger className="h-12">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {filteredVehicles.length > 0 ? (
-                                                filteredVehicles.map((vehicle: any) => (
-                                                    <SelectItem key={vehicle.vehicleId} value={vehicle.vehicleId}>
-                                                        {vehicle.name}
+                                                // Update all related fields at once
+                                                setFormData(prev => {
+                                                    const newState = {
+                                                        ...prev,
+                                                        vehicleId: v,
+                                                        vehicleType: selectedVehicle?.type || '',
+                                                        // Add any other vehicle-related fields you want to update
+                                                    };
+                                                    return newState;
+                                                });
+                                            }}
+                                        >
+                                            <SelectTrigger className="h-12">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {filteredVehicles.length > 0 ? (
+                                                    filteredVehicles.map((vehicle: any) => (
+                                                        <SelectItem key={vehicle.vehicleId} value={vehicle.vehicleId}>
+                                                            {vehicle.name}
+                                                        </SelectItem>
+                                                    ))
+                                                ) : (
+                                                    <SelectItem value="no-vehicles" disabled>
+                                                        No vehicles available
                                                     </SelectItem>
-                                                ))
-                                            ) : (
-                                                <SelectItem value="no-vehicles" disabled>
-                                                    No vehicles available
-                                                </SelectItem>
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                ) : null}
 
 
-                                {formData.vehicleId ? (
-                                    <div className="pt-2">
-                                        <Label>Vehicle Type</Label>
-                                        <Input
-                                            type="text"
-                                            value={formData.vehicleType || "Unknown"}
-                                            disabled
-                                            className="mt-1 w-full h-12 px-3 border rounded-md bg-gray-100 text-gray-700"
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="pt-2">
-                                        <Label>Vehicle Type</Label>
-                                        <Input
-                                            type="text"
-                                            value="No vehicle selected"
-                                            disabled
-                                            className="mt-1 w-full h-12 px-3 border rounded-md bg-gray-100 text-gray-500 italic"
-                                        />
-                                    </div>
+                                {/* Show vehicle type only if vehicle selection is visible */}
+                                {(formData.serviceType !== 'Hourly Packages' || formData.packageId) && (
+                                    formData.vehicleId ? (
+                                        <div className="pt-2">
+                                            <Label>Vehicle Type</Label>
+                                            <Input
+                                                type="text"
+                                                value={formData.vehicleType || "Unknown"}
+                                                disabled
+                                                className="mt-1 w-full h-12 px-3 border rounded-md bg-gray-100 text-gray-700"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="pt-2">
+                                            <Label>Vehicle Type</Label>
+                                            <Input
+                                                type="text"
+                                                value="No vehicle selected"
+                                                disabled
+                                                className="mt-1 w-full h-12 px-3 border rounded-md bg-gray-100 text-gray-500 italic"
+                                            />
+                                        </div>
+                                    )
                                 )}
 
 
 
-                                {/* Add this new conditional package selection */}
-                                {/* {(formData.serviceType === 'Day Packages' || formData.serviceType === 'Hourly Packages') && formData.vehicleId && (
+                                {/* Package Selection for Hourly Packages */}
+                                {formData.serviceType === 'Hourly Packages' && (
                                     <div className="space-y-2">
                                         <Label>Package Selection <span className='text-red-500'>*</span></Label>
                                         <Select
                                             value={formData.packageId}
                                             onValueChange={async (v) => {
-                                                const selectedPackage = packageTariffs.find(pkg => pkg.packageId === v);
+                                                const selectedPackage = allPkgTariffs.find(pkg => pkg.packageId === v);
 
                                                 // Update all related fields at once
                                                 setFormData(prev => {
                                                     const newState = {
                                                         ...prev,
                                                         packageId: v,
-                                                        dayOrHour: selectedPackage?.dayOrHour || '',
+                                                        dayOrHour: selectedPackage?.noOfHours || '',
                                                         distanceLimit: selectedPackage?.distanceLimit || 0,
                                                         price: selectedPackage?.price || 0,
-                                                        extraPrice: selectedPackage?.extraPrice || 0
+                                                        extraPrice: selectedPackage?.extraPrice || 0,
+                                                        extraPricePerKm: selectedPackage?.extraPrice || 0,
+                                                        vehicleId: '' // Reset vehicle selection when package changes
                                                     };
                                                     return newState;
                                                 });
@@ -996,17 +1069,25 @@ console.log("Total Duration:", totalDuration);
                                                 <SelectValue placeholder="Select a package" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {packageTariffs
+                                                {allPkgTariffs
                                                     .filter(pkg => pkg.createdBy === 'Admin')
+                                                    .filter((pkg, index, self) => 
+                                                        // Remove duplicates based on hours and distance only
+                                                        index === self.findIndex(p => 
+                                                            p.noOfHours === pkg.noOfHours && 
+                                                            p.distanceLimit === pkg.distanceLimit
+                                                        )
+                                                    )
                                                     .map(pkg => (
                                                         <SelectItem key={pkg.packageId} value={pkg.packageId}>
-                                                            {pkg.dayOrHour} {pkg.dayOrHour > 1 ? "Hours" : "Hour"} - {pkg.distanceLimit} Km - ₹ {pkg.price}
+                                                            {pkg.noOfHours} {Number(pkg.noOfHours) > 1 ? "Hours" : "Hour"} {pkg.distanceLimit} Km - ₹{pkg.price}
                                                         </SelectItem>
                                                     ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                )} */}
+                                )}
+
 
                                 <div className="space-y-2">
                                     <Label>Customer Name <span className='text-red-500'>*</span></Label>
@@ -1056,17 +1137,19 @@ console.log("Total Duration:", totalDuration);
                                         onChange={(e) => handleInputChange("pickup", e.target.value)}
                                         getValue={formData.pickup}
                                     />
-                                    <Button
-                                        variant="link"
-                                        onClick={handleAddStop}
-                                        disabled={formData.stops.length >= MAX_STOPS}
-                                        className="text-blue-500 text-sm mt-1 hover:underline flex items-center p-0"
-                                    >
-                                        <Plus className="w-4 h-4 mr-1" /> Add Stop
-                                    </Button>
+                                    {formData.serviceType !== 'Hourly Packages' && (
+                                        <Button
+                                            variant="link"
+                                            onClick={handleAddStop}
+                                            disabled={formData.stops.length >= MAX_STOPS}
+                                            className="text-blue-500 text-sm mt-1 hover:underline flex items-center p-0"
+                                        >
+                                            <Plus className="w-4 h-4 mr-1" /> Add Stop
+                                        </Button>
+                                    )}
                                 </div>
 
-                                {formData.stops.map((stop: any, index: any) => (
+                                {formData.serviceType !== 'Hourly Packages' && formData.stops.map((stop: any, index: any) => (
                                     <div key={index} className="mb-3 flex items-center gap-2">
                                         <div className="flex-1">
                                             <Label className="text-sm text-gray-600">Stop {index + 1}</Label>
@@ -1209,23 +1292,45 @@ console.log("Total Duration:", totalDuration);
                             </div>
                             <div className="space-y-4 mt-4">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Price Per KM <span className='text-red-500'>*</span></Label>
-                                        <Input
-                                            value={formData?.pricePerKm || ""}
-                                            className="h-12 bg-muted"
-                                            onChange={e => handleInputChange('pricePerKm', e.target.value)}
-
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Distance (KM) <span className='text-red-500'>*</span></Label>
-                                        <Input
-                                            value={formData.distance}
-                                            className="h-12 bg-muted"
-                                            onChange={e => handleInputChange('distance', e.target.value)}
-                                        />
-                                    </div>
+                                    {formData.serviceType === 'Hourly Packages' ? (
+                                        <>
+                                            <div className="space-y-2">
+                                                <Label>Base Price</Label>
+                                                <Input
+                                                    value={formData.price || ""}
+                                                    className="h-12 bg-muted"
+                                                    readOnly
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Distance Limit (KM)</Label>
+                                                <Input
+                                                    value={formData.distanceLimit || ""}
+                                                    className="h-12 bg-muted"
+                                                    readOnly
+                                                />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="space-y-2">
+                                                <Label>Price Per KM <span className='text-red-500'>*</span></Label>
+                                                <Input
+                                                    value={formData?.pricePerKm || ""}
+                                                    className="h-12 bg-muted"
+                                                    onChange={e => handleInputChange('pricePerKm', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Distance (KM) <span className='text-red-500'>*</span></Label>
+                                                <Input
+                                                    value={formData.distance}
+                                                    className="h-12 bg-muted"
+                                                    onChange={e => handleInputChange('distance', e.target.value)}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
 
                                     <div className="space-y-2">
                                         <Label>Estimated Amount <span className='text-red-500'>*</span></Label>
@@ -1283,6 +1388,18 @@ console.log("Total Duration:", totalDuration);
                                             className="h-12"
                                         />
                                     </div>
+
+                                    {/* Driver Beta Display for Package Services */}
+                                    {(formData.serviceType === 'Hourly Packages' || formData.serviceType === 'Day Packages') && (
+                                        <div className="space-y-2">
+                                            <Label>Driver Beta</Label>
+                                            <Input
+                                                value={formData.driverBeta !== null && formData.driverBeta !== undefined ? formData.driverBeta : ""}
+                                                className="h-12 bg-muted"
+                                                readOnly
+                                            />
+                                        </div>
+                                    )}
 
                                     <div className="space-y-2">
 
