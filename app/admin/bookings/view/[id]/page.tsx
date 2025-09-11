@@ -167,8 +167,10 @@ export default function BookingDetailsPage() {
       (sum, charge) => sum + (parseFloat(charge) || 0),
       0
     );
-
-    return estimatedFare + chargesSum + taxAmount + driverBeta + extraChargesSum;
+    const convenienceFee = booking.convenienceFee || 0;
+    const advanceAmount = booking.advanceAmount || 0;
+    const discountAmount = booking.discountAmount || 0;
+    return estimatedFare + chargesSum + taxAmount + driverBeta + extraChargesSum + convenienceFee - (advanceAmount + discountAmount);
   };
 
   const handleEdit = (section: 'before' | 'after') => {
@@ -262,7 +264,7 @@ export default function BookingDetailsPage() {
 
         // Always recalculate tripCompletedFinalAmount fresh:
         const totalFinal = calculateTotalAmount(estimatedFare, taxAmount, driverBeta || 0, driverCharges, extraCharges);
-        updated.tripCompletedFinalAmount = totalFinal - (updated.discountAmount || 0);
+        updated.tripCompletedFinalAmount = totalFinal;
       }
 
       return updated;
@@ -797,13 +799,15 @@ export default function BookingDetailsPage() {
 
           {/* Trip Calculation Card (Full Width) */}
           {(booking.tripCompletedFinalAmount > 0) && (
-            <Card className="bg-white rounded-lg border border-gray-200">
-              <CardHeader className="pb-4 border-b text-center">
-                <h2 className="text-lg font-semibold text-gray-800">Trip Summary</h2>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-center">
-                  <div className="w-full md:w-1/2 bg-gray-50 p-4 rounded-lg">
+            <div className=' rounded-lg flex flex-col items-center gap-6'>
+
+              {/* Trip Summary */}
+              <Card className="bg-white border border-gray-200 w-2/3">
+                <CardHeader className="pb-4 border-b text-center">
+                  <h2 className="text-lg font-semibold text-gray-800">Trip Summary</h2>
+                </CardHeader>
+                <CardContent>
+                  <div className="w-full mx-auto p-4 rounded-lg">
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span>Total Distance</span>
@@ -814,57 +818,55 @@ export default function BookingDetailsPage() {
                         <span>{formatCurrency(formData?.pricePerKm || booking?.pricePerKm)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Base Fare</span>
-                        <span>
-                          {formatCurrency(formData?.tripCompletedEstimatedAmount || booking?.tripCompletedEstimatedAmount)}
-                        </span>
+                        <span>Km Price</span>
+                        <span>{formatCurrency(formData?.tripCompletedEstimatedAmount || booking?.tripCompletedEstimatedAmount)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Driver Beta</span>
                         <span>{formatCurrency(formData?.tripCompletedDriverBeta || booking?.tripCompletedDriverBeta || 0)}</span>
                       </div>
-                      {/* <div className="flex justify-between">
-                        <span>Offer Amount</span>
-                        <span>{formatCurrency(0)}</span>
-                      </div> */}
                       <div className="flex justify-between">
                         <span>GST ({booking?.taxPercentage || 0}%)</span>
                         <span>{formatCurrency(booking?.tripCompletedTaxAmount)}</span>
                       </div>
 
-                      {/* Driver Charges Display */}
-                      {Object.entries(driverCharges).filter(([key, value]) => parseFloat(value) > 0).map(([key, value]) => (
-                        <div key={key} className="flex justify-between">
-                          <span>{capitalizeLabel(key)}</span>
-                          <span>{formatCurrency(parseFloat(value) || 0)}</span>
-                        </div>
-                      ))}
+                      {/* Driver Charges */}
+                      {Object.entries(driverCharges)
+                        .filter(([_, value]) => parseFloat(value) > 0)
+                        .map(([key, value]) => (
+                          <div key={key} className="flex justify-between">
+                            <span>{capitalizeLabel(key)}</span>
+                            <span>{formatCurrency(parseFloat(value) || 0)}</span>
+                          </div>
+                        ))}
 
-                      {Object.entries(extraCharges).filter(([key, value]) => parseFloat(value) > 0).map(([key, value]) => (
-                        <div key={key} className="flex justify-between">
-                          <span>{capitalizeLabel(key)}</span>
-                          <span>{formatCurrency(parseFloat(value) || 0)}</span>
-                        </div>
-                      ))}
+                      {/* Extra Charges */}
+                      {Object.entries(extraCharges)
+                        .filter(([_, value]) => parseFloat(value) > 0)
+                        .map(([key, value]) => (
+                          <div key={key} className="flex justify-between">
+                            <span>{capitalizeLabel(key)}</span>
+                            <span>{formatCurrency(parseFloat(value) || 0)}</span>
+                          </div>
+                        ))}
 
                       <div className="flex justify-between">
-                        <span>Convenience Fee</span>
+                        <span>Platform Fee</span>
                         <span>{formatCurrency(formData?.convenienceFee || 0)}</span>
                       </div>
 
-                      <div className="border-y border-gray-200 pt-2">
+                      {/* Total Amount */}
+                      <div className="border-t-4 border-double border-gray-400 pt-2">
                         <div className="flex justify-between font-bold">
                           <span>Total Amount</span>
-                          <span>
-                            {formatCurrency(formData?.tripCompletedFinalAmount || booking?.tripCompletedFinalAmount || 0)}
-                          </span>
+                          <span>{formatCurrency(formData?.tripCompletedFinalAmount || booking?.tripCompletedFinalAmount || 0)}</span>
                         </div>
                       </div>
 
                       {booking?.advanceAmount > 0 && (
                         <div className="flex justify-between">
                           <span>Advance Amount</span>
-                          <span className='text-red-500'> {"-"} {formatCurrency(booking?.advanceAmount)}</span>
+                          <span className="text-red-500">- {formatCurrency(booking?.advanceAmount)}</span>
                         </div>
                       )}
 
@@ -872,93 +874,114 @@ export default function BookingDetailsPage() {
                         <div className="flex justify-between font-bold">
                           <span>Remaining Amount</span>
                           <span>
-                            {formatCurrency(((booking?.tripCompletedFinalAmount || 0) - (booking?.advanceAmount || 0)))}
+                            {formatCurrency((booking?.tripCompletedFinalAmount || 0) - (booking?.advanceAmount || 0))}
                           </span>
                         </div>
                       )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                      <div className="border-t border-gray-200 pt-2">
-                        <br />
-                        <h4 className="font-semibold mb-1">{booking?.createdBy === "User" ? "Admin" : booking?.createdBy}  Amount</h4>
-                        <div className="space-y-1">
-                          <div className="flex justify-between">
-                            <span>GST ({booking?.taxPercentage || 0}%)</span>
-                            <span>{formatCurrency(booking?.tripCompletedTaxAmount)}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-1">
-                              <span>{booking?.createdBy === "User" ? "Admin" : booking?.createdBy}  Commission</span>
-                              <TooltipComponent name={`Commission Tax Amount = ${calculateCommissionTax()} `}>
-                                <Info className="w-4 h-4" />
-                              </TooltipComponent>
-                            </div>
-                            <span>{formatCurrency(Number(booking?.driverDeductionAmount) - Number(booking?.tripCompletedTaxAmount))}</span>
-                          </div>
-
-                          <div className="border-t border-b border-gray-200 pt-2">
-                            <div className="flex justify-between font-bold">
-                              <span>Total Amount</span>
-                              <span>{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
-                            </div>
-                          </div>
-
-                          {booking?.createdBy === "Vendor" && (
-                            <>
-                              <div className="flex justify-between">
-                                <span>Admin Commission</span>
-                                <span className='text-red-500'>- {formatCurrency(booking?.adminCommission)}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Platform Fee</span>
-                                <span className='text-red-500'>- {formatCurrency(booking?.convenienceFee)}</span>
-                              </div>
-                              <div className="border-t border-b border-gray-200 pt-2">
-                                <div className="flex justify-between font-bold">
-                                  <span>Total Amount</span>
-                                  <span>{formatCurrency(Number((booking?.driverDeductionAmount) - booking?.adminCommission))}</span>
-                                </div>
-                              </div>
-                            </>
-                          )}
-                        </div>
-
-                        <br />
-
-                        <h4 className="font-semibold mb-1">Driver Amount</h4>
-                        <div className="space-y-1">
-                          <div className="flex justify-between">
-                            <span>Trip Total Amount</span>
-                            <span>{formatCurrency((booking?.tripCompletedFinalAmount || 0))}</span>
-                          </div>
-
-                          <div className="flex justify-between text-red-500">
-                            <span>{booking?.createdBy === "User" ? "Admin" : booking?.createdBy} Commission Amount</span>
-                            <span>-{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
-                          </div>
-
-                          {/* {Object.entries(driverCharges).map(([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span>{capitalizeLabel(key)}</span>
-                            <span>{formatCurrency(parseFloat(value) || 0)}</span>
-                          </div>
-                        ))} */}
-
-                          <div className="border-t border-gray-200 pt-2">
-                            <div className="flex justify-between font-bold">
-                              <span>Driver Total</span>
-                              <span>
-                                {formatCurrency((booking?.tripCompletedFinalAmount || 0) - (Number(booking?.driverDeductionAmount) || 0))}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+              {/* Deduction For Driver */}
+              <Card className="bg-white border border-gray-200 w-2/3">
+                <CardHeader className="pb-4 border-b text-center">
+                  <h2 className="text-lg font-semibold text-gray-800">Deduction From Driver</h2>
+                </CardHeader>
+                <CardContent>
+                  <div className="w-full mx-auto p-4 rounded-lg space-y-2">
+                    <div className="flex justify-between">
+                      <span>Trip Total Amount</span>
+                      <span>{formatCurrency(booking?.tripCompletedFinalAmount || 0)}</span>
+                    </div>
+                    <div className="flex justify-between text-red-500">
+                      <span>{booking?.createdBy === "User" ? "Admin" : booking?.createdBy} Commission Amount</span>
+                      <span>- {formatCurrency(Number(booking?.driverDeductionAmount))}</span>
+                    </div>
+                    <div className="border-t-4 border-double border-gray-400 pt-2">
+                      <div className="flex justify-between font-bold">
+                        <span>Driver Total</span>
+                        <span>
+                          {formatCurrency((booking?.tripCompletedFinalAmount || 0) - (Number(booking?.driverDeductionAmount) || 0))}
+                        </span>
                       </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              {/* Admin | Vendor Earnings */}
+              <Card className="bg-white border border-gray-200 w-2/3">
+                <CardHeader className="pb-4 border-b text-center">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    {booking?.createdBy === "User" ? "Admin" : booking?.createdBy} Earnings
+                  </h2>
+                </CardHeader>
+                <CardContent>
+                  <div className="w-full mx-auto p-4 rounded-lg space-y-2">
+                    <div className="flex justify-between">
+                      <span>GST ({booking?.taxPercentage || 0}%)</span>
+                      <span>{formatCurrency(booking?.tripCompletedTaxAmount)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-1">
+                        <span>{booking?.createdBy === "User" ? "Admin" : booking?.createdBy} Commission</span>
+                        <TooltipComponent name={`Commission Tax Amount = ${calculateCommissionTax()} `}>
+                          <Info className="w-4 h-4" />
+                        </TooltipComponent>
+                      </div>
+                      <span>{formatCurrency(Number(booking?.driverCommissionBreakup?.commissionAmount))}</span>
+                    </div>
+                    {booking?.convenienceFee && (
+                      <div className="flex justify-between">
+                        <span>Platform Fee</span>
+                        <span>{formatCurrency(booking?.convenienceFee)}</span>
+                      </div>
+                    )}
+
+                    {/* Extra Charges */}
+                    {Object.entries(extraCharges)
+                      .filter(([_, value]) => parseFloat(value) > 0)
+                      .map(([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <span>{capitalizeLabel(key)}</span>
+                          <span>{formatCurrency(parseFloat(value) || 0)}</span>
+                        </div>
+                      ))}
+
+                    <div className="border-t-4 border-double border-gray-400 pt-2">
+                      <div className="flex justify-between font-bold">
+                        <span>Total Amount</span>
+                        <span>{formatCurrency(Number(booking?.driverDeductionAmount))}</span>
+                      </div>
+                    </div>
+
+                    {booking?.createdBy === "Vendor" && (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Admin Commission</span>
+                          <span className="text-red-500">- {formatCurrency(booking?.adminCommission)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Platform Fee</span>
+                          <span className="text-red-500">- {formatCurrency(booking?.convenienceFee)}</span>
+                        </div>
+                        <div className="border-t-4 border-double border-gray-400 pt-2">
+                          <div className="flex justify-between font-bold">
+                            <span>Total Amount</span>
+                            <span>
+                              {formatCurrency(Number((booking?.driverDeductionAmount) - booking?.adminCommission))}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
+
         </TabsContent>
 
         <TabsContent value="activity">
