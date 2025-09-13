@@ -17,8 +17,11 @@ export interface Booking {
   packageId: string;
   driverBeta: number | null;
   toll: number | null;
+  extraToll: number | null;
   hill: number | null;
+  extraHill: number | null;
   permitCharge: number | null;
+  extraPermitCharge: number | null;
   taxPercentage: number | null;
   price: number | null;
   extraPrice: number | null;
