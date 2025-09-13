@@ -57,7 +57,7 @@ export default function BookingDetailsPage() {
   const [editMode, setEditMode] = useState<'before' | 'after' | null>(null);
   const [formData, setFormData] = useState<Booking | null>(null);
   const [driverCharges, setDriverCharges] = useState<Record<string, string>>({});
-  const [extraCharges, setExtraCharges] = useState<Record<string, string>>({});
+  const [extraCharges, setExtraCharges] = useState<Record<string, number>>({});
 
   const [newChargeKey, setNewChargeKey] = useState('');
   const [newChargeValue, setNewChargeValue] = useState('');
@@ -159,12 +159,12 @@ export default function BookingDetailsPage() {
 
   const calculateTotalAmount = (estimatedFare: number, taxAmount: number, driverBeta: number, charges = driverCharges, extraCharge = extraCharges) => {
     const chargesSum = Object.values(charges).reduce(
-      (sum, charge) => sum + (parseFloat(charge) || 0),
+      (sum, charge) => sum + (Number(charge) || 0),
       0
     );
 
     const extraChargesSum = Object.values(extraCharge).reduce(
-      (sum, charge) => sum + (parseFloat(charge) || 0),
+      (sum, charge) => sum + (Number(charge) || 0),
       0
     );
     const convenienceFee = booking.convenienceFee || 0;
@@ -242,7 +242,7 @@ export default function BookingDetailsPage() {
     const value = e.target.value;
     const parsedValue =
       field.includes('Distance') || field.includes('Amount') || field.includes('Charge') || field.includes('Value')
-        ? parseFloat(value) || 0
+        ? Number(value) || 0
         : value;
 
     setFormData((prev) => {
@@ -274,7 +274,7 @@ export default function BookingDetailsPage() {
 
   const handleDriverChargeChange = (key: string, value: string) => {
     const newValue = value.replace(/[^0-9.]/g, ''); // Allow only numbers and decimal point
-    const parsedValue = parseFloat(newValue) || 0;
+    const parsedValue = Number(newValue) || 0;
 
     // Update driverCharges first
     setDriverCharges(prev => {
@@ -304,11 +304,11 @@ export default function BookingDetailsPage() {
 
   const handleExtraChargeChange = (key: string, value: string) => {
     const newValue = value.replace(/[^0-9.]/g, ''); // Allow only numbers and decimal point
-    const parsedValue = parseFloat(newValue) || 0;
+    const parsedValue = Number(newValue) || 0;
 
     // Update driverCharges first
     setExtraCharges(prev => {
-      const newCharges = { ...prev, [key]: parsedValue.toString() };
+      const newCharges = { ...prev, [key]: Number(parsedValue) };
 
       // Then update formData based on the new charges
       setFormData(prevForm => {
@@ -335,12 +335,12 @@ export default function BookingDetailsPage() {
     if (!newChargeKey.trim()) return;
 
     const value = newChargeValue.replace(/[^0-9.]/g, ''); // Allow only numbers and decimal point
-    const parsedValue = parseFloat(value) || 0;
+    const parsedValue = Number(value) || 0;
 
     setExtraCharges(prev => {
       const newCharges = {
         ...prev,
-        [newChargeKey]: parsedValue.toString(),
+        [newChargeKey]: Number(parsedValue),
       };
 
       // Update formData
@@ -547,7 +547,7 @@ export default function BookingDetailsPage() {
                   </>
                 ) : (
                   <>
-                    {booking?.status === 'Started' &&
+                    {booking?.status === 'Started' && booking?.createBy !== 'Vendor' &&
                       <Button variant="outline" onClick={() => {
                         setIsManualCompleted(!isManualCompleted)
                         if (isManualCompleted) {
@@ -629,17 +629,18 @@ export default function BookingDetailsPage() {
                       <X className="w-4 h-4" />
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      handleEdit('after')
-                    }}
-                    disabled={isAfterDisabled}
-                    className={isAfterDisabled ? 'text-gray-400' : 'text-blue-600 hover:text-blue-700'}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
+                  {booking?.createdBy !== 'Vendor' &&
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        handleEdit('after')
+                      }}
+                      disabled={isAfterDisabled}
+                      className={isAfterDisabled ? 'text-gray-400' : 'text-blue-600 hover:text-blue-700'}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>}
                 </div>
               </div>
               <CardContent className="p-4 space-y-4">
@@ -672,7 +673,7 @@ export default function BookingDetailsPage() {
                           <div key={key} className="flex justify-between items-center gap-2 ">
                             <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
                             <span className="text-sm font-medium">
-                              {formatCurrency(parseFloat(value) || 0)}
+                              {formatCurrency(Number(value) || 0)}
                             </span>
                           </div>
                         ))}
@@ -741,7 +742,7 @@ export default function BookingDetailsPage() {
                           <div key={key} className="flex justify-between items-center gap-2">
                             <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
                             <span className="text-sm font-medium">
-                              {formatCurrency(parseFloat(value) || 0)}
+                              {formatCurrency(Number(value) || 0)}
                             </span>
                           </div>
                         ))}
@@ -832,21 +833,21 @@ export default function BookingDetailsPage() {
 
                       {/* Driver Charges */}
                       {Object.entries(driverCharges)
-                        .filter(([_, value]) => parseFloat(value) > 0)
+                        .filter(([_, value]) => Number(value) > 0)
                         .map(([key, value]) => (
                           <div key={key} className="flex justify-between">
                             <span>{capitalizeLabel(key)}</span>
-                            <span>{formatCurrency(parseFloat(value) || 0)}</span>
+                            <span>{formatCurrency(Number(value) || 0)}</span>
                           </div>
                         ))}
 
                       {/* Extra Charges */}
                       {Object.entries(extraCharges)
-                        .filter(([_, value]) => parseFloat(value) > 0)
+                        .filter(([_, value]) => Number(value) > 0)
                         .map(([key, value]) => (
                           <div key={key} className="flex justify-between">
                             <span>{capitalizeLabel(key)}</span>
-                            <span>{formatCurrency(parseFloat(value) || 0)}</span>
+                            <span>{formatCurrency(Number(value) || 0)}</span>
                           </div>
                         ))}
 
@@ -870,14 +871,14 @@ export default function BookingDetailsPage() {
                         </div>
                       )}
 
-                      {booking?.upPaidAmount > 0 && (
+                      {/* {booking?.upPaidAmount > 0 && (
                         <div className="flex justify-between font-bold">
                           <span>Remaining Amount</span>
                           <span>
                             {formatCurrency((booking?.tripCompletedFinalAmount || 0) - (booking?.advanceAmount || 0))}
                           </span>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </CardContent>
@@ -941,11 +942,11 @@ export default function BookingDetailsPage() {
 
                     {/* Extra Charges */}
                     {Object.entries(extraCharges)
-                      .filter(([_, value]) => parseFloat(value) > 0)
+                      .filter(([_, value]) => Number(value) > 0)
                       .map(([key, value]) => (
                         <div key={key} className="flex justify-between">
                           <span>{capitalizeLabel(key)}</span>
-                          <span>{formatCurrency(parseFloat(value) || 0)}</span>
+                          <span>{formatCurrency(Number(value) || 0)}</span>
                         </div>
                       ))}
 
