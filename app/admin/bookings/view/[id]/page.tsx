@@ -932,6 +932,10 @@ export default function BookingDetailsPage() {
                             </div>
                             <span>{formatCurrency(Number(booking?.driverCommissionBreakup?.commissionAmount))}</span>
                           </div>
+                             <div className="flex justify-between">
+                            <span>Extra Per Km Charge</span>
+                            <span>{formatCurrency(booking?.driverCommissionBreakup?.extraPerKmCharge)}</span>
+                          </div>
                           <div className="flex justify-between">
                             <span>Extra Driver Beta</span>
                             <span>{formatCurrency(booking?.extraDriverBeta)}</span>
@@ -948,10 +952,7 @@ export default function BookingDetailsPage() {
                             <span>Platform Fee</span>
                             <span>{formatCurrency(booking?.convenienceFee)}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span>Extra Per Km Charge</span>
-                            <span>{formatCurrency(booking?.driverCommissionBreakup?.extraPerKmCharge)}</span>
-                          </div>
+                       
                           <div className="flex justify-between text-red-500">
                             <span>Admin Earnings</span>
                             <span>- {formatCurrency(Number(booking?.driverDeductionAmount) - Number(booking?.vendorCommission))}</span>
