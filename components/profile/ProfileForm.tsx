@@ -5,10 +5,11 @@ import { Card, CardContent } from 'components/ui/card';
 import { Input } from 'components/ui/input';
 import { Label } from 'components/ui/label';
 import { Button } from 'components/ui/button';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Settings } from 'lucide-react';
 import { useProfileStore } from 'stores/-profileStore';
 import { toast } from 'sonner';
 import { Textarea } from '../ui/textarea';
+import ConfigKeysPopup from './ConfigKeysPopup';
 import {
     AlertDialog,
     AlertDialogContent,
@@ -115,6 +116,7 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
     const [isFormDirty, setIsFormDirty] = useState(false);
     const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
+    const [showConfigKeysPopup, setShowConfigKeysPopup] = useState(false);
 
 
     useEffect(() => {
@@ -322,9 +324,19 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
                 <h2 className="text-3xl font-bold tracking-tight">
                     {id ? 'Edit Profile' : 'Create Profile'}
                 </h2>
-                <Button onClick={handleClose} variant="outline">
-                    Close
-                </Button>
+                <div className="flex items-center space-x-3">
+                    <Button 
+                        onClick={() => setShowConfigKeysPopup(true)} 
+                        variant="outline"
+                        className="flex items-center space-x-2"
+                    >
+                        <Settings className="w-4 h-4" />
+                        <span>Config Keys</span>
+                    </Button>
+                    <Button onClick={handleClose} variant="outline">
+                        Close
+                    </Button>
+                </div>
             </div>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -336,18 +348,19 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
                                 <Label htmlFor="logo">Logo</Label>
                                 <div className="mt-1" />
                                 <div className="flex flex-col items-center justify-center border border-dashed border-gray-400 rounded-lg p-6 hover:border-gray-600 transition cursor-pointer">
-                                    <Label htmlFor="logo" className="flex flex-col items-center cursor-pointer">
+                                    <Label htmlFor={logoURL ? "logo-change" : "logo-upload"} className="flex flex-col items-center cursor-pointer">
                                         {!logoURL && (
                                             <>
                                                 <Upload className="text-gray-600 text-4xl mb-2" />
                                                 <p className="text-gray-600 text-sm mb-2">Click to upload</p>
                                                 <span className="text-xs text-gray-400">Only image files (JPG, PNG, etc.)</span>
                                                 <input
-                                                    id="logo"
+                                                    id="logo-upload"
                                                     type="file"
                                                     accept="image/*"
                                                     className="hidden"
                                                     onChange={handleLogoChange}
+                                                    aria-label="Upload logo image"
                                                 />
                                             </>
                                         )}
@@ -364,11 +377,12 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
                                                     </p>
                                                     <span className="cursor-pointer text-black text-base border border-black rounded bg-[#EFEFEF] p-1">Change image</span>
                                                     <input
-                                                        id="logo"
+                                                        id="logo-change"
                                                         type="file"
                                                         accept="image/*"
                                                         className="hidden"
                                                         onChange={handleLogoChange}
+                                                        aria-label="Change logo image"
                                                     />
                                                 </div>
                                             </>
@@ -691,6 +705,11 @@ const ProfileForm = ({ id, createdBy }: ProfileFormProps) => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <ConfigKeysPopup 
+                isOpen={showConfigKeysPopup} 
+                onClose={() => setShowConfigKeysPopup(false)} 
+            />
         </Card>
     );
 };
