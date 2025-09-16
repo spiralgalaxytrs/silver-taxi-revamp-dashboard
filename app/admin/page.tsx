@@ -103,6 +103,40 @@ export default function AdminDashboard() {
           ]}
         />
 
+<ShortcutSection
+          col={4}
+          shortcuts={[
+            {
+              title: "Create Drivers",
+              href: "/admin/drivers/create",
+              icon: User,
+              color: "from-green-500 to-green-600",
+              hoverColor: "group-hover:from-green-600 group-hover:to-green-700",
+            },
+            {
+              title: "Create Vendors",
+              href: "/admin/vendor/create",
+              icon: User,
+              color: "from-pink-500 to-pink-600",
+              hoverColor: "group-hover:from-pink-600 group-hover:to-pink-700",
+            },
+            {
+              title: "Create Offers",
+              href: "/admin/offers/create",
+              icon: BadgePercent,
+              color: "from-yellow-500 to-yellow-600",
+              hoverColor: "group-hover:from-yellow-600 group-hover:to-yellow-700",
+            },
+            {
+              title: "Create Promo Code",
+              href: "/admin/promo-codes/create",
+              icon: Route,
+              color: "from-red-500 to-red-600",
+              hoverColor: "group-hover:from-red-600 group-hover:to-red-700",
+            },
+          ]}
+        />
+
         {/* Invoice table */}
         <InvoiceTable invoices={invoices} isLoading={isInvoicesLoading} />
 
@@ -169,40 +203,7 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Second shortcuts section */}
-        <ShortcutSection
-          col={4}
-          shortcuts={[
-            {
-              title: "Create Drivers",
-              href: "/admin/drivers/create",
-              icon: User,
-              color: "from-blue-500 to-indigo-600",
-              hoverColor: "group-hover:from-blue-600 group-hover:to-indigo-700",
-            },
-            {
-              title: "Create Vendors",
-              href: "/admin/vendor/create",
-              icon: User,
-              color: "from-emerald-500 to-teal-600",
-              hoverColor: "group-hover:from-emerald-600 group-hover:to-teal-700",
-            },
-            {
-              title: "Create Offers",
-              href: "/admin/offers/create",
-              icon: BadgePercent,
-              color: "from-amber-500 to-orange-600",
-              hoverColor: "group-hover:from-amber-600 group-hover:to-orange-700",
-            },
-            {
-              title: "Create Routes",
-              href: "/admin/dynamic-routes/create",
-              icon: Route,
-              color: "from-purple-500 to-violet-600",
-              hoverColor: "group-hover:from-purple-600 group-hover:to-violet-700",
-            },
-          ]}
-        />
+   
 
         {/* Enquiries */}
 
