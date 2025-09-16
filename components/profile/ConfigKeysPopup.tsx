@@ -6,7 +6,7 @@ import { Label } from 'components/ui/label';
 import { Textarea } from 'components/ui/textarea';
 import { Switch } from 'components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card';
-import { X, Edit2, Save, XCircle } from 'lucide-react';
+import { Edit2, Save, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import {
     Dialog,
@@ -134,8 +134,8 @@ const ConfigKeysPopup: React.FC<ConfigKeysPopupProps> = ({ isOpen, onClose }) =>
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <Dialog open={isOpen} onOpenChange={() => {}}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto [&>button]:hidden">
                 <DialogHeader>
                     <div className="flex items-center justify-between">
                         <DialogTitle className="text-2xl font-bold">API Keys Configuration</DialogTitle>
@@ -181,48 +181,65 @@ const ConfigKeysPopup: React.FC<ConfigKeysPopupProps> = ({ isOpen, onClose }) =>
                                 <h3 className="text-lg font-semibold text-gray-800 mb-3">Google Map Key</h3>
                                 
                                 {isEditing ? (
-                                    <Input
-                                        value={localKeys[0]?.keyValue || ''}
-                                        onChange={(e) => handleKeyChange(0, 'keyValue', e.target.value)}
-                                        placeholder="Enter Google Maps API Key"
-                                        className="w-full"
-                                    />
+                                    <div className="space-y-3">
+                                        <div className="space-y-2">
+                                            <span className="font-medium">Google Map Key:</span>
+                                            <Input
+                                                value={localKeys[0]?.keyValue || ''}
+                                                onChange={(e) => handleKeyChange(0, 'keyValue', e.target.value)}
+                                                placeholder="Enter Google Maps API Key"
+                                                className="w-full"
+                                            />
+                                        </div>
+                                    </div>
                                 ) : (
-                                    <div className="text-gray-600">
-                                        <span className="font-medium">google_map_key:</span> 
-                                        <span className="ml-2">{localKeys[0]?.keyValue || 'Not set'}</span>
+                                    <div className="space-y-2">
+                                        <span className="font-medium">Google Map Key:</span>
+                                        <div className="text-gray-600">
+                                            <span className="ml-2">{localKeys[0]?.keyValue || 'Not set'}</span>
+                                        </div>
                                     </div>
                                 )}
                             </div>
 
                             {/* Payment Keys */}
-                            <div className="border border-gray-200 rounded-lg p-4">
+                            <div className="border border-gray-200 rounded-lg p-4 ">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-3">Payment Key</h3>
                                 
                                 {isEditing ? (
-                                    <div className="space-y-3">
-                                        <Input
-                                            value={localKeys[1]?.keyValue || ''}
-                                            onChange={(e) => handleKeyChange(1, 'keyValue', e.target.value)}
-                                            placeholder="Enter Razorpay API Key"
-                                            className="w-full"
-                                        />
-                                        <Input
-                                            value={localKeys[2]?.keyValue || ''}
-                                            onChange={(e) => handleKeyChange(2, 'keyValue', e.target.value)}
-                                            placeholder="Enter Razorpay API Secret"
-                                            className="w-full"
-                                        />
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <span className="font-medium">Razorpay Key:</span>
+                                            <Input
+                                                value={localKeys[1]?.keyValue || ''}
+                                                onChange={(e) => handleKeyChange(1, 'keyValue', e.target.value)}
+                                                placeholder="Enter Razorpay API Key"
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <span className="font-medium">Razorpay Secret:</span>
+                                            <Input
+                                                value={localKeys[2]?.keyValue || ''}
+                                                onChange={(e) => handleKeyChange(2, 'keyValue', e.target.value)}
+                                                placeholder="Enter Razorpay API Secret"
+                                                className="w-full"
+                                            />
+                                        </div>
                                     </div>
                                 ) : (
-                                    <div className="space-y-2">
-                                        <div className="text-gray-600">
-                                            <span className="font-medium">razorpay_key:</span> 
-                                            <span className="ml-2">{localKeys[1]?.keyValue || 'Not set'}</span>
+                                    <div className="space-y-3">
+                                        <div className="space-y-2">
+                                            <span className="font-medium">Client Key:</span>
+                                            <div className="text-gray-600">
+                                                <span className="ml-2">{localKeys[1]?.keyValue || 'Not set'}</span>
+                                            </div>
                                         </div>
-                                        <div className="text-gray-600">
-                                            <span className="font-medium">razorpay_key_secret:</span> 
-                                            <span className="ml-2">{localKeys[2]?.keyValue || 'Not set'}</span>
+                                        <div className="space-y-2">
+                                            <span className="font-medium">Secret Key:</span>
+                                            <div className="text-gray-600">
+                                                <span className="ml-2">{localKeys[2]?.keyValue || 'Not set'}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -233,8 +250,7 @@ const ConfigKeysPopup: React.FC<ConfigKeysPopupProps> = ({ isOpen, onClose }) =>
 
                 <DialogFooter>
                     <Button variant="outline" onClick={handleClose}>
-                        <X className="w-4 h-4 mr-2" />
-                        Close
+                        Cancel
                     </Button>
                 </DialogFooter>
             </DialogContent>
