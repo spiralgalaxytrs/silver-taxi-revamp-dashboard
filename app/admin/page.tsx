@@ -107,8 +107,8 @@ export default function AdminDashboard() {
           col={4}
           shortcuts={[
             {
-              title: "Create Drivers",
-              href: "/admin/drivers/create",
+              title: "Create Notification",
+              href: "/admin/custom-notifications/create",
               icon: User,
               color: "from-green-500 to-green-600",
               hoverColor: "group-hover:from-green-600 group-hover:to-green-700",
