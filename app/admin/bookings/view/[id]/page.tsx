@@ -466,6 +466,20 @@ export default function BookingDetailsPage() {
     // Field is editable if it's in normal edit mode OR manual completion mode
     const shouldShowInput = ((section === 'before' || section === 'after') && editMode === section && isEditable) || isManualCompletionEditable;
 
+    if (field.key === "pricePerKm") {
+      return (
+        <div key={field.key} className="space-y-1">
+          <Label className="text-sm text-gray-600">{field.label}</Label>
+          <div className="font-medium">
+            {formData?.extraPricePerKm ?
+              <p>{value} + {formData?.extraPricePerKm}</p>
+              : <p>{value}</p>
+            }
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div key={field.key} className="space-y-1">
         <Label className="text-sm text-gray-600">{field.label}</Label>
@@ -817,7 +831,7 @@ export default function BookingDetailsPage() {
                       </div>
                       <div className="flex justify-between">
                         <span>Per KM Price</span>
-                        <span>{formatCurrency(formData?.pricePerKm || booking?.pricePerKm)}</span>
+                        <span>{formatCurrency(Number(formData?.pricePerKm || booking?.pricePerKm) + Number(formData?.extraPricePerKm || booking?.extraPricePerKm))}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Km Price</span>
@@ -932,7 +946,7 @@ export default function BookingDetailsPage() {
                             </div>
                             <span>{formatCurrency(Number(booking?.driverCommissionBreakup?.commissionAmount))}</span>
                           </div>
-                             <div className="flex justify-between">
+                          <div className="flex justify-between">
                             <span>Extra Per Km Charge</span>
                             <span>{formatCurrency(booking?.driverCommissionBreakup?.extraPerKmCharge)}</span>
                           </div>
@@ -952,7 +966,7 @@ export default function BookingDetailsPage() {
                             <span>Platform Fee</span>
                             <span>{formatCurrency(booking?.convenienceFee)}</span>
                           </div>
-                       
+
                           <div className="flex justify-between text-red-500">
                             <span>Admin Earnings</span>
                             <span>- {formatCurrency(Number(booking?.driverDeductionAmount) - Number(booking?.vendorCommission))}</span>

@@ -34,6 +34,7 @@ export interface Booking {
   offerId?: string | null;
   offerName?: string;
   pricePerKm: number | null;
+  extraPricePerKm: number | null;
   duration: string | null;
   paymentMethod: "UPI" | "Bank" | "Cash" | "Card";
   type: "Website" | "App" | "Manual";
