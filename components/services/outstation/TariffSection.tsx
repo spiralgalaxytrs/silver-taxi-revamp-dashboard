@@ -133,8 +133,8 @@ export function TariffSection({ isEditing, serviceId, vehicleId, createdBy, isLo
 
     const handleTariffUpdate = async (targetVehicleId: string, tariffData: Tariff, silent = false) => {
         try {
-            if (!tariffData.price || !tariffData.extraPrice) {
-                if (!silent) toast.error("Price and Extra Price are required", {
+            if (!tariffData.price) {
+                if (!silent) toast.error("Price are required", {
                     style: {
                         backgroundColor: "#FF0000",
                         color: "#fff",
