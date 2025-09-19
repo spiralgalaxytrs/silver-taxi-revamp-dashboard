@@ -103,7 +103,7 @@ export default function AdminDashboard() {
           ]}
         />
 
-<ShortcutSection
+        <ShortcutSection
           col={4}
           shortcuts={[
             {
@@ -203,7 +203,7 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-   
+
 
         {/* Enquiries */}
 
