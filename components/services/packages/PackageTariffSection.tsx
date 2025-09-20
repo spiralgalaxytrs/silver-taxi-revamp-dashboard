@@ -155,7 +155,7 @@ export function PackageTariffSection({
         const cleaned = String(value).replace(/[^0-9.]/g, '');
         setLocalTariffs((prev) => ({
             ...prev,
-            [vehicleId]: prev[vehicleId].map((t) => ({
+            [vehicleId]: prev[vehicleId]?.map((t) => ({
                 ...t,
                 extraPrice: Number(cleaned),
             })),

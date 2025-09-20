@@ -962,6 +962,10 @@ export default function BookingDetailsPage() {
                             <span>Extra Permit</span>
                             <span>{formatCurrency(booking?.extraPermitCharge)}</span>
                           </div>
+                          {booking?.tripCompletedTaxAmount > 0 && <div className="flex justify-between">
+                            <span>GST ({booking?.taxPercentage || 0}%)</span>
+                            <span>{formatCurrency(booking?.tripCompletedTaxAmount)}</span>
+                          </div>}
                           <div className="flex justify-between">
                             <span>Platform Fee</span>
                             <span>{formatCurrency(booking?.convenienceFee)}</span>
