@@ -7,7 +7,7 @@ export interface Vendor {
   remark: string;
   walletId: string;
   isLogin: boolean;
-  totalEarnings: number;
+  totalEarnings: string;
   wallet: {
     walletId: string;
     balance: number;
