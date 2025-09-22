@@ -88,7 +88,7 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
     const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
     const [isSpinning, setIsSpinning] = useState(false)
     const [totalTrips, setTotalTrips] = useState(25);
-    const [totalEarnings, setTotalEarnings] = useState(0);
+    const [totalEarnings, setTotalEarnings] = useState<string>("0");
     const [walletAmount, setWalletAmount] = useState(0);
     const [showVendorTransactions, setShowVendorTransactions] = useState(false);
     const [sortConfig, setSortConfig] = useState<{
@@ -151,7 +151,7 @@ export default function ViewDVendorPage({ params }: { params: Promise<{ id: stri
             setWalletAmount(wAmount || 0);
 
             const totalEarnings = vendorData.find((vendor: any) => vendor.vendorId === id)?.totalEarnings;
-            setTotalEarnings(totalEarnings || 0);
+            setTotalEarnings(totalEarnings || "0");
         }
     }, [vendorData, id]);
 

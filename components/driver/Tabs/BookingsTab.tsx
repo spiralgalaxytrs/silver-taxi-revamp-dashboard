@@ -32,7 +32,7 @@ export default function BookingsTab({
           color="emerald"
         />
         <StatsCard
-          count={editedDriver?.totalEarnings || 0}
+          count={Number(editedDriver?.totalEarnings) || 0}
           label="Total Earned"
           gradientFrom="blue"
           gradientTo="indigo"
