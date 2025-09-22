@@ -333,8 +333,8 @@ export default function Sidebar({ createdBy }: { createdBy: string }) {
   return (
     <div className="flex flex-col w-64 bg-white border-r overflow-y-auto scrollbar-hide">
       <div className="flex justify-center h-20 border-b">
-        <div style={{ position: "relative", width: "120px", height: "60px", top: "-15px" }} className="p-4">
-          {cProfile?.logo === 'string' && cProfile.logo ? (
+        <div style={{ position: "relative",  top: "-15px" }} className="p-4">
+          {/* {cProfile?.logo === 'string' && cProfile.logo ? (
             <Image
               src={cProfile.logo}
               alt="logo"
@@ -353,7 +353,18 @@ export default function Sidebar({ createdBy }: { createdBy: string }) {
               height={60}
               style={{ objectFit: "contain" }}
             />
-          )}
+          )} */}
+   
+            <Image
+              src="/img/taxienginelogo.png"
+              alt="logo"
+              priority
+              width={220}
+              height={130}
+
+              style={{ objectFit: "contain", marginTop: "20px" }}
+            />
+      
           <Link href={`/img/logo-v1-white.png`} target="_blank" rel="noopener noreferrer"></Link>
           <Link href={`/img/logo-v1.png`} target="_blank" rel="noopener noreferrer"></Link>
           
