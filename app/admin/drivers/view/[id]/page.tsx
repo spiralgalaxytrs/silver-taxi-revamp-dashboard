@@ -58,7 +58,7 @@ export default function ViewDriverPage() {
     } = useDriverById(id as string || "");
 
     const [totalTrips, setTotalTrips] = useState(0);
-    const [totalEarnings, setTotalEarnings] = useState(0);
+    const [totalEarnings, setTotalEarnings] = useState<string>("0");
     const [walletAmount, setWalletAmount] = useState(0);
     const [activeTab, setActiveTab] = useState("profile");
     const [editedDriver, setEditedDriver] = useState<Driver | null>(null);

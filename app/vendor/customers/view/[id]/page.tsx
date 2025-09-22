@@ -78,7 +78,7 @@ export default function ViewCustomerPage({ params }: { params: Promise<{ id: str
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [isSpinning, setIsSpinning] = useState(false)
   const [totalTrips, setTotalTrips] = useState(0);
-  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [totalEarnings, setTotalEarnings] = useState<string>("0");
 
   useEffect(() => {
     const stats = fData.reduce((acc, booking) => {
@@ -88,7 +88,7 @@ export default function ViewCustomerPage({ params }: { params: Promise<{ id: str
     }, { total: 0, totalValue: 0 });
 
     setTotalTrips(stats.total);
-    setTotalEarnings(stats.totalValue);
+    setTotalEarnings(stats.totalValue.toString());
   }, [fData]);
 
   const handleRefetch = async () => {
