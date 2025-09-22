@@ -27,8 +27,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Silver Taxi",
-  description: "Silver Taxi - A comprehensive platform for managing cab bookings, vendor interactions, and payment processing.",
+  title: "Taxi Engine 360",
+  description: "A comprehensive platform for managing cab bookings, vendor interactions, and payment processing.",
 };
 
 

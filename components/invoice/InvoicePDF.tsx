@@ -94,7 +94,7 @@ const InvoicePDF = ({ id }: { id: string }) => {
         <div className="bg-gradient-to-r from-[#009879] to-[#00775F] text-white p-8 w-full">
           <div className="flex justify-between items-center flex-nowrap">
             <div className="flex flex-col justify-center">
-              <h1 className="text-4xl font-bold">Silver Taxi</h1>
+              <h1 className="text-4xl font-bold">Taxi Engine 360</h1>
               <p className="text-sm mt-1 opacity-75">Your Luxury Ride Partner</p>
             </div>
             <div className="text-right">
@@ -141,10 +141,16 @@ const InvoicePDF = ({ id }: { id: string }) => {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-[#00775F] mb-2">CompanyDetails</h3>
-                <p className="font-medium text-lg mb-2">{profile?.name}</p>
+                <p className="font-medium text-lg mb-2">
+                  {/* {profile?.name} */}
+                  Taxi Engine 360
+                  </p>
                 <p className="mt-3">{profile?.address}</p>
                 <p className="flex items-center mt-3">{profile?.phone}</p>
-                <p className="flex items-center mt-3">{profile?.email}</p>
+                <p className="flex items-center mt-3">
+                  taxiengine360@gmail.com
+                  {/* {profile?.email} */}
+                  </p>
               </div>
             </div>
           </section>

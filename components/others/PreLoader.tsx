@@ -1,7 +1,7 @@
 import React from 'react'
 
 const PreLoader = () => {
-    const text = "Silver Taxi";
+    const text = "Taxi Engine 360".split("");
     const rings = 2;
     const ringSectors = 30;
   
@@ -11,6 +11,7 @@ const PreLoader = () => {
       alignItems: "center",
       height: "90vh",
       width: "100dvw",
+      color: "#4A90E2",
     }
   
     return (

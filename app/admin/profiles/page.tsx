@@ -83,7 +83,8 @@ function TaxiCompanyProfile() {
               </div>
               <div className="text-center">
                 <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
-                  {profile?.name || "Taxi Company Name"}
+                  {/* {profile?.name || "Taxi Company Name"} */}
+                  Taxi Engine 360
                 </CardTitle>
                 {/* <p className="text-xl text-gray-600">{profile?.email || "company@example.com"}</p> */}
               </div>
@@ -123,7 +124,9 @@ function TaxiCompanyProfile() {
                       </CardHeader>
                       <CardContent className="space-y-2">
                         <InfoItem icon={<Phone className="text-[#009F7F]" />} content={profile?.phone?.join(", ")} />
-                        <InfoItem icon={<Mail className="text-[#009F7F] " />} content={profile?.email} />
+                        {/* <InfoItem icon={<Mail className="text-[#009F7F] " />} content={profile?.email} /> */}
+                                                <InfoItem icon={<Mail className="text-[#009F7F] " />} content={"taxiengine360@gmail.com"}/>
+
                         <InfoItem
                           icon={<Globe className="text-[#009F7F]" />}
                           content={
@@ -133,7 +136,8 @@ function TaxiCompanyProfile() {
                               rel="noopener noreferrer"
                               className="text-[#009F7F] hover:underline"
                             >
-                              {profile?.website}
+                              {/* {profile?.website} */}
+                              www.taxiengine360.com
                             </a>
                           }
                         />
