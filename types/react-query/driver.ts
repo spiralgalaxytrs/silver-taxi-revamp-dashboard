@@ -12,7 +12,7 @@ export interface Driver {
     licenseImage?: File | string | undefined;
     bookingCount?: number;
     assigned?: boolean;
-    totalEarnings: number;
+    totalEarnings: string;
     vehicleId?: string;
     vehicle: VehicleAttributes[];
     isActive: boolean | null;
