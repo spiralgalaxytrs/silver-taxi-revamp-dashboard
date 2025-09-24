@@ -79,6 +79,7 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
                     console.log("No matching query invalidation for type:", notification.type);
             }
             playNotificationSound();
+            showSystemNotification(notification.title, notification.description);
             toast.info(notification.title, {
                 duration: 5000,
                 position: "top-right",
@@ -100,6 +101,26 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
             socket.off('notification');
         };
     }, [socket, isConnected]);
+
+    useEffect(() => {
+        if ("Notification" in window) {
+            Notification.requestPermission().then((permission) => {
+                console.log("Notification permission:", permission);
+            });
+        }
+    }, []);
+
+    const showSystemNotification = (title: string, body?: string) => {
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification(title, {
+                body: body || 'Update from Silver Taxi',
+                icon: "/icons/chat.png",
+            }).onclick = () => {
+                window.focus();
+                window.open("/chat"); // open your app/chat page
+            };
+        }
+    };
 
 
     const unreadCount = useMemo(() => {
