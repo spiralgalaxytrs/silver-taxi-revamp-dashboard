@@ -51,7 +51,7 @@ export default function Page() {
             <Link href="/admin/vehicles/create">
               <Button>Create Vehicle</Button>
             </Link>
-            <VehicleTypeConfig />
+            {/* <VehicleTypeConfig /> */}
           </div>
         </div>
         {vehicles.length > 0 ? (
