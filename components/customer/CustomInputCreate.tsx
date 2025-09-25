@@ -6,6 +6,7 @@ import {
   DialogFooter,
   DialogHeader
 } from 'components/ui/dialog';
+import { X } from 'lucide-react';
 import { Button } from 'components/ui/button';
 
 
@@ -20,6 +21,7 @@ interface InputPickerProps {
   data: OptionType[];
   onChange: (value: string) => void;
   onCreate: (value: string) => void;
+  onDelete: (value: string) => void;
   placeholder?: string;
   className?: string;
 }
@@ -29,12 +31,14 @@ const InputPicker: React.FC<InputPickerProps> = ({
   data,
   onChange,
   onCreate,
+  onDelete,
   placeholder = 'Select...',
   className = '',
 }) => {
   const [inputValue, setInputValue] = useState<string>(value);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [isCreateMode, setIsCreateMode] = useState<boolean>(false);
+  const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -76,60 +80,115 @@ const InputPicker: React.FC<InputPickerProps> = ({
         placeholder={placeholder}
         className="w-full border border-black py-4 p-3 text-black mt-1 rounded-md placeholder:text-black"
       />
+      
       {isDropdownOpen && (
         <div className="absolute top-full left-0 w-full bg-white border mt-1 shadow-md">
           <ul>
-            {data.map((option, index) => (
+            {data.map((option) => (
               <li
-                key={index}
-                onClick={() => {
-                  onChange(option.value);
-                  setInputValue(option.label);
-                  setIsDropdownOpen(false); // Close dropdown after selection
-                }}
-
-                className="cursor-pointer p-2 hover:bg-gray-200"
+                key={option.value}
+                className="flex items-center px-3 py-2 hover:bg-gray-200"
               >
-                {option.label}
+                {/* Selection button (left, fills remaining space) */}
+                <button
+                  type="button"
+                  className="flex-1 text-left focus:outline-none"
+                  onClick={() => {
+                    onChange(option.value);
+                    setInputValue(option.label);
+                    setIsDropdownOpen(false);
+                  }}
+                >
+                  {option.label}
+                </button>
+
+                {/* Delete button (fixed size, right) */}
+                <button
+                  type="button"
+                  aria-label={`Delete ${option.label}`}
+                  className="flex-none w-8 h-8 ml-2 inline-flex items-center justify-center"
+                  onClick={(e) => {
+                    setIsDeleteMode(true);
+                  }}
+                >
+                  <X className="w-4 h-4 text-red-500" />
+                </button>
               </li>
             ))}
           </ul>
+
         </div>
-      )}
+      )
+      }
 
       {/* Create new value */}
-      {inputValue.toLowerCase() && !data.find((option) => option.value.toLowerCase() === inputValue.toLowerCase()) && !isCreateMode && (
-        <button
-          onClick={() => setIsCreateMode(true)}
-          className="text-blue-500 mt-2"
-        >
-          Create &quot;{inputValue}&quot;
-        </button>
-      )}
+      {
+        inputValue.toLowerCase() && !data.find((option) => option.value.toLowerCase() === inputValue.toLowerCase()) && !isCreateMode && (
+          <button
+            onClick={() => setIsCreateMode(true)}
+            className="text-blue-500 mt-2"
+          >
+            Create &quot;{inputValue}&quot;
+          </button>
+        )
+      }
 
-      {isCreateMode && (
-        <Dialog open={isCreateMode} onOpenChange={setIsCreateMode}>
-          <DialogContent className="rounded-2xl max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle>Create New Vehicle Type</DialogTitle>
-            </DialogHeader>
+      {
+        isCreateMode && (
+          <Dialog open={isCreateMode} onOpenChange={setIsCreateMode}>
+            <DialogContent className="rounded-2xl max-w-[400px]">
+              <DialogHeader>
+                <DialogTitle>Create New Vehicle Type</DialogTitle>
+              </DialogHeader>
 
-            <div className="py-4">
-              {/* Optional: add form fields here if needed */}
-              Are you sure you want to create a new type?
-            </div>
+              <div className="py-4">
+                {/* Optional: add form fields here if needed */}
+                Are you sure you want to create a new type?
+              </div>
 
-            <DialogFooter>
-              <Button onClick={handleCreateNewValue}>Create</Button>
-              <Button variant="ghost" onClick={() => setIsCreateMode(false)}>
-                Cancel
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+              <DialogFooter>
+                <Button onClick={handleCreateNewValue}>Create</Button>
+                <Button variant="ghost" onClick={() => setIsCreateMode(false)}>
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )
+      }
 
-    </div>
+      {
+        isDeleteMode && (
+          <Dialog open={isDeleteMode} onOpenChange={setIsDeleteMode}>
+            <DialogContent className="rounded-2xl max-w-[400px]">
+              <DialogHeader>
+                <DialogTitle>Delete Vehicle Type</DialogTitle>
+              </DialogHeader>
+
+              <div className="py-4">
+                {/* Optional: add form fields here if needed */}
+                Are you sure you want to delete this vehicle type?
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant={"destructive"}
+                  onClick={
+                    () => {
+                      onDelete(inputValue);
+                      setIsDeleteMode(false);
+                    }
+                  }>Delete</Button>
+                <Button variant="ghost" onClick={() => setIsDeleteMode(false)}>
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )
+      }
+
+    </div >
   );
 };
 

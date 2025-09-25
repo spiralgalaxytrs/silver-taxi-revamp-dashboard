@@ -10,7 +10,8 @@ import {
   deleteVehicle,
   getVehicleTypes,
   createVehicleTypes,
-  acceptVehicleTypes
+  acceptVehicleTypes,
+  deleteVehicleType
 } from "services/vehicle";
 
 // 🚘 All vehicles
@@ -110,6 +111,17 @@ export const useAcceptVehicleTypes = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: acceptVehicleTypes,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vehicleTypes"] });
+    },
+  });
+};
+
+
+export const useDeleteVehicleTypes = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteVehicleType,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vehicleTypes"] });
     },
