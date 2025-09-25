@@ -117,7 +117,7 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
                 icon: "/icons/chat.png",
             }).onclick = () => {
                 window.focus();
-                window.open("/bookings"); // open your app/chat page
+                window.open("/admin/bookings"); // open your app/chat page
             };
         }
     };
