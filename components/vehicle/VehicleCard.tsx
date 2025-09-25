@@ -8,6 +8,10 @@ import { useState } from "react"
 import { useVehicleStore } from "stores/-vehicleStore"
 import { toast } from "sonner"
 import { Trash } from "lucide-react"
+import {
+    useToggleVehicleStatus,
+    useDeleteVehicle
+} from "hooks/react-query/useVehicle"
 
 interface VehicleCardProps {
     vehicleId: string
@@ -24,36 +28,34 @@ interface VehicleCardProps {
     createdBy: "Admin" | "Vendor"
 }
 
-export function VehicleCard({ vehicleId, name, fuelType, isActive, type, seats, bags, permitCharge, driverBeta,order, imageUrl, createdBy }: VehicleCardProps) {
+export function VehicleCard({ vehicleId, name, fuelType, isActive, type, seats, bags, permitCharge, driverBeta, order, imageUrl, createdBy }: VehicleCardProps) {
 
-    const { vehicleToggleChange, deleteVehicle, message, statusCode } = useVehicleStore()
+    const { mutateAsync: vehicleToggleChange } = useToggleVehicleStatus();
+    const { mutateAsync: deleteVehicle } = useDeleteVehicle();
 
 
     const [status, setStatus] = useState<boolean>(isActive)
 
     const handleSwitchChange = async (currentStatus: boolean) => {
         try {
-            await vehicleToggleChange(vehicleId, currentStatus);
-            const { statusCode, message } = useVehicleStore.getState();
-            if (statusCode === 200 || statusCode === 201) {
-                toast.success(message, {
-                    style: {
-                        backgroundColor: "#009F7F",
-                        color: "#fff",
-                    },
-                });
-                setStatus(!currentStatus);
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                toast.error(message, {
-                    style: {
-                        backgroundColor: "#FF0000",
-                        color: "#fff",
-                    },
-                });
-            }
+            await vehicleToggleChange({ id: vehicleId, status: currentStatus }, {
+                onSuccess: () => {
+                    toast.success("Vehicle status updated successfully", {
+                        style: {
+                            backgroundColor: "#009F7F",
+                            color: "#fff",
+                        },
+                    });
+                },
+                onError: (error: any) => {
+                    toast.error(error?.response?.data?.message || "Failed to create vehicle", {
+                        style: {
+                            backgroundColor: "#FF0000",
+                            color: "#fff",
+                        },
+                    })
+                },
+            });
         } catch (error) {
             toast.error("Failed to toggle vehicle status", {
                 style: {
@@ -66,18 +68,25 @@ export function VehicleCard({ vehicleId, name, fuelType, isActive, type, seats, 
 
     const handleDelete = async (id: string) => {
         try {
-            await deleteVehicle(id);
-            const { statusCode, message } = useVehicleStore.getState();
-            if (statusCode === 200 || statusCode === 201) {
-                toast.success('Vehicle deleted successfully');
-            } else {
-                toast.error(message), {
-                    style: {
-                        backgroundColor: "#FF0000",
-                        color: "#fff",
-                    },
-                };
-            }
+            await deleteVehicle(id, {
+                onSuccess: () => {
+                    toast.success("Vehicle deleted successfully", {
+                        style: {
+                            backgroundColor: "#009F7F",
+                            color: "#fff",
+                        },
+                    });
+                },
+                onError: (error: any) => {
+                    toast.error(error?.response?.data?.message || "Failed to delete vehicle", {
+                        style: {
+                            backgroundColor: "#FF0000",
+                            color: "#fff",
+                        },
+                    })
+                },
+            });
+
         } catch (error) {
             toast.error("Failed to delete vehicle", {
                 style: {
