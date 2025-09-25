@@ -91,3 +91,8 @@ export const acceptVehicleTypes = async ({ name, acceptedVehicleTypes }: { name:
 export const deleteVehicle = async (id: string) => {
   return axios.delete(`/v1/vehicles/${id}`);
 };
+
+// ❌ Delete a vehicle
+export const deleteVehicleType = async (name: string) => {
+  return axios.delete(`/v1/vehicles/types/${name}`);
+};

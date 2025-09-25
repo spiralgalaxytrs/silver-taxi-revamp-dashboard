@@ -20,7 +20,8 @@ import {
     useCreateVehicle,
     useUpdateVehicle,
     useVehicleTypes,
-    useCreateVehicleTypes
+    useCreateVehicleTypes,
+    useDeleteVehicleTypes
 } from 'hooks/react-query/useVehicle';
 import { Vehicle } from 'types/react-query/vehicle'
 import { capitalize } from 'lib/capitalize';
@@ -47,6 +48,7 @@ const VehicleForm = ({ id }: { id?: string }) => {
     const { mutate: createVehicleTypes } = useCreateVehicleTypes();
     const { mutate: createVehicle } = useCreateVehicle()
     const { mutate: updateVehicle } = useUpdateVehicle()
+    const { mutate: deleteVehicleTypes } = useDeleteVehicleTypes()
 
 
     const vehicleTypes = useMemo(() => {
@@ -244,7 +246,7 @@ const VehicleForm = ({ id }: { id?: string }) => {
                                                     refetch();
                                                     toast.success("Vehicle type created successfully", {
                                                         style: {
-                                                            backgroundColor: "#0065F8",
+                                                            backgroundColor: "#009F7F",
                                                             color: "#fff",
                                                         },
                                                     })
@@ -252,6 +254,27 @@ const VehicleForm = ({ id }: { id?: string }) => {
                                                 },
                                                 onError: (error: any) => {
                                                     toast.error(error?.response?.data?.message || "Failed to create vehicle type", {
+                                                        style: {
+                                                            backgroundColor: "#FF0000",
+                                                            color: "#fff",
+                                                        },
+                                                    })
+                                                },
+                                            })
+                                        }}
+                                        onDelete={(value) => {
+                                            deleteVehicleTypes(value, {
+                                                onSuccess: () => {
+                                                    refetch();
+                                                    toast.success("Vehicle type deleted successfully", {
+                                                        style: {
+                                                            backgroundColor: "#009F7F",
+                                                            color: "#fff",
+                                                        },
+                                                    })
+                                                },
+                                                onError: (error: any) => {
+                                                    toast.error(error?.response?.data?.message || "Failed to delete vehicle type", {
                                                         style: {
                                                             backgroundColor: "#FF0000",
                                                             color: "#fff",
