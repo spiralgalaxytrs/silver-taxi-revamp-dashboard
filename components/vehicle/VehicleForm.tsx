@@ -244,7 +244,7 @@ const VehicleForm = ({ id }: { id?: string }) => {
                                                     refetch();
                                                     toast.success("Vehicle type created successfully", {
                                                         style: {
-                                                            backgroundColor: "#0065F8",
+                                                            backgroundColor: "#009F7F",
                                                             color: "#fff",
                                                         },
                                                     })
