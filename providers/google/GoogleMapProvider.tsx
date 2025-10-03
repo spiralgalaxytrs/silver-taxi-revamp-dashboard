@@ -24,7 +24,7 @@ export default function GoogleMapsProvider({ children }: GoogleMapsProviderProps
     )
   }
 
-  const GOOGLE_MAPS_API_KEY = configKeysData?.data.find((key) => key.keyName === "google_map_key")?.keyValue || "";
+  const GOOGLE_MAPS_API_KEY = configKeysData?.data?.find((key) => key?.keyName === "google_map_key")?.keyValue || "";
 
   return (
     <LoadScript
