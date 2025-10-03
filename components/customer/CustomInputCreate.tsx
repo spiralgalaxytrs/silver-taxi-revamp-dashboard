@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, use } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -65,6 +65,7 @@ const InputPicker: React.FC<InputPickerProps> = ({
     }
   };
 
+
   const handleInputClick = () => {
     setIsDropdownOpen(true); // Open dropdown when the input is clicked
   };
@@ -80,7 +81,7 @@ const InputPicker: React.FC<InputPickerProps> = ({
         placeholder={placeholder}
         className="w-full border border-black py-4 p-3 text-black mt-1 rounded-md placeholder:text-black"
       />
-      
+
       {isDropdownOpen && (
         <div className="absolute top-full left-0 w-full bg-white border mt-1 shadow-md">
           <ul>
@@ -109,6 +110,7 @@ const InputPicker: React.FC<InputPickerProps> = ({
                   className="flex-none w-8 h-8 ml-2 inline-flex items-center justify-center"
                   onClick={(e) => {
                     setIsDeleteMode(true);
+                    setInputValue(option.value);
                   }}
                 >
                   <X className="w-4 h-4 text-red-500" />
@@ -175,6 +177,7 @@ const InputPicker: React.FC<InputPickerProps> = ({
                   variant={"destructive"}
                   onClick={
                     () => {
+                      console.log("Deleting: >> ", inputValue);
                       onDelete(inputValue);
                       setIsDeleteMode(false);
                     }
