@@ -49,8 +49,6 @@ export function DriverSelectionPopup({
     const [lastViewWasDriverList, setLastViewWasDriverList] = useState(false);
     const [zoom, setZoom] = useState(7);
 
-    const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
-
     const activeDrivers = drivers.filter(
         (driver: any) =>
             String(driver.driverId) !== String(bookedDriverId) &&
