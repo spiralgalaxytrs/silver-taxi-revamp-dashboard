@@ -2,12 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from 'components/ui/button';
 import { Input } from 'components/ui/input';
-import { Label } from 'components/ui/label';
-import { Textarea } from 'components/ui/textarea';
-import { Switch } from 'components/ui/switch';
-import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card';
-import { Edit2, Save, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Edit2, Save, XCircle } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -22,84 +18,82 @@ interface ConfigKeysPopupProps {
     onClose: () => void;
 }
 
+// Map-based state instead of array
+type KeysMap = Record<string, ConfigKeyInput>;
+
 const ConfigKeysPopup: React.FC<ConfigKeysPopupProps> = ({ isOpen, onClose }) => {
     const { data: configKeysData, isLoading } = useConfigKeys();
     const { mutate: storeConfigKeys, isPending } = useStoreConfigKeys();
-    
-    const [isEditing, setIsEditing] = useState(false);
-    const [localKeys, setLocalKeys] = useState<ConfigKeyInput[]>([]);
 
-    // Initialize with 2 specific keys
+    const [isEditing, setIsEditing] = useState(false);
+    const [localKeys, setLocalKeys] = useState<KeysMap>({});
+
     const defaultKeys: ConfigKeyInput[] = [
         {
             keyName: 'google_map_key',
             keyValue: '',
             isPublic: false,
-            description: 'Google Maps API Key'
+            description: 'Google Maps API Key',
         },
         {
             keyName: 'razorpay_key',
             keyValue: '',
             isPublic: false,
-            description: 'Razorpay API Key'
+            description: 'Razorpay API Key',
         },
         {
             keyName: 'razorpay_key_secret',
             keyValue: '',
             isPublic: false,
-            description: 'Razorpay API Secret'
-        }
+            description: 'Razorpay API Secret',
+        },
     ];
 
     useEffect(() => {
         if (configKeysData?.data && configKeysData.data.length > 0) {
-            // Convert existing data to the format we need
-            const formattedKeys = configKeysData.data.map(key => ({
-                keyName: key.keyName,
-                keyValue: key.keyValue,
-                isPublic: key.isPublic,
-                description: key.description
-            }));
-            setLocalKeys(formattedKeys);
+            const map: KeysMap = {};
+            configKeysData.data.forEach((key) => {
+                map[key.keyName] = {
+                    keyName: key.keyName,
+                    keyValue: key.keyValue,
+                    isPublic: key.isPublic,
+                    description: key.description || '',
+                };
+            });
+            setLocalKeys(map);
         } else {
-            // Use default keys if no data exists
-            setLocalKeys(defaultKeys);
+            const map: KeysMap = {};
+            defaultKeys.forEach((key) => {
+                map[key.keyName] = key;
+            });
+            setLocalKeys(map);
         }
     }, [configKeysData]);
 
-    const handleEditAll = () => {
-        setIsEditing(true);
-    };
-
     const handleSaveAll = () => {
-        // Validate keys
-        const hasEmptyNames = localKeys.some(key => !key.keyName.trim());
-        const hasEmptyValues = localKeys.some(key => !key.keyValue.trim());
-        
+        // Validate
+        const values = Object.values(localKeys);
+        const hasEmptyNames = values.some((k) => !k.keyName.trim());
+        const hasEmptyValues = values.some((k) => !k.keyValue.trim());
+
         if (hasEmptyNames || hasEmptyValues) {
             toast.error('Please fill in all key names and values');
             return;
         }
 
         storeConfigKeys(
-            { keys: localKeys },
+            { keys: values },
             {
                 onSuccess: () => {
                     toast.success('Config keys saved successfully', {
-                        style: {
-                            background: '#009F7F',
-                            color: '#fff',
-                        },
+                        style: { background: '#009F7F', color: '#fff' },
                     });
                     setIsEditing(false);
                     onClose();
                 },
                 onError: () => {
                     toast.error('Failed to save config keys', {
-                        style: {
-                            backgroundColor: "#FF0000",
-                            color: "#fff",
-                        },
+                        style: { backgroundColor: '#FF0000', color: '#fff' },
                     });
                 },
             }
@@ -108,24 +102,31 @@ const ConfigKeysPopup: React.FC<ConfigKeysPopupProps> = ({ isOpen, onClose }) =>
 
     const handleCancelEdit = () => {
         setIsEditing(false);
-        // Reset to original data if needed
         if (configKeysData?.data && configKeysData.data.length > 0) {
-            const formattedKeys = configKeysData.data.map(key => ({
-                keyName: key.keyName,
-                keyValue: key.keyValue,
-                isPublic: key.isPublic,
-                description: key.description
-            }));
-            setLocalKeys(formattedKeys);
+            const map: KeysMap = {};
+            configKeysData.data.forEach((key) => {
+                map[key.keyName] = {
+                    keyName: key.keyName,
+                    keyValue: key.keyValue,
+                    isPublic: key.isPublic,
+                    description: key.description || '',
+                };
+            });
+            setLocalKeys(map);
         } else {
-            setLocalKeys(defaultKeys);
+            const map: KeysMap = {};
+            defaultKeys.forEach((key) => {
+                map[key.keyName] = key;
+            });
+            setLocalKeys(map);
         }
     };
 
-    const handleKeyChange = (index: number, field: keyof ConfigKeyInput, value: string | boolean) => {
-        setLocalKeys(prev => prev.map((key, i) => 
-            i === index ? { ...key, [field]: value } : key
-        ));
+    const handleChange = (name: string, value: string) => {
+        setLocalKeys((prev) => ({
+            ...prev,
+            [name]: { ...prev[name], keyValue: value },
+        }));
     };
 
     const handleClose = () => {
@@ -138,10 +139,12 @@ const ConfigKeysPopup: React.FC<ConfigKeysPopupProps> = ({ isOpen, onClose }) =>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto [&>button]:hidden">
                 <DialogHeader>
                     <div className="flex items-center justify-between">
-                        <DialogTitle className="text-2xl font-bold">API Keys Configuration</DialogTitle>
+                        <DialogTitle className="text-2xl font-bold">
+                            API Keys Configuration
+                        </DialogTitle>
                         {!isEditing ? (
                             <Button
-                                onClick={handleEditAll}
+                                onClick={() => setIsEditing(true)}
                                 className="bg-blue-600 hover:bg-blue-700"
                             >
                                 <Edit2 className="w-4 h-4 mr-2" />
@@ -157,10 +160,7 @@ const ConfigKeysPopup: React.FC<ConfigKeysPopupProps> = ({ isOpen, onClose }) =>
                                     <Save className="w-4 h-4 mr-2" />
                                     {isPending ? 'Saving...' : 'Save All'}
                                 </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={handleCancelEdit}
-                                >
+                                <Button variant="outline" onClick={handleCancelEdit}>
                                     <XCircle className="w-4 h-4 mr-2" />
                                     Cancel
                                 </Button>
@@ -168,7 +168,7 @@ const ConfigKeysPopup: React.FC<ConfigKeysPopupProps> = ({ isOpen, onClose }) =>
                         )}
                     </div>
                 </DialogHeader>
-                
+
                 <div className="space-y-6">
                     {isLoading ? (
                         <div className="flex justify-center items-center py-8">
@@ -178,67 +178,65 @@ const ConfigKeysPopup: React.FC<ConfigKeysPopupProps> = ({ isOpen, onClose }) =>
                         <>
                             {/* Google Map Key */}
                             <div className="border border-gray-200 rounded-lg p-4">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">Google Map Key</h3>
-                                
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                                    Google Map Key
+                                </h3>
                                 {isEditing ? (
-                                    <div className="space-y-3">
-                                        <div className="space-y-2">
-                                            <span className="font-medium">Google Map Key:</span>
-                                            <Input
-                                                value={localKeys[0]?.keyValue || ''}
-                                                onChange={(e) => handleKeyChange(0, 'keyValue', e.target.value)}
-                                                placeholder="Enter Google Maps API Key"
-                                                className="w-full"
-                                            />
-                                        </div>
-                                    </div>
+                                    <Input
+                                        value={localKeys['google_map_key']?.keyValue || ''}
+                                        onChange={(e) =>
+                                            handleChange('google_map_key', e.target.value)
+                                        }
+                                        placeholder="Enter Google Maps API Key"
+                                        className="w-full"
+                                    />
                                 ) : (
-                                    <div className="space-y-2">
-                                        <span className="font-medium">Google Map Key:</span>
-                                        <div className="text-gray-600">
-                                            <span className="ml-2">{localKeys[0]?.keyValue || 'Not set'}</span>
-                                        </div>
+                                    <div className="text-gray-600">
+                                        {localKeys['google_map_key']?.keyValue || 'Not set'}
                                     </div>
                                 )}
                             </div>
 
-                            {/* Payment Keys */}
-                            <div className="border border-gray-200 rounded-lg p-4 ">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">Payment Key</h3>
-                                
+                            {/* Razorpay Keys */}
+                            <div className="border border-gray-200 rounded-lg p-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                                    Payment Keys
+                                </h3>
                                 {isEditing ? (
                                     <div className="space-y-4">
-                                        <div className="space-y-2">
-                                            <span className="font-medium">Razorpay Key:</span>
-                                            <Input
-                                                value={localKeys[1]?.keyValue || ''}
-                                                onChange={(e) => handleKeyChange(1, 'keyValue', e.target.value)}
-                                                placeholder="Enter Razorpay API Key"
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <span className="font-medium">Razorpay Secret:</span>
-                                            <Input
-                                                value={localKeys[2]?.keyValue || ''}
-                                                onChange={(e) => handleKeyChange(2, 'keyValue', e.target.value)}
-                                                placeholder="Enter Razorpay API Secret"
-                                                className="w-full"
-                                            />
-                                        </div>
+                                        <Input
+                                            value={localKeys['razorpay_key']?.keyValue || ''}
+                                            onChange={(e) =>
+                                                handleChange('razorpay_key', e.target.value)
+                                            }
+                                            placeholder="Enter Razorpay API Key"
+                                            className="w-full"
+                                        />
+                                        <Input
+                                            value={localKeys['razorpay_key_secret']?.keyValue || ''}
+                                            onChange={(e) =>
+                                                handleChange(
+                                                    'razorpay_key_secret',
+                                                    e.target.value
+                                                )
+                                            }
+                                            placeholder="Enter Razorpay API Secret"
+                                            className="w-full"
+                                        />
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
-                                        <div className="space-y-2">
+                                        <div>
                                             <span className="font-medium">Client Key:</span>
-                                            <div className="text-gray-600">
-                                                <span className="ml-2">{localKeys[1]?.keyValue || 'Not set'}</span>
+                                            <div className="text-gray-600 ml-2">
+                                                {localKeys['razorpay_key']?.keyValue || 'Not set'}
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
+                                        <div>
                                             <span className="font-medium">Secret Key:</span>
-                                            <div className="text-gray-600">
-                                                <span className="ml-2">{localKeys[2]?.keyValue || 'Not set'}</span>
+                                            <div className="text-gray-600 ml-2">
+                                                {localKeys['razorpay_key_secret']?.keyValue ||
+                                                    'Not set'}
                                             </div>
                                         </div>
                                     </div>
