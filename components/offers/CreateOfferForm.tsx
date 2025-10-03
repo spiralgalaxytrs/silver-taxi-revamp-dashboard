@@ -308,22 +308,22 @@ export function CreateOfferForm() {
                                     </Select>
                                 </div>
 
-                                 <div className="space-y-2">
-                                                                    <Label htmlFor="value">
-                                                                        Limit Per User
-                                                                        <span className='text-red-500'>*</span>
-                                                                    </Label>
-                                                                    <Input
-                                                                        required
-                                                                        id="limit"
-                                                                        name="limit"
-                                                                        type="number"
-                                                                        placeholder="Enter the limit per user"
-                                                                        value={formData.limit}
-                                                                        onChange={handleInputChange}
-                                                                        className="h-12"
-                                                                    />
-                                                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="value">
+                                        Limit Per User
+                                        <span className='text-red-500'>*</span>
+                                    </Label>
+                                    <Input
+                                        required
+                                        id="limit"
+                                        name="limit"
+                                        type="number"
+                                        placeholder="Enter the limit per user"
+                                        value={formData.limit}
+                                        onChange={handleInputChange}
+                                        className="h-12"
+                                    />
+                                </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="description">Description</Label>
