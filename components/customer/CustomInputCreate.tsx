@@ -71,6 +71,7 @@ const InputPicker: React.FC<InputPickerProps> = ({
   };
 
   return (
+
     <div className={`relative ${className}`}>
       <input
         ref={inputRef}
@@ -194,5 +195,6 @@ const InputPicker: React.FC<InputPickerProps> = ({
     </div >
   );
 };
+
 
 export default InputPicker;
