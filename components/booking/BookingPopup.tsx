@@ -47,6 +47,7 @@ import { Eye, Pencil, Trash, CheckCircle, HelpCircle } from 'lucide-react';
 import ActionDropdown from 'components/others/ActionComponent';
 import { DriverSelectionPopup } from "components/driver/SelectDriver";
 import TooltipComponent from "components/others/TooltipComponent";
+import { isLocalDateTime } from 'lib/dateFunctions';
 interface BookingPopupProps {
   trigger: React.ReactNode;
   booking: Record<string, any> | null;
@@ -144,12 +145,12 @@ export function BookingPopup({
   // Auto-set contact status to "Contacted" when popup opens
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
-    
+
     // When popup opens and booking is not contacted, automatically set to contacted
     if (newOpen && booking && !booking.isContacted) {
-      toggleContactStatus({ 
-        id: booking.bookingId, 
-        status: true 
+      toggleContactStatus({
+        id: booking.bookingId,
+        status: true
       }, {
         onSuccess: (data: any) => {
           // Silently update the contact status without showing toast
@@ -195,9 +196,9 @@ export function BookingPopup({
         ? booking.stops.map(s => s.location || s).join(", ")
         : "-",
 
-      "Pickup Date & Time": formatDate(booking.pickupDateTime || "") || "-",
-      "Pickup Date": formatDate(booking.pickupDateTime || "") || "-",
-      "Pickup Time": formattedTime(booking.pickupDateTime || "") || "-",
+      "Pickup Date & Time": isLocalDateTime({ dateTime: booking.pickupDateTime || "" }) || "-",
+      // "Pickup Date": isLocalDateTime({ date: booking.pickupDateTime || "" }) || "-",
+      // "Pickup Time": isLocalDateTime({ time: booking.pickupDateTime || "" }) || "-",
       "Drop Date": booking.dropDate ? formatDate(booking.dropDate) : "-",
       "Service Type": booking.serviceType || "-",
       "Vehicle Name": booking.vehicles?.name || "-",

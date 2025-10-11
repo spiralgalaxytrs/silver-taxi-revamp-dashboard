@@ -36,3 +36,71 @@ export const dateRangeFilter = (row: any, columnId: any, filterValue: any) => {
 };
 
 
+export const isLocalDateTime = ({ date, time, dateTime }: { date?: string, time?: string, dateTime?: string }): string => {
+
+    if (dateTime) {
+        const utcDate = new Date(dateTime);
+
+        // Adjust back to IST (Subtract 5.5 hours)
+        const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+        // Format the corrected IST date
+        const formattedDate = istDate.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        });
+
+        const formattedTime = istDate.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+
+        return `${formattedDate} ${formattedTime}`;
+    }
+
+    if (date) {
+        const utcDate = new Date(date);
+
+        // Adjust back to IST (Subtract 5.5 hours)
+        const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+        // Format the corrected IST date
+        const formattedDate = istDate.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        });
+
+        return formattedDate;
+    }
+
+    if (time) {
+        const utcDate = new Date(time);
+
+        // Adjust back to IST (Subtract 5.5 hours)
+        const istDate = new Date(utcDate.getTime() - (5.5 * 60 * 60 * 1000));
+
+        const formattedTime = istDate.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+
+        return formattedTime;
+    }
+
+    const newDate = new Date().toLocaleTimeString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+    });
+
+    return newDate;
+}
+
