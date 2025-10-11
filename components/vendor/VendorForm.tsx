@@ -69,6 +69,7 @@ export function VendorForm({ id }: VendorFormProps) {
     const [pendingNavigation, setPendingNavigation] = useState<() => void>(() => { });
     const [adjustmentRemarks, setAdjustmentRemarks] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [showEye, setShowEye] = useState(false);
 
     useEffect(() => {
         if (vendor && id) {
@@ -356,16 +357,18 @@ export function VendorForm({ id }: VendorFormProps) {
                                         type={showPassword ? "text" : "password"}
                                         value={formData.password}
                                         onChange={handleInputChange}
+                                        onFocus={() => setShowEye(true)}
+                                        onBlur={() => setShowEye(false)}
                                         className='w-full border-none shadow-none py-6'
                                         required={!id} // Required only for creating, optional for updating
                                     />
-                                    <Button
+                                    {showEye && <Button
                                         variant={"none"}
                                         className="w-10 h-10"
                                         onClick={() => setShowPassword(!showPassword)}
                                     >
-                                       {showPassword ? <Eye className="w-5 h-5 text-black" /> : <EyeClosed className="w-5 h-5 text-black" />}
-                                    </Button>
+                                        {showPassword ? <Eye className="w-5 h-5 text-black" /> : <EyeClosed className="w-5 h-5 text-black" />}
+                                    </Button>}
                                 </div>
                             </div>
                             <div className="mb-4">
