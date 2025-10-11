@@ -12,6 +12,7 @@ import { useFetchBookingById, useUpdateBooking } from 'hooks/react-query/useBook
 import { toast } from 'sonner';
 import TooltipComponent from 'components/others/TooltipComponent';
 import { Booking } from 'types/react-query/booking';
+import { isLocalDateTime } from 'lib/dateFunctions';
 
 // Formatters
 const formatCurrency = (value: number | null | undefined) => `₹${value?.toLocaleString() || '0'}`;
@@ -475,6 +476,17 @@ export default function BookingDetailsPage() {
               <p>{value} + {formData?.extraPricePerKm}</p>
               : <p>{value}</p>
             }
+          </div>
+        </div>
+      )
+    }
+
+    if (field.key === "pickupDateTime") {
+      return (
+        <div key={field.key} className="space-y-1">
+          <Label className="text-sm text-gray-600">{field.label}</Label>
+          <div className="font-medium">
+            {value ? isLocalDateTime({ dateTime: value }) : '-'}
           </div>
         </div>
       )
