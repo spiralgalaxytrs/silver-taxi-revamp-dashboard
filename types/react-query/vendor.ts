@@ -20,7 +20,8 @@ export interface Vendor {
     createdAt: string;
   };
   createdAt: string;
-
+  
+  website?: string;
   reason?: string;
 }
 

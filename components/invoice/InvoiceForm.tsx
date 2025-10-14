@@ -394,7 +394,6 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
             {paymentStatus === "Paid" ? (
               <Input
                 type="text"
-                readOnly
                 value={paymentStatus}
                 className="bg-gray-100 cursor-default"
               />
@@ -544,12 +543,11 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                       className="border-none shadow-none"
                       placeholder="Pickup - Drop"
                       readOnly={paymentStatus === "Paid"}
-                      value={items.details || ""}
+                      defaultValue={items.details || ""}
                       onBlur={(e) => {
                         const value = e.target.value;
 
-                        // Update the item details when input loses focus
-                        handleItemChange("details", value);
+                        handleItemChange("details", e.target.value);
 
                         // Parse and set pickup/drop if "-" is present
                         if (value.includes("-")) {
@@ -558,6 +556,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                         }
                       }}
                     />
+
 
                   </td>
                 }
@@ -583,7 +582,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                     type="text"
                     placeholder="Km"
                     readOnly={paymentStatus === "Paid"}
-                    value={items.km || 0}
+                    defaultValue={items.km || 0}
                     onBlur={(e) => {
                       const numericValue = e.target.value.replace(/[^0-9]/g, '')
                       handleItemChange("km", Number(numericValue))
@@ -596,7 +595,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                     type="text"
                     placeholder="Price"
                     readOnly={paymentStatus === "Paid"}
-                    value={items.price || 0}
+                    defaultValue={items.price || 0}
                     onBlur={(e) => {
                       const numericValue = e.target.value.replace(/[^0-9]/g, '')
                       handleItemChange("price", Number(numericValue))
@@ -617,7 +616,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                   <Input
                     className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
                     type="text"
-                    readOnly={paymentStatus === "Paid"}
+                    readOnly
                     placeholder="Amount"
                     value={items.amount || 0}
                   />
@@ -635,7 +634,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
             <div className="flex flex-col gap-2 items-end">
               {taxCharges.filter(charge => charge.isFixed).map((charge, index) => (
                 <div key={index} className="flex flex-row gap-2 items-center">
-                      <Checkbox
+                  <Checkbox
                     checked={
                       charge.label === "CGST & SGST" ? isCGSTSGSTSelected : isIGSTSelected
                     }
@@ -646,7 +645,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
 
                   <Input
                     type="text"
-                    value={charge.label}
+                    value={charge.label || ""}
                     readOnly
                     className="w-32 bg-white border border-gray-300 text-gray-600"
                   />
@@ -666,7 +665,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                 <div key={index} className="flex flex-row gap-2 items-center">
                   <Input
                     type="text"
-                    value={charge.label}
+                    value={charge.label || ""}
                     readOnly
                     className="w-32 bg-white border border-gray-300 text-gray-600"
                   />
@@ -693,7 +692,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                     <Input
                       type="text"
                       placeholder="Charge Label"
-                      value={charge.label}
+                      value={charge.label || ""}
                       onChange={(e) => {
                         const filteredValue = e.target.value.replace(/[^A-Za-z\s]/g, "");
                         handleChargeChange(index, "label", filteredValue);
