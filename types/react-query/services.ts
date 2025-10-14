@@ -2,9 +2,8 @@ export interface Service {
     serviceId?: string | null | undefined;
     name: string;
     tax: {
-        IGST: number;
-        CGST: number;
-        SGST: number;
+        GST: number;
+        vendorGST: number
     };
     isActive: boolean;
     minKm: number;
