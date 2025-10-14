@@ -27,7 +27,7 @@ export default function PackageServiceSection({ isEditing, serviceId, title }: S
     const [updatedService, setUpdatedService] = useState<PackageService>({
         serviceId: "",
         name: title,
-        tax: { CGST: 0, SGST: 0, IGST: 0 },
+        tax: { GST: 0, vendorGST: 0 },
         isActive: false,
         minKm: 0,
         driverCommission: 0,
@@ -138,30 +138,21 @@ export default function PackageServiceSection({ isEditing, serviceId, title }: S
                                 <>
                                     <div className="flex items-center gap-3">
                                         <div>
-                                            <Label className="text-sm">CGST %<span className="text-red-500 ml-1">*</span></Label>
+                                            <Label className="text-sm">GST %<span className="text-red-500 ml-1">*</span></Label>
                                             <Input
                                                 type="number"
-                                                value={updatedService?.tax?.CGST || 0}
+                                                value={updatedService?.tax?.GST || 0}
                                                 className="mt-3"
-                                                onChange={(e) => handleTaxChange("CGST", Number(e.target.value))}
+                                                onChange={(e) => handleTaxChange("GST", Number(e.target.value))}
                                             />
                                         </div>
                                         <div>
-                                            <Label className="text-sm">SGST %<span className="text-red-500 ml-1">*</span></Label>
+                                            <Label className="text-sm">Vendor GST %<span className="text-red-500 ml-1">*</span></Label>
                                             <Input
                                                 type="number"
-                                                value={updatedService?.tax?.SGST || 0}
+                                                value={updatedService?.tax?.vendorGST || 0}
                                                 className="mt-3"
-                                                onChange={(e) => handleTaxChange("SGST", Number(e.target.value))}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="text-sm">IGST %<span className="text-red-500 ml-1">*</span></Label>
-                                            <Input
-                                                type="number"
-                                                value={updatedService?.tax?.IGST || 0}
-                                                className="mt-3"
-                                                onChange={(e) => handleTaxChange("IGST", Number(e.target.value))}
+                                                onChange={(e) => handleTaxChange("vendorGST", Number(e.target.value))}
                                             />
                                         </div>
                                     </div>
@@ -169,9 +160,8 @@ export default function PackageServiceSection({ isEditing, serviceId, title }: S
                             ) : (
                                 <>
                                     <div className="flex items-center gap-3">
-                                        <p className="mt-3">CGST: {service?.tax?.CGST || 0}%</p>
-                                        <p className="mt-3">SGST: {service?.tax?.SGST || 0}%</p>
-                                        <p className="mt-3">IGST: {service?.tax?.IGST || 0}%</p>
+                                        <p className="mt-3">GST: {service?.tax?.GST || 0}%</p>
+                                        <p className="mt-3">Vendor GST: {service?.tax?.vendorGST || 0}%</p>
                                     </div>
                                 </>
                             )}

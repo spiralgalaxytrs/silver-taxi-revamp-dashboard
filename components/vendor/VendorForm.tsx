@@ -40,6 +40,7 @@ type VendorFormData = {
     remark?: string;
     walletAmount: number;
     isActive?: boolean | null; // Optional status field for vendors
+    website?: string
 };
 
 export function VendorForm({ id }: VendorFormProps) {
@@ -62,6 +63,7 @@ export function VendorForm({ id }: VendorFormProps) {
         remark: "",
         walletAmount: 0,
         isActive: false,
+        website: ""
     });
     const [adjustmentAmount, setAdjustmentAmount] = useState("");
     const [isFormDirty, setIsFormDirty] = useState(false);
@@ -81,6 +83,7 @@ export function VendorForm({ id }: VendorFormProps) {
                 remark: vendor.remark || "",
                 walletAmount: vendor.wallet.balance || 0,
                 isActive: vendor.isLogin || false,
+                website: vendor.website || ""
             });
         }
     }, [vendor]);
@@ -378,6 +381,19 @@ export function VendorForm({ id }: VendorFormProps) {
                                     id="remark"
                                     name="remark"
                                     value={formData.remark}
+                                    onChange={handleInputChange}
+                                    className='w-full border-black py-6'
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <Label htmlFor="website">
+                                    Website Url
+                                </Label>
+                                <Input
+                                    id="website"
+                                    name="website"
+                                    type="url"
+                                    value={formData.website}
                                     onChange={handleInputChange}
                                     className='w-full border-black py-6'
                                 />
