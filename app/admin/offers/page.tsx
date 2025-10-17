@@ -40,11 +40,21 @@ import {
     useTableColumnVisibility,
     useUpdateTableColumnVisibility
 } from 'hooks/react-query/useImageUpload';
+import {
+    useOffers,
+    useBulkDeleteOffers
+} from 'hooks/react-query/useOffers';
 
 export default function OffersPage() {
 
     const router = useRouter();
-    const { offers, fetchOffers, multiDeleteOffers, isLoading } = useOfferStore();
+
+    const {
+        data: offers = [],
+        isLoading,
+        refetch
+    } = useOffers();
+    const { mutate: multiDeleteOffers } = useBulkDeleteOffers();
 
     const {
         data: tableColumnVisibility = {},
@@ -81,20 +91,12 @@ export default function OffersPage() {
         columnId: string | null;
         direction: 'asc' | 'desc' | null;
     }>({ columnId: null, direction: null });
-    const [offersData, setOffersData] = useState(
-        offers.map(offer => ({
-            ...offer,
-            id: offer.offerId
-        }))
-    );
 
-    useEffect(() => {
-        setOffersData(
-            offers.map(offer => ({
-                ...offer,
-                id: offer.offerId
-            }))
-        );
+    const offersData = useMemo(() => {
+        return offers.map((offer: any, index: number) => ({
+            id: offer.offerId,
+            ...offer
+        }))
     }, [offers])
 
 
@@ -103,10 +105,6 @@ export default function OffersPage() {
         setFilters(prev => ({ ...prev, [key]: value }));
     };
 
-    useEffect(() => {
-        fetchOffers();
-        setOffersData(offersData);
-    }, []);
 
     const handleClear = async () => {
         try {
@@ -209,7 +207,7 @@ export default function OffersPage() {
                 if (bValue == null) return sortConfig.direction === 'asc' ? -1 : 1;
 
                 // Date comparison for date fields
-                if (['startDate', 'endDate', 'createdAt'].includes(columnKey)) {
+                if (['startDate', 'endDate', 'createdAt'].includes(columnKey as string)) {
                     const dateA = new Date(aValue as string).getTime();
                     const dateB = new Date(bValue as string).getTime();
                     return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
@@ -304,23 +302,27 @@ export default function OffersPage() {
             const offerId = filteredData[parseInt(index)]?.offerId
             return offerId !== undefined ? offerId : null
         }).filter(id => id !== null);
-        await multiDeleteOffers(selectedIds);
-        const newData = filteredData.filter(offer => !selectedIds.includes(offer.offerId || ""));
-        setOffersData(newData);
-        setRowSelection({});
-        const { statusCode, message } = useOfferStore.getState()
-        if (statusCode === 200 || statusCode === 201) {
-            toast.success("Offers deleted successfully");
-            router.push("/admin/offers");
-        } else {
-            toast.error(message || "Error deleting Offers", {
-                style: {
-                    backgroundColor: "#FF0000",
-                    color: "#fff",
-                },
-            });
-        }
-        setIsDialogOpen(false);
+        multiDeleteOffers(selectedIds, {
+            onSuccess: () => {
+                setRowSelection({});
+                setIsDialogOpen(false);
+                toast.success("Offers deleted successfully", {
+                    style: {
+                        backgroundColor: "#009F7F",
+                        color: "#fff",
+                    },
+                });
+            },
+            onError: (error: any) => {
+                toast.error(error?.response?.data?.message || "Failed to delete offers", {
+                    style: {
+                        backgroundColor: "#FF0000",
+                        color: "#fff",
+                    },
+                });
+            },
+        });
+
     };
 
     const cancelBulkDelete = () => {

@@ -27,8 +27,8 @@ interface ColumnsProps {
 
 export const useColumns = ({ onEdit }: ColumnsProps) => {
   const deleteMutation = useDeleteCustomNotification();
-  const sendMutation = useSendCustomNotification();
-  
+  const { mutate: sendMutation, isPending } = useSendCustomNotification();
+
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [sendDialogOpen, setSendDialogOpen] = React.useState(false);
   const [selectedNotification, setSelectedNotification] = React.useState<CustomNotification | null>(null);
@@ -58,20 +58,30 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
 
   const handleSend = async () => {
     console.log("handleSend called with selectedNotification:", selectedNotification);
-    
+
     if (selectedNotification) {
       try {
         console.log("Sending notification with templateId:", selectedNotification.templateId);
-        const result = await sendMutation.mutateAsync({ templateId: selectedNotification.templateId || '' });
-        console.log("Send notification result:", result);
-        toast.success("Notification sent successfully!", {
-          style: {
-            backgroundColor: "#009F7F",
-            color: "#fff",
+        sendMutation({ templateId: selectedNotification.templateId || '' }, {
+          onSuccess: () => {
+            setSendDialogOpen(false);
+            setSelectedNotification(null);
+            toast.success("Notification sent successfully", {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
           },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || "Failed to send notification", {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          }
         });
-        setSendDialogOpen(false);
-        setSelectedNotification(null);
       } catch (error: any) {
         console.error("Send notification error:", error);
         console.error("Error response:", error?.response?.data);
@@ -144,15 +154,15 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
       Cell: ({ row }) => (
         <div className="flex items-center gap-1">
           <CustomNotificationView notification={row.original}>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-8 w-8 p-0"
             >
               <Eye className="w-4 h-4" />
             </Button>
           </CustomNotificationView>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -161,7 +171,7 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
           >
             <Pencil className="w-4 h-4" />
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -171,11 +181,11 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
               setSelectedNotification(row.original);
               setSendDialogOpen(true);
             }}
-            disabled={sendMutation.isPending}
+            disabled={isPending}
           >
             <Send className="w-4 h-4" />
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -204,7 +214,7 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
     handleDelete,
     handleSend,
     deleteLoading: deleteMutation.isPending,
-    sendLoading: sendMutation.isPending,
+    sendLoading: isPending,
   };
 };
 
@@ -294,7 +304,7 @@ const SendDialog = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Send Notification</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to send this notification to all customers? This action cannot be undone.
+            Are you sure you want to send this notifications This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

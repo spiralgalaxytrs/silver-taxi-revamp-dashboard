@@ -24,6 +24,7 @@ import {
   MRT_ColumnDef,
 } from 'material-react-table'
 import { dateRangeFilter } from "lib/dateFunctions";
+import { useDeleteOffer, useToggleOfferStatus } from "hooks/react-query/useOffers";
 
 type Offers = {
   offerId?: string;
@@ -94,30 +95,31 @@ export const columns: MRT_ColumnDef<Offers>[] = [
     header: "Status",
     Cell: ({ row }) => {
       const status = row.getValue("status") as boolean;
-      const { toggleChanges, fetchOffers } = useOfferStore();
+      const { mutate: toggleChanges } = useToggleOfferStatus();
       const id = row.original.offerId;
 
       const handleToggleStatus = async (newStatus: boolean) => {
         try {
-          await toggleChanges(id, newStatus);
-          const statusCode = useOfferStore.getState().statusCode;
-          const message = useOfferStore.getState().message;
-          if (statusCode === 200 || statusCode === 201) {
-            toast.success("Offer status updated successfully", {
-              style: {
-                backgroundColor: "#009F7F",
-                color: "#fff",
-              },
-            });
-          } else {
-            toast.error(message || "Failed to update status", {
-              style: {
-                backgroundColor: "#FF0000",
-                color: "#fff",
-              },
-            });
-          }
-          await fetchOffers();
+          toggleChanges({ id: id || "", status: newStatus }, {
+
+            onSuccess: () => {
+              toast.success("Offer status updated successfully", {
+                style: {
+                  backgroundColor: "#009F7F",
+                  color: "#fff",
+                },
+              });
+            },
+            onError: (error: any) => {
+              toast.error(error?.response?.data?.message || "Failed to update status", {
+                style: {
+                  backgroundColor: "#FF0000",
+                  color: "#fff",
+                },
+              });
+            },
+
+          });
         } catch (error) {
           toast.error("Failed to update status", {
             style: {
@@ -266,9 +268,10 @@ export const columns: MRT_ColumnDef<Offers>[] = [
     header: "Actions",
     Cell: ({ row }) => {
       const offer = row.original;
+      console.log("offer:", offer);
       const router = useRouter()
       const [isDialogOpen, setIsDialogOpen] = useState(false);
-      const { deleteOffer } = useOfferStore();
+      const { mutate: deleteOffer } = useDeleteOffer();
 
       const handleCopy = (id: string | undefined) => {
         if (!id) return;
@@ -292,13 +295,30 @@ export const columns: MRT_ColumnDef<Offers>[] = [
       }
 
       const confirmDelete = async (id: string) => {
-        await deleteOffer(id);
-        setIsDialogOpen(false);
-        toast.success("Offer deleted successfully");
+        deleteOffer(id, {
+          onSuccess: () => {
+            setIsDialogOpen(false);
+            toast.success("Offers deleted successfully", {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            });
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || "Failed to delete offers", {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            });
+          },
+
+        });
       }
 
       return (
-        <div className="flex items-center gap-3 justify-center">
+        <div className="flex items-center gap-3 justify-center" >
           <div className="flex items-center gap-3">
             {/* Edit Icon */}
             {/* <Button
@@ -365,7 +385,7 @@ export const columns: MRT_ColumnDef<Offers>[] = [
               <Copy className="h-5 w-5" />
             </Button>
           </div>
-        </div>
+        </div >
       );
     },
     muiTableHeadCellProps: { align: 'center' },
