@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from 'components/ui/card';
 
-const CounterCard = ({ color, icon: Icon, count, label, counterSize = 'text-2xl', cardSize = 'w-[250px]' }: any | null) => {
+const CounterCard = ({ color, icon: Icon, count, label, subLabel, counterSize = 'text-2xl', cardSize = 'w-[250px]' }: any | null) => {
   const [currentCount, setCurrentCount] = useState(0);
 
   useEffect(() => {
@@ -26,13 +26,16 @@ const CounterCard = ({ color, icon: Icon, count, label, counterSize = 'text-2xl'
   }, [count]);
 
   return (
-    <Card className={`${cardSize} ${color} h-[150px] w-[full]` }>
+    <Card className={`${cardSize} ${color} h-[300px] w-[full]`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{label}</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          {label}
+          {subLabel && <div className="text-xs font-normal">{subLabel}</div>}
+        </CardTitle>
         <Icon className='h-5 w-5' />
       </CardHeader>
       <CardContent>
-        <div className={`font-bold ${counterSize}`}>{currentCount ? currentCount: "0"}</div>
+        <div className={`font-bold ${counterSize}`}>{currentCount ? currentCount : "0"}</div>
       </CardContent>
     </Card>
   );
