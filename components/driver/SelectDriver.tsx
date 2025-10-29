@@ -155,7 +155,7 @@ export function DriverSelectionPopup({
                         }}
                     >
                         {activeDrivers.map((driver, idx) => {
-                            console.log("driver geoLocation >> ", driver.geoLocation, "driverId >> ", driver.driverId);
+                            // console.log("driver geoLocation >> ", driver.geoLocation, "driverId >> ", driver.driverId);
                             return (
                                 <Marker
                                     key={idx}
