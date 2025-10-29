@@ -1,5 +1,6 @@
 "use client";
 
+import { BookingPopup } from 'components/booking/BookingPopup';
 import { dateRangeFilter } from 'lib/dateFunctions';
 import {
   MRT_ColumnDef
@@ -20,6 +21,26 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     header: "Booking ID",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    Cell: ({ row }) => {
+      const booking = row.original;
+
+      return (
+        <BookingPopup
+          trigger={
+            <span
+              style={{
+                color: 'blue',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+              }}
+            >
+              {booking.bookingId}
+            </span>
+          }
+          booking={booking}
+        />
+      );
+    },
   },
   {
     accessorKey: "name",
