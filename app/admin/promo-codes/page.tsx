@@ -48,6 +48,7 @@ export default function PromoCodePage() {
         isPending: isFetchPending,
         isError,
         error,
+        refetch
     } = usePromoCodesAll();
 
     const {
@@ -332,22 +333,27 @@ export default function PromoCodePage() {
             const promoId = filteredData[parseInt(index)]?.codeId
             return promoId !== undefined ? promoId : null
         }).filter(id => id !== null);
-        await bulkDeletePromoCodes(selectedIds || []);
-        const newData = filteredData.filter(promos => !selectedIds.includes(promos.codeId || ""));
-        setPromoCodeData(newData);
-        setRowSelection({});
-        const { statusCode, message } = promoCodes.getState()
-        if (statusCode === 200 || statusCode === 201) {
-            toast.success("Promo Codes deleted successfully");
-            router.push("/admin/promo-codes");
-        } else {
-            toast.error(message || "Error deleting promo codes", {
-                style: {
-                    backgroundColor: "#FF0000",
-                    color: "#fff",
+        bulkDeletePromoCodes(selectedIds || [],{
+                onSuccess: (data: any) => {
+                    const message = data?.message || "Promo Codes deleted successfully";
+                    toast.success(message, {
+                        style: {
+                            backgroundColor: "#009F7F",
+                            color: "#fff",
+                        },
+                    });
+                    setRowSelection({});
                 },
-            });
-        }
+                onError: (error) => {
+                    toast.error(error.message || "Error deleting promo codes", {
+                        style: {
+                            backgroundColor: "#FF0000",
+                            color: "#fff",
+                        },
+                    });
+                },
+            }
+        );
         setIsDialogOpen(false);
     };
 
@@ -358,8 +364,7 @@ export default function PromoCodePage() {
     const handleRefetch = async () => {
         setIsSpinning(true);
         try {
-            // await refetch(); // wait for the refetch to complete
-            await usePromoCodesAll().refetch();
+            await refetch(); // wait for the refetch to complete
         } finally {
             // stop spinning after short delay to allow animation to play out
             setTimeout(() => setIsSpinning(false), 500);
