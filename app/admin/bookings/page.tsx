@@ -771,6 +771,7 @@ export default function BookingsPage() {
             data={filteredData}
             enableRowSelection
             positionGlobalFilter="left"
+            enableColumnResizing
             onRowSelectionChange={setRowSelection}
             onColumnVisibilityChange={(newVisibility) => {
               setIsColumnVisibilityUpdated(true);
