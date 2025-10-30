@@ -211,7 +211,7 @@ export const walletColumns: MRT_ColumnDef<VendorTransaction>[] = [
         muiTableBodyCellProps: { align: 'center' },
     },
     {
-        accessorKey: "createdAt",
+        accessorKey: "date",
         header: "Date/Time",
         Cell: ({ row }) => {
             const createdAt: string = row.getValue("createdAt")
