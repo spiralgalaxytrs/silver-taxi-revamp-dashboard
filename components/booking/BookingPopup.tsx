@@ -65,6 +65,7 @@ export function BookingPopup({
   const [open, setOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [localBooking, setLocalBooking] = useState(booking);
 
   const router = useRouter();
 
@@ -154,7 +155,7 @@ export function BookingPopup({
       }, {
         onSuccess: (data: any) => {
           // Silently update the contact status without showing toast
-          // The table will automatically refresh and show the updated status
+          setLocalBooking((prev) => ({ ...prev, isContacted: true }));
         },
         onError: (error: any) => {
           // Silently handle error without showing toast
@@ -186,46 +187,45 @@ export function BookingPopup({
     if (!booking || !open) return null;
 
     return {
-      "Booking Id": booking.bookingId || "-",
-      "Name": booking.name || "-",
-      "Phone Number": booking.phone || "-",
-      "Email": booking.email || "-",
-      "Pick Up": booking.pickup || "-",
-      "Drop": booking.drop || "-",
-      "Stops": Array.isArray(booking.stops) && booking.stops.length
-        ? booking.stops.map(s => s.location || s).join(", ")
+      "Booking Id": localBooking?.bookingId || "-",
+      "Name": localBooking?.name || "-",
+      "Phone Number": localBooking?.phone || "-",
+      "Email": localBooking?.email || "-",
+      "Pick Up": localBooking?.pickup || "-",
+      "Drop": localBooking?.drop || "-",
+      "Stops": Array.isArray(localBooking?.stops) && localBooking?.stops.length
+        ? localBooking?.stops.map(s => s.location || s).join(", ")
         : "-",
 
-      "Pickup Date & Time": isLocalDateTime({ dateTime: booking.pickupDateTime || "" }) || "-",
-      // "Pickup Date": isLocalDateTime({ date: booking.pickupDateTime || "" }) || "-",
-      // "Pickup Time": isLocalDateTime({ time: booking.pickupDateTime || "" }) || "-",
-      "Drop Date": booking.dropDate ? formatDate(booking.dropDate) : "-",
-      "Service Type": booking.serviceType || "-",
-      "Vehicle Name": booking.vehicles?.name || "-",
-      "Vehicle Type": booking.vehicles?.type || "-",
-      "Distance": booking.distance || 0,
-      "Duration": booking.duration || 0,
-      "Price Per Km": booking.pricePerKm || 0,
-      "Estimated Amount": booking.estimatedAmount || 0,
-      "Driver Assigned": booking.driver?.name || "-",
-      "Driver Beta": booking.driverBeta || "-",
-      "Toll": booking.toll || 0,
-      "Hill": booking.hill || 0,
-      "Permit Charge": booking.permitCharge || 0,
-      "Tax Percentage": booking.taxPercentage || 0,
-      "Offer Name": booking.offers?.offerName || "-",
-      "DiscountAmount": booking.discountAmount || 0,
-      "Advance Amount": booking.advanceAmount || 0,
-      "FinalAmount": booking.finalAmount || 0,
-      "Payment Method": booking.paymentMethod || "-",
-      "Payment Status": booking.paymentStatus || "-",
-      "Type": booking.type || "-",
-      "Status": booking.status || "-",
-      "CreatedBy": booking.createdBy || "-",
-      "Booking Date": formatDate(booking.createdAt || "") || "-",
+      "Pickup Date & Time": isLocalDateTime({ dateTime: localBooking?.pickupDateTime || "" }) || "-",
+      // "Pickup Date": isLocalDateTime({ date: localBooking?.pickupDateTime || "" }) || "-",
+      // "Pickup Time": isLocalDateTime({ time: localBooking?.pickupDateTime || "" }) || "-",
+      "Drop Date": localBooking?.dropDate ? formatDate(localBooking?.dropDate) : "-",
+      "Service Type": localBooking?.serviceType || "-",
+      "Vehicle Name": localBooking?.vehicles?.name || "-",
+      "Vehicle Type": localBooking?.vehicles?.type || "-",
+      "Distance": localBooking?.distance || 0,
+      "Duration": localBooking?.duration || 0,
+      "Price Per Km": localBooking?.pricePerKm || 0,
+      "Estimated Amount": localBooking?.estimatedAmount || 0,
+      "Driver Assigned": localBooking?.driver?.name || "-",
+      "Driver Beta": localBooking?.driverBeta || "-",
+      "Toll": localBooking?.toll || 0,
+      "Hill": localBooking?.hill || 0,
+      "Permit Charge": localBooking?.permitCharge || 0,
+      "Tax Percentage": localBooking?.taxPercentage || 0,
+      "Offer Name": localBooking?.offers?.offerName || "-",
+      "DiscountAmount": localBooking?.discountAmount || 0,
+      "Advance Amount": localBooking?.advanceAmount || 0,
+      "FinalAmount": localBooking?.finalAmount || 0,
+      "Payment Method": localBooking?.paymentMethod || "-",
+      "Payment Status": localBooking?.paymentStatus || "-",
+      "Type": localBooking?.type || "-",
+      "Status": localBooking?.status || "-",
+      "CreatedBy": localBooking?.createdBy || "-",
+      "Booking Date": formatDate(localBooking?.createdAt || "") || "-",
     };
-  }, [booking, open]);
-
+  }, [localBooking, open]);
 
 
   const {

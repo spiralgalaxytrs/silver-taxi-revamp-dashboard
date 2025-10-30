@@ -79,6 +79,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   // {
   //   accessorKey: "bookingId",
@@ -91,6 +92,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     header: "Booking ID",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
     Cell: ({ row }) => {
       const booking = row.original;
 
@@ -118,7 +120,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     Cell: ({ row }) => {
       const isContacted = row.getValue("isContacted") as boolean;
       const createdBy = row.original.createdBy;
-      
+
       // If created by vendor, show dash
       if (createdBy === "Vendor") {
         return (
@@ -129,7 +131,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
           </div>
         );
       }
-      
+
       const getStatusColor = (status: boolean) => {
         switch (status) {
           case false:
@@ -143,14 +145,15 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return (
         <div className="flex items-center justify-center">
-                <Badge variant="outline" className={getStatusColor(isContacted)}>
-                  {isContacted ? "Contacted" : "Not Contacted"}
-                </Badge>
+          <Badge variant="outline" className={getStatusColor(isContacted)}>
+            {isContacted ? "Contacted" : "Not Contacted"}
+          </Badge>
         </div>
       );
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "name",
@@ -161,6 +164,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "phone",
@@ -171,6 +175,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "pickup",
@@ -186,6 +191,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "drop",
@@ -201,6 +207,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     id: "pickupDateTime",
@@ -264,6 +271,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     id: "dropDate",
@@ -296,12 +304,14 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "serviceType",
     header: "Service Type",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "distance",
@@ -335,6 +345,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "discountAmount",
@@ -350,6 +361,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "offerId",
@@ -370,6 +382,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "finalAmount",
@@ -387,6 +400,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "advanceAmount",
@@ -402,6 +416,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "upPaidAmount",
@@ -417,6 +432,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: 'driverId',
@@ -507,10 +523,10 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         <DriverSelectionPopup
           trigger={
             <Button variant="outline" size="sm" disabled={false}>
-                {assignedDriver ?
-                  <p className="flex items-center gap-2 text-sm font-medium">
-                    {assignedDriver.name}
-                    <TooltipComponent name={booking?.driverId ? booking?.driverAccepted || "" : "Assign Driver"}>
+              {assignedDriver ?
+                <p className="flex items-center gap-2 text-sm font-medium">
+                  {assignedDriver.name}
+                  <TooltipComponent name={booking?.driverId ? booking?.driverAccepted || "" : "Assign Driver"}>
                     {currentBooking.driverAccepted === "accepted" ?
                       <span className="text-xs text-green-500">
                         <CheckCircle className="h-4 w-4" />
@@ -519,9 +535,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
                         <HelpCircle className="h-4 w-4" />
                       </span>
                     }
-                    </TooltipComponent>
-                  </p>
-                  : "Assign Driver"}
+                  </TooltipComponent>
+                </p>
+                : "Assign Driver"}
             </Button>
           }
           onSelectDriver={handleDriverAssignment}
@@ -537,6 +553,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "paymentMethod",
@@ -617,6 +634,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "paymentStatus",
@@ -704,6 +722,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     id: "createdType",
@@ -711,7 +730,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     Cell: ({ row }) => {
       const type = row.original.type;
       const createdBy = row.original.createdBy;
-      
+
       // Simple mapping based on API data
       if (type === "App" && createdBy === "Vendor") {
         return <div>Vendor App</div>;
@@ -728,6 +747,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     accessorKey: "status",
@@ -878,7 +898,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
           {(booking.status === "Completed" || booking.status === "Manual Completed")
             && <Badge variant="outline" className={`${getStatusColor(status)} cursor-default`}>{status}</Badge>}
-      
+
 
           {/* Status Completed Confirmation */}
           <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -902,6 +922,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     id: "createdAt",
@@ -946,6 +967,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     sortingFn: "datetime",
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
   {
     id: "actions",
@@ -1084,5 +1106,6 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
+    size: 90,
   },
 ]

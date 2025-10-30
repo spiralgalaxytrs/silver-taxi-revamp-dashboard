@@ -107,17 +107,11 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
     {
       accessorKey: "sno",
       header: "S.No",
-      size: 60,
-      minSize: 60,
-      maxSize: 80,
       Cell: ({ row }) => <div className="text-sm font-medium">{row.index + 1}</div>,
     },
     {
       accessorKey: "title",
       header: "Title",
-      size: 250,
-      minSize: 200,
-      maxSize: 300,
       Cell: ({ row }) => (
         <div className="max-w-[250px] truncate font-medium">
           {row.original.title}
@@ -127,9 +121,6 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
     {
       accessorKey: "message",
       header: "Message",
-      size: 350,
-      minSize: 300,
-      maxSize: 400,
       Cell: ({ row }) => (
         <div className="max-w-[350px] truncate text-gray-600">
           {row.original.message}
@@ -139,17 +130,11 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
     {
       accessorKey: "target",
       header: "Target",
-      size: 120,
-      minSize: 100,
-      maxSize: 150,
       Cell: ({ row }) => getTargetBadge(row.original.target || 'none'),
     },
     {
       accessorKey: "actions",
       header: "Actions",
-      size: 160,
-      minSize: 140,
-      maxSize: 180,
       enableSorting: false,
       Cell: ({ row }) => (
         <div className="flex items-center gap-1">
