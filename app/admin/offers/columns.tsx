@@ -332,20 +332,23 @@ export const columns: MRT_ColumnDef<Offers>[] = [
             </Button> */}
 
             {/* View Icon */}
-            <OfferPopup
-              trigger={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-blue-600 hover:text-blue-800 tool-tip"
-                  data-tooltip="View Details"
-                >
-                  <Eye className="h-5 w-5" />
-                </Button>
-              }
-              id={offer.offerId ?? ''}
-              title="Offer Details"
-            />
+      <OfferPopup
+  trigger={
+    <Button
+      variant="ghost"
+      size="icon"
+      className="text-blue-600 hover:text-blue-800 tool-tip"
+      data-tooltip="View Details"
+      onClick={(e) => {
+        e.stopPropagation(); // Prevent row click event
+      }}
+    >
+      <Eye className="h-5 w-5" />
+    </Button>
+  }
+  id={row.original.offerId || ''}
+  title="Offer Details"
+/>
             {/* Delete Icon */}
             <>
               <Button

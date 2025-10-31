@@ -8,7 +8,7 @@ import { Label } from "components/ui/label";
 import { toast } from "sonner";
 import { Textarea } from "components/ui/textarea";
 import { Card, CardContent } from "components/ui/card";
-import { Plus, Minus, Eye, EyeClosed } from "lucide-react";
+import { Plus, Minus, Eye, EyeOff } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogTrigger,
@@ -360,18 +360,28 @@ export function VendorForm({ id }: VendorFormProps) {
                                         type={showPassword ? "text" : "password"}
                                         value={formData.password}
                                         onChange={handleInputChange}
-                                        onFocus={() => setShowEye(true)}
-                                        onBlur={() => setShowEye(false)}
                                         className='w-full border-none shadow-none py-6'
                                         required={!id} // Required only for creating, optional for updating
                                     />
-                                    {showEye && <Button
-                                        variant={"none"}
-                                        className="w-10 h-10"
-                                        onClick={() => setShowPassword(!showPassword)}
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-gray-500 hover:bg-transparent hover:text-gray-700"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setShowPassword(!showPassword);
+                                        }}
                                     >
-                                        {showPassword ? <Eye className="w-5 h-5 text-black" /> : <EyeClosed className="w-5 h-5 text-black" />}
-                                    </Button>}
+                                        {showPassword ? (
+                                             <Eye className="h-5 w-5" />  
+                                        ) : (
+                                           <EyeOff className="h-5 w-5" />
+                                        )}
+                                        <span className="sr-only">
+                                            {showPassword ? 'Hide password' : 'Show password'}
+                                        </span>
+                                    </Button>
                                 </div>
                             </div>
                             <div className="mb-4">
