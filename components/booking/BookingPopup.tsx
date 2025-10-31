@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Label } from 'components/ui/label';
 import {
@@ -66,6 +66,7 @@ export function BookingPopup({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [localBooking, setLocalBooking] = useState(booking);
+  const isManualUpdate = useRef(false);
 
   const router = useRouter();
 
@@ -143,11 +144,23 @@ export function BookingPopup({
     }
   };
 
+  useEffect(() => {
+    // Only update localBooking when the popup opens,
+    // but NOT when React Query refetch updates the booking prop.
+    if (open && booking && !isManualUpdate.current) {
+      setLocalBooking(booking);
+    }
+
+    // Reset the manual flag
+    if (!open) isManualUpdate.current = false;
+  }, [open]);
+
   // Auto-set contact status to "Contacted" when popup opens
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
 
     // When popup opens and booking is not contacted, automatically set to contacted
+    console.log("newOpen", newOpen, booking?.id, booking?.isContacted);
     if (newOpen && booking && !booking.isContacted) {
       toggleContactStatus({
         id: booking.bookingId,
@@ -162,6 +175,8 @@ export function BookingPopup({
           console.error('Failed to update contact status:', error);
         }
       });
+    } else {
+      setLocalBooking((prev) => ({ ...prev }));
     }
   };
 
@@ -236,12 +251,22 @@ export function BookingPopup({
     try {
       deleteBooking(id, {
         onSuccess: () => {
-          toast.success("Booking deleted successfully");
+          toast.success("Booking deleted successfully",{
+            style: {
+              backgroundColor: "#009F7F",
+              color: "#fff",
+            },
+          });
           // router.push("/admin/bookings");
           setOpen(false);
         },
         onError: () => {
-          toast.error("Failed to delete booking");
+          toast.error("Failed to delete booking",{
+            style: {
+              backgroundColor: "#FF0000",
+              color: "#fff",
+            },
+          });
         },
       }); // Wait for deletion to complete
     } catch (error: any) {
