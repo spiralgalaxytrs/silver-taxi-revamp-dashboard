@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Label } from 'components/ui/label';
 import {
     Dialog,
@@ -9,9 +9,8 @@ import {
     DialogTitle
 } from "components/ui/dialog";
 import { Button } from "components/ui/button";
-import { useOfferStore } from 'stores/-offerStore';
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Book } from 'lucide-react';
+import { useOffersById } from "hooks/react-query/useOffers";
 
 interface OfferPopupProps {
     trigger: React.ReactNode;
@@ -21,72 +20,111 @@ interface OfferPopupProps {
     size?: string;
 }
 
-interface OfferDetails {
-    [key: string]: any;
+interface OfferData {
+    offerName?: string;
+    description?: string;
+    keywords?: string;
+    type?: string;
+    value?: number;
+    category?: string;
+    startDate?: string | Date;
+    endDate?: string | Date;
+    usedCount?: number;
+    status?: boolean;
+    bannerImage?: string;
 }
 
-export function OfferPopup({ trigger, id, title = 'Offer Details', width, size = 'max-h-[80vh]' }: OfferPopupProps) {
-    const { offers } = useOfferStore();
-    const [open, setOpen] = useState(false);
-    const [offerDetails, setOfferDetails] = useState<OfferDetails | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+type OfferDetails = Record<string, string | number | boolean>;
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${day}-${month}-${year}`;
-    };
+export function OfferPopup({ trigger, id, title = 'Offer Details' }: OfferPopupProps) {
+    const { data: offer, isLoading, error } = useOffersById(id);
+    const [open, setOpen] = React.useState(false);
 
-    const formattedTime = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleTimeString('en-US', { timeZone: "Asia/Kolkata", hour: 'numeric', minute: 'numeric', hour12: true });
-    };
-
-    useEffect(() => {
-        if (open && id) {
-            fetchOfferDetails(id);
-        }
-    }, [open, id]);
-
-    const fetchOfferDetails = async (id: string) => {
-        setLoading(true);
-        setError(null);
+    const formatDate = (dateString: string): string => {
         try {
-            const offer = offers.find((offer) => offer.offerId === id);
-            if (offer) {
-                const formattedOffer = {
-                    // "Offer Id": offer.offerId || '-',
-                    "Name": offer.offerName || '-',
-                    "Description": offer.description || '-',
-                    "Keywords": offer.keywords || '-',
-                    "Offer Type": offer.type || '-',
-                    "Offer Value": (offer.type === "Percentage" ? (`${offer.value}%`) : (`₹${offer.value}`))|| '-',
-                    "Category": offer.category || '-',
-                    "Start Date": formatDate(String(offer.startDate || "-")) || '-',
-                    "End Date": formatDate(String(offer.endDate || "-")) || '-',
-                    "Claimed Count": offer.claimedCount || '-',
-                    "Offer Status": offer.status ? "Active" : "Inactive",
-                    "Created At": formatDate(offer.createdAt || '') || '-',
-                    "Banner Image": offer.bannerImage || '-',
-                };
-                setOfferDetails(formattedOffer);
-            } else {
-                setError("Offer not found");
-            }
-        } catch (error: any){
-            setError(error.message);
-        } finally {
-            setLoading(false);
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+            return date.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        } catch (error) {
+            return dateString;
         }
     };
+
+    const getOfferDetails = (): OfferDetails => {
+        if (!offer || !Array.isArray(offer) || offer.length === 0) return {};
+
+        const offerData = offer[0] as OfferData; 
+
+        return {
+            "Name": offerData.offerName || '-',
+            "Description": offerData.description || '-',
+            "Keywords": offerData.keywords || '-',
+            "Offer Type": offerData.type || '-',
+            "Offer Value": offerData.type === "Percentage" 
+                ? `${offerData.value}%` 
+                : `₹${offerData.value}`,
+            "Category": offerData.category || '-',
+            "Start Date": offerData.startDate ? formatDate(String(offerData.startDate)) : '-',
+            "End Date": offerData.endDate ? formatDate(String(offerData.endDate)) : '-',
+            "Claimed Count": offerData.usedCount?.toString() || '0',
+            "Status": offerData.status ? "Active" : "Inactive",
+            ...(offerData.bannerImage && { "Banner Image": offerData.bannerImage })
+        };
+    };
+
+    const offerDetails = getOfferDetails();
+
+   const renderOfferDetailItem = (key: string, value: unknown): React.ReactNode => {
+  let displayValue: React.ReactNode = "-"; // default fallback
+
+  // Handle different value types safely
+  if (key === "Banner Image" && typeof value === "string") {
+    displayValue = (
+      <img
+        src={value}
+        alt="Offer Banner"
+        className="max-w-[200px] h-auto rounded-md"
+      />
+    );
+  } else if (typeof value === "string" || typeof value === "number") {
+    displayValue = String(value);
+  } else if (typeof value === "boolean") {
+    displayValue = value ? "Yes" : "No";
+  } else if (React.isValidElement(value)) {
+    displayValue = value;
+  } else if (Array.isArray(value)) {
+    displayValue = value.join(", ");
+  } else if (value && typeof value === "object") {
+    displayValue = JSON.stringify(value);
+  }
+
+  return (
+    <div key={key} className="grid grid-cols-3 items-center gap-4">
+      <Label className="capitalize font-medium text-base">{key}</Label>
+      <div className="col-span-2 text-base text-muted-foreground">
+        {displayValue}
+      </div>
+    </div>
+  );
+};
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                {trigger}
+                {React.cloneElement(trigger as React.ReactElement, {
+                    onClick: (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        const originalOnClick = (trigger as React.ReactElement).props.onClick;
+                        if (originalOnClick) originalOnClick(e);
+                    }
+                })}
             </DialogTrigger>
             <DialogContent
                 className="w-[800px] max-h-[90vh] overflow-y-auto rounded-lg p-8"
@@ -98,58 +136,26 @@ export function OfferPopup({ trigger, id, title = 'Offer Details', width, size =
 
                 <div className="grid gap-4">
                     <h4 className="text-2xl font-semibold text-center mb-4">{title}</h4>
-                    {loading && <div>Loading...</div>}
-                    {error && <div className="text-red-500">{error}</div>}
-
-                    {offerDetails && (
-                        <div className="grid gap-4">
-                            {Object.entries(offerDetails)
-                                .filter(([key, value]) => {
-                                    // Skip if value is explicitly null or undefined
-                                    if (value === null || value === undefined) return false;
-
-                                    // For numbers, only show if greater than 0 (keep your logic)
-                                    if (typeof value === "number") return value > 0;
-
-                                    // For strings, only show if not empty or just a dash
-                                    if (typeof value === "string") return value.trim() !== '' && value !== '-';
-
-                                    // Include all other non-null/undefined values (e.g., booleans, objects)
-                                    return true;
-                                })
-                                .map(([key, value]) => (
-                                    <div key={key} className="grid grid-cols-3 items-center gap-4">
-                                        <Label className="capitalize font-medium text-base">{key}</Label>
-                                        <div className="col-span-2 text-base text-muted-foreground">
-                                            {key === "Banner Image" ? (
-                                                <img 
-                                                    src={value} 
-                                                    alt="Offer Image" 
-                                                    className="max-w-[200px] h-auto rounded-md"
-                                                />
-                                            ) : (
-                                                typeof value === "number" ? value.toLocaleString() : value
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            {Object.keys(offerDetails).length > 0 &&
-                                Object.entries(offerDetails).every(
-                                    ([_, value]) =>
-                                        value === null ||
-                                        value === undefined ||
-                                        (typeof value === "number" && value <= 0) ||
-                                        (typeof value === "string" && (value.trim() === '' || value === '-'))
-                                ) && (
-                                    <div className="text-center text-muted-foreground">
-                                        No relevant offer details available.
-                                    </div>
-                                )}
+                    
+                    {isLoading && <div>Loading offer details...</div>}
+                    
+                    {error && (
+                        <div className="text-red-500 text-center">
+                            Failed to load offer details. Please try again.
                         </div>
                     )}
-                    {!offerDetails && !loading && !error && (
+
+                    {!isLoading && !error && Object.keys(offerDetails).length > 0 && (
+                        <div className="grid gap-4">
+                            {Object.entries(offerDetails).map(([key, value]) => 
+                                renderOfferDetailItem(key, value)
+                            )}
+                        </div>
+                    )}
+
+                    {!isLoading && !error && Object.keys(offerDetails).length === 0 && (
                         <div className="text-center text-muted-foreground">
-                            No offer details found.
+                            No offer details available.
                         </div>
                     )}
                 </div>
