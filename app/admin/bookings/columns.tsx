@@ -79,7 +79,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     },
     muiTableHeadCellProps: { align: 'center' },
     muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    size: 20,
   },
   // {
   //   accessorKey: "bookingId",
@@ -90,9 +90,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
   {
     accessorKey: "bookingId",
     header: "Booking ID",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 120,
     Cell: ({ row }) => {
       const booking = row.original;
 
