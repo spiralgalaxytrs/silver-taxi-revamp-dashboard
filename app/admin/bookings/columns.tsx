@@ -77,9 +77,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     Cell: ({ row }) => {
       return <div>{row.index + 1}</div>
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 20,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 90,
   },
   // {
   //   accessorKey: "bookingId",
@@ -92,7 +92,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     header: "Booking ID",
     muiTableHeadCellProps: { align: 'left' },
     muiTableBodyCellProps: { align: 'left' },
-    size: 120,
+    size: 110,
     Cell: ({ row }) => {
       const booking = row.original;
 
@@ -151,9 +151,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         </div>
       );
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 120,
   },
   {
     accessorKey: "name",
@@ -162,8 +162,8 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       const name = row.getValue("name");
       return <div>{!name || name === "null" ? "-" : String(name)}</div>;
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
     size: 90,
   },
   {
@@ -173,9 +173,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       const phone = row.original.phone
       return <div>+{phone}</div>;
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 120,
   },
   {
     accessorKey: "pickup",
@@ -189,9 +189,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         </TooltipComponent>
       )
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 140,
   },
   {
     accessorKey: "drop",
@@ -205,9 +205,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         </TooltipComponent>
       )
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 140,
   },
   {
     id: "pickupDateTime",
@@ -238,8 +238,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     filterFn: dateRangeFilter,
     filterVariant: "date-range",
     sortingFn: "datetime",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 80,
   },
   {
     accessorKey: "pickupDateTime",
@@ -269,9 +270,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return <div>{amPmTime}</div>;
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 70,
   },
   {
     id: "dropDate",
@@ -302,16 +303,16 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     filterFn: dateRangeFilter,
     filterVariant: "date-range",
     sortingFn: "datetime",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 80,
   },
   {
     accessorKey: "serviceType",
     header: "Service Type",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 125,
   },
   {
     accessorKey: "distance",
@@ -325,8 +326,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         return <div>{`${distance} Km`}</div>;
       }
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 70,
   },
   {
     accessorKey: "estimatedAmount",
@@ -343,8 +345,8 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>;
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
     size: 90,
   },
   {
@@ -359,9 +361,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 70,
   },
   {
     accessorKey: "offerId",
@@ -380,8 +382,8 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         </div>
       )
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
     size: 90,
   },
   {
@@ -398,9 +400,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 80,
   },
   {
     accessorKey: "advanceAmount",
@@ -414,9 +416,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 80,
   },
   {
     accessorKey: "upPaidAmount",
@@ -430,9 +432,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 80,
   },
   {
     accessorKey: 'driverId',
@@ -552,9 +554,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         />
       );
     },
-    muiTableHeadCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
     muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    size: 100,
   },
   {
     accessorKey: "paymentMethod",
@@ -633,9 +635,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         </div>
       );
     },
-    muiTableHeadCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
     muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    size: 100,
   },
   {
     accessorKey: "paymentStatus",
@@ -721,9 +723,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         </div>
       );
     },
-    muiTableHeadCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
     muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    size: 100,
   },
   {
     id: "createdType",
@@ -746,9 +748,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         return <div>{type || createdBy || "-"}</div>;
       }
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 110,
   },
   {
     accessorKey: "status",
@@ -921,9 +923,9 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         </div >
       );
     },
-    muiTableHeadCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
     muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    size: 150,
   },
   {
     id: "createdAt",
@@ -966,8 +968,8 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     filterFn: dateRangeFilter,
     filterVariant: "date-range",
     sortingFn: "datetime",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
     size: 90,
   },
   {
@@ -1105,8 +1107,8 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         </React.Fragment>
       )
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
-    size: 90,
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 140,
   },
 ]
