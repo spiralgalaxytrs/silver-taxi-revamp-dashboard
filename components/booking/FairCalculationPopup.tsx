@@ -118,7 +118,7 @@ export function FairCalculationPopup({ isOpen, onClose, fareData, createdBy }: F
       const bookingPayload: any = {
         ...fareData,
         // Ensure stops are properly formatted
-        stops: Array.isArray(fareData.stops) 
+        stops: Array.isArray(fareData.stops)
           ? fareData.stops.map((stop: any) => typeof stop === 'string' ? stop : stop?.stop || stop?.location || stop)
           : [],
         // Ensure all numeric fields are numbers
@@ -390,72 +390,77 @@ export function FairCalculationPopup({ isOpen, onClose, fareData, createdBy }: F
               </div>
 
               {/* Modified Fare */}
-              {fareData?.fareBreakdown?.modifiedFare && (
-                <div className="space-y-2 bg-indigo-100 rounded-lg p-3">
-                  <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                    <Wallet className="w-4 h-4" />
-                    <span>Admin Fare</span>
-                  </h3>
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Distance</span>
-                      <span className="font-medium">{fareData?.fareBreakdown?.modifiedFare?.distance || 0}Km</span>
-                    </div>
-                    {((fareData?.fareBreakdown?.modifiedFare?.minKm || 0) > 0) && (
+              {(fareData?.fareBreakdown?.modifiedFare && [
+                fareData?.extraDriverBeta,
+                fareData?.extraPermitCharge,
+                fareData?.extraToll,
+                fareData?.extraHill
+              ].some(v => v ? v > 0 : false)) && (
+                  <div className="space-y-2 bg-indigo-100 rounded-lg p-3">
+                    <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                      <Wallet className="w-4 h-4" />
+                      <span>Admin Fare</span>
+                    </h3>
+                    <div className="space-y-1.5 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Minimum Km</span>
-                        <span className="font-medium">
-                          {fareData.serviceType === "Round trip" && (fareData?.days || 0) > 1
-                            ? `${fareData?.fareBreakdown?.modifiedFare?.minKm || 0} Km × ${fareData?.days || 0} days`
-                            : `${fareData?.fareBreakdown?.modifiedFare?.minKm || 0} Km`}
-                        </span>
+                        <span className="text-gray-600">Distance</span>
+                        <span className="font-medium">{fareData?.fareBreakdown?.modifiedFare?.distance || 0}Km</span>
                       </div>
-                    )}
-                    {(fareData?.fareBreakdown?.modifiedFare?.days || 0) > 0 && (
+                      {((fareData?.fareBreakdown?.modifiedFare?.minKm || 0) > 0) && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Minimum Km</span>
+                          <span className="font-medium">
+                            {fareData.serviceType === "Round trip" && (fareData?.days || 0) > 1
+                              ? `${fareData?.fareBreakdown?.modifiedFare?.minKm || 0} Km × ${fareData?.days || 0} days`
+                              : `${fareData?.fareBreakdown?.modifiedFare?.minKm || 0} Km`}
+                          </span>
+                        </div>
+                      )}
+                      {(fareData?.fareBreakdown?.modifiedFare?.days || 0) > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">No of Days</span>
+                          <span className="font-medium">{fareData?.fareBreakdown?.modifiedFare?.days || 0}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
-                        <span className="text-gray-600">No of Days</span>
-                        <span className="font-medium">{fareData?.fareBreakdown?.modifiedFare?.days || 0}</span>
+                        <span className="text-gray-600">Price Per Km</span>
+                        <span className="font-medium">{formatCurrency(fareData?.fareBreakdown?.modifiedFare?.pricePerKm || 0)}</span>
                       </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Price Per Km</span>
-                      <span className="font-medium">{formatCurrency(fareData?.fareBreakdown?.modifiedFare?.pricePerKm || 0)}</span>
-                    </div>
-                    {(fareData?.fareBreakdown?.modifiedFare?.driverBeta || 0) > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Driver Beta</span>
-                        <span className="font-medium">
-                          {fareData.serviceType === "Round trip" && (fareData?.days || 0) > 1
-                            ? `${formatCurrency(fareData?.fareBreakdown?.modifiedFare?.driverBeta || 0)} × ${fareData?.days || 0} days`
-                            : formatCurrency(fareData?.fareBreakdown?.modifiedFare?.driverBeta || 0)}
-                        </span>
+                      {(fareData?.fareBreakdown?.modifiedFare?.driverBeta || 0) > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Driver Beta</span>
+                          <span className="font-medium">
+                            {fareData.serviceType === "Round trip" && (fareData?.days || 0) > 1
+                              ? `${formatCurrency(fareData?.fareBreakdown?.modifiedFare?.driverBeta || 0)} × ${fareData?.days || 0} days`
+                              : formatCurrency(fareData?.fareBreakdown?.modifiedFare?.driverBeta || 0)}
+                          </span>
+                        </div>
+                      )}
+                      {fareData?.fareBreakdown?.modifiedFare?.hill > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Hill</span>
+                          <span className="font-medium">{formatCurrency(fareData?.fareBreakdown?.modifiedFare?.hill)}</span>
+                        </div>
+                      )}
+                      {fareData?.fareBreakdown?.modifiedFare?.permitCharge > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Permit Charge</span>
+                          <span className="font-medium">{formatCurrency(fareData?.fareBreakdown?.modifiedFare?.permitCharge)}</span>
+                        </div>
+                      )}
+                      {(fareData?.extraToll || 0) > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Toll</span>
+                          <span className="font-medium">{formatCurrency(fareData?.extraToll || 0)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between border-t border-gray-300 pt-1.5 mt-2">
+                        <span className="text-sm font-semibold text-gray-800">Final Amount</span>
+                        <span className="text-sm font-bold text-gray-900">{formatCurrency(fareData?.fareBreakdown?.modifiedFare?.finalAmount || 0)}</span>
                       </div>
-                    )}
-                    {fareData?.fareBreakdown?.modifiedFare?.hill > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Hill</span>
-                        <span className="font-medium">{formatCurrency(fareData?.fareBreakdown?.modifiedFare?.hill)}</span>
-                      </div>
-                    )}
-                    {fareData?.fareBreakdown?.modifiedFare?.permitCharge > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Permit Charge</span>
-                        <span className="font-medium">{formatCurrency(fareData?.fareBreakdown?.modifiedFare?.permitCharge)}</span>
-                      </div>
-                    )}
-                    {(fareData?.extraToll || 0) > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Toll</span>
-                        <span className="font-medium">{formatCurrency(fareData?.extraToll || 0)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between border-t border-gray-300 pt-1.5 mt-2">
-                      <span className="text-sm font-semibold text-gray-800">Final Amount</span>
-                      <span className="text-sm font-bold text-gray-900">{formatCurrency(fareData?.fareBreakdown?.modifiedFare?.finalAmount || 0)}</span>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
         </div>

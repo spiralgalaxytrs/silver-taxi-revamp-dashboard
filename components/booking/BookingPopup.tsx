@@ -310,6 +310,7 @@ export function BookingPopup({
                           {assignedDriver ?
                             <p className="flex items-center gap-2 text-sm font-medium">
                               {assignedDriver.name}
+                              {assignedDriver.phone && ` (${assignedDriver.phone})`}
                               <TooltipComponent name={booking?.driverId ? booking?.driverAccepted || "" : "Assign Driver"}>
                                 {currentBooking?.driverAccepted === "accepted" ?
                                   <span className="text-xs text-green-500">
@@ -344,8 +345,7 @@ export function BookingPopup({
                 viewPath="/admin/bookings/view"
                 editPath="/admin/bookings/edit"
                 className="absolute top-20 right-4"
-                disableEdit={booking?.status === "Completed"}
-
+                disableEdit={booking?.status != "Booking Confirmed" || booking?.status != "Reassign"}
               />
 
 
