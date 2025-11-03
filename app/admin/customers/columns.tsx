@@ -60,14 +60,35 @@ export const columns: MRT_ColumnDef<Customer>[] = [
     Cell: ({ row }) => {
       return <div>{row.index + 1}</div>
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
   accessorKey: "customerId",
   header: "Customer ID",
-  muiTableHeadCellProps: { align: 'center' },
-  muiTableBodyCellProps: { align: 'center' },
+  muiTableHeadCellProps: { align: 'left',
+    sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    },
+   },
+  muiTableBodyCellProps: { align: 'left' },
   Cell: ({ row }) => {
     const customer = row.original;
 
@@ -84,14 +105,34 @@ export const columns: MRT_ColumnDef<Customer>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
   },
   {
     accessorKey: "phone",
     header: "Phone",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
   },
   // {
   //   accessorKey: "email",
@@ -102,12 +143,33 @@ export const columns: MRT_ColumnDef<Customer>[] = [
   {
     accessorKey: "bookingCount",
     header: "Booking Count",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Booking<br />Count
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 50,
   },
   {
     accessorKey: "totalAmount",
     header: "Total Amount",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Total<br />Amount
+      </div>
+    ),
     Cell: ({ row }) => {
       const amount = row.getValue("totalAmount");
 
@@ -125,8 +187,19 @@ export const columns: MRT_ColumnDef<Customer>[] = [
 
       return <div>{formatted}</div>;
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 50,
   },
   {
     id: "actions",
@@ -216,7 +289,18 @@ export const columns: MRT_ColumnDef<Customer>[] = [
         </React.Fragment>
       )
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 40,
   },
 ]

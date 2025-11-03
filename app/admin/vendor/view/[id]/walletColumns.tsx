@@ -20,6 +20,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "components/ui/dropdown-menu"
+import TooltipComponent from "components/others/TooltipComponent";
 
 export type VendorTransaction = {
     transactionId: string;
@@ -35,18 +36,42 @@ export type VendorTransaction = {
     status: "Paid" | "Unpaid";
 };
 
+
 export const walletColumns: MRT_ColumnDef<VendorTransaction>[] = [
     {
         header: "S.No",
         Cell: ({ row }) => row.index + 1,
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        muiTableHeadCellProps: { align: 'left', sx: {
+            '& .MuiBox-root': {
+                gap: 0, // ✅ Removes space between filter & menu icons
+            },
+            '& .MuiButtonBase-root': {
+                padding: '2px',
+                margin: 0,
+            },
+        } },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 10,
     },
     {
         accessorKey: "transactionId",
         header: "Transaction ID",
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        Header: () => (
+            <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+              Transaction<br />ID
+            </div>
+          ),
+        muiTableHeadCellProps: { align: 'left', sx: {
+            '& .MuiBox-root': {
+                gap: 0, // ✅ Removes space between filter & menu icons
+            },
+            '& .MuiButtonBase-root': {
+                padding: '2px',
+                margin: 0,
+            },
+        } },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
     },
     // {
     //     accessorKey: "vendorId",
@@ -57,8 +82,17 @@ export const walletColumns: MRT_ColumnDef<VendorTransaction>[] = [
     {
         accessorKey: "initiatedTo",
         header: "Name/Phone",
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        muiTableHeadCellProps: { align: 'left', sx: {
+            '& .MuiBox-root': {
+                gap: 0, // ✅ Removes space between filter & menu icons
+            },
+            '& .MuiButtonBase-root': {
+                padding: '2px',
+                margin: 0,
+            },
+        } },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
     },
     // {
     //     accessorKey: "ownedBy",
@@ -69,6 +103,22 @@ export const walletColumns: MRT_ColumnDef<VendorTransaction>[] = [
     {
         accessorKey: "status",
         header: "Transaction Status",
+        Header: () => (
+            <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+              Transaction<br />Status
+            </div>
+          ),
+        muiTableHeadCellProps: { align: 'left', sx: {
+            '& .MuiBox-root': {
+                gap: 0, // ✅ Removes space between filter & menu icons
+            },
+            '& .MuiButtonBase-root': {
+                padding: '2px',
+                margin: 0,
+            },
+        } },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
         Cell: ({ row }) => {
             const status = row.getValue("status") as "Paid" | "Unpaid";
 
@@ -176,8 +226,6 @@ export const walletColumns: MRT_ColumnDef<VendorTransaction>[] = [
                 </React.Fragment>
             );
         },
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
     },
     {
         accessorKey: "amount",
@@ -193,8 +241,17 @@ export const walletColumns: MRT_ColumnDef<VendorTransaction>[] = [
 
             return <div>{formatted}</div>
         },
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        muiTableHeadCellProps: { align: 'left', sx: {
+            '& .MuiBox-root': {
+                gap: 0, // ✅ Removes space between filter & menu icons
+            },
+            '& .MuiButtonBase-root': {
+                padding: '2px',
+                margin: 0,
+            },
+        } },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
     },
     {
         accessorKey: "remark",
@@ -202,13 +259,21 @@ export const walletColumns: MRT_ColumnDef<VendorTransaction>[] = [
         Cell: ({ row }) => {
             const remark: string = row.getValue("remark");
             return (
-                <div>
-                    <p>{remark || "-"}</p>
-                </div>
+                <TooltipComponent name={remark}>
+                    <div>{remark.slice(0, 15)}...</div>
+                </TooltipComponent>
             )
         },
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        muiTableHeadCellProps: { align: 'left', sx: {
+            '& .MuiBox-root': {
+                gap: 0, // ✅ Removes space between filter & menu icons
+            },
+            '& .MuiButtonBase-root': {
+                padding: '2px',
+                margin: 0,
+            },
+        } },
+        muiTableBodyCellProps: { align: 'left' }
     },
     {
         accessorKey: "date",
@@ -227,7 +292,16 @@ export const walletColumns: MRT_ColumnDef<VendorTransaction>[] = [
                 </div>
             )
         },
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        muiTableHeadCellProps: { align: 'left', sx: {
+            '& .MuiBox-root': {
+                gap: 0, // ✅ Removes space between filter & menu icons
+            },
+            '& .MuiButtonBase-root': {
+                padding: '2px',
+                margin: 0,
+            },
+        } },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
     },
 ];

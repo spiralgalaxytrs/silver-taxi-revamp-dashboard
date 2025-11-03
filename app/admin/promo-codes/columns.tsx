@@ -68,8 +68,19 @@ export const columns: MRT_ColumnDef<PromoCodes>[] = [
     Cell: ({ row }) => {
       return <div>{row.index + 1}</div>;
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' ,
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 10,
   },
   // {
   //   accessorKey: "offerId",
@@ -80,26 +91,84 @@ export const columns: MRT_ColumnDef<PromoCodes>[] = [
   {
     accessorKey: "promoName",
     header: "Promo Name",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' ,
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
   },
   {
     accessorKey: "category",
     header: "Category",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Category
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left' ,
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
     accessorKey: "type",
     header: "Type",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Type
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left' ,
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
     accessorKey: "value",
     header: "Value",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Value
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left' ,
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
     accessorKey: "status",
@@ -170,6 +239,19 @@ export const columns: MRT_ColumnDef<PromoCodes>[] = [
         </div>
       );
     },
+    muiTableHeadCellProps: { align: 'left' ,
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   // {
   //   accessorKey: "createdAt",
@@ -194,6 +276,11 @@ export const columns: MRT_ColumnDef<PromoCodes>[] = [
   {
     id: "startDate",
     header: "Start Date",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Start<br />Date
+      </div>
+    ),
     Cell: ({ row }) => {
       const startDate: string = row.getValue("startDate");
       if (!startDate) {
@@ -232,12 +319,28 @@ export const columns: MRT_ColumnDef<PromoCodes>[] = [
     filterFn: dateRangeFilter,
     filterVariant: "date-range",
     sortingFn: "datetime",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' ,
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
     id: "endDate",
     header: "End Date",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        End<br />Date
+      </div>
+    ),
     Cell: ({ row }) => {
       const endDate: string = row.getValue("endDate");
       if (!endDate) {
@@ -276,8 +379,19 @@ export const columns: MRT_ColumnDef<PromoCodes>[] = [
     filterFn: dateRangeFilter,
     filterVariant: "date-range",
     sortingFn: "datetime",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' ,
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
     id: "actions",
@@ -387,7 +501,18 @@ export const columns: MRT_ColumnDef<PromoCodes>[] = [
         </div>
       );
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' ,
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
 ];
