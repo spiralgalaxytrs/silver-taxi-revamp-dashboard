@@ -539,10 +539,20 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
             duration: data.duration,
             days: data.days,
             convenienceFee: data.convenienceFee,
-            minKm: data.minKm
+            minKm: data.minKm,
+            toll: data.toll || 0,
+            extraToll: data.extraToll || 0,
+            hill: data.hill || 0,
+            extraHill: data.extraHill || 0,
+            permitCharge: data.permitCharge || 0,
+            extraPermitCharge: data.extraPermitCharge || 0,
+            extraDriverBeta: data.extraDriverBeta || 0,
+            extraPricePerKm: data.extraPricePerKm || 0
         }));
         
         setShowFareCalculation(true);
+        // Pass the complete API response data to FairCalculationPopup
+        // This ensures all fields from fair-calculation API are available for booking creation
         setFareData(data);
     } catch (err) {
         console.error('Fair calculation error:', err);
@@ -1190,14 +1200,6 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                     />
                                 </div>
                                 </div>
-                                {/* <div className="space-y-2">
-                                    <Label>Email <span className='text-red-500'>*</span></Label>
-                                    <Input
-                                        value={formData.email}
-                                        onChange={e => handleInputChange('email', e.target.value)}
-                                        className="h-12"
-                                    />
-                                </div> */}
                                   <div className="grid grid-cols-2 gap-4">
                                 <h3 className="col-span-2 text-lg font-medium">Location Details</h3>
                                 <div className="space-y-2">
@@ -1285,15 +1287,6 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         className="h-12"
                                     />
                                 </div>
-                                      {/* <div className="space-y-2">
-                                    <Label>Distance <span className='text-red-500'>*</span></Label>
-                                    <Input
-                                        type="number"
-                                        value={formData.distance}
-                                        onChange={e => handleInputChange('distance', e.target.value)}
-                                        className="h-12"
-                                    />
-                                </div> */}
                                 </div>
 
                                    {formData.serviceType === 'Round trip' && (
@@ -1323,7 +1316,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 className="h-12"
                                             />
                                         </div>
-                                        <div className="space-y-2">
+                                        {/* <div className="space-y-2">
                                             <Label>Extra Amount per Km</Label>
                                             <Input
                                                 type="number"
@@ -1331,7 +1324,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 onChange={e => handleInputChange('extraPricePerKm', e.target.value)}
                                                 className="h-12"
                                             />
-                                        </div>
+                                        </div> */}
                                         <div className="space-y-2">
                                             <Label>Driver Beta</Label>
                                             <Input
@@ -1341,7 +1334,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 className="h-12"
                                             />
                                         </div>
-                                        <div className="space-y-2">
+                                        {/* <div className="space-y-2">
                                             <Label>Extra Driver Beta</Label>
                                             <Input
                                                 type="number"
@@ -1349,7 +1342,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 onChange={e => handleInputChange('extraDriverBeta', e.target.value)}
                                                 className="h-12"
                                             />
-                                        </div>
+                                        </div> */}
                                         <div className="space-y-2">
                                             <Label>Hill Charge</Label>
                                             <Input
@@ -1359,7 +1352,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 className="h-12"
                                             />
                                         </div>
-                                        <div className="space-y-2">
+                                        {/* <div className="space-y-2">
                                             <Label>Extra Hill Charge</Label>
                                             <Input
                                                 type="number"
@@ -1367,7 +1360,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 onChange={e => handleInputChange('extraHill', e.target.value)}
                                                 className="h-12"
                                             />
-                                        </div>
+                                        </div> */}
                                         <div className="space-y-2">
                                             <Label>Permit Charge</Label>
                                             <Input
@@ -1377,7 +1370,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 className="h-12"
                                             />
                                         </div>
-                                        <div className="space-y-2">
+                                        {/* <div className="space-y-2">
                                             <Label>Extra Permit Charge</Label>
                                             <Input
                                                 type="number"
@@ -1385,7 +1378,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 onChange={e => handleInputChange('extraPermitCharge', e.target.value)}
                                                 className="h-12"
                                             />
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </div>
 
@@ -1395,266 +1388,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                         
                     )}
 
-                    {/* Step 2: Pricing & Payment */}
-                    {/* {currentStep === 2 && (
-                        <>
-                            <div className="flex items-center flex-wrap gap-3 bg-gray-50 p-4 rounded-xl shadow-sm mb-6 max-w-full overflow-x-auto">
-                                {(() => {
-                                    const routeParts = [];
-
-                                    // Start with Pickup
-                                    routeParts.push({ label: formData.pickup || "Pickup", type: "pickup" });
-
-                                    // Add up to 5 stops with truncation for more
-                                    if (Array.isArray(formData.stops) && formData.stops.length > 0) {
-                                        const maxStops = 5;
-                                        formData.stops.slice(0, maxStops).forEach((stop, i) => {
-                                            routeParts.push({ label: stop || `Stop ${i + 1}`, type: "stop" });
-                                        });
-                                        if (formData.stops.length > maxStops) {
-                                            routeParts.push({ label: `+${formData.stops.length - maxStops} more`, type: "more" });
-                                        }
-                                    }
-
-                                    // Add Drop
-                                    // routeParts.push({ label: formData.drop || "Drop", type: "drop" });
-
-                                    
-                                    // Add Drop only if exists
-                                    if (formData.drop) {
-                                        routeParts.push({ label: formData.drop, type: "drop" });
-                                    }
-
-
-                                    // Add Pickup again for round trip with stops
-                                    if (formData.serviceType === "Round trip" && Array.isArray(formData.stops) && formData.stops.length > 0) {
-                                        routeParts.push({ label: formData.pickup || "Pickup", type: "pickup" });
-                                    }
-
-                                    return routeParts.map((part, i) => (
-                                        <React.Fragment key={i}>
-                                            <span
-                                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${part.type === "more"
-                                                    ? "italic text-gray-500 bg-gray-200"
-                                                    : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-100"
-                                                    }`}
-                                            >
-                                                {part.label}
-                                            </span>
-                                            {i < routeParts.length - 1 && (
-                                                <svg
-                                                    className="w-4 h-4 text-gray-500 mx-1"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth="2"
-                                                        d="M9 5l7 7-7 7"
-                                                    />
-                                                </svg>
-                                            )}
-                                        </React.Fragment>
-                                    ));
-                                })()}
-                            </div>
-                            <div className="space-y-4 mt-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    {formData.serviceType === 'Hourly Packages' ? (
-                                        <>
-                                            {/* <div className="space-y-2">
-                                                <Label>Base Price</Label>
-                                                <Input
-                                                    value={formData.price || ""}
-                                                    className="h-12 bg-muted"
-                                                    readOnly
-                                                />
-                                            </div> */}
-                                            {/* <div className="space-y-2">
-                                                <Label>Distance (KM)</Label>
-                                                <Input
-                                                    value={formData.distanceLimit || ""}
-                                                    className="h-12 bg-muted"
-                                                    readOnly
-                                                />
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="space-y-2">
-                                                <Label>Price Per KM <span className='text-red-500'>*</span></Label>
-                                                <Input
-                                                    value={formData?.pricePerKm || ""}
-                                                    className="h-12 bg-muted"
-                                                    onChange={e => handleInputChange('pricePerKm', e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Distance (KM) <span className='text-red-500'>*</span></Label>
-                                                <Input
-                                                    value={formData?.distance}
-                                                    className="h-12 bg-muted"
-                                                    onChange={e => handleInputChange('distance', e.target.value)}
-                                                />
-                                            </div>
-                                        </>
-                                    )}
-
-                                    <div className="space-y-2">
-                                        <Label>KM Price <span className='text-red-500'>*</span></Label>
-                                        <Input
-                                            value={formData?.estimatedAmount ?? formData?.price}
-                                            className="h-12 bg-muted"
-                                            onChange={e => handleInputChange('estimatedAmount', e.target.value)}
-                                            readOnly
-                                        />
-                                    </div> */}
-
-                                    {/* <div className="space-y-2">
-                                        <Label>Offer <span className='text-red-500'>*</span></Label>
-                                        <Select
-                                            value={formData.offerId || ""}
-                                            onValueChange={v => {
-                                                handleInputChange('offerId', v);
-                                            }}
-                                        >
-                                            <SelectTrigger className="h-12">
-                                                <SelectValue placeholder="Select Offer" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {updatedOffers
-                                                    .filter(offer =>
-                                                        offer.category === formData.serviceType ||
-                                                        offer.category === "All"
-                                                    )
-                                                    .map(offer => (
-                                                        <SelectItem key={offer.offerId} value={offer.offerId}>
-                                                            {offer.offerName}
-                                                        </SelectItem>
-                                                    ))}
-                                                <SelectItem value="None">None</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div> */}
-
-                                    {/* <div className="space-y-2">
-                                        <Label>Discount Amount <span className='text-red-500'>*</span></Label>
-                                        <Input
-                                            id="discountAmount"
-                                            value={formData.discountAmount}
-                                            onChange={(e) => handleInputChange("discountAmount", e.target.value)}
-                                            readOnly// Make read-only when an offer is selected
-                                            className="h-12"
-                                        />
-                                    </div> */}
-
-                                    {/* <div className="space-y-2">
-                                        <Label>Advance Amount <span className='text-red-500'>*</span></Label>
-                                        <Input
-                                            value={formData.advanceAmount}
-                                            onChange={e => handleInputChange('advanceAmount', e.target.value)}
-                                            className="h-12"
-                                        />
-                                    </div>
-
-                                    {/* Driver Beta Display for Package Services */}
-                                    {/* {(formData.serviceType === 'Hourly Packages' || formData.serviceType === 'Day Packages') && (
-                                        <div className="space-y-2">
-                                            <Label>Driver Beta</Label>
-                                            <Input
-                                                value={formData.driverBeta !== null && formData.driverBeta !== undefined ? formData.driverBeta : ""}
-                                                className="h-12 bg-muted"
-                                                readOnly
-                                            />
-                                        </div>
-                                    )}
-
-                                    <div className="space-y-2">
-
-                                        <Label>Final Amount <span className='text-red-500'>*</span>
-                                            <InfoComponent
-                                                content={[
-                                                    { label: "Estimated Amount", value: formData.estimatedAmount || '' },
-                                                    { label: "Driver Beta", value: formData?.breakFareDetails?.driverBeta || '' },
-                                                    { label: "Tax Amount", value: finalTax || formData?.breakFareDetails?.taxAmount || '' },
-                                                    { label: "Final Amount", value: formData?.finalAmount || '', highlight: true },
-
-                                                ]}
-                                                position='top'
-                                                iconColor='text-blue-500'
-                                                className='ml-2'
-                                                title='Final Amount Info'
-                                            />
-                                        </Label>
-
-                                        <Input
-                                            value={formData.upPaidAmount}
-                                            readOnly
-                                            className="h-12 bg-muted cursor-not-allowed"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label>Payment Method <span className='text-red-500'>*</span></Label>
-                                        <Select
-                                            value={formData.paymentMethod}
-                                            onValueChange={v => handleInputChange('paymentMethod', v)}
-                                        >
-                                            <SelectTrigger className="h-12">
-                                                <SelectValue placeholder="Select Payment Method" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {['Cash', 'UPI', 'Bank', 'Card'].map(method => (
-                                                    <SelectItem key={method} value={method}>
-                                                        {method}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label>Payment Status <span className='text-red-500'>*</span></Label>
-                                        <Select
-                                            value={formData.paymentStatus}
-                                            onValueChange={v => handleInputChange('paymentStatus', v)}
-                                        >
-                                            <SelectTrigger className="h-12">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {['Unpaid', 'Paid', 'Partial Paid'].map(status => (
-                                                    <SelectItem key={status} value={status}>
-                                                        {status}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                            </div>
-                        </> */}
-                    {/* )}  */}
-
-                    {/* Navigation Controls */}
                     <div className="flex justify-end gap-4 mt-8">
-                        {/* {currentStep === 2 && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setCurrentStep(1)}
-
-                            >
-                                Previous
-                            </Button>
-                        )}
-
-                        {currentStep === 1 ? (
-                       
-                        ) : ( */}
                              <Button
                                 type="button"
                                 onClick={handleNextStep}
@@ -1662,10 +1396,6 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                             >
                                 Check Fare
                             </Button>
-                            {/* <Button type="submit" disabled={isCreatePending || isUpdatePending}>
-                                {id ? 'Update Booking' : 'Create Booking'}
-                            </Button> */}
-                        {/* )} */}
                     </div>
                 </form>
             </CardContent>
