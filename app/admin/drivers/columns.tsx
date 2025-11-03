@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation"
 import { toast } from 'sonner';
 import { Badge } from "components/ui/badge"
 import TooltipProvider from "components/others/TooltipComponent"
+import TooltipComponent from "components/others/TooltipComponent";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -77,14 +78,41 @@ export const columns: MRT_ColumnDef<Driver>[] = [
     Cell: ({ row }) => row.index + 1,
     enableSorting: false,
     enableColumnFilter: false,
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
     accessorKey: "driverId",
     header: "Driver ID",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Driver<br />ID
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
     Cell: ({ row }) => {
       const driver = row.original;
 
@@ -101,12 +129,33 @@ export const columns: MRT_ColumnDef<Driver>[] = [
   {
     accessorKey: "name",
     header: "Driver Name",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Driver<br />Name
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
     accessorKey: "isOnline",
     header: "Online Status",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Online<br />Status
+      </div>
+    ),
     Cell: ({ row }) => {
       const status = row.getValue("isOnline") as boolean
       console.log("status >> ", status)
@@ -137,20 +186,63 @@ export const columns: MRT_ColumnDef<Driver>[] = [
         </div>
       )
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 10,
   },
   {
     accessorKey: "phone",
     header: "Phone Number",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Phone<br />Number
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 15,
   },
   {
     accessorKey: "walletAmount",
     header: "Wallet Balance",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Wallet<br />Balance
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
     accessorKey: "isActive",
@@ -263,8 +355,53 @@ export const columns: MRT_ColumnDef<Driver>[] = [
         </React.Fragment>
       )
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 25,
+  },
+  {
+    accessorKey: "inActiveReason",
+    header: "Reason",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Reason
+      </div>
+    ),
+    Cell: ({ row }) => {
+      const reason: string = row.original.inActiveReason || '';
+      if (!reason) {
+        return <div>-</div>;
+      }
+      return (
+        <TooltipComponent name={reason}>
+          <div>{reason.length > 15 ? `${reason.slice(0, 15)}...` : reason}</div>
+        </TooltipComponent>
+      );
+    },
+    muiTableHeadCellProps: {
+      align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0,
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+    },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     id: "actions",
@@ -379,7 +516,8 @@ export const columns: MRT_ColumnDef<Driver>[] = [
         </React.Fragment>
       );
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
 ];

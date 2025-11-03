@@ -4,6 +4,7 @@ import React from "react";
 import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
 import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";
+import TooltipComponent from "components/others/TooltipComponent";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -121,11 +122,17 @@ export const useColumns = ({ onEdit }: ColumnsProps) => {
     {
       accessorKey: "message",
       header: "Message",
-      Cell: ({ row }) => (
-        <div className="max-w-[350px] truncate text-gray-600">
-          {row.original.message}
-        </div>
-      ),
+      Cell: ({ row }) => {
+      const message= row.original.message as string;
+      if (!message) return <div>-</div>;
+      return (
+        <TooltipComponent name={message}>
+          <div>{message.slice(0, 15)}...</div>
+        </TooltipComponent>
+      )
+    },
+      
+     
     },
     {
       accessorKey: "target",
