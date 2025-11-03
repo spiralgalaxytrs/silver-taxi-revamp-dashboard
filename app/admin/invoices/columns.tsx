@@ -59,8 +59,17 @@ export const columns: MRT_ColumnDef<Invoice>[] = [
     Cell: ({ row }) => {
       return <div>{row.index + 1}</div>
     },
-    muiTableHeadCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'center', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
     muiTableBodyCellProps: { align: 'center' },
+    size: 30,
   },
   {
     accessorKey: "invoiceNo",
