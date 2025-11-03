@@ -344,8 +344,7 @@ export function BookingPopup({
                 viewPath="/admin/bookings/view"
                 editPath="/admin/bookings/edit"
                 className="absolute top-20 right-4"
-                disableEdit={booking?.status === "Completed"}
-
+                disableEdit={booking?.status != "Booking Confirmed" || booking?.status != "Reassign"}
               />
 
 
