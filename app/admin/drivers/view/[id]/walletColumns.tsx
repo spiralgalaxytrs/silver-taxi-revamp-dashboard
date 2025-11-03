@@ -4,6 +4,7 @@ import { Badge } from "components/ui/badge";
 import {
     MRT_ColumnDef,
 } from 'material-react-table'
+import TooltipComponent from "components/others/TooltipComponent";
 
 export type DriverTransaction = {
     transactionId: string;
@@ -22,14 +23,41 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
     {
         header: "S.No",
         Cell: ({ row }) => row.index + 1, // Assigns Serial Number dynamically
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        muiTableHeadCellProps: { align: 'left' ,
+            sx: {
+                '& .MuiBox-root': {
+                    gap: 0, // ✅ Removes space between filter & menu icons
+                },
+                '& .MuiButtonBase-root': {
+                    padding: '2px',
+                    margin: 0,
+                },
+            },
+        },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 10,
     },
     {
         accessorKey: "transactionId",
         header: "Transaction ID",
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        Header: () => (
+            <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+              Transaction<br />ID
+            </div>
+          ),
+        muiTableHeadCellProps: { align: 'left' ,
+            sx: {
+                '& .MuiBox-root': {
+                    gap: 0, // ✅ Removes space between filter & menu icons
+                },
+                '& .MuiButtonBase-root': {
+                    padding: '2px',
+                    margin: 0,
+                },
+            },
+        },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
     },
     // {
     //     accessorKey: "driverId",
@@ -38,18 +66,45 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
     {
         accessorKey: "initiatedTo",
         header: "Name/Phone",
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        muiTableHeadCellProps: { align: 'left' ,
+            sx: {
+                '& .MuiBox-root': {
+                    gap: 0, // ✅ Removes space between filter & menu icons
+                },
+                '& .MuiButtonBase-root': {
+                    padding: '2px',
+                    margin: 0,
+                },
+            },
+        },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
     },
     {
         accessorKey: "ownedBy",
         header: "Category",
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        muiTableHeadCellProps: { align: 'left',
+            sx: {
+                '& .MuiBox-root': {
+                    gap: 0, // ✅ Removes space between filter & menu icons
+                },
+                '& .MuiButtonBase-root': {
+                    padding: '2px',
+                    margin: 0,
+                },
+            },
+         },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
     },
     {
         accessorKey: "type",
         header: "Transaction Type",
+        Header: () => (
+            <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+              Transaction<br />Type
+            </div>
+          ),
         Cell: ({ row }) => {
             const type = row.getValue("type") as string;
             return (
@@ -60,8 +115,19 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
                 </div>
             );
         },
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        muiTableHeadCellProps: { align: 'left' ,
+            sx: {
+                '& .MuiBox-root': {
+                    gap: 0, // ✅ Removes space between filter & menu icons
+                },
+                '& .MuiButtonBase-root': {
+                    padding: '2px',
+                    margin: 0,
+                },
+            },
+         },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 25,
     },
     {
         accessorKey: "amount",
@@ -77,19 +143,46 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
 
             return <div>{prefix} {formatted}</div>
         },
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        muiTableHeadCellProps: { align: 'left' ,
+            sx: {
+                '& .MuiBox-root': {
+                    gap: 0, // ✅ Removes space between filter & menu icons
+                },
+                '& .MuiButtonBase-root': {
+                    padding: '2px',
+                    margin: 0,
+                },
+            },
+         },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
     },
     {
         accessorKey: "remark",
         header: "Remarks",
-        Cell: ({ row }) => {
+        Cell:({row})=>{
             const remark = row.getValue("remark") as string
-            if (!remark) return <div>-</div>
-            return <div>{remark}</div>
+             if (!remark) return <div>-</div>
+           return (
+        <TooltipComponent name={remark}>
+          <div>{remark.slice(0, 15)}...</div>
+        </TooltipComponent>
+      )
+             
         },
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        muiTableHeadCellProps: { align: 'left' ,
+            sx: {
+                '& .MuiBox-root': {
+                    gap: 0, // ✅ Removes space between filter & menu icons
+                },
+                '& .MuiButtonBase-root': {
+                    padding: '2px',
+                    margin: 0,
+                },
+            },
+         },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
     },
     {
         accessorKey: "createdAt",
@@ -108,7 +201,18 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
                 </div>
             )
         },
-        muiTableHeadCellProps: { align: 'center' },
-        muiTableBodyCellProps: { align: 'center' },
+        muiTableHeadCellProps: { align: 'left' ,
+            sx: {
+                '& .MuiBox-root': {
+                    gap: 0, // ✅ Removes space between filter & menu icons
+                },
+                '& .MuiButtonBase-root': {
+                    padding: '2px',
+                    margin: 0,
+                },
+            },
+         },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
     },
 ];

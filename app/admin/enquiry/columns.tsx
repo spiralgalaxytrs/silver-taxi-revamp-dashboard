@@ -63,14 +63,37 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
     ),
     enableSorting: false,
     enableColumnFilter: false,
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
     accessorKey: "enquiryId",
     header: "Enquiry ID",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Enquiry<br />ID
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
     Cell: ({ row }) => {
       const enquiry = row.original;
        return(
@@ -94,8 +117,22 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
   {
     accessorKey: "name",
     header: "Customer Name",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Customer<br />Name
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
     Cell: ({ row }) => {
       const name: string = row.original.name;
       if (!name) {
@@ -107,8 +144,22 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
   {
     accessorKey: "phone",
     header: "Phone Number",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Phone<br />Number
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
     Cell: ({ row }) => {
       const phone: string = row.original.phone;
       if (!phone) {
@@ -129,8 +180,17 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
         </TooltipComponent>
       )
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     accessorKey: "drop",
@@ -144,12 +204,26 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
         </TooltipComponent>
       )
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     id: "pickupDate",
     header: "PickUp Date",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        PickUp<br />Date
+      </div>
+    ),
     Cell: ({ row }) => {
       const pickupDate: string = row.original.pickupDateTime;
       if (!pickupDate) {
@@ -175,12 +249,26 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
     filterFn: dateRangeFilter,
     filterVariant: "date-range",
     sortingFn: "datetime",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     accessorKey: "pickupTime",
     header: "PickUp Time",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        PickUp<br />Time
+      </div>
+    ),
     Cell: ({ row }) => {
       const pickupTime: string = row.original.pickupDateTime;
       if (!pickupTime) {
@@ -204,12 +292,26 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
 
       return <div>{amPmTime}</div>;
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     id: "dropDate",
     header: "Drop Date",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Drop<br />Date
+      </div>
+    ),
     Cell: ({ row }) => {
       const dropDate: string = row.getValue("dropDate");
       if (!dropDate) {
@@ -235,15 +337,38 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
     filterFn: dateRangeFilter,
     filterVariant: "date-range",
     sortingFn: "datetime",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
 
   {
     accessorKey: "serviceType",
     header: "Service Name",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Service<br />Name
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     accessorKey: "status",
@@ -319,24 +444,61 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
         </div>
       );
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     accessorKey: "type",
     header: "Source",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     accessorKey: "createdBy",
     header: "Created By",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Created<br />By
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     id: "createdAt",
     header: "Created At",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Created<br />At
+      </div>
+    ),
     Cell: ({ row }) => {
       const createdAt: string = row.original.createdAt;
       if (!createdAt) {
@@ -375,12 +537,26 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
     filterFn: dateRangeFilter,
     filterVariant: "date-range",
     sortingFn: "datetime",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     id: "actions",
     header: "Actions",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Actions
+      </div>
+    ),
     Cell: ({ row }) => {
       const enquiry = row.original;
       const [showConvertDialog, setShowConvertDialog] = useState(false);
@@ -488,8 +664,17 @@ export const columns: MRT_ColumnDef<Enquiry>[] = [
         </div>
       );
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left', sx: {
+      '& .MuiBox-root': {
+        gap: 0, // ✅ Removes space between filter & menu icons
+      },
+      '& .MuiButtonBase-root': {
+        padding: '2px',
+        margin: 0,
+      },
+    }, },
+    size: 70,
+    muiTableBodyCellProps: { align: 'left' },
     enableSorting: false,
     enableColumnFilter: false,
   },
