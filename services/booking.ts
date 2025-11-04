@@ -32,7 +32,7 @@ export const fetchBookingById = async (id: string) => {
 };
 
 // Create a booking
-export const createBooking = async (data: Partial<Booking>) => {
+export const createBooking = async (data: Partial<any>) => {
   const response = await axios.post(`/v1/bookings`, data);
   return response.data.data;
 };

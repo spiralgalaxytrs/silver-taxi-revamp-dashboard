@@ -60,14 +60,41 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
     Cell: ({ row }) => {
       return <div>{row.index + 1}</div>
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
     accessorKey: "vendorId",
     header: "Vendor ID",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Vendor<br />ID
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
     Cell: ({ row }) => {
       const vendor = row.original;
 
@@ -88,18 +115,48 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
   },
   {
     accessorKey: "phone",
     header: "Phone No",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Phone<br />No
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
   },
   {
     accessorKey: "createdAt",
     header: "Created At",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Created<br />At
+      </div>
+    ),
     Cell: ({ row }) => {
       const createdAt: string = row.getValue("createdAt")
       const date = new Date(createdAt);
@@ -116,8 +173,18 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
         </React.Fragment>
       )
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
   },
   {
     accessorKey: "isLogin",
@@ -242,8 +309,19 @@ export const columns: MRT_ColumnDef<Partial<Vendor>>[] = [
         </React.Fragment>
       )
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left',
+      sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      },
+     },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
     id: "actions",

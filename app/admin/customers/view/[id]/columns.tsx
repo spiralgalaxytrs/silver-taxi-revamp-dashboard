@@ -18,30 +18,47 @@ export const bookingColumns: MRT_ColumnDef<Booking>[] = [
   {
     accessorKey: "bookingId",
     header: "Booking ID",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Booking<br />ID
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     accessorKey: "pickup",
     header: "From",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
   },
   {
     accessorKey: "drop",
     header: "To",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
   },
   {
     accessorKey: "serviceType",
     header: "Booking Type",
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Booking<br />Type
+      </div>
+    ),
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     accessorKey: "finalAmount",
     header: "Total Amount",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Total<br />Amount
+      </div>
+    ),
     Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("finalAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
@@ -51,12 +68,18 @@ export const bookingColumns: MRT_ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 30,
   },
   {
     accessorKey: "pickupDate",
     header: "Pickup Date",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Pickup<br />Date
+      </div>
+    ),
     Cell: ({ row }) => {
       const pickupDate: string = row.getValue("pickupDate")
       if (pickupDate === null) {
@@ -66,12 +89,18 @@ export const bookingColumns: MRT_ColumnDef<Booking>[] = [
       const convertedDate = date.toLocaleDateString();
       return <div>{convertedDate}</div>
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   },
   {
     accessorKey: "dropDate",
     header: "Drop Date",
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Drop<br />Date
+      </div>
+    ),
     Cell: ({ row }) => {
       const dropDate: string = row.getValue("dropDate")
       if (dropDate === null) {
@@ -86,7 +115,8 @@ export const bookingColumns: MRT_ColumnDef<Booking>[] = [
         </div>
       )
     },
-    muiTableHeadCellProps: { align: 'center' },
-    muiTableBodyCellProps: { align: 'center' },
+    muiTableHeadCellProps: { align: 'left' },
+    muiTableBodyCellProps: { align: 'left' },
+    size: 20,
   }
 ];

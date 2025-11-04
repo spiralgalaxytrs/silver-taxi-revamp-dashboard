@@ -120,12 +120,19 @@ export default function BookingsPage() {
 
 
   const bookingData = useMemo(() => {
-    return bookings.map((booking: any) => ({
-      ...booking,
-      id: booking.bookingId,
-      pickupDate: booking.pickupDate,
-      dropDate: booking.dropDate ? booking.dropDate : null,
-    }))
+    return bookings.map((booking: any) => {
+
+      if (booking.status === "Reassign") {
+        booking.status = "Booking Confirmed"
+      }
+
+      return {
+        ...booking,
+        id: booking.bookingId,
+        pickupDate: booking.pickupDate,
+        dropDate: booking.dropDate ? booking.dropDate : null,
+      }
+    })
   }, [bookings])
 
 
