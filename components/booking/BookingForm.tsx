@@ -1073,7 +1073,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {filteredVehicles.length > 0 ? (
-                                                    filteredVehicles.map((vehicle: any) => (
+                                                    filteredVehicles.sort((a, b) => a.order ? a.order : 0 - (b.order ? b.order : 0)).map((vehicle: any) => (
                                                         <SelectItem key={vehicle.vehicleId} value={vehicle.vehicleId}>
                                                             {vehicle.name}
                                                         </SelectItem>
@@ -1316,7 +1316,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 className="h-12"
                                             />
                                         </div>
-                                        {/* <div className="space-y-2">
+                                        <div className="space-y-2">
                                             <Label>Extra Amount per Km</Label>
                                             <Input
                                                 type="number"
@@ -1324,7 +1324,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 onChange={e => handleInputChange('extraPricePerKm', e.target.value)}
                                                 className="h-12"
                                             />
-                                        </div> */}
+                                        </div>
                                         <div className="space-y-2">
                                             <Label>Driver Beta</Label>
                                             <Input
@@ -1334,7 +1334,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 className="h-12"
                                             />
                                         </div>
-                                        {/* <div className="space-y-2">
+                                        <div className="space-y-2">
                                             <Label>Extra Driver Beta</Label>
                                             <Input
                                                 type="number"
@@ -1342,7 +1342,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 onChange={e => handleInputChange('extraDriverBeta', e.target.value)}
                                                 className="h-12"
                                             />
-                                        </div> */}
+                                        </div>
                                         <div className="space-y-2">
                                             <Label>Hill Charge</Label>
                                             <Input
@@ -1352,7 +1352,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 className="h-12"
                                             />
                                         </div>
-                                        {/* <div className="space-y-2">
+                                        <div className="space-y-2">
                                             <Label>Extra Hill Charge</Label>
                                             <Input
                                                 type="number"
@@ -1360,7 +1360,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 onChange={e => handleInputChange('extraHill', e.target.value)}
                                                 className="h-12"
                                             />
-                                        </div> */}
+                                        </div>
                                         <div className="space-y-2">
                                             <Label>Permit Charge</Label>
                                             <Input
@@ -1370,7 +1370,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 className="h-12"
                                             />
                                         </div>
-                                        {/* <div className="space-y-2">
+                                        <div className="space-y-2">
                                             <Label>Extra Permit Charge</Label>
                                             <Input
                                                 type="number"
@@ -1378,7 +1378,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                                 onChange={e => handleInputChange('extraPermitCharge', e.target.value)}
                                                 className="h-12"
                                             />
-                                        </div> */}
+                                        </div>
                                     </div>
                                 </div>
 
