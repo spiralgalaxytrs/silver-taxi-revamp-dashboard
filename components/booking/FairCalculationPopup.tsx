@@ -390,12 +390,14 @@ export function FairCalculationPopup({ isOpen, onClose, fareData, createdBy }: F
               </div>
 
               {/* Modified Fare */}
-              {(fareData?.fareBreakdown?.modifiedFare && [
-                fareData?.extraDriverBeta,
-                fareData?.extraPermitCharge,
-                fareData?.extraToll,
-                fareData?.extraHill
-              ].some(v => v ? v > 0 : false)) && (
+              {(fareData?.fareBreakdown?.modifiedFare
+                // && [
+                //   fareData?.extraDriverBeta,
+                //   fareData?.extraPermitCharge,
+                //   fareData?.extraToll,
+                //   fareData?.extraHill
+                // ].some(v => v ? v > 0 : false)
+              ) && (
                   <div className="space-y-2 bg-indigo-100 rounded-lg p-3">
                     <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
                       <Wallet className="w-4 h-4" />

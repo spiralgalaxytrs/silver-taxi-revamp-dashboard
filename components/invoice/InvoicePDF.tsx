@@ -95,7 +95,7 @@ const InvoicePDF = ({ id }: { id: string }) => {
           <div className="flex justify-between items-center flex-nowrap">
             <div className="flex flex-col justify-center">
               <h1 className="text-4xl font-bold">Silver Taxi</h1>
-              <p className="text-sm mt-1 opacity-75">Your Luxury Ride Partner</p>
+              <p className="text-sm mt-1 opacity-75">Best Outstation Taxi Service</p>
             </div>
             <div className="text-right">
               <h2 className="text-5xl font-bold whitespace-nowrap -mt-2">INVOICE</h2>
