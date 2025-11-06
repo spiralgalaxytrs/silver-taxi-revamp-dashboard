@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+"use client"
+
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Input } from "components/ui/input";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -9,6 +11,10 @@ import { customAlphabet } from 'nanoid';
 import { useInvoiceById, useCreateInvoice, useUpdateInvoice } from 'hooks/react-query/useInvoice';
 import { useServices } from 'hooks/react-query/useServices';
 import { useOffers } from 'hooks/react-query/useOffers';
+import { useVehiclesAdmin } from 'hooks/react-query/useVehicle';
+import { useTariffs, usePackageTariffs } from 'hooks/react-query/useTariff';
+import LocationAutocomplete from '../location/LocationAutocomplete';
+import axios from '../../lib/http-common';
 import {
   Select,
   SelectTrigger,
@@ -48,17 +54,22 @@ interface Charge {
 
 interface InvoiceFormProps {
   invId?: string;
-  createdBy: string;
+  createdBy: "Admin" | "Vendor";
 }
 
 export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
   const router = useRouter();
   const { bookingId } = useParams<{ bookingId: string }>();
-  const { mutate: updateInvoice } = useUpdateInvoice();
-  const { mutate: createInvoice } = useCreateInvoice();
-  const { data: invoice = null } = useInvoiceById(invId || "");
+  const { mutate: updateInvoice, isPending: isUpdating } = useUpdateInvoice();
+  const { mutate: createInvoice, isPending: isCreating } = useCreateInvoice();
+  const { data: invoice = null, isLoading: isLoadingInvoice } = useInvoiceById(invId || "");
   const { data: offers = [] } = useOffers();
   const { data: services = [] } = useServices();
+  const { data: vehicles = [] } = useVehiclesAdmin();
+  const { data: tariffs = [] } = useTariffs();
+
+  // Fetch package tariffs for hourly packages
+  const { data: allPkgTariffs = [] } = usePackageTariffs('hourly');
 
   const date = new Date();
   const year = date.getFullYear();
@@ -67,9 +78,11 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
   const nanoid = customAlphabet("0123456789", 4);
   const uniqueId = nanoid();
   const newInvoiceId = `INV-${year}${month}${day}${uniqueId}`;
-  const invoiceId = invoice?.invoiceNo || newInvoiceId;
 
+  const [invoiceId, setInvoiceId] = useState(newInvoiceId);
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const [shippingAddress, setShippingAddress] = useState({
     name: "",
@@ -102,15 +115,32 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
   const [isIGSTSelected, setIsIGSTSelected] = useState(false);
   const [selectedServiceName, setSelectedServiceName] = useState("");
   const [pickupDrop, setPickupDrop] = useState({ pickup: "", drop: "" });
+  const [selectedPackageId, setSelectedPackageId] = useState("");
+  const [packageDetails, setPackageDetails] = useState({
+    noOfHours: "",
+    distanceLimit: 0,
+    price: 0,
+    extraPrice: 0
+  });
   const [paymentStatus, setPaymentStatus] = useState("Unpaid");
   const [bookingStatus, setBookingStatus] = useState("Unpaid");
   const [paymentDetails, setPaymentDetails] = useState("");
   const [note, setNote] = useState("");
+  const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
+  const [serviceTaxPercentage, setServiceTaxPercentage] = useState(0);
 
-
-  // Update from invoice when it loads
+  // Set invoice ID when invoice data loads - FIXED: Only set once
   useEffect(() => {
-    if (invoice) {
+    if (invoice?.invoiceNo && !isDataLoaded) {
+      setInvoiceId(invoice.invoiceNo);
+    }
+  }, [invoice?.invoiceNo, isDataLoaded]);
+
+  // Update from invoice when it loads - FIXED: Prevent infinite loops
+  useEffect(() => {
+    if (invoice && !isDataLoaded && !isLoadingInvoice) {
+      console.log("Loading invoice data:", invoice);
+      
       setShippingAddress({
         name: invoice?.name || "",
         phone: invoice?.phone || "",
@@ -119,6 +149,9 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
         address: invoice?.address || ""
       });
 
+      // Calculate amount from km and price if not provided
+      const calculatedAmount = invoice?.estimatedAmount || (invoice?.totalKm || 0) * (invoice?.pricePerKm || 0);
+
       setItems({
         serviceType: invoice?.serviceType || "",
         vehicleType: invoice?.vehicleType || "",
@@ -126,31 +159,71 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
         km: invoice?.totalKm || 0,
         price: invoice?.pricePerKm || 0,
         time: invoice?.travelTime || "",
-        amount: invoice?.estimatedAmount || 0,
-      })
+        amount: calculatedAmount,
+      });
 
-      // console.log("invoice >>>", invoice);
+      // Set selected service name for package filtering
+      setSelectedServiceName(invoice?.serviceType || "");
+
+      // Load tax percentages from service data
+      if (invoice?.serviceType) {
+        const service = services.find(s => s.name === invoice.serviceType);
+        if (service && service.tax) {
+          setServiceTaxPercentage(service.tax.GST);
+        }
+      }
+
+      // Set pickup and drop locations
+      setPickupDrop({
+        pickup: invoice?.pickup || "",
+        drop: invoice?.drop || ""
+      });
+
+      // For hourly packages, try to find and set package details
+      if (invoice?.serviceType === "Hourly Packages") {
+        // Extract hours from travelTime
+        const hoursMatch = invoice.travelTime?.match(/(\d+)\s*Hours?/);
+        const noOfHours = hoursMatch ? hoursMatch[1] : "";
+        
+        setPackageDetails({
+          noOfHours: noOfHours,
+          distanceLimit: invoice.totalKm || 0,
+          price: invoice.estimatedAmount || 0,
+          extraPrice: 0
+        });
+
+        // Try to find the matching package
+        const matchingPackage = allPkgTariffs.find(pkg => 
+          pkg.noOfHours === noOfHours && 
+          pkg.distanceLimit === invoice.totalKm &&
+          pkg.price === invoice.estimatedAmount
+        );
+        
+        if (matchingPackage) {
+          setSelectedPackageId(matchingPackage.packageId);
+        }
+      }
 
       setPaymentDetails(invoice?.paymentDetails || "");
       setNote(invoice?.note || "");
       setPaymentStatus(invoice?.status || "Unpaid");
-      setInvoiceDate(invoice?.invoiceDate.split("T")[0] || new Date().toISOString().split("T")[0]);
+      setBookingStatus(invoice?.status || "Unpaid");
+      setInvoiceDate(invoice?.invoiceDate?.split("T")[0] || new Date().toISOString().split("T")[0]);
 
       if (invoice?.otherCharges) {
+        // Load GST values and set tax selection
+        const cgstSgstValue = invoice?.otherCharges?.["CGST & SGST"];
+        const igstValue = invoice?.otherCharges?.["IGST"];
 
-        const taxValue =
-          invoice?.otherCharges?.["CGST & SGST"] ??
-          invoice?.otherCharges?.["IGST"] ??
-          0;
+        if (cgstSgstValue !== undefined) {
+          setIsCGSTSGSTSelected(true);
+          setIsIGSTSelected(false);
+        } else if (igstValue !== undefined) {
+          setIsCGSTSGSTSelected(false);
+          setIsIGSTSelected(true);
+        }
 
-        setTaxCharges((prev) => {
-          return prev.map((charge) => ({
-            ...charge,
-            value: taxValue,
-          }));
-        });
-
-
+        // Load other charges (excluding GST)
         const excludedLabels = ["CGST & SGST", "IGST"];
         const parsedCharges = Object.entries(invoice.otherCharges)
           .filter(([label]) => !excludedLabels.includes(label.trim()))
@@ -160,10 +233,118 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
           }));
         setOtherCharges(parsedCharges);
       }
-    }
-  }, [invoice]);
 
-  const handleItemChange = (field: keyof InvoiceItem, value: any) => {
+      // Mark data as loaded to prevent re-running this effect
+      setIsDataLoaded(true);
+    }
+  }, [invoice, services, allPkgTariffs, isLoadingInvoice, isDataLoaded]);
+
+  // Function to calculate distance and duration between pickup and drop
+  const calculateDistance = async (pickup: string, drop: string) => {
+    if (!pickup || !drop) return;
+
+    setIsCalculatingDistance(true);
+    try {
+      const response = await axios.get('/global/distance', {
+        params: { origin: pickup, destination: drop }
+      });
+
+      const { distance, duration } = response.data.data;
+      handleItemChange("km", distance);
+      handleItemChange("time", duration);
+    } catch (error) {
+      console.error('Error calculating distance:', error);
+      toast.error('Failed to calculate distance');
+    } finally {
+      setIsCalculatingDistance(false);
+    }
+  };
+
+  // Function to get available vehicle types for selected service
+  const getAvailableVehicleTypes = (): string[] => {
+    const serviceName = selectedServiceName || items.serviceType;
+    if (!serviceName) return [];
+
+    const service = services.find(s => s.name === serviceName);
+    if (!service) return [];
+
+    // For hourly packages, get vehicles from package tariffs
+    if (serviceName === "Hourly Packages") {
+      if (selectedPackageId) {
+        // If package is selected, show vehicles that support this specific package
+        const packageVehicles = vehicles.filter(vehicle =>
+          vehicle.isActive &&
+          allPkgTariffs.some(
+            pkgTariff =>
+              pkgTariff.vehicleId === vehicle.vehicleId &&
+              pkgTariff.packageId === selectedPackageId &&
+              pkgTariff.price > 0
+          )
+        );
+
+        const vehicleTypes = [...new Set(packageVehicles.map(vehicle => vehicle.type).filter((type): type is string => Boolean(type)))];
+        return vehicleTypes;
+      } else {
+        // If no package selected, show all vehicles that have hourly packages
+        const packageVehicles = vehicles.filter(vehicle =>
+          vehicle.isActive &&
+          allPkgTariffs.some(
+            pkgTariff =>
+              pkgTariff.vehicleId === vehicle.vehicleId &&
+              pkgTariff.price > 0
+          )
+        );
+
+        const vehicleTypes = [...new Set(packageVehicles.map(vehicle => vehicle.type).filter((type): type is string => Boolean(type)))];
+        return vehicleTypes;
+      }
+    }
+
+    // For regular services, get vehicles from regular tariffs
+    const serviceTariffs = tariffs.filter(tariff =>
+      tariff.serviceId === service.serviceId && tariff.price > 0
+    );
+
+    const vehicleTypes = [...new Set(serviceTariffs.map(tariff => {
+      const vehicle = vehicles.sort((a, b) => a.order - b.order).find(v => v.vehicleId === tariff.vehicleId);
+      return vehicle?.type;
+    }).filter((type): type is string => Boolean(type)))];
+
+    return vehicleTypes;
+  };
+
+  // Handle pickup location change
+  const handlePickupChange = useCallback((address: string) => {
+    setPickupDrop(prev => ({ ...prev, pickup: address }));
+
+    // For hourly packages, only use pickup location
+    if (selectedServiceName === "Hourly Packages") {
+      const details = address;
+      handleItemChange("details", details);
+    } else {
+      const details = `${address} - ${pickupDrop.drop}`;
+      handleItemChange("details", details);
+
+      // Calculate distance if both pickup and drop are available
+      if (address && pickupDrop.drop) {
+        calculateDistance(address, pickupDrop.drop);
+      }
+    }
+  }, [selectedServiceName, pickupDrop.drop]);
+
+  // Handle drop location change
+  const handleDropChange = useCallback((address: string) => {
+    setPickupDrop(prev => ({ ...prev, drop: address }));
+    const details = `${pickupDrop.pickup} - ${address}`;
+    handleItemChange("details", details);
+
+    // Calculate distance if both pickup and drop are available (not for hourly packages)
+    if (pickupDrop.pickup && address && selectedServiceName !== "Hourly Packages") {
+      calculateDistance(pickupDrop.pickup, address);
+    }
+  }, [pickupDrop.pickup, selectedServiceName]);
+
+  const handleItemChange = useCallback((field: keyof InvoiceItem, value: any) => {
     setItems((prevItem) => {
       const updatedItem = { ...prevItem, [field]: value };
 
@@ -178,71 +359,92 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
     });
 
     setIsFormDirty(true);
-  };
+  }, []);
 
-
-  const addCustomCharge = () => {
-    setCustomCharges([...customCharges, { label: "", value: 0 }]);
+  const addCustomCharge = useCallback(() => {
+    setCustomCharges(prev => [...prev, { label: "", value: 0 }]);
     setIsFormDirty(true);
-  };
+  }, []);
 
-  const removeCustomCharge = (index: number) => {
+  const removeCustomCharge = useCallback((index: number) => {
     setCustomCharges((prev) => {
       const updated = [...prev];
       updated.splice(index, 1);
-
       return updated;
     });
-
     setIsFormDirty(true);
-  };
+  }, []);
 
-
-  const handleChargeChange = (index: number, field: keyof Charge, value: any) => {
+  const handleChargeChange = useCallback((index: number, field: keyof Charge, value: any) => {
     setCustomCharges((prev) => {
       const updated = [...prev];
-
       updated[index] = {
         ...updated[index],
         [field]: field === "value" ? Number(value) : value
       };
-
       return updated;
     });
-
     setIsFormDirty(true);
-  };
+  }, []);
 
-
-
-  const handleTaxSelection = (label: "CGST & SGST" | "IGST") => {
-    console.log("handleTaxSelection", label);
+  const handleTaxSelection = useCallback((label: "CGST & SGST" | "IGST") => {
     if (label === "CGST & SGST") {
-      console.log("Selected CGST & SGST");
       setIsCGSTSGSTSelected(true);
       setIsIGSTSelected(false);
     } else {
-      console.log("Selected IGST");
       setIsCGSTSGSTSelected(false);
       setIsIGSTSelected(true);
     }
     setIsFormDirty(true);
-  };
+  }, []);
 
+  const handleStatusChange = useCallback((value: string) => {
+    setPaymentStatus(value);
+    setBookingStatus(value);
+    setIsFormDirty(true);
+  }, []);
 
   const totalAmount = useMemo(() => {
     const customTotal = customCharges.reduce(
       (sum, charge) => sum + (Number(charge.value) || 0),
       0
     );
-    return (invoice?.totalAmount || 0) + customTotal;
-  }, [customCharges, invoice]);
 
+    // Get base amount - use package price for hourly packages, otherwise use items.amount
+    const baseAmount = selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount;
 
+    // Calculate tax amount based on selected tax type
+    let taxAmount = 0;
+    if (isCGSTSGSTSelected || isIGSTSelected) {
+      taxAmount = Math.ceil(baseAmount * Number(serviceTaxPercentage) / 100);
+    }
 
+    return baseAmount + customTotal + taxAmount;
+  }, [
+    customCharges, 
+    items.amount, 
+    packageDetails.price, 
+    selectedServiceName, 
+    isCGSTSGSTSelected, 
+    isIGSTSelected, 
+    serviceTaxPercentage
+  ]);
 
-  const handleCreateInvoice = () => {
+  const handleCreateInvoice = useCallback(() => {
+    if (isSubmitting) return;
 
+    // Validate required fields
+    if (!shippingAddress.name || !shippingAddress.phone) {
+      toast.error("Please fill in customer name and phone number");
+      return;
+    }
+
+    if (!items.serviceType || !items.vehicleType) {
+      toast.error("Please select service type and vehicle type");
+      return;
+    }
+
+    setIsSubmitting(true);
 
     const customChargeEntries = customCharges.map((c) => [c.label, c.value]);
 
@@ -251,114 +453,103 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
       ...Object.fromEntries(customChargeEntries),
     };
 
-    // Step 2: Remove any GST from base charges
+    // Remove any GST from base charges
     delete baseOtherCharges["CGST & SGST"];
     delete baseOtherCharges["IGST"];
 
-    // Step 3: Add only the selected GST
+    // Add only the selected GST with proper calculation
+    const baseAmount = selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount;
+    
     if (isCGSTSGSTSelected) {
-      const gstValue = taxCharges.find(charge => charge.label === "CGST & SGST")?.value || 0;
-      baseOtherCharges["CGST & SGST"] = gstValue;
+      const gstAmount = Math.ceil(baseAmount * Number(serviceTaxPercentage) / 100);
+      baseOtherCharges["CGST & SGST"] = gstAmount;
     } else if (isIGSTSelected) {
-      const gstValue = taxCharges.find(charge => charge.label === "IGST")?.value || 0;
-      baseOtherCharges["IGST"] = gstValue;
+      const gstAmount = Math.ceil(baseAmount * Number(serviceTaxPercentage) / 100);
+      baseOtherCharges["IGST"] = gstAmount;
     }
 
-    // Final object to save in DB
     const finalOtherCharges = baseOtherCharges;
 
-
     const payload = {
-      invoiceId,
-      bookingId: invoice?.bookingId || bookingId || "",
+      invoiceId: invId || undefined, // Only include for updates
+      bookingId: invoice?.bookingId || bookingId || undefined,
       companyId: invoice?.companyId || "",
-      invoiceNo: invoice?.invoiceNo || newInvoiceId,
-      invoiceDate: invoiceDate || invoice?.invoiceDate,
+      invoiceNo: invoiceId,
+      invoiceDate: invoiceDate,
       name: shippingAddress.name,
       phone: shippingAddress.phone,
       email: shippingAddress.email,
       serviceType: items.serviceType,
       vehicleType: items.vehicleType,
-      totalKm: items.km,
-      pricePerKm: items.price,
-      travelTime: items.time,
+      totalKm: selectedServiceName === "Hourly Packages" ? packageDetails.distanceLimit : items.km,
+      pricePerKm: selectedServiceName === "Hourly Packages" ? 0 : items.price,
+      travelTime: selectedServiceName === "Hourly Packages" ? 
+        `${packageDetails.noOfHours} Hours` : items.time,
       address: shippingAddress.address,
-      estimatedAmount: invoice?.estimatedAmount || items.amount,
+      estimatedAmount: selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount,
       advanceAmount: invoice?.advanceAmount || 0,
-      totalAmount: totalAmount || invoice?.totalAmount || 0,
+      totalAmount: totalAmount,
       otherCharges: finalOtherCharges,
       paymentDetails,
-      createdBy: createdBy as "Admin" | "Vendor",
+      createdBy: createdBy,
       status: paymentStatus as "Partial Paid" | "Paid" | "Unpaid",
       booking: invoice?.booking || null,
       companyProfile: invoice?.companyProfile || null,
-      pickup: pickupDrop.pickup || invoice?.pickup,
-      drop: pickupDrop.drop || invoice?.drop,
-      note: note || invoice?.note,
-      GSTNumber: shippingAddress.GSTNumber || invoice?.GSTNumber,
+      pickup: pickupDrop.pickup,
+      drop: pickupDrop.drop,
+      note: note,
+      GSTNumber: shippingAddress.GSTNumber,
       offerId: invoice?.offerId || null,
     };
-
 
     try {
       if (invId) {
         updateInvoice({ id: invId, data: payload }, {
           onSuccess: () => {
-            toast.success("Invoice updated successfully", {
-              style: { backgroundColor: "#009F7F", color: "#fff" },
-            });
+            toast.success("Invoice updated successfully");
             setIsFormDirty(false);
+            setIsSubmitting(false);
             router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices/view/${invId}`);
           },
           onError: (error: any) => {
-            toast.error(error?.response?.data?.message || "Error updating Invoice!", {
-              style: { backgroundColor: "#FF0000", color: "#fff" },
-            });
+            toast.error(error?.response?.data?.message || "Error updating Invoice!");
+            setIsSubmitting(false);
           }
         });
       } else {
         createInvoice(payload, {
           onSuccess: () => {
-            toast.success("Invoice created successfully", {
-              style: { backgroundColor: "#009F7F", color: "#fff" },
-            });
+            toast.success("Invoice created successfully");
             setIsFormDirty(false);
+            setIsSubmitting(false);
             router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`);
           },
           onError: (error: any) => {
-            toast.error(error?.response?.data?.message || "Error creating Invoice!", {
-              style: { backgroundColor: "#FF0000", color: "#fff" },
-            });
+            toast.error(error?.response?.data?.message || "Error creating Invoice!");
+            setIsSubmitting(false);
           }
         });
       }
     } catch (error) {
-      console.error("Error creating invoice:", error);
-      toast.error("Error creating invoice", {
-        style: { backgroundColor: "#FF0000", color: "#fff" },
-      });
-      return;
+      console.error("Error saving invoice:", error);
+      toast.error("Error saving invoice");
+      setIsSubmitting(false);
     }
+  }, [
+    isSubmitting, shippingAddress, items, customCharges, OtherCharges, 
+    selectedServiceName, packageDetails, isCGSTSGSTSelected, isIGSTSelected, 
+    serviceTaxPercentage, invId, invoice, bookingId, invoiceId, invoiceDate, 
+    paymentDetails, createdBy, paymentStatus, pickupDrop, note, totalAmount,
+    updateInvoice, createInvoice, router
+  ]);
 
-  };
-
-
-  useEffect(() => {
-    const hasCGST = invoice?.otherCharges?.["CGST & SGST"] !== undefined;
-    const hasIGST = invoice?.otherCharges?.["IGST"] !== undefined;
-
-    setIsCGSTSGSTSelected(hasCGST);
-    setIsIGSTSelected(hasIGST);
-  }, [invoice?.otherCharges]);
-
-
-  const handleConfirmNavigation = () => {
+  const handleConfirmNavigation = useCallback(() => {
     setShowUnsavedChangesDialog(false);
     setIsFormDirty(false);
     pendingNavigation();
-  };
+  }, [pendingNavigation]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (isFormDirty) {
       setShowUnsavedChangesDialog(true);
       setPendingNavigation(() =>
@@ -367,13 +558,29 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
     } else {
       router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`);
     }
-  };
+  }, [isFormDirty, createdBy, router]);
+
+  const isPaid = paymentStatus === "Paid";
+
+  // Show loading state while invoice data is being fetched
+  if (invId && isLoadingInvoice) {
+    return (
+      <Card className="rounded-none">
+        <CardContent className="flex justify-center items-center h-64">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-[#009F7F] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p>Loading invoice data...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="rounded-none">
       <div className="flex justify-between items-center p-6 pt-2 pb-6">
         <h2 className="text-3xl font-bold tracking-tight">
-          {invoiceId ? "Edit Invoice" : "Create New Invoice"}
+          {invId ? "Edit Invoice" : "Create New Invoice"}
         </h2>
         <Button onClick={handleClose} variant="outline">Close</Button>
       </div>
@@ -385,90 +592,95 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
           </div>
           <div>
             <Label>Invoice Date</Label>
-            <Input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} />
+            <Input 
+              type="date" 
+              value={invoiceDate} 
+              onChange={(e) => {
+                setInvoiceDate(e.target.value);
+                setIsFormDirty(true);
+              }} 
+            />
           </div>
         </div>
+        
         <div className="mt-4 mb-4 grid grid-cols-2 gap-4">
           <div className="mt-1 border-gray-900">
             <Label>Payment Status</Label>
-            {paymentStatus === "Paid" ? (
+            {isPaid ? (
               <Input
                 type="text"
+                readOnly
                 value={paymentStatus}
                 className="bg-gray-100 cursor-default"
               />
-            ) : (<Select
-              value={paymentStatus}
-              onValueChange={(value) => {
-                setPaymentStatus(value);
-                setBookingStatus(value);
-              }}
-            >
-              <SelectTrigger id="paymentStatus" className="py-3 border-grey">
-                <SelectValue placeholder="Select Payment Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Partial Paid">Partial Paid</SelectItem>
-                <SelectItem value="Paid">Paid</SelectItem>
-                <SelectItem value="Unpaid">Unpaid</SelectItem>
-              </SelectContent>
-            </Select>)}
+            ) : (
+              <Select
+                value={paymentStatus}
+                onValueChange={handleStatusChange}
+              >
+                <SelectTrigger id="paymentStatus" className="py-3 border-grey">
+                  <SelectValue placeholder="Select Payment Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Partial Paid">Partial Paid</SelectItem>
+                  <SelectItem value="Paid">Paid</SelectItem>
+                  <SelectItem value="Unpaid">Unpaid</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 mt-4 gap-4">
+    <div className="grid grid-cols-2 mt-4 gap-4">
           <div className="flex flex-col gap-4">
             <h2 className="font-bold">Billing Address</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Full Name</Label>
+                <Label>Full Name *</Label>
                 <Input
                   type="text"
                   placeholder="Full Name"
-                  value={shippingAddress?.name}
-                  onChange={(e) => setShippingAddress({ ...shippingAddress, name: e.target.value })}
+                  value={shippingAddress.name}
+                  onChange={(e) => {
+                    setShippingAddress({ ...shippingAddress, name: e.target.value });
+                    setIsFormDirty(true);
+                  }}
+                  readOnly={isPaid}
                 />
               </div>
               <div>
-                <Label>Phone</Label>
-
+                <Label>Phone *</Label>
                 <Input
                   type="tel"
                   placeholder="Phone"
-                  value={shippingAddress?.phone}
+                  value={shippingAddress.phone}
                   onChange={(e) => {
-                    // Allow only numbers and optional leading +
                     let value = e.target.value.replace(/[^0-9+]/g, '');
-                    // Remove leading zeros, allow optional +
                     if (value.startsWith('+')) {
                       value = '+' + value.slice(1).replace(/^0+/, '');
                     } else {
                       value = value.replace(/^0+/, '');
                     }
-                    // Limit to 15 chars (E.164 max)
                     value = value.slice(0, 15);
                     setShippingAddress({ ...shippingAddress, phone: value });
+                    setIsFormDirty(true);
                   }}
+                  readOnly={isPaid}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              {/* <div>
-                <Label>Email</Label>
-                <Input
-                  type="text"
-                  placeholder="Email"
-                  value={shippingAddress.email}
-                  onChange={(e) => setShippingAddress({ ...shippingAddress, email: e.target.value })}
-                />
-              </div> */}
               <div>
                 <Label>GST Number</Label>
                 <Input
                   type="text"
                   placeholder="GST Number"
                   value={shippingAddress.GSTNumber}
-                  onChange={(e) => setShippingAddress({ ...shippingAddress, GSTNumber: e.target.value })}
+                  onChange={(e) => {
+                    setShippingAddress({ ...shippingAddress, GSTNumber: e.target.value });
+                    setIsFormDirty(true);
+                  }}
+                  readOnly={isPaid}
                 />
               </div>
             </div>
@@ -478,7 +690,11 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                 type="text"
                 placeholder="Address"
                 value={shippingAddress.address}
-                onChange={(e) => setShippingAddress({ ...shippingAddress, address: e.target.value })}
+                onChange={(e) => {
+                  setShippingAddress({ ...shippingAddress, address: e.target.value });
+                  setIsFormDirty(true);
+                }}
+                readOnly={isPaid}
               />
             </div>
           </div>
@@ -503,20 +719,32 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
             <tbody className="divide-y divide-gray-200">
               <tr>
                 <td className="px-4 py-2 border">
-                  {paymentStatus === "Paid" ? (
+                  {isPaid ? (
                     <div className="text-sm text-gray-700">
                       {items.serviceType || "No Service Selected"}
                     </div>
                   ) : (
                     <Select
                       value={items.serviceType}
-                      onValueChange={(value) => handleItemChange("serviceType", value)}
+                      onValueChange={(value) => {
+                        setSelectedServiceName(value);
+                        handleItemChange("serviceType", value);
+                        handleItemChange("vehicleType", "");
+
+                        // Fetch tax percentages for the service
+                        const service = services.find(s => s.name === value);
+                        if (service && service.tax) {
+                          setServiceTaxPercentage(service.tax.GST);
+                        } else {
+                          setServiceTaxPercentage(0);
+                        }
+                      }}
                     >
                       <SelectTrigger className="border-none shadow-none">
                         <SelectValue placeholder="Select Service" />
                       </SelectTrigger>
                       <SelectContent>
-                        {services.map((service: any) => (
+                        {services.filter(service => service.isActive).map((service: any) => (
                           <SelectItem key={service.name} value={service.name}>
                             {service.name}
                           </SelectItem>
@@ -524,102 +752,243 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                       </SelectContent>
                     </Select>
                   )}
-
                 </td>
+                
                 <td className="px-2 py-2 border">
-                  <Input
-                    type="text"
-                    readOnly={paymentStatus === "Paid"}
-                    className="border-none shadow-none"
-                    placeholder="Vehicle Category"
-                    value={items.vehicleType || ""}
-                    onChange={(e) => handleItemChange("vehicleType", e.target.value)}
-                  />
+                  {isPaid ? (
+                    <div className="text-sm text-gray-700">
+                      {items.vehicleType || "No Vehicle Type Selected"}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {selectedServiceName === "Hourly Packages" ? (
+                        <>
+                          <div>
+                            <Label className="text-xs text-gray-600">Package Selection</Label>
+                            <Select
+                              value={selectedPackageId}
+                              onValueChange={(value) => {
+                                const selectedPackage = allPkgTariffs.find(pkg => pkg.packageId === value);
+                                setSelectedPackageId(value);
+                                setPackageDetails({
+                                  noOfHours: selectedPackage?.noOfHours || "",
+                                  distanceLimit: selectedPackage?.distanceLimit || 0,
+                                  price: selectedPackage?.price || 0,
+                                  extraPrice: selectedPackage?.extraPrice || 0
+                                });
+                                handleItemChange("vehicleType", "");
+                                handleItemChange("amount", selectedPackage?.price || 0);
+                                handleItemChange("time", selectedPackage?.noOfHours ? `${selectedPackage.noOfHours} Hours` : "");
+                                handleItemChange("km", selectedPackage?.distanceLimit || 0);
+                              }}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue placeholder="Select Package" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {allPkgTariffs
+                                  .filter((pkg, index, self) =>
+                                    index === self.findIndex(p =>
+                                      p.noOfHours === pkg.noOfHours &&
+                                      p.distanceLimit === pkg.distanceLimit &&
+                                      p.status === true &&
+                                      p.createdBy === 'Admin'
+                                    )
+                                  )
+                                  .map(pkg => (
+                                    <SelectItem key={pkg.packageId} value={pkg.packageId}>
+                                      {pkg.noOfHours} {Number(pkg.noOfHours) > 1 ? "Hours" : "Hour"} {pkg.distanceLimit} Km - ₹{pkg.price}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-gray-600">Vehicle Type</Label>
+                            <Select
+                              value={items.vehicleType}
+                              onValueChange={(value) => handleItemChange("vehicleType", value)}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue placeholder="Select Vehicle Type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getAvailableVehicleTypes().map((vehicleType: string) => (
+                                  <SelectItem key={vehicleType} value={vehicleType}>
+                                    {vehicleType}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </>
+                      ) : (
+                        <Select
+                          value={items.vehicleType}
+                          onValueChange={(value) => handleItemChange("vehicleType", value)}
+                        >
+                          <SelectTrigger className="border-none shadow-none">
+                            <SelectValue placeholder="Select Vehicle Type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getAvailableVehicleTypes().map((vehicleType: string) => (
+                              <SelectItem key={vehicleType} value={vehicleType}>
+                                {vehicleType}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                  )}
                 </td>
-                {
-                  selectedServiceName !== "Package" &&
+
+                {selectedServiceName !== "Package" && selectedServiceName !== "Hourly Packages" && (
+                  <td className="px-4 py-2 border">
+                    {isPaid ? (
+                      <div className="text-sm text-gray-700">
+                        {items.details || "No Details"}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <LocationAutocomplete
+                          onSelect={handlePickupChange}
+                          onChange={(e) => handlePickupChange(e.target.value)}
+                          getValue={pickupDrop.pickup}
+                          placeholder="Pickup Location"
+                        />
+                        <LocationAutocomplete
+                          onSelect={handleDropChange}
+                          onChange={(e) => handleDropChange(e.target.value)}
+                          getValue={pickupDrop.drop}
+                          placeholder="Drop Location"
+                        />
+                      </div>
+                    )}
+                  </td>
+                )}
+
+                {selectedServiceName === "Hourly Packages" && (
+                  <td className="px-4 py-2 border">
+                    {isPaid ? (
+                      <div className="text-sm text-gray-700">
+                        {items.details || "No Details"}
+                      </div>
+                    ) : (
+                      <div>
+                        <LocationAutocomplete
+                          onSelect={handlePickupChange}
+                          onChange={(e) => handlePickupChange(e.target.value)}
+                          getValue={pickupDrop.pickup}
+                          placeholder="Pickup Location"
+                        />
+                      </div>
+                    )}
+                  </td>
+                )}
+
+                {selectedServiceName === "Package" && (
                   <td className="px-4 py-2 border">
                     <Input
                       className="border-none shadow-none"
                       placeholder="Pickup - Drop"
-                      readOnly={paymentStatus === "Paid"}
-                      defaultValue={items.details || ""}
-                      onBlur={(e) => {
-                        const value = e.target.value;
+                      readOnly={isPaid}
+                      value={items.details}
+                      onChange={(e) => handleItemChange("details", e.target.value)}
+                    />
+                  </td>
+                )}
 
-                        handleItemChange("details", e.target.value);
+                <td className="px-2 py-2 border">
+                  {isPaid ? (
+                    <div className="text-sm text-gray-700">
+                      {selectedServiceName === "Hourly Packages" ? packageDetails.distanceLimit : items.km || 0} km
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
+                        type="text"
+                        placeholder="Km"
+                        readOnly={selectedServiceName === "Hourly Packages" || isCalculatingDistance}
+                        value={selectedServiceName === "Hourly Packages" ? packageDetails.distanceLimit : items.km || 0}
+                        onChange={(e) => {
+                          if (selectedServiceName !== "Hourly Packages") {
+                            const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                            handleItemChange("km", numericValue ? Number(numericValue) : 0);
+                          }
+                        }}
+                      />
+                      {isCalculatingDistance && (
+                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      )}
+                    </div>
+                  )}
+                </td>
 
-                        // Parse and set pickup/drop if "-" is present
-                        if (value.includes("-")) {
-                          const [newPickup, newDrop] = value.split("-").map((s) => s.trim());
-                          setPickupDrop({ pickup: newPickup, drop: newDrop });
+                <td className="px-2 py-2 border">
+                  {isPaid ? (
+                    <div className="text-sm text-gray-700">
+                      ₹{selectedServiceName === "Hourly Packages" ? packageDetails.price : items.price || 0}
+                    </div>
+                  ) : (
+                    <Input
+                      className={`appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none ${selectedServiceName === "Hourly Packages" ? "cursor-not-allowed bg-gray-50" : ""}`}
+                      type="text"
+                      placeholder={selectedServiceName === "Hourly Packages" ? "Package Price" : "Price per km"}
+                      readOnly={selectedServiceName === "Hourly Packages"}
+                      value={selectedServiceName === "Hourly Packages" ? packageDetails.price : items.price || 0}
+                      onChange={(e) => {
+                        if (selectedServiceName !== "Hourly Packages") {
+                          const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                          handleItemChange("price", numericValue ? Number(numericValue) : 0);
                         }
                       }}
                     />
+                  )}
+                </td>
 
-
-                  </td>
-                }
-                {
-                  selectedServiceName === "Package" &&
-                  <td className="px-4 py-2 border">
+                <td className="px-4 py-2 border">
+                  {isPaid ? (
+                    <div className="text-sm text-gray-700">
+                      {selectedServiceName === "Hourly Packages" ?
+                        (packageDetails.noOfHours ? `${packageDetails.noOfHours} Hours` : "No duration") :
+                        (items.time || "No duration")
+                      }
+                    </div>
+                  ) : (
                     <Input
+                      type="text"
                       className="border-none shadow-none"
-                      placeholder="Pickup - Drop"
-                      readOnly={paymentStatus === "Paid"}
-                      value={items.details.split("-")[0] || ""}
-                      onChange={(e) => handleItemChange("details", e.target.value)}
-                      onBlur={(e) => {
-                        const newPickup = e.target.value;
-                        setPickupDrop({ pickup: newPickup, drop: "" });
+                      readOnly={selectedServiceName === "Hourly Packages" || isCalculatingDistance}
+                      placeholder={selectedServiceName === "Package" ? "Day / Hour" : selectedServiceName === "Hourly Packages" ? "Package Duration" : "Duration"}
+                      value={selectedServiceName === "Hourly Packages" ?
+                        (packageDetails.noOfHours ? `${packageDetails.noOfHours} Hours` : "") :
+                        (items.time || "")
+                      }
+                      onChange={(e) => {
+                        if (selectedServiceName !== "Hourly Packages") {
+                          handleItemChange("time", e.target.value);
+                        }
                       }}
                     />
-                  </td>
-                }
-                <td className="px-2 py-2 border">
-                  <Input
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
-                    type="text"
-                    placeholder="Km"
-                    readOnly={paymentStatus === "Paid"}
-                    defaultValue={items.km || 0}
-                    onBlur={(e) => {
-                      const numericValue = e.target.value.replace(/[^0-9]/g, '')
-                      handleItemChange("km", Number(numericValue))
-                    }}
-                  />
+                  )}
                 </td>
+
                 <td className="px-2 py-2 border">
-                  <Input
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
-                    type="text"
-                    placeholder="Price"
-                    readOnly={paymentStatus === "Paid"}
-                    defaultValue={items.price || 0}
-                    onBlur={(e) => {
-                      const numericValue = e.target.value.replace(/[^0-9]/g, '')
-                      handleItemChange("price", Number(numericValue))
-                    }}
-                  />
-                </td>
-                <td className="px-4 py-2 border">
-                  <Input
-                    type="text"
-                    className="border-none shadow-none"
-                    readOnly={paymentStatus === "Paid"}
-                    placeholder={selectedServiceName === "Package" ? "Day / Hour" : "Time"}
-                    value={items.time || ""}
-                    onChange={(e) => handleItemChange("time", e.target.value)}
-                  />
-                </td>
-                <td className="px-2 py-2 border">
-                  <Input
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none"
-                    type="text"
-                    readOnly
-                    placeholder="Amount"
-                    value={items.amount || 0}
-                  />
+                  {isPaid ? (
+                    <div className="text-sm text-gray-700 font-semibold">
+                      ₹{selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount || 0}
+                    </div>
+                  ) : (
+                    <Input
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none cursor-not-allowed bg-gray-50"
+                      type="text"
+                      readOnly
+                      placeholder="Amount"
+                      value={`₹${selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount || 0}`}
+                    />
+                  )}
                 </td>
               </tr>
             </tbody>
@@ -632,31 +1001,39 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
 
             {/* Fixed Tax Charges with Checkboxes */}
             <div className="flex flex-col gap-2 items-end">
-              {taxCharges.filter(charge => charge.isFixed).map((charge, index) => (
-                <div key={index} className="flex flex-row gap-2 items-center">
-                  <Checkbox
-                    checked={
-                      charge.label === "CGST & SGST" ? isCGSTSGSTSelected : isIGSTSelected
-                    }
-                    onCheckedChange={() =>
-                      handleTaxSelection(charge.label as "CGST & SGST" | "IGST")
-                    }
-                  />
+              {taxCharges.filter(charge => charge.isFixed).map((charge, index) => {
+                const isSelected = charge.label === "CGST & SGST" ? isCGSTSGSTSelected : isIGSTSelected;
+                let taxValue = 0;
 
-                  <Input
-                    type="text"
-                    value={charge.label || ""}
-                    readOnly
-                    className="w-32 bg-white border border-gray-300 text-gray-600"
-                  />
-                  <Input
-                    type="number"
-                    className="w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    value={charge.value || ""}
-                    readOnly
-                  />
-                </div>
-              ))}
+                if (isSelected) {
+                  const baseAmount = selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount;
+                  taxValue = Math.ceil(baseAmount * Number(serviceTaxPercentage) / 100);
+                }
+
+                return (
+                  <div key={index} className="flex flex-row gap-2 items-center">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() =>
+                        handleTaxSelection(charge.label as "CGST & SGST" | "IGST")
+                      }
+                      disabled={isPaid}
+                    />
+                    <Input
+                      type="text"
+                      value={`${charge.label}`}
+                      readOnly
+                      className="w-40 bg-white border border-gray-300 text-gray-600"
+                    />
+                    <Input
+                      type="number"
+                      className="w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      value={taxValue || ""}
+                      readOnly
+                    />
+                  </div>
+                );
+              })}
             </div>
 
             {/* Other Charges */}
@@ -665,7 +1042,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                 <div key={index} className="flex flex-row gap-2 items-center">
                   <Input
                     type="text"
-                    value={charge.label || ""}
+                    value={charge.label}
                     readOnly
                     className="w-32 bg-white border border-gray-300 text-gray-600"
                   />
@@ -681,61 +1058,95 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
 
             {/* Dynamic Custom Charges */}
             <div className="flex flex-col gap-2 items-end">
-              {customCharges.map((charge, index) => {
-                return (
-                  <div key={index} className="flex flex-row gap-2 items-end">
-                    <Button
-                      variant="destructive"
-                      className="w-10"
-                      onClick={() => removeCustomCharge(index)}
-                    >✖</Button>
-                    <Input
-                      type="text"
-                      placeholder="Charge Label"
-                      value={charge.label || ""}
-                      onChange={(e) => {
-                        const filteredValue = e.target.value.replace(/[^A-Za-z\s]/g, "");
-                        handleChargeChange(index, "label", filteredValue);
-                      }}
-                      className="w-32 bg-white border border-gray-300 text-gray-600"
-                    />
-                    <Input
-                      type="number"
-                      className="w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      value={charge.value || ""}
-                      onChange={(e) => handleChargeChange(index, "value", e.target.value)}
-                    />
-                  </div>
-                );
-              })}
+              {customCharges.map((charge, index) => (
+                <div key={index} className="flex flex-row gap-2 items-end">
+                  <Button
+                    variant="destructive"
+                    className="w-10"
+                    onClick={() => removeCustomCharge(index)}
+                    disabled={isPaid}
+                  >✖</Button>
+                  <Input
+                    type="text"
+                    placeholder="Charge Label"
+                    value={charge.label}
+                    onChange={(e) => {
+                      const filteredValue = e.target.value.replace(/[^A-Za-z\s]/g, "");
+                      handleChargeChange(index, "label", filteredValue);
+                    }}
+                    className="w-32 bg-white border border-gray-300 text-gray-600"
+                    readOnly={isPaid}
+                  />
+                  <Input
+                    type="number"
+                    className="w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    value={charge.value || ""}
+                    onChange={(e) => handleChargeChange(index, "value", e.target.value)}
+                    readOnly={isPaid}
+                  />
+                </div>
+              ))}
             </div>
+
+            {!isPaid && (
+              <div className="flex flex-col gap-2 items-end">
+                <div className="flex flex-row gap-2 items-end">
+                  <Button
+                    variant="destructive"
+                    className="bg-[#009F7F] hover:bg-[#009F7F] w-10"
+                    onClick={addCustomCharge}
+                  >
+                    <PlusIcon />
+                  </Button>
+                  <Input hidden className="w-32 invisible" />
+                  <Input
+                    hidden
+                    className="invisible w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-col gap-2 items-end">
-              <div className="flex flex-row gap-2 items-end">
-                <Button
-                  variant="destructive"
-                  className="bg-[#009F7F] hover:bg-[#009F7F] w-10"
-                  onClick={addCustomCharge}
-                >
-                  <PlusIcon />
-                </Button>
-                <Input hidden className="w-32 invisible" />
+              <div className="flex flex-row gap-2 items-center">
+                <Label className="ml-12">Base Amount</Label>
                 <Input
-                  hidden
-                  className="invisible w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  type="text"
+                  placeholder="Base Amount"
+                  className="w-32"
+                  value={`₹${selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount || 0}`}
+                  readOnly
                 />
               </div>
-            </div>
-
-            <div className="flex flex-row gap-2 items-center">
-              <Label className="ml-12">Total Amount</Label>
-              <Input
-                type="text"
-                placeholder="Total Amount"
-                className="w-32"
-                value={totalAmount}
-                readOnly
-              />
+              <div className="flex flex-row gap-2 items-center">
+                <Label className="ml-12">Tax Amount</Label>
+                <Input
+                  type="text"
+                  placeholder="Tax Amount"
+                  className="w-32"
+                  value={`₹${(() => {
+                    let taxAmount = 0;
+                    const baseAmount = selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount;
+                    if (isCGSTSGSTSelected) {
+                      taxAmount = Math.ceil(baseAmount * Number(serviceTaxPercentage) / 100);
+                    } else if (isIGSTSelected) {
+                      taxAmount = Math.ceil(baseAmount * Number(serviceTaxPercentage) / 100);
+                    }
+                    return taxAmount;
+                  })()}`}
+                  readOnly
+                />
+              </div>
+              <div className="flex flex-row gap-2 items-center">
+                <Label className="ml-12 font-bold">Total Amount</Label>
+                <Input
+                  type="text"
+                  placeholder="Total Amount"
+                  className="w-32 font-bold"
+                  value={`₹${totalAmount}`}
+                  readOnly
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -749,7 +1160,11 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                 rows={6}
                 className="resize-none"
                 value={paymentDetails}
-                onChange={(e) => setPaymentDetails(e.target.value)}
+                onChange={(e) => {
+                  setPaymentDetails(e.target.value);
+                  setIsFormDirty(true);
+                }}
+                readOnly={isPaid}
               />
             </div>
           </div>
@@ -762,14 +1177,24 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
               rows={4}
               className="resize-none"
               value={note}
-              onChange={(e) => setNote(e.target.value)}
+              onChange={(e) => {
+                setNote(e.target.value);
+                setIsFormDirty(true);
+              }}
+              readOnly={isPaid}
             />
           </div>
         </div>
-
-        <div className="flex gap-4 mt-4">
-          <Button onClick={() => handleCreateInvoice()}>Save</Button>
-        </div>
+        {!isPaid && (
+          <div className="flex gap-4 mt-4">
+            <Button 
+              onClick={handleCreateInvoice} 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        )}
       </CardContent>
 
       <AlertDialog open={showUnsavedChangesDialog} onOpenChange={setShowUnsavedChangesDialog}>
