@@ -30,15 +30,17 @@ export const columns: MRT_ColumnDef<Booking>[] = [
   {
     header: "S.No",
     Cell: ({ row }) => row.index + 1, // Assigns Serial Number dynamically
-    muiTableHeadCellProps: { align: 'left',sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
-      },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    } },
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      }
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 10,
   },
@@ -50,15 +52,17 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         Booking<br />ID
       </div>
     ),
-    muiTableHeadCellProps: { align: 'left',sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
-      },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    } },
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      }
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 30,
     Cell: ({ row }) => {
@@ -77,7 +81,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
               {booking.bookingId}
             </span>
           }
-          booking={booking}
+          bookingId={booking?.bookingId || ""}
         />
       );
     },
@@ -90,15 +94,17 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         Customer<br />Name
       </div>
     ),
-    muiTableHeadCellProps: { align: 'left',sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
-      },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    } },
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      }
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 30,
   },
@@ -110,104 +116,112 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         Mobile<br />Number
       </div>
     ),
-    muiTableHeadCellProps: { align: 'left',sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
-      },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    } },
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      }
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 30,
   },
   {
     accessorKey: "pickup",
     header: "From",
-    muiTableHeadCellProps: { align: 'left',sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
-      },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    } },
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      }
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 40,
-      Cell: ({ row }) => {
+    Cell: ({ row }) => {
       const pickup = row.getValue("pickup") as string;
       if (!pickup) return <div>-</div>;
-        if (pickup.length > 15) {
-             const firstWord = pickup.split(" ")[0];
+      if (pickup.length > 15) {
+        const firstWord = pickup.split(" ")[0];
         if (firstWord.length > 15) {
-          return  (
-        <TooltipComponent name={pickup}>
-          <div>{firstWord}...</div>
-        </TooltipComponent>
-      )
-        }
-         return (
+          return (
             <TooltipComponent name={pickup}>
-          <div>{pickup.slice(0, 15)}...</div>
-        </TooltipComponent>
-         )
+              <div>{firstWord}...</div>
+            </TooltipComponent>
+          )
         }
-          return <div>{pickup}</div>;
+        return (
+          <TooltipComponent name={pickup}>
+            <div>{pickup.slice(0, 15)}...</div>
+          </TooltipComponent>
+        )
+      }
+      return <div>{pickup}</div>;
     },
   },
   {
     accessorKey: "drop",
     header: "To",
-    muiTableHeadCellProps: { align: 'left',sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
-      },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    } },
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      }
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 40,
-     Cell: ({ row }) => {
+    Cell: ({ row }) => {
       const drop = row.getValue("drop") as string;
       if (!drop) return <div>-</div>;
-        if (drop.length > 15) {
-             const firstWord = drop.split(" ")[0];
+      if (drop.length > 15) {
+        const firstWord = drop.split(" ")[0];
         if (firstWord.length > 15) {
-          return  (
-        <TooltipComponent name={drop}>
-          <div>{firstWord}...</div>
-        </TooltipComponent>
-      )
-        }
-         return (
+          return (
             <TooltipComponent name={drop}>
-          <div>{drop.slice(0, 15)}...</div>
-        </TooltipComponent>
-         )
+              <div>{firstWord}...</div>
+            </TooltipComponent>
+          )
         }
-          return <div>{drop}</div>;
+        return (
+          <TooltipComponent name={drop}>
+            <div>{drop.slice(0, 15)}...</div>
+          </TooltipComponent>
+        )
+      }
+      return <div>{drop}</div>;
     },
   },
   {
-    accessorKey:"status",
-    header:"Status",
+    accessorKey: "status",
+    header: "Status",
     Cell: ({ row }) => {
       const status = row.getValue("status") as string
       return <div>{status}</div>
     },
-    muiTableHeadCellProps: { align: 'left',sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
-      },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    } },
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      }
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 20,
   },
@@ -228,15 +242,17 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
-    muiTableHeadCellProps: { align: 'left',sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
-      },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    } },
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      }
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 20,
   },
@@ -257,15 +273,17 @@ export const columns: MRT_ColumnDef<Booking>[] = [
 
       return <div>{formatted}</div>
     },
-    muiTableHeadCellProps: { align: 'left',sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
-      },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    } },
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      }
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 30,
   },
@@ -287,15 +305,17 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       const convertedDate = date.toLocaleDateString();
       return <div>{convertedDate}</div>
     },
-    muiTableHeadCellProps: { align: 'left',sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
-      },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    } },
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      }
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 20,
   },
@@ -321,15 +341,17 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         </div>
       )
     },
-    muiTableHeadCellProps: { align: 'left',sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
-      },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    } },
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      }
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 20,
   },
@@ -375,15 +397,17 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         </div>
       )
     },
-    muiTableHeadCellProps: { align: 'left',sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
-      },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    } },
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
+      }
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 20,
   },

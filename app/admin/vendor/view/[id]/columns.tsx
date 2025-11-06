@@ -60,7 +60,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
               {booking.bookingId}
             </span>
           }
-          booking={booking}
+          bookingId={booking?.bookingId || ""}
         />
       );
     },
