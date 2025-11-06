@@ -6,7 +6,7 @@ import { Label } from 'components/ui/label';
 import { Button } from 'components/ui/button';
 import { Input } from 'components/ui/input';
 import { Dialog, DialogContent, DialogTrigger } from 'components/ui/dialog';
-import { Eye, Edit, X, Loader2, Info, Plus, TriangleAlert, Edit2 } from 'lucide-react';
+import { Eye, Edit, X, Loader2, Info, Plus, TriangleAlert, Edit2, Wallet } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useFetchBookingById, useUpdateBooking } from 'hooks/react-query/useBooking';
 import { toast } from 'sonner';
@@ -20,7 +20,14 @@ const formatDistance = (value: number | null | undefined) => `${value || 0} km`;
 const formatDateTime = (dateString: string | null | undefined) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
-  return date.toLocaleString('en-GB');
+  return date.toLocaleString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour12: true,
+    hour: 'numeric',
+    minute: 'numeric',
+  });
 };
 
 const ImagePreview = ({ src, alt }: { src?: string | null; alt: string }) => {
@@ -68,6 +75,8 @@ export default function BookingDetailsPage() {
   const { data: booking, isLoading } = useFetchBookingById(bookingId || "");
   const { mutateAsync: updateBooking } = useUpdateBooking();
 
+  console.log('Booking >> ', booking);
+
   useEffect(() => {
     if (!booking) return;
 
@@ -100,23 +109,74 @@ export default function BookingDetailsPage() {
     { key: 'createdAt', label: 'Created Date & Time', format: formatDateTime },
     { key: 'status', label: 'Trip Status' },
     { key: 'taxPercentage', label: 'Tax Percentage', suffix: '%' },
+    { key: 'tripStartedTime', label: 'Trip Start Date & Time', format: formatDateTime },
+    { key: 'tripCompletedTime', label: 'Trip Completed Date & Time', format: formatDateTime },
   ];
 
-  const beforeTripFields = [
-    { key: 'distance', label: 'Total Km', format: formatDistance },
-    { key: 'pricePerKm', label: 'Per Km', format: formatCurrency },
-    { key: 'driverBeta', label: 'Driver Beta', format: formatCurrency },
-    { key: 'duration', label: 'Total Duration' },
-    { key: 'estimatedAmount', label: 'Km Base Fare', format: formatCurrency },
-    { key: 'taxAmount', label: 'Tax Amount', format: formatCurrency },
-    { key: 'discountAmount', label: 'Discount Amount', format: formatCurrency },
-    { key: 'advanceAmount', label: 'Advance Amount', format: formatCurrency },
-    { key: 'statePermit', label: 'State Permit', format: formatCurrency, optional: true },
-    { key: 'tollCharges', label: 'Toll Charges', format: formatCurrency, optional: true },
-    { key: 'hillCharges', label: 'Hill Charges', format: formatCurrency, optional: true },
-    { key: 'finalAmount', label: 'Total Amount', format: formatCurrency },
-    { key: 'remainingAmount', label: 'Remaining Amount', format: formatCurrency },
+  const estimationFareFields = [
+    { key: "distance", label: "Distance", suffix: "Km" },
+    { key: "minKm", label: "Minimum Km" },
+    { key: "duration", label: "Duration" },
+    { key: "days", label: "No of Days" },
+    { key: "pricePerKm", label: "Price Per Km", format: formatCurrency },
+    { key: "driverBeta", label: "Driver Beta", format: formatCurrency },
+    { key: "hill", label: "Hill", format: formatCurrency },
+    { key: "permitCharge", label: "Permit Charge", format: formatCurrency },
+    { key: "toll", label: "Toll", format: formatCurrency },
+    { key: "finalAmount", label: "Final Amount", format: formatCurrency, isTotal: true },
   ];
+
+  const modifiedFareFields = [
+    { key: "distance", label: "Distance", suffix: "Km" },
+    { key: "minKm", label: "Minimum Km" },
+    { key: "duration", label: "Duration" },
+    { key: "days", label: "No of Days" },
+    { key: "pricePerKm", label: "Price Per Km", format: formatCurrency },
+    { key: "driverBeta", label: "Driver Beta", format: formatCurrency },
+    { key: "hill", label: "Hill", format: formatCurrency },
+    { key: "permitCharge", label: "Permit Charge", format: formatCurrency },
+    { key: "extraToll", label: "Toll", format: formatCurrency },
+    { key: "finalAmount", label: "Final Amount", format: formatCurrency, isTotal: true },
+  ];
+
+
+
+  const renderFareBlock = (title: string, data: any, fields: any[], className = "") => {
+    if (!data) return null;
+
+    return (
+      <div className={`rounded-lg p-4 ${className}`}>
+        <div className="flex items-center gap-2 mb-3">
+          <Wallet className="w-4 h-4 text-gray-700" />
+          <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+        </div>
+
+        <div className="space-y-1.5 text-xs text-gray-700">
+          {fields.map((field) => {
+            const value = data[field.key];
+            if (!value && !field.isTotal) return null;
+
+            const isTotal = field.isTotal;
+
+            return (
+              <div
+                key={field.key}
+                className={`flex justify-between ${isTotal ? "border-t border-gray-300 pt-2 mt-2 text-xl font-semibold text-gray-900" : "text-lg"
+                  }`}
+              >
+                <span className={`${isTotal ? "font-semibold" : "text-gray-600"}`}>{field.label}</span>
+                <span className={`${isTotal ? "font-bold" : "font-medium"}`}>
+                  {field.format ? field.format(value) : value}
+                  {field.suffix ? field.suffix : ""}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
 
   const afterTripFields = [
     { key: 'tripCompletedDistance', label: 'Total Km', format: formatDistance },
@@ -522,7 +582,7 @@ export default function BookingDetailsPage() {
 
   if (!booking) return <div className="text-center py-8">Booking not found</div>;
 
-  const isBeforeDisabled = booking?.status === 'Started' || booking?.status === 'Completed' || booking?.status === 'Manual Completed';
+  const isBeforeDisabled = booking?.status !== 'Booking Confirmed' || booking?.status !== "Reassign";
   const isAfterDisabled = booking?.endOdometerValue === 0 || booking?.endOdometerValue === null || booking?.status === 'Completed' || booking?.status === 'Manual Completed';
 
   return (
@@ -597,39 +657,12 @@ export default function BookingDetailsPage() {
             <Card className="bg-white rounded-lg border border-gray-200">
               <div className="flex justify-between items-center p-4 border-b">
                 <h2 className="text-lg font-semibold text-gray-800">Before Trip Details</h2>
-                <div className="flex items-center gap-2">
-                  {editMode === 'before' && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCancel}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit('before')}
-                    disabled={isBeforeDisabled}
-                    className={isBeforeDisabled ? 'text-gray-400' : 'text-blue-600 hover:text-blue-700'}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                </div>
               </div>
               <CardContent className="p-4 space-y-4">
-                {beforeTripFields.map((field) => renderField(field, 'before'))}
+                {renderFareBlock("Estimation Fare", booking?.normalFare, estimationFareFields, "bg-neutral-100")}
 
-                {editMode === 'before' && (
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button variant="outline" onClick={handleCancel}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleSave}>Save Changes</Button>
-                  </div>
-                )}
+                {booking?.modifiedFare &&
+                  renderFareBlock("Admin Fare", booking?.modifiedFare, modifiedFareFields, "bg-indigo-100")}
               </CardContent>
             </Card>
 
@@ -671,6 +704,40 @@ export default function BookingDetailsPage() {
                 </div>
               </div>
               <CardContent className="p-4 space-y-4">
+                {/* OTP and Odometer Sections */}
+                < div className="grid grid-cols-2 gap-4" >
+                  <div className="space-y-1">
+                    <Label className="text-sm text-gray-600">Start OTP</Label>
+                    <div className="font-medium">{booking?.startOtp ?? '-'}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm text-gray-600">End OTP</Label>
+                    <div className="font-medium">{booking?.endOtp ?? '-'}</div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-sm text-gray-600">Start Odometer Value</Label>
+                    <div className="font-medium">{booking?.startOdometerValue ?? '-'}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm text-gray-600">End Odometer Value</Label>
+                    <div className="font-medium">{booking?.endOdometerValue ?? '-'}</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-sm text-gray-600">Start Odometer</Label>
+                    <ImagePreview src={booking?.startOdometerImage ?? null} alt="Start Odometer" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm text-gray-600">End Odometer</Label>
+                    <ImagePreview src={booking?.endOdometerImage ?? null} alt="End Odometer" />
+                  </div>
+                </div>
+
                 {afterTripFields.map((field) => renderField(field, 'after'))}
 
                 {/* Driver Charges Section */}
@@ -777,41 +844,6 @@ export default function BookingDetailsPage() {
                     )}
                   </>
                 )}
-
-
-                {/* OTP and Odometer Sections */}
-                < div className="grid grid-cols-2 gap-4" >
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">Start OTP</Label>
-                    <div className="font-medium">{booking?.startOtp ?? '-'}</div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">End OTP</Label>
-                    <div className="font-medium">{booking?.endOtp ?? '-'}</div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">Start Odometer Value</Label>
-                    <div className="font-medium">{booking?.startOdometerValue ?? '-'}</div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">End Odometer Value</Label>
-                    <div className="font-medium">{booking?.endOdometerValue ?? '-'}</div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">Start Odometer</Label>
-                    <ImagePreview src={booking?.startOdometerImage ?? null} alt="Start Odometer" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">End Odometer</Label>
-                    <ImagePreview src={booking?.endOdometerImage ?? null} alt="End Odometer" />
-                  </div>
-                </div>
 
                 {editMode === 'after' && (
                   <div className="flex justify-end space-x-2 pt-4">

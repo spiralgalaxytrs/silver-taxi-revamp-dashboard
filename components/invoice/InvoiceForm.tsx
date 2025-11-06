@@ -1,6 +1,4 @@
-"use client"
-
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Input } from "components/ui/input";
 import { Card, CardContent } from "components/ui/card";
 import { Button } from "components/ui/button";
@@ -54,15 +52,15 @@ interface Charge {
 
 interface InvoiceFormProps {
   invId?: string;
-  createdBy: "Admin" | "Vendor";
+  createdBy: string;
 }
 
 export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
   const router = useRouter();
   const { bookingId } = useParams<{ bookingId: string }>();
-  const { mutate: updateInvoice, isPending: isUpdating } = useUpdateInvoice();
-  const { mutate: createInvoice, isPending: isCreating } = useCreateInvoice();
-  const { data: invoice = null, isLoading: isLoadingInvoice } = useInvoiceById(invId || "");
+  const { mutate: updateInvoice } = useUpdateInvoice();
+  const { mutate: createInvoice } = useCreateInvoice();
+  const { data: invoice = null } = useInvoiceById(invId || "");
   const { data: offers = [] } = useOffers();
   const { data: services = [] } = useServices();
   const { data: vehicles = [] } = useVehiclesAdmin();
@@ -78,11 +76,9 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
   const nanoid = customAlphabet("0123456789", 4);
   const uniqueId = nanoid();
   const newInvoiceId = `INV-${year}${month}${day}${uniqueId}`;
+  const invoiceId = invoice?.invoiceNo || newInvoiceId;
 
-  const [invoiceId, setInvoiceId] = useState(newInvoiceId);
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const [shippingAddress, setShippingAddress] = useState({
     name: "",
@@ -129,18 +125,10 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
   const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
   const [serviceTaxPercentage, setServiceTaxPercentage] = useState(0);
 
-  // Set invoice ID when invoice data loads - FIXED: Only set once
-  useEffect(() => {
-    if (invoice?.invoiceNo && !isDataLoaded) {
-      setInvoiceId(invoice.invoiceNo);
-    }
-  }, [invoice?.invoiceNo, isDataLoaded]);
 
-  // Update from invoice when it loads - FIXED: Prevent infinite loops
+  // Update from invoice when it loads
   useEffect(() => {
-    if (invoice && !isDataLoaded && !isLoadingInvoice) {
-      console.log("Loading invoice data:", invoice);
-      
+    if (invoice) {
       setShippingAddress({
         name: invoice?.name || "",
         phone: invoice?.phone || "",
@@ -160,7 +148,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
         price: invoice?.pricePerKm || 0,
         time: invoice?.travelTime || "",
         amount: calculatedAmount,
-      });
+      })
 
       // Set selected service name for package filtering
       setSelectedServiceName(invoice?.serviceType || "");
@@ -168,6 +156,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
       // Load tax percentages from service data
       if (invoice?.serviceType) {
         const service = services.find(s => s.name === invoice.serviceType);
+        console.log("service >>>", service);
         if (service && service.tax) {
           setServiceTaxPercentage(service.tax.GST);
         }
@@ -180,35 +169,22 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
       });
 
       // For hourly packages, try to find and set package details
-      if (invoice?.serviceType === "Hourly Packages") {
-        // Extract hours from travelTime
-        const hoursMatch = invoice.travelTime?.match(/(\d+)\s*Hours?/);
-        const noOfHours = hoursMatch ? hoursMatch[1] : "";
-        
+      if (invoice?.serviceType === "Hourly Packages" && invoice?.otherCharges) {
+        // Try to extract package information from otherCharges or set default
         setPackageDetails({
-          noOfHours: noOfHours,
-          distanceLimit: invoice.totalKm || 0,
-          price: invoice.estimatedAmount || 0,
+          noOfHours: invoice?.travelTime?.replace(" Hours", "") || "",
+          distanceLimit: invoice?.totalKm || 0,
+          price: invoice?.totalAmount || 0,
           extraPrice: 0
         });
-
-        // Try to find the matching package
-        const matchingPackage = allPkgTariffs.find(pkg => 
-          pkg.noOfHours === noOfHours && 
-          pkg.distanceLimit === invoice.totalKm &&
-          pkg.price === invoice.estimatedAmount
-        );
-        
-        if (matchingPackage) {
-          setSelectedPackageId(matchingPackage.packageId);
-        }
       }
+
+      // console.log("invoice >>>", invoice);
 
       setPaymentDetails(invoice?.paymentDetails || "");
       setNote(invoice?.note || "");
       setPaymentStatus(invoice?.status || "Unpaid");
-      setBookingStatus(invoice?.status || "Unpaid");
-      setInvoiceDate(invoice?.invoiceDate?.split("T")[0] || new Date().toISOString().split("T")[0]);
+      setInvoiceDate(invoice?.invoiceDate.split("T")[0] || new Date().toISOString().split("T")[0]);
 
       if (invoice?.otherCharges) {
         // Load GST values and set tax selection
@@ -218,9 +194,21 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
         if (cgstSgstValue !== undefined) {
           setIsCGSTSGSTSelected(true);
           setIsIGSTSelected(false);
+          setTaxCharges((prev) => {
+            return prev.map((charge) => ({
+              ...charge,
+              value: charge.label === "CGST & SGST" ? cgstSgstValue : 0,
+            }));
+          });
         } else if (igstValue !== undefined) {
           setIsCGSTSGSTSelected(false);
           setIsIGSTSelected(true);
+          setTaxCharges((prev) => {
+            return prev.map((charge) => ({
+              ...charge,
+              value: charge.label === "IGST" ? igstValue : 0,
+            }));
+          });
         }
 
         // Load other charges (excluding GST)
@@ -233,11 +221,8 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
           }));
         setOtherCharges(parsedCharges);
       }
-
-      // Mark data as loaded to prevent re-running this effect
-      setIsDataLoaded(true);
     }
-  }, [invoice, services, allPkgTariffs, isLoadingInvoice, isDataLoaded]);
+  }, [invoice]);
 
   // Function to calculate distance and duration between pickup and drop
   const calculateDistance = async (pickup: string, drop: string) => {
@@ -283,6 +268,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
         );
 
         const vehicleTypes = [...new Set(packageVehicles.map(vehicle => vehicle.type).filter((type): type is string => Boolean(type)))];
+        // console.log('Hourly packages vehicle types for selected package:', vehicleTypes);
         return vehicleTypes;
       } else {
         // If no package selected, show all vehicles that have hourly packages
@@ -296,6 +282,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
         );
 
         const vehicleTypes = [...new Set(packageVehicles.map(vehicle => vehicle.type).filter((type): type is string => Boolean(type)))];
+        console.log('Hourly packages vehicle types (all packages):', vehicleTypes);
         return vehicleTypes;
       }
     }
@@ -310,11 +297,12 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
       return vehicle?.type;
     }).filter((type): type is string => Boolean(type)))];
 
+    // console.log('Regular service vehicle types:', vehicleTypes);
     return vehicleTypes;
   };
 
   // Handle pickup location change
-  const handlePickupChange = useCallback((address: string) => {
+  const handlePickupChange = (address: string) => {
     setPickupDrop(prev => ({ ...prev, pickup: address }));
 
     // For hourly packages, only use pickup location
@@ -330,10 +318,10 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
         calculateDistance(address, pickupDrop.drop);
       }
     }
-  }, [selectedServiceName, pickupDrop.drop]);
+  };
 
   // Handle drop location change
-  const handleDropChange = useCallback((address: string) => {
+  const handleDropChange = (address: string) => {
     setPickupDrop(prev => ({ ...prev, drop: address }));
     const details = `${pickupDrop.pickup} - ${address}`;
     handleItemChange("details", details);
@@ -342,9 +330,9 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
     if (pickupDrop.pickup && address && selectedServiceName !== "Hourly Packages") {
       calculateDistance(pickupDrop.pickup, address);
     }
-  }, [pickupDrop.pickup, selectedServiceName]);
+  };
 
-  const handleItemChange = useCallback((field: keyof InvoiceItem, value: any) => {
+  const handleItemChange = (field: keyof InvoiceItem, value: any) => {
     setItems((prevItem) => {
       const updatedItem = { ...prevItem, [field]: value };
 
@@ -359,50 +347,57 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
     });
 
     setIsFormDirty(true);
-  }, []);
+  };
 
-  const addCustomCharge = useCallback(() => {
-    setCustomCharges(prev => [...prev, { label: "", value: 0 }]);
+
+  const addCustomCharge = () => {
+    setCustomCharges([...customCharges, { label: "", value: 0 }]);
     setIsFormDirty(true);
-  }, []);
+  };
 
-  const removeCustomCharge = useCallback((index: number) => {
+  const removeCustomCharge = (index: number) => {
     setCustomCharges((prev) => {
       const updated = [...prev];
       updated.splice(index, 1);
+
       return updated;
     });
-    setIsFormDirty(true);
-  }, []);
 
-  const handleChargeChange = useCallback((index: number, field: keyof Charge, value: any) => {
+    setIsFormDirty(true);
+  };
+
+
+  const handleChargeChange = (index: number, field: keyof Charge, value: any) => {
     setCustomCharges((prev) => {
       const updated = [...prev];
+
       updated[index] = {
         ...updated[index],
         [field]: field === "value" ? Number(value) : value
       };
+
       return updated;
     });
-    setIsFormDirty(true);
-  }, []);
 
-  const handleTaxSelection = useCallback((label: "CGST & SGST" | "IGST") => {
+    setIsFormDirty(true);
+  };
+
+
+
+  const handleTaxSelection = (label: "CGST & SGST" | "IGST") => {
+    console.log("handleTaxSelection", label);
     if (label === "CGST & SGST") {
+      console.log("Selected CGST & SGST");
       setIsCGSTSGSTSelected(true);
       setIsIGSTSelected(false);
     } else {
+      console.log("Selected IGST");
       setIsCGSTSGSTSelected(false);
       setIsIGSTSelected(true);
     }
     setIsFormDirty(true);
-  }, []);
+  };
 
-  const handleStatusChange = useCallback((value: string) => {
-    setPaymentStatus(value);
-    setBookingStatus(value);
-    setIsFormDirty(true);
-  }, []);
 
   const totalAmount = useMemo(() => {
     const customTotal = customCharges.reduce(
@@ -414,37 +409,15 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
     const baseAmount = selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount;
 
     // Calculate tax amount based on selected tax type
-    let taxAmount = 0;
-    if (isCGSTSGSTSelected || isIGSTSelected) {
-      taxAmount = Math.ceil(baseAmount * Number(serviceTaxPercentage) / 100);
-    }
+    let taxAmount = (baseAmount * Number(serviceTaxPercentage) / 100);
+    return (invoice?.totalAmount || baseAmount || 0) + customTotal + taxAmount;
+  }, [customCharges, invoice, items.amount, packageDetails.price, selectedServiceName, isCGSTSGSTSelected, isIGSTSelected, serviceTaxPercentage]);
 
-    return baseAmount + customTotal + taxAmount;
-  }, [
-    customCharges, 
-    items.amount, 
-    packageDetails.price, 
-    selectedServiceName, 
-    isCGSTSGSTSelected, 
-    isIGSTSelected, 
-    serviceTaxPercentage
-  ]);
 
-  const handleCreateInvoice = useCallback(() => {
-    if (isSubmitting) return;
 
-    // Validate required fields
-    if (!shippingAddress.name || !shippingAddress.phone) {
-      toast.error("Please fill in customer name and phone number");
-      return;
-    }
 
-    if (!items.serviceType || !items.vehicleType) {
-      toast.error("Please select service type and vehicle type");
-      return;
-    }
+  const handleCreateInvoice = () => {
 
-    setIsSubmitting(true);
 
     const customChargeEntries = customCharges.map((c) => [c.label, c.value]);
 
@@ -453,29 +426,34 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
       ...Object.fromEntries(customChargeEntries),
     };
 
-    // Remove any GST from base charges
+    // Step 2: Remove any GST from base charges
     delete baseOtherCharges["CGST & SGST"];
     delete baseOtherCharges["IGST"];
 
-    // Add only the selected GST with proper calculation
-    const baseAmount = selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount;
-    
+    // Step 3: Add only the selected GST with proper calculation
     if (isCGSTSGSTSelected) {
-      const gstAmount = Math.ceil(baseAmount * Number(serviceTaxPercentage) / 100);
+      // Calculate CGST + SGST amount based on base amount
+      const baseAmount = selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount;
+      const totalPercentage = Number(serviceTaxPercentage);
+      const gstAmount = (baseAmount * totalPercentage / 100);
       baseOtherCharges["CGST & SGST"] = gstAmount;
     } else if (isIGSTSelected) {
-      const gstAmount = Math.ceil(baseAmount * Number(serviceTaxPercentage) / 100);
+      // Calculate IGST amount based on base amount
+      const baseAmount = selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount;
+      const gstAmount = (baseAmount * Number(serviceTaxPercentage) / 100);
       baseOtherCharges["IGST"] = gstAmount;
     }
 
+    // Final object to save in DB
     const finalOtherCharges = baseOtherCharges;
 
+
     const payload = {
-      invoiceId: invId || undefined, // Only include for updates
+      invoiceId,
       bookingId: invoice?.bookingId || bookingId || undefined,
       companyId: invoice?.companyId || "",
-      invoiceNo: invoiceId,
-      invoiceDate: invoiceDate,
+      invoiceNo: invoice?.invoiceNo || newInvoiceId,
+      invoiceDate: invoiceDate || invoice?.invoiceDate,
       name: shippingAddress.name,
       phone: shippingAddress.phone,
       email: shippingAddress.email,
@@ -483,73 +461,84 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
       vehicleType: items.vehicleType,
       totalKm: selectedServiceName === "Hourly Packages" ? packageDetails.distanceLimit : items.km,
       pricePerKm: selectedServiceName === "Hourly Packages" ? 0 : items.price,
-      travelTime: selectedServiceName === "Hourly Packages" ? 
-        `${packageDetails.noOfHours} Hours` : items.time,
+      travelTime: selectedServiceName === "Hourly Packages" ? `${packageDetails.noOfHours} Hours` : items.time,
       address: shippingAddress.address,
-      estimatedAmount: selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount,
+      estimatedAmount: selectedServiceName === "Hourly Packages" ? packageDetails.price : (invoice?.estimatedAmount || items.amount),
       advanceAmount: invoice?.advanceAmount || 0,
-      totalAmount: totalAmount,
+      totalAmount: totalAmount || invoice?.totalAmount || 0,
       otherCharges: finalOtherCharges,
       paymentDetails,
-      createdBy: createdBy,
+      createdBy: createdBy as "Admin" | "Vendor",
       status: paymentStatus as "Partial Paid" | "Paid" | "Unpaid",
       booking: invoice?.booking || null,
       companyProfile: invoice?.companyProfile || null,
-      pickup: pickupDrop.pickup,
-      drop: pickupDrop.drop,
-      note: note,
-      GSTNumber: shippingAddress.GSTNumber,
+      pickup: pickupDrop.pickup || invoice?.pickup,
+      drop: pickupDrop.drop || invoice?.drop,
+      note: note || invoice?.note,
+      GSTNumber: shippingAddress.GSTNumber || invoice?.GSTNumber,
       offerId: invoice?.offerId || null,
     };
+
 
     try {
       if (invId) {
         updateInvoice({ id: invId, data: payload }, {
           onSuccess: () => {
-            toast.success("Invoice updated successfully");
+            toast.success("Invoice updated successfully", {
+              style: { backgroundColor: "#009F7F", color: "#fff" },
+            });
             setIsFormDirty(false);
-            setIsSubmitting(false);
             router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices/view/${invId}`);
           },
           onError: (error: any) => {
-            toast.error(error?.response?.data?.message || "Error updating Invoice!");
-            setIsSubmitting(false);
+            toast.error(error?.response?.data?.message || "Error updating Invoice!", {
+              style: { backgroundColor: "#FF0000", color: "#fff" },
+            });
           }
         });
       } else {
         createInvoice(payload, {
           onSuccess: () => {
-            toast.success("Invoice created successfully");
+            toast.success("Invoice created successfully", {
+              style: { backgroundColor: "#009F7F", color: "#fff" },
+            });
             setIsFormDirty(false);
-            setIsSubmitting(false);
             router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`);
           },
           onError: (error: any) => {
-            toast.error(error?.response?.data?.message || "Error creating Invoice!");
-            setIsSubmitting(false);
+            toast.error(error?.response?.data?.message || "Error creating Invoice!", {
+              style: { backgroundColor: "#FF0000", color: "#fff" },
+            });
           }
         });
       }
     } catch (error) {
-      console.error("Error saving invoice:", error);
-      toast.error("Error saving invoice");
-      setIsSubmitting(false);
+      console.error("Error creating invoice:", error);
+      toast.error("Error creating invoice", {
+        style: { backgroundColor: "#FF0000", color: "#fff" },
+      });
+      return;
     }
-  }, [
-    isSubmitting, shippingAddress, items, customCharges, OtherCharges, 
-    selectedServiceName, packageDetails, isCGSTSGSTSelected, isIGSTSelected, 
-    serviceTaxPercentage, invId, invoice, bookingId, invoiceId, invoiceDate, 
-    paymentDetails, createdBy, paymentStatus, pickupDrop, note, totalAmount,
-    updateInvoice, createInvoice, router
-  ]);
 
-  const handleConfirmNavigation = useCallback(() => {
+  };
+
+
+  useEffect(() => {
+    const hasCGST = invoice?.otherCharges?.["CGST & SGST"] !== undefined;
+    const hasIGST = invoice?.otherCharges?.["IGST"] !== undefined;
+
+    setIsCGSTSGSTSelected(hasCGST);
+    setIsIGSTSelected(hasIGST);
+  }, [invoice?.otherCharges]);
+
+
+  const handleConfirmNavigation = () => {
     setShowUnsavedChangesDialog(false);
     setIsFormDirty(false);
     pendingNavigation();
-  }, [pendingNavigation]);
+  };
 
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     if (isFormDirty) {
       setShowUnsavedChangesDialog(true);
       setPendingNavigation(() =>
@@ -558,29 +547,13 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
     } else {
       router.push(`/${createdBy === "Vendor" ? "vendor" : "admin"}/invoices`);
     }
-  }, [isFormDirty, createdBy, router]);
-
-  const isPaid = paymentStatus === "Paid";
-
-  // Show loading state while invoice data is being fetched
-  if (invId && isLoadingInvoice) {
-    return (
-      <Card className="rounded-none">
-        <CardContent className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-[#009F7F] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p>Loading invoice data...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  };
 
   return (
     <Card className="rounded-none">
       <div className="flex justify-between items-center p-6 pt-2 pb-6">
         <h2 className="text-3xl font-bold tracking-tight">
-          {invId ? "Edit Invoice" : "Create New Invoice"}
+          {invoice?.invoiceId ? "Edit Invoice" : "Create New Invoice"}
         </h2>
         <Button onClick={handleClose} variant="outline">Close</Button>
       </div>
@@ -592,95 +565,92 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
           </div>
           <div>
             <Label>Invoice Date</Label>
-            <Input 
-              type="date" 
-              value={invoiceDate} 
-              onChange={(e) => {
-                setInvoiceDate(e.target.value);
-                setIsFormDirty(true);
-              }} 
-            />
+            <Input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} />
           </div>
         </div>
-        
         <div className="mt-4 mb-4 grid grid-cols-2 gap-4">
           <div className="mt-1 border-gray-900">
             <Label>Payment Status</Label>
-            {isPaid ? (
+            {invoice?.status === "Paid" ? (
               <Input
                 type="text"
                 readOnly
                 value={paymentStatus}
                 className="bg-gray-100 cursor-default"
               />
-            ) : (
-              <Select
-                value={paymentStatus}
-                onValueChange={handleStatusChange}
-              >
-                <SelectTrigger id="paymentStatus" className="py-3 border-grey">
-                  <SelectValue placeholder="Select Payment Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Partial Paid">Partial Paid</SelectItem>
-                  <SelectItem value="Paid">Paid</SelectItem>
-                  <SelectItem value="Unpaid">Unpaid</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
+            ) : (<Select
+              value={paymentStatus}
+              onValueChange={(value) => {
+                setPaymentStatus(value);
+                setBookingStatus(value);
+              }}
+            >
+              <SelectTrigger id="paymentStatus" className="py-3 border-grey">
+                <SelectValue placeholder="Select Payment Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Partial Paid">Partial Paid</SelectItem>
+                <SelectItem value="Paid">Paid</SelectItem>
+                <SelectItem value="Unpaid">Unpaid</SelectItem>
+              </SelectContent>
+            </Select>)}
           </div>
         </div>
 
-    <div className="grid grid-cols-2 mt-4 gap-4">
+        <div className="grid grid-cols-2 mt-4 gap-4">
           <div className="flex flex-col gap-4">
             <h2 className="font-bold">Billing Address</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Full Name *</Label>
+                <Label>Full Name</Label>
                 <Input
                   type="text"
                   placeholder="Full Name"
-                  value={shippingAddress.name}
-                  onChange={(e) => {
-                    setShippingAddress({ ...shippingAddress, name: e.target.value });
-                    setIsFormDirty(true);
-                  }}
-                  readOnly={isPaid}
+                  value={shippingAddress?.name}
+                  onChange={(e) => setShippingAddress({ ...shippingAddress, name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>Phone *</Label>
+                <Label>Phone</Label>
+
                 <Input
                   type="tel"
                   placeholder="Phone"
-                  value={shippingAddress.phone}
+                  value={shippingAddress?.phone}
+                  maxLength={10}
                   onChange={(e) => {
+                    // Allow only numbers and optional leading +
                     let value = e.target.value.replace(/[^0-9+]/g, '');
+                    // Remove leading zeros, allow optional +
                     if (value.startsWith('+')) {
                       value = '+' + value.slice(1).replace(/^0+/, '');
                     } else {
                       value = value.replace(/^0+/, '');
                     }
+                    // Limit to 15 chars (E.164 max)
                     value = value.slice(0, 15);
                     setShippingAddress({ ...shippingAddress, phone: value });
-                    setIsFormDirty(true);
                   }}
-                  readOnly={isPaid}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
+              {/* <div>
+                <Label>Email</Label>
+                <Input
+                  type="text"
+                  placeholder="Email"
+                  value={shippingAddress.email}
+                  onChange={(e) => setShippingAddress({ ...shippingAddress, email: e.target.value })}
+                />
+              </div> */}
               <div>
                 <Label>GST Number</Label>
                 <Input
                   type="text"
                   placeholder="GST Number"
                   value={shippingAddress.GSTNumber}
-                  onChange={(e) => {
-                    setShippingAddress({ ...shippingAddress, GSTNumber: e.target.value });
-                    setIsFormDirty(true);
-                  }}
-                  readOnly={isPaid}
+                  onChange={(e) => setShippingAddress({ ...shippingAddress, GSTNumber: e.target.value })}
                 />
               </div>
             </div>
@@ -690,11 +660,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                 type="text"
                 placeholder="Address"
                 value={shippingAddress.address}
-                onChange={(e) => {
-                  setShippingAddress({ ...shippingAddress, address: e.target.value });
-                  setIsFormDirty(true);
-                }}
-                readOnly={isPaid}
+                onChange={(e) => setShippingAddress({ ...shippingAddress, address: e.target.value })}
               />
             </div>
           </div>
@@ -719,7 +685,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
             <tbody className="divide-y divide-gray-200">
               <tr>
                 <td className="px-4 py-2 border">
-                  {isPaid ? (
+                  {invoice?.status === "Paid" ? (
                     <div className="text-sm text-gray-700">
                       {items.serviceType || "No Service Selected"}
                     </div>
@@ -729,13 +695,17 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                       onValueChange={(value) => {
                         setSelectedServiceName(value);
                         handleItemChange("serviceType", value);
+
+                        // Reset vehicle type when service changes
                         handleItemChange("vehicleType", "");
 
                         // Fetch tax percentages for the service
                         const service = services.find(s => s.name === value);
                         if (service && service.tax) {
+                          console.log('Service tax values:', service.tax);
                           setServiceTaxPercentage(service.tax.GST);
                         } else {
+                          console.log('No tax data found for service:', value);
                           setServiceTaxPercentage(0);
                         }
                       }}
@@ -752,10 +722,10 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                       </SelectContent>
                     </Select>
                   )}
+
                 </td>
-                
                 <td className="px-2 py-2 border">
-                  {isPaid ? (
+                  {invoice?.status === "Paid" ? (
                     <div className="text-sm text-gray-700">
                       {items.vehicleType || "No Vehicle Type Selected"}
                     </div>
@@ -776,9 +746,13 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                                   price: selectedPackage?.price || 0,
                                   extraPrice: selectedPackage?.extraPrice || 0
                                 });
+                                // Reset vehicle type when package changes
                                 handleItemChange("vehicleType", "");
+                                // Update amount based on package price
                                 handleItemChange("amount", selectedPackage?.price || 0);
+                                // Update time field with hours
                                 handleItemChange("time", selectedPackage?.noOfHours ? `${selectedPackage.noOfHours} Hours` : "");
+                                // Update km field with package distance limit
                                 handleItemChange("km", selectedPackage?.distanceLimit || 0);
                               }}
                             >
@@ -788,6 +762,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                               <SelectContent>
                                 {allPkgTariffs
                                   .filter((pkg, index, self) =>
+                                    // Remove duplicates based on hours and distance only
                                     index === self.findIndex(p =>
                                       p.noOfHours === pkg.noOfHours &&
                                       p.distanceLimit === pkg.distanceLimit &&
@@ -813,7 +788,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                                 <SelectValue placeholder="Select Vehicle Type" />
                               </SelectTrigger>
                               <SelectContent>
-                                {getAvailableVehicleTypes().map((vehicleType: string) => (
+                                {getAvailableVehicleTypes().map((vehicleType: string, index: number) => (
                                   <SelectItem key={vehicleType} value={vehicleType}>
                                     {vehicleType}
                                   </SelectItem>
@@ -831,7 +806,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                             <SelectValue placeholder="Select Vehicle Type" />
                           </SelectTrigger>
                           <SelectContent>
-                            {getAvailableVehicleTypes().map((vehicleType: string) => (
+                            {getAvailableVehicleTypes().map((vehicleType: string, index: number) => (
                               <SelectItem key={vehicleType} value={vehicleType}>
                                 {vehicleType}
                               </SelectItem>
@@ -842,10 +817,10 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                     </div>
                   )}
                 </td>
-
-                {selectedServiceName !== "Package" && selectedServiceName !== "Hourly Packages" && (
+                {
+                  selectedServiceName !== "Package" && selectedServiceName !== "Hourly Packages" &&
                   <td className="px-4 py-2 border">
-                    {isPaid ? (
+                    {invoice?.status === "Paid" ? (
                       <div className="text-sm text-gray-700">
                         {items.details || "No Details"}
                       </div>
@@ -853,24 +828,24 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                       <div className="space-y-2">
                         <LocationAutocomplete
                           onSelect={handlePickupChange}
-                          onChange={(e) => handlePickupChange(e.target.value)}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handlePickupChange(e.target.value)}
                           getValue={pickupDrop.pickup}
                           placeholder="Pickup Location"
                         />
                         <LocationAutocomplete
                           onSelect={handleDropChange}
-                          onChange={(e) => handleDropChange(e.target.value)}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleDropChange(e.target.value)}
                           getValue={pickupDrop.drop}
                           placeholder="Drop Location"
                         />
                       </div>
                     )}
                   </td>
-                )}
-
-                {selectedServiceName === "Hourly Packages" && (
+                }
+                {
+                  selectedServiceName === "Hourly Packages" &&
                   <td className="px-4 py-2 border">
-                    {isPaid ? (
+                    {invoice?.status === "Paid" ? (
                       <div className="text-sm text-gray-700">
                         {items.details || "No Details"}
                       </div>
@@ -878,29 +853,32 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                       <div>
                         <LocationAutocomplete
                           onSelect={handlePickupChange}
-                          onChange={(e) => handlePickupChange(e.target.value)}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handlePickupChange(e.target.value)}
                           getValue={pickupDrop.pickup}
                           placeholder="Pickup Location"
                         />
                       </div>
                     )}
                   </td>
-                )}
-
-                {selectedServiceName === "Package" && (
+                }
+                {
+                  selectedServiceName === "Package" &&
                   <td className="px-4 py-2 border">
                     <Input
                       className="border-none shadow-none"
                       placeholder="Pickup - Drop"
-                      readOnly={isPaid}
-                      value={items.details}
+                      readOnly={invoice?.status === "Paid"}
+                      value={items.details.split("-")[0] || ""}
                       onChange={(e) => handleItemChange("details", e.target.value)}
+                      onBlur={(e) => {
+                        const newPickup = e.target.value;
+                        setPickupDrop({ pickup: newPickup, drop: "" });
+                      }}
                     />
                   </td>
-                )}
-
+                }
                 <td className="px-2 py-2 border">
-                  {isPaid ? (
+                  {invoice?.status === "Paid" ? (
                     <div className="text-sm text-gray-700">
                       {selectedServiceName === "Hourly Packages" ? packageDetails.distanceLimit : items.km || 0} km
                     </div>
@@ -914,7 +892,9 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                         value={selectedServiceName === "Hourly Packages" ? packageDetails.distanceLimit : items.km || 0}
                         onChange={(e) => {
                           if (selectedServiceName !== "Hourly Packages") {
+                            // Allow only numeric input
                             const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                            // Update state with 0 if empty
                             handleItemChange("km", numericValue ? Number(numericValue) : 0);
                           }
                         }}
@@ -925,31 +905,32 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                     </div>
                   )}
                 </td>
-
                 <td className="px-2 py-2 border">
-                  {isPaid ? (
+                  {paymentStatus === "Paid" ? (
                     <div className="text-sm text-gray-700">
-                      ₹{selectedServiceName === "Hourly Packages" ? packageDetails.price : items.price || 0}
+                      ₹{selectedServiceName === "Hourly Packages" ? "Package Price" : items.price || 0}
                     </div>
                   ) : (
                     <Input
-                      className={`appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none ${selectedServiceName === "Hourly Packages" ? "cursor-not-allowed bg-gray-50" : ""}`}
+                      className={`appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none ${selectedServiceName === "Hourly Packages" ? "cursor-not-allowed bg-gray-50" : ""
+                        }`}
                       type="text"
                       placeholder={selectedServiceName === "Hourly Packages" ? "Package Price" : "Price per km"}
                       readOnly={selectedServiceName === "Hourly Packages"}
-                      value={selectedServiceName === "Hourly Packages" ? packageDetails.price : items.price || 0}
+                      value={selectedServiceName === "Hourly Packages" ? "Package Price" : items.price || 0}
                       onChange={(e) => {
                         if (selectedServiceName !== "Hourly Packages") {
+                          // Allow only numeric input
                           const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                          // Update state with 0 if empty
                           handleItemChange("price", numericValue ? Number(numericValue) : 0);
                         }
                       }}
                     />
                   )}
                 </td>
-
                 <td className="px-4 py-2 border">
-                  {isPaid ? (
+                  {invoice?.status === "Paid" ? (
                     <div className="text-sm text-gray-700">
                       {selectedServiceName === "Hourly Packages" ?
                         (packageDetails.noOfHours ? `${packageDetails.noOfHours} Hours` : "No duration") :
@@ -974,9 +955,8 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                     />
                   )}
                 </td>
-
                 <td className="px-2 py-2 border">
-                  {isPaid ? (
+                  {invoice?.status === "Paid" ? (
                     <div className="text-sm text-gray-700 font-semibold">
                       ₹{selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount || 0}
                     </div>
@@ -1006,8 +986,15 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                 let taxValue = 0;
 
                 if (isSelected) {
-                  const baseAmount = selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount;
-                  taxValue = Math.ceil(baseAmount * Number(serviceTaxPercentage) / 100);
+                  if (charge.label === "CGST & SGST") {
+                    // CGST + SGST = (CGST% + SGST%) of amount
+                    console.log("CGST & SGST >> ",serviceTaxPercentage);
+                    const totalPercentage = Number(serviceTaxPercentage);
+                    taxValue = (items.amount * totalPercentage / 100);
+                  } else if (charge.label === "IGST") {
+                    // IGST = IGST% of amount
+                    taxValue = (items.amount * Number(serviceTaxPercentage) / 100);
+                  }
                 }
 
                 return (
@@ -1017,8 +1004,8 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                       onCheckedChange={() =>
                         handleTaxSelection(charge.label as "CGST & SGST" | "IGST")
                       }
-                      disabled={isPaid}
                     />
+
                     <Input
                       type="text"
                       value={`${charge.label}`}
@@ -1043,14 +1030,14 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                   <Input
                     type="text"
                     value={charge.label}
-                    readOnly
+                    readOnly={invoice?.status === "Paid"}
                     className="w-32 bg-white border border-gray-300 text-gray-600"
                   />
                   <Input
                     type="number"
                     className="w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     value={charge.value || ""}
-                    readOnly
+                    readOnly={invoice?.status === "Paid"}
                   />
                 </div>
               ))}
@@ -1058,54 +1045,51 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
 
             {/* Dynamic Custom Charges */}
             <div className="flex flex-col gap-2 items-end">
-              {customCharges.map((charge, index) => (
-                <div key={index} className="flex flex-row gap-2 items-end">
-                  <Button
-                    variant="destructive"
-                    className="w-10"
-                    onClick={() => removeCustomCharge(index)}
-                    disabled={isPaid}
-                  >✖</Button>
-                  <Input
-                    type="text"
-                    placeholder="Charge Label"
-                    value={charge.label}
-                    onChange={(e) => {
-                      const filteredValue = e.target.value.replace(/[^A-Za-z\s]/g, "");
-                      handleChargeChange(index, "label", filteredValue);
-                    }}
-                    className="w-32 bg-white border border-gray-300 text-gray-600"
-                    readOnly={isPaid}
-                  />
-                  <Input
-                    type="number"
-                    className="w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    value={charge.value || ""}
-                    onChange={(e) => handleChargeChange(index, "value", e.target.value)}
-                    readOnly={isPaid}
-                  />
-                </div>
-              ))}
+              {customCharges.map((charge, index) => {
+                return (
+                  <div key={index} className="flex flex-row gap-2 items-end">
+                    <Button
+                      variant="destructive"
+                      className="w-10"
+                      onClick={() => removeCustomCharge(index)}
+                    >✖</Button>
+                    <Input
+                      type="text"
+                      placeholder="Charge Label"
+                      value={charge.label}
+                      onChange={(e) => {
+                        const filteredValue = e.target.value.replace(/[^A-Za-z\s]/g, "");
+                        handleChargeChange(index, "label", filteredValue);
+                      }}
+                      className="w-32 bg-white border border-gray-300 text-gray-600"
+                    />
+                    <Input
+                      type="number"
+                      className="w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      value={charge.value || ""}
+                      onChange={(e) => handleChargeChange(index, "value", e.target.value)}
+                    />
+                  </div>
+                );
+              })}
             </div>
 
-            {!isPaid && (
-              <div className="flex flex-col gap-2 items-end">
-                <div className="flex flex-row gap-2 items-end">
-                  <Button
-                    variant="destructive"
-                    className="bg-[#009F7F] hover:bg-[#009F7F] w-10"
-                    onClick={addCustomCharge}
-                  >
-                    <PlusIcon />
-                  </Button>
-                  <Input hidden className="w-32 invisible" />
-                  <Input
-                    hidden
-                    className="invisible w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                </div>
+            <div className="flex flex-col gap-2 items-end">
+              <div className="flex flex-row gap-2 items-end">
+                <Button
+                  variant="destructive"
+                  className="bg-[#009F7F] hover:bg-[#009F7F] w-10"
+                  onClick={addCustomCharge}
+                >
+                  <PlusIcon />
+                </Button>
+                <Input hidden className="w-32 invisible" />
+                <Input
+                  hidden
+                  className="invisible w-32 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
               </div>
-            )}
+            </div>
 
             <div className="flex flex-col gap-2 items-end">
               <div className="flex flex-row gap-2 items-center">
@@ -1114,7 +1098,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                   type="text"
                   placeholder="Base Amount"
                   className="w-32"
-                  value={`₹${selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount || 0}`}
+                  value={`₹${items.amount || 0}`}
                   readOnly
                 />
               </div>
@@ -1126,11 +1110,11 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                   className="w-32"
                   value={`₹${(() => {
                     let taxAmount = 0;
-                    const baseAmount = selectedServiceName === "Hourly Packages" ? packageDetails.price : items.amount;
                     if (isCGSTSGSTSelected) {
-                      taxAmount = Math.ceil(baseAmount * Number(serviceTaxPercentage) / 100);
+                      const totalPercentage = Number(serviceTaxPercentage);
+                      taxAmount = Math.ceil(items.amount * totalPercentage / 100);
                     } else if (isIGSTSelected) {
-                      taxAmount = Math.ceil(baseAmount * Number(serviceTaxPercentage) / 100);
+                      taxAmount = Math.ceil(items.amount * Number(serviceTaxPercentage) / 100);
                     }
                     return taxAmount;
                   })()}`}
@@ -1160,11 +1144,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                 rows={6}
                 className="resize-none"
                 value={paymentDetails}
-                onChange={(e) => {
-                  setPaymentDetails(e.target.value);
-                  setIsFormDirty(true);
-                }}
-                readOnly={isPaid}
+                onChange={(e) => setPaymentDetails(e.target.value)}
               />
             </div>
           </div>
@@ -1177,24 +1157,14 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
               rows={4}
               className="resize-none"
               value={note}
-              onChange={(e) => {
-                setNote(e.target.value);
-                setIsFormDirty(true);
-              }}
-              readOnly={isPaid}
+              onChange={(e) => setNote(e.target.value)}
             />
           </div>
         </div>
-        {!isPaid && (
-          <div className="flex gap-4 mt-4">
-            <Button 
-              onClick={handleCreateInvoice} 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        )}
+
+        <div className="flex gap-4 mt-4">
+          <Button onClick={() => handleCreateInvoice()}>Save</Button>
+        </div>
       </CardContent>
 
       <AlertDialog open={showUnsavedChangesDialog} onOpenChange={setShowUnsavedChangesDialog}>

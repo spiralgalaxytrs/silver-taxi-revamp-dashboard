@@ -155,11 +155,15 @@ export const useTogglePaymentStatus = () => {
 
 export const useToggleContactStatus = () => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: boolean }) =>
-      toggleContactStatus(id, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["bookings"] });
-    }
+    mutationFn: (params: { id: string; status: boolean; skipInvalidate?: boolean }) =>
+      toggleContactStatus(params.id, params.status),
+
+    onSuccess: (_data, variables) => {
+      if (!variables?.skipInvalidate) {
+        queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      }
+    },
   });
 };
