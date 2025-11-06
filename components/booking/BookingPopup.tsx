@@ -27,9 +27,7 @@ import {
 import {
   useAssignDriver,
   useAssignAllDriver,
-  useTogglePaymentMethod,
-  useToggleTripStatus,
-  useTogglePaymentStatus,
+  useFetchBookingById,
   useDeleteBooking,
   useFetchBookings,
   useToggleContactStatus
@@ -48,9 +46,10 @@ import ActionDropdown from 'components/others/ActionComponent';
 import { DriverSelectionPopup } from "components/driver/SelectDriver";
 import TooltipComponent from "components/others/TooltipComponent";
 import { isLocalDateTime } from 'lib/dateFunctions';
+import { Booking } from 'types/react-query/booking';
 interface BookingPopupProps {
   trigger: React.ReactNode;
-  booking: Record<string, any> | null;
+  bookingId: string | null;
   title?: string;
   width?: string;
   size?: string;
@@ -59,13 +58,12 @@ interface BookingPopupProps {
 
 export function BookingPopup({
   trigger,
-  booking,
+  bookingId,
   title = "Booking Details",
 }: BookingPopupProps) {
   const [open, setOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [localBooking, setLocalBooking] = useState(booking);
   const isManualUpdate = useRef(false);
 
   const router = useRouter();
@@ -76,6 +74,8 @@ export function BookingPopup({
 
   // Driver assignment functionality
   const { data: drivers = [], isPending: isLoading, isError } = useDrivers({ enabled: open });
+  const { data: booking = null, isLoading: isLoadingBooking, refetch } = useFetchBookingById(open ? (bookingId || '') : '');
+  const { refetch: refetchBookings } = useFetchBookings();
   const { mutate: assignDriver } = useAssignDriver();
   const { mutate: assignAllDriver } = useAssignAllDriver();
 
@@ -144,41 +144,33 @@ export function BookingPopup({
     }
   };
 
-  useEffect(() => {
-    // Only update localBooking when the popup opens,
-    // but NOT when React Query refetch updates the booking prop.
-    if (open && booking && !isManualUpdate.current) {
-      setLocalBooking(booking);
-    }
-
-    // Reset the manual flag
-    if (!open) isManualUpdate.current = false;
-  }, [open]);
-
   // Auto-set contact status to "Contacted" when popup opens
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
-
-    // When popup opens and booking is not contacted, automatically set to contacted
-    console.log("newOpen", newOpen, booking?.id, booking?.isContacted);
-    if (newOpen && booking && !booking.isContacted) {
-      toggleContactStatus({
-        id: booking.bookingId,
-        status: true
-      }, {
-        onSuccess: (data: any) => {
-          // Silently update the contact status without showing toast
-          setLocalBooking((prev) => ({ ...prev, isContacted: true }));
-        },
-        onError: (error: any) => {
-          // Silently handle error without showing toast
-          console.error('Failed to update contact status:', error);
-        }
-      });
-    } else {
-      setLocalBooking((prev) => ({ ...prev }));
+    if (newOpen === false) {
+      refetchBookings();
     }
   };
+
+  // 3️⃣ Auto-update contact status **after booking fetched**
+  useEffect(() => {
+    // Only proceed if popup is open and data exists
+    if (!open || !booking || !booking.bookingId) return;
+
+    // If already contacted, do nothing
+    if (booking.isContacted) return;
+
+    toggleContactStatus(
+      { id: booking.bookingId, status: true, skipInvalidate: true },
+      {
+        onSuccess: () => {
+        },
+        onError: (error: any) => {
+          console.error("Failed to update contact status:", error);
+        }
+      }
+    );
+  }, [open, booking]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -202,45 +194,45 @@ export function BookingPopup({
     if (!booking || !open) return null;
 
     return {
-      "Booking Id": localBooking?.bookingId || "-",
-      "Name": localBooking?.name || "-",
-      "Phone Number": localBooking?.phone || "-",
-      "Email": localBooking?.email || "-",
-      "Pick Up": localBooking?.pickup || "-",
-      "Drop": localBooking?.drop || "-",
-      "Stops": Array.isArray(localBooking?.stops) && localBooking?.stops.length
-        ? localBooking?.stops.map(s => s.location || s).join(", ")
+      "Booking Id": booking?.bookingId || "-",
+      "Name": booking?.name || "-",
+      "Phone Number": booking?.phone || "-",
+      "Email": booking?.email || "-",
+      "Pick Up": booking?.pickup || "-",
+      "Drop": booking?.drop || "-",
+      "Stops": Array.isArray(booking?.stops) && booking?.stops.length
+        ? booking?.stops.join(", ")
         : "-",
 
-      "Pickup Date & Time": isLocalDateTime({ dateTime: localBooking?.pickupDateTime || "" }) || "-",
-      // "Pickup Date": isLocalDateTime({ date: localBooking?.pickupDateTime || "" }) || "-",
-      // "Pickup Time": isLocalDateTime({ time: localBooking?.pickupDateTime || "" }) || "-",
-      "Drop Date": localBooking?.dropDate ? formatDate(localBooking?.dropDate) : "-",
-      "Service Type": localBooking?.serviceType || "-",
-      "Vehicle Name": localBooking?.vehicles?.name || "-",
-      "Vehicle Type": localBooking?.vehicles?.type || "-",
-      "Distance": localBooking?.distance || 0,
-      "Duration": localBooking?.duration || 0,
-      "Price Per Km": localBooking?.pricePerKm || 0,
-      "Estimated Amount": localBooking?.estimatedAmount || 0,
-      "Driver Assigned": localBooking?.driver?.name || "-",
-      "Driver Beta": localBooking?.driverBeta || "-",
-      "Toll": localBooking?.toll || 0,
-      "Hill": localBooking?.hill || 0,
-      "Permit Charge": localBooking?.permitCharge || 0,
-      "Tax Percentage": localBooking?.taxPercentage || 0,
-      "Offer Name": localBooking?.offers?.offerName || "-",
-      "DiscountAmount": localBooking?.discountAmount || 0,
-      "Advance Amount": localBooking?.advanceAmount || 0,
-      "FinalAmount": localBooking?.finalAmount || 0,
-      "Payment Method": localBooking?.paymentMethod || "-",
-      "Payment Status": localBooking?.paymentStatus || "-",
-      "Type": localBooking?.type || "-",
-      "Status": localBooking?.status || "-",
-      "CreatedBy": localBooking?.createdBy || "-",
-      "Booking Date": formatDate(localBooking?.createdAt || "") || "-",
+      "Pickup Date & Time": isLocalDateTime({ dateTime: booking?.pickupDateTime || "" }) || "-",
+      // "Pickup Date": isLocalDateTime({ date: booking?.pickupDateTime || "" }) || "-",
+      // "Pickup Time": isLocalDateTime({ time: booking?.pickupDateTime || "" }) || "-",
+      "Drop Date": booking?.dropDate ? formatDate(booking?.dropDate) : "-",
+      "Service Type": booking?.serviceType || "-",
+      "Vehicle Name": booking?.vehicles?.name || "-",
+      "Vehicle Type": booking?.vehicles?.type || "-",
+      "Distance": booking?.distance || 0,
+      "Duration": booking?.duration || 0,
+      "Price Per Km": booking?.pricePerKm || 0,
+      "Estimated Amount": booking?.estimatedAmount || 0,
+      "Driver Assigned": booking?.driver?.name || "-",
+      "Driver Beta": booking?.driverBeta || "-",
+      "Toll": booking?.toll || 0,
+      "Hill": booking?.hill || 0,
+      "Permit Charge": booking?.permitCharge || 0,
+      "Tax Percentage": booking?.taxPercentage || 0,
+      "Offer Name": booking?.offers?.offerName || "-",
+      "DiscountAmount": booking?.discountAmount || 0,
+      "Advance Amount": booking?.advanceAmount || 0,
+      "FinalAmount": booking?.finalAmount || 0,
+      "Payment Method": booking?.paymentMethod || "-",
+      "Payment Status": booking?.paymentStatus || "-",
+      "Type": booking?.type || "-",
+      "Status": booking?.status || "-",
+      "CreatedBy": booking?.createdBy || "-",
+      "Booking Date": formatDate(booking?.createdAt || "") || "-",
     };
-  }, [localBooking, open]);
+  }, [booking, open]);
 
 
   const {
@@ -251,7 +243,7 @@ export function BookingPopup({
     try {
       deleteBooking(id, {
         onSuccess: () => {
-          toast.success("Booking deleted successfully",{
+          toast.success("Booking deleted successfully", {
             style: {
               backgroundColor: "#009F7F",
               color: "#fff",
@@ -261,7 +253,7 @@ export function BookingPopup({
           setOpen(false);
         },
         onError: () => {
-          toast.error("Failed to delete booking",{
+          toast.error("Failed to delete booking", {
             style: {
               backgroundColor: "#FF0000",
               color: "#fff",
@@ -280,7 +272,7 @@ export function BookingPopup({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange} >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent
         className="w-[800px] max-h-[90vh] overflow-y-auto rounded-lg p-8"
@@ -290,8 +282,13 @@ export function BookingPopup({
           <DialogTitle>{title}</DialogTitle>
         </VisuallyHidden>
 
-        <div className="grid gap-4">
-          <h4 className="text-2xl font-semibold text-center mb-4">{title}</h4>
+        <div className="grid  gap-4">
+          <h4 className="flex flex-col items-center gap-2 text-2xl font-semibold text-center mb-4">
+            {title}
+            <span className={`text-xl font-bold text-center p-2 rounded-lg ${booking?.isContacted ? "bg-green-500 text-white" : "bg-yellow-500"}`}>
+              {booking?.isContacted ? "Contacted" : "Not Contacted"}
+            </span>
+          </h4>
 
           {bookingDetails && (
             <div className="grid gap-4">

@@ -22,7 +22,7 @@ export interface Vehicle {
   imageUrl?: string | null | File;
   seats?: number;
   bags?: number;
-  order?: number;
+  order: number;
   permitCharge?: number;
   vehicleYear?: number;
   vehicleNumber?: string;

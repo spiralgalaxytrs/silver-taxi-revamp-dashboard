@@ -344,6 +344,12 @@ export function FairCalculationPopup({ isOpen, onClose, fareData, createdBy }: F
                       </span>
                     </div>
                   )}
+                  {fareData?.duration && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Duration</span>
+                      <span className="font-medium">{fareData?.duration || "1 Hour 30 Minutes"}</span>
+                    </div>
+                  )}
                   {(fareData?.fareBreakdown?.normalFare?.days || 0) > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">No of Days</span>
@@ -416,6 +422,12 @@ export function FairCalculationPopup({ isOpen, onClose, fareData, createdBy }: F
                               ? `${fareData?.fareBreakdown?.modifiedFare?.minKm || 0} Km × ${fareData?.days || 0} days`
                               : `${fareData?.fareBreakdown?.modifiedFare?.minKm || 0} Km`}
                           </span>
+                        </div>
+                      )}
+                      {fareData?.duration && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Duration</span>
+                          <span className="font-medium">{fareData?.duration || "1 Hour 30 Minutes"}</span>
                         </div>
                       )}
                       {(fareData?.fareBreakdown?.modifiedFare?.days || 0) > 0 && (
