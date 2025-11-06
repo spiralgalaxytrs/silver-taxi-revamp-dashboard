@@ -30,7 +30,7 @@ import {
     AlertDialogCancel,
     AlertDialogFooter
 } from 'components/ui/alert-dialog'
-import LocationAutocomplete from '../localtion/LocationAutocomplete';
+import LocationAutocomplete from '../location/LocationAutocomplete';
 import PhoneInput from 'react-phone-input-2'
 import {
     useServices

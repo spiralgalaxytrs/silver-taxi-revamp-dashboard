@@ -11,9 +11,10 @@ interface Props {
     onSelect: (address: string, lat: number, lng: number) => void;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     getValue: string;
+    placeholder?: string
 }
 
-const LocationAutocomplete: React.FC<Props> = ({ onSelect, onChange, getValue }) => {
+const LocationAutocomplete: React.FC<Props> = ({ onSelect, onChange, getValue, placeholder }) => {
     const {
         ready,
         value,
@@ -57,7 +58,7 @@ const LocationAutocomplete: React.FC<Props> = ({ onSelect, onChange, getValue })
                     }
                 }}
                 disabled={!ready}
-                placeholder="Enter a location"
+                placeholder={placeholder || "Search for a location..."}
                 className="flex h-10 w-full rounded-md border border-slate-400 bg-transparent px-3 py-6 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:none  disabled:cursor-not-allowed disabled:opacity-50 md:text-sm hover:bg-primary active:bg-primary"
             />
             {status === "OK" && (

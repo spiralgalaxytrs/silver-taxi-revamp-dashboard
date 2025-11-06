@@ -89,21 +89,23 @@ export const columns: MRT_ColumnDef<Booking>[] = [
   // },
   {
     accessorKey: "bookingId",
-  header: 'Booking ID',
-Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Booking<br />ID
-  </div>
-),
-    muiTableHeadCellProps: { align: 'left',   sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    header: 'Booking ID',
+    Header: () => (
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Booking<br />ID
+      </div>
+    ),
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    },},
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 130,
     Cell: ({ row }) => {
@@ -122,7 +124,7 @@ Header: () => (
               {booking.bookingId}
             </span>
           }
-          booking={booking}
+          bookingId={booking?.bookingId || ""}
         />
       );
     },
@@ -131,10 +133,10 @@ Header: () => (
     accessorKey: "isContacted",
     header: "Contact Status",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Contact<br />Status
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Contact<br />Status
+      </div>
+    ),
     Cell: ({ row }) => {
       const isContacted = row.getValue("isContacted") as boolean;
       const createdBy = row.original.createdBy;
@@ -169,15 +171,17 @@ Header: () => (
         </div>
       );
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 130,
   },
@@ -185,23 +189,25 @@ Header: () => (
     accessorKey: "name",
     header: "Customer Name",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Customer<br />Name
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Customer<br />Name
+      </div>
+    ),
     Cell: ({ row }) => {
       const name = row.getValue("name");
       return <div>{!name || name === "null" ? "-" : String(name)}</div>;
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 140,
   },
@@ -209,23 +215,25 @@ Header: () => (
     accessorKey: "phone",
     header: "Mobile Number",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Mobile<br />Number
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Mobile<br />Number
+      </div>
+    ),
     Cell: ({ row }) => {
       const phone = row.original.phone
       return <div>+{phone}</div>;
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 130,
   },
@@ -241,15 +249,17 @@ Header: () => (
         </TooltipComponent>
       )
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 140,
   },
@@ -273,10 +283,10 @@ Header: () => (
     id: "pickupDateTime",
     header: "PickUp Date",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    PickUp<br />Date
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        PickUp<br />Date
+      </div>
+    ),
     // filterVariant: "date",
     Cell: ({ row }) => {
       const pickupDate: string = row.original.pickupDateTime || "";
@@ -303,15 +313,17 @@ Header: () => (
     filterFn: dateRangeFilter,
     filterVariant: "date-range",
     sortingFn: "datetime",
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 120,
   },
@@ -320,10 +332,10 @@ Header: () => (
     id: "pickupTime",
     header: "PickUp Time",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    PickUp<br />Time
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        PickUp<br />Time
+      </div>
+    ),
 
     Cell: ({ row }) => {
       const pickupTime: string = row.getValue("pickupTime");
@@ -348,15 +360,17 @@ Header: () => (
 
       return <div>{amPmTime}</div>;
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 120,
   },
@@ -364,10 +378,10 @@ Header: () => (
     id: "dropDate",
     header: "Drop Date",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Drop<br />Date
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Drop<br />Date
+      </div>
+    ),
     Cell: ({ row }) => {
       const dropDate: string = row.original.dropDate || "";
 
@@ -394,15 +408,17 @@ Header: () => (
     filterFn: dateRangeFilter,
     filterVariant: "date-range",
     sortingFn: "datetime",
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 110,
   },
@@ -410,19 +426,21 @@ Header: () => (
     accessorKey: "serviceType",
     header: "Service Type",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Service<br />Type
-  </div>
-),
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Service<br />Type
+      </div>
+    ),
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 125,
   },
@@ -438,15 +456,17 @@ Header: () => (
         return <div>{`${distance} Km`}</div>;
       }
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 135,
   },
@@ -454,10 +474,10 @@ Header: () => (
     accessorKey: "estimatedAmount",
     header: "Km Base Fare",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Km Base<br />Fare
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Km Base<br />Fare
+      </div>
+    ),
     Cell: ({ row }) => {
       const amount = Number(row.getValue("estimatedAmount"))
       const tripCompletedAmount = Number(row.original.tripCompletedEstimatedAmount)
@@ -470,15 +490,17 @@ Header: () => (
 
       return <div>{formatted}</div>;
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 135,
   },
@@ -486,10 +508,10 @@ Header: () => (
     accessorKey: "discountAmount",
     header: "Discount Amount",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Discount<br />Amount
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Discount<br />Amount
+      </div>
+    ),
     Cell: ({ row }) => {
       const amount = parseFloat(row.getValue("discountAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
@@ -499,15 +521,17 @@ Header: () => (
 
       return <div>{formatted}</div>
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 135,
   },
@@ -515,10 +539,10 @@ Header: () => (
     accessorKey: "offerId",
     header: "Offer Details",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Offer<br />Details
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Offer<br />Details
+      </div>
+    ),
     Cell: ({ row }) => {
       const offerId = row.getValue("offerId")
       const { data: offers = [] } = useOffers();
@@ -533,15 +557,17 @@ Header: () => (
         </div>
       )
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 125,
   },
@@ -549,10 +575,10 @@ Header: () => (
     accessorKey: "finalAmount",
     header: "Total Amount",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Total<br />Amount
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Total<br />Amount
+      </div>
+    ),
     Cell: ({ row }) => {
       const amount = Number(row.getValue("finalAmount"))
       const tripCompletedAmount = Number(row.original.tripCompletedFinalAmount)
@@ -564,15 +590,17 @@ Header: () => (
 
       return <div>{formatted}</div>
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 135,
   },
@@ -580,10 +608,10 @@ Header: () => (
     accessorKey: "advanceAmount",
     header: "Advance Amount",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Advance<br />Amount
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Advance<br />Amount
+      </div>
+    ),
     Cell: ({ row }) => {
       const amount = Number(row.getValue("advanceAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
@@ -593,15 +621,17 @@ Header: () => (
 
       return <div>{formatted}</div>
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 135,
   },
@@ -609,10 +639,10 @@ Header: () => (
     accessorKey: "upPaidAmount",
     header: "Remaining Amount",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Remaining<br />Amount
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Remaining<br />Amount
+      </div>
+    ),
     Cell: ({ row }) => {
       const amount = Number(row.getValue("upPaidAmount"))
       const formatted = new Intl.NumberFormat("en-IN", {
@@ -622,15 +652,17 @@ Header: () => (
 
       return <div>{formatted}</div>
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 145,
   },
@@ -638,10 +670,10 @@ Header: () => (
     accessorKey: 'driverId',
     header: 'Driver Assigned',
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Driver<br />Assigned
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Driver<br />Assigned
+      </div>
+    ),
     Cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const booking = row.original;
@@ -730,7 +762,7 @@ Header: () => (
             <Button variant="outline" size="default" disabled={false} className="py-2">
               {assignedDriver ?
                 <p className="flex items-center gap-2 text-sm font-medium py-1">
-                  {assignedDriver.name}<br/>
+                  {assignedDriver.name}<br />
                   {assignedDriver.phone && ` (${assignedDriver.phone})`}
                   <TooltipComponent name={booking?.driverId ? booking?.driverAccepted || "" : "Assign Driver"}>
                     {currentBooking.driverAccepted === "accepted" ?
@@ -757,15 +789,17 @@ Header: () => (
         />
       );
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 170,
   },
@@ -773,10 +807,10 @@ Header: () => (
     accessorKey: "paymentMethod",
     header: "Payment Type",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Payment<br />Type
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Payment<br />Type
+      </div>
+    ),
     Cell: ({ row }) => {
       const status = row.getValue("paymentMethod") as string;
       const {
@@ -851,15 +885,17 @@ Header: () => (
         </div>
       );
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'center' },
     size: 130,
   },
@@ -867,10 +903,10 @@ Header: () => (
     accessorKey: "paymentStatus",
     header: "Payment Status",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Payment<br />Status
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Payment<br />Status
+      </div>
+    ),
     Cell: ({ row }) => {
       const status = row.getValue("paymentStatus") as string;
       const {
@@ -952,15 +988,17 @@ Header: () => (
         </div>
       );
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'center' },
     size: 130,
   },
@@ -968,10 +1006,10 @@ Header: () => (
     id: "createdType",
     header: "Created Type",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Created<br />Type
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Created<br />Type
+      </div>
+    ),
     Cell: ({ row }) => {
       const type = row.original.type;
       const createdBy = row.original.createdBy;
@@ -990,15 +1028,17 @@ Header: () => (
         return <div>{type || createdBy || "-"}</div>;
       }
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 125,
   },
@@ -1006,10 +1046,10 @@ Header: () => (
     accessorKey: "status",
     header: "Trip Status",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Trip<br />Status
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Trip<br />Status
+      </div>
+    ),
     Cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -1178,15 +1218,17 @@ Header: () => (
         </div >
       );
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'center' },
     size: 150,
   },
@@ -1194,10 +1236,10 @@ Header: () => (
     id: "createdAt",
     header: "Bookings At",
     Header: () => (
-  <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-    Bookings<br />At
-  </div>
-),
+      <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+        Bookings<br />At
+      </div>
+    ),
     Cell: ({ row }) => {
       const bookingDate: string = row.original.createdAt || "";
       if (!bookingDate) {
@@ -1236,15 +1278,17 @@ Header: () => (
     filterFn: dateRangeFilter,
     filterVariant: "date-range",
     sortingFn: "datetime",
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 130,
   },
@@ -1325,14 +1369,14 @@ Header: () => (
                   <Eye className="h-5 w-5" />
                 </Button>
               }
-              booking={booking || null}
+              bookingId={booking?.bookingId || ""}
             />
 
             {/* Edit Icon */}
             <Button
               variant="ghost"
               size="icon"
-              className={`${!(booking.status === "Booking Confirmed") ? "text-green-400":"text-green-600"}  hover:text-green-800 tool-tip`}
+              className={`${!(booking.status === "Booking Confirmed") ? "text-green-400" : "text-green-600"}  hover:text-green-800 tool-tip`}
               data-tooltip="Edit Booking"
               disabled={!(booking.status === "Booking Confirmed")}
               onClick={() => handleEditBooking(booking.bookingId)}
@@ -1383,15 +1427,17 @@ Header: () => (
         </React.Fragment>
       )
     },
-    muiTableHeadCellProps: { align: 'left', sx: {
-      '& .MuiBox-root': {
-        gap: 0, // ✅ Removes space between filter & menu icons
+    muiTableHeadCellProps: {
+      align: 'left', sx: {
+        '& .MuiBox-root': {
+          gap: 0, // ✅ Removes space between filter & menu icons
+        },
+        '& .MuiButtonBase-root': {
+          padding: '2px',
+          margin: 0,
+        },
       },
-      '& .MuiButtonBase-root': {
-        padding: '2px',
-        margin: 0,
-      },
-    }, },
+    },
     muiTableBodyCellProps: { align: 'left' },
     size: 140,
   },
