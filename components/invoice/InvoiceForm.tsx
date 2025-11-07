@@ -710,7 +710,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                         }
                       }}
                     >
-                      <SelectTrigger className="border-none shadow-none">
+                      <SelectTrigger>
                         <SelectValue placeholder="Select Service" />
                       </SelectTrigger>
                       <SelectContent>
@@ -802,7 +802,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                           value={items.vehicleType}
                           onValueChange={(value) => handleItemChange("vehicleType", value)}
                         >
-                          <SelectTrigger className="border-none shadow-none">
+                          <SelectTrigger>
                             <SelectValue placeholder="Select Vehicle Type" />
                           </SelectTrigger>
                           <SelectContent>
@@ -912,7 +912,7 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                     </div>
                   ) : (
                     <Input
-                      className={`appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-none shadow-none ${selectedServiceName === "Hourly Packages" ? "cursor-not-allowed bg-gray-50" : ""
+                      className={`${selectedServiceName === "Hourly Packages" ? "cursor-not-allowed bg-gray-50" : ""
                         }`}
                       type="text"
                       placeholder={selectedServiceName === "Hourly Packages" ? "Package Price" : "Price per km"}
@@ -940,7 +940,6 @@ export default function InvoiceForm({ invId, createdBy }: InvoiceFormProps) {
                   ) : (
                     <Input
                       type="text"
-                      className="border-none shadow-none"
                       readOnly={selectedServiceName === "Hourly Packages" || isCalculatingDistance}
                       placeholder={selectedServiceName === "Package" ? "Day / Hour" : selectedServiceName === "Hourly Packages" ? "Package Duration" : "Duration"}
                       value={selectedServiceName === "Hourly Packages" ?

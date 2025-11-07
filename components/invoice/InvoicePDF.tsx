@@ -19,13 +19,6 @@ const InvoicePDF = ({ id }: { id: string }) => {
   const { data: profile = null } = useAdminProfile();
   const { data: invoice = null, isPending: isLoading } = useInvoiceById(id)
 
-  if (!isLoading && (!invoice || !profile)) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <p className="text-red-600">Invoice or profile data not found.</p>
-      </div>
-    );
-  }
   // useEffect(() => {
   //   if (profile) {
   //     setUpdatedCompanyProfile(profile as unknown as Profile);
@@ -68,6 +61,22 @@ const InvoicePDF = ({ id }: { id: string }) => {
   const invDate = invoice?.invoiceDate
     ? invoice.invoiceDate.split("T")[0].split("-").reverse().join("-")
     : "";
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (!invoice || !profile) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <p className="text-red-600">Invoice or profile data not found.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative bg-white shadow-lg p-8 flex justify-center items-center">
