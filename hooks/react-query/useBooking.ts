@@ -7,6 +7,7 @@ import {
   fetchVendorBookings,
   fetchDriverBookings,
   updateBooking,
+  manualBookingComplete,
   bulkDeleteBookings,
   assignDriver,
   assignAllDriver,
@@ -72,6 +73,17 @@ export const useUpdateBooking = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Booking> }) =>
       updateBooking(id, data),
+    onSuccess: (context) => {
+      const { bookingId } = context;
+      queryClient.invalidateQueries({ queryKey: ["booking", bookingId] });
+    }
+  });
+};
+export const useManualBookingComplete = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Booking> }) =>
+      manualBookingComplete(id, data),
     onSuccess: (context) => {
       const { bookingId } = context;
       queryClient.invalidateQueries({ queryKey: ["booking", bookingId] });
