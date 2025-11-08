@@ -43,6 +43,12 @@ export const updateBooking = async (id: string, data: Partial<Booking>) => {
   return response.data.data;
 };
 
+// manually complete a booking
+export const manualBookingComplete = async (id: string, data: Partial<Booking>) => {
+  const response = await axios.post(`/v1/bookings/manual-complete/${id}`, data);
+  return response.data.data;
+};
+
 // Delete a booking
 export const deleteBooking = async (id: string) => {
   const response = await axios.delete(`/v1/bookings/${id}`);
