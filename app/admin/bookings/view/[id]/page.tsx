@@ -81,7 +81,7 @@ export default function BookingDetailsPage() {
 
   const { data: booking, isLoading } = useFetchBookingById(bookingId || "");
   const { mutateAsync: updateBooking } = useUpdateBooking();
-  const { mutateAsync: manualBookingComplete } = useManualBookingComplete();
+  const { mutateAsync: manualBookingComplete, isPending: isManualCompletePending } = useManualBookingComplete();
 
   useEffect(() => {
     if (!booking) return;
@@ -735,197 +735,128 @@ export default function BookingDetailsPage() {
             </Card>
 
             {/* After Trip Card */}
-            <Card className={`bg-white rounded-lg border ${isManualCompleted ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`}>
-              <div className="flex justify-between items-center p-4 border-b">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-gray-800">After Trip Details</h2>
-                  {isManualCompleted && (
-                    <div className="flex items-center gap-1 text-orange-600">
-                      <TriangleAlert className="w-3 h-3" />
-                      <span className="text-xs font-medium">Manual Mode</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {editMode === 'after' && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCancel}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
-                  {booking?.createdBy !== 'Vendor' &&
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        handleEdit('after')
-                      }}
-                      disabled={isAfterDisabled}
-                      className={isAfterDisabled ? 'text-gray-400' : 'text-blue-600 hover:text-blue-700'}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>}
-                </div>
-              </div>
-              <CardContent className="p-4 space-y-4">
-                {/* OTP and Odometer Sections */}
-                < div className="grid grid-cols-2 gap-4" >
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">Start OTP</Label>
-                    <div className="font-medium">{booking?.startOtp ?? '-'}</div>
+            {isManualCompletePending ?
+              <div className="flex items-center justify-center h-screen bg-gray-50">
+                <Loader2 className="w-12 h-12 animate-spin text-primary" />
+              </div> :
+              < Card className={`bg-white rounded-lg border ${isManualCompleted ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`}>
+                <div className="flex justify-between items-center p-4 border-b">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold text-gray-800">After Trip Details</h2>
+                    {isManualCompleted && (
+                      <div className="flex items-center gap-1 text-orange-600">
+                        <TriangleAlert className="w-3 h-3" />
+                        <span className="text-xs font-medium">Manual Mode</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">End OTP</Label>
-                    <div className="font-medium">{booking?.endOtp ?? '-'}</div>
+                  <div className="flex items-center gap-2">
+                    {editMode === 'after' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancel}
+                        className="text-red-500 hover:text-red-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {booking?.createdBy !== 'Vendor' &&
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          handleEdit('after')
+                        }}
+                        disabled={isAfterDisabled}
+                        className={isAfterDisabled ? 'text-gray-400' : 'text-blue-600 hover:text-blue-700'}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>}
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">Start Odometer Value</Label>
-                    {isManualCompleted ?
-                      (<Input
-                        type="text"
-                        value={formData?.startOdometerValue}
-                        onChange={(e) => handleChange(e, 'startOdometerValue')}
-                        className="w-full"
-                      />)
-                      : <div className="font-medium">{booking?.startOdometerValue ?? '-'}</div>
-                    }
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">End Odometer Value</Label>
-                    {isManualCompleted ?
-                      (<Input
-                        type="text"
-                        value={formData?.endOdometerValue}
-                        onChange={(e) => handleChange(e, 'endOdometerValue')}
-                        className="w-full"
-                      />)
-                      : <div className="font-medium">{booking?.endOdometerValue ?? '-'}</div>
-                    }
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">Start Odometer</Label>
-                    <ImagePreview src={booking?.startOdometerImage ?? ''} alt="Start Odometer" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm text-gray-600">End Odometer</Label>
-                    <ImagePreview src={booking?.endOdometerImage ?? ''} alt="End Odometer" />
-                  </div>
-                </div>
-
-                {isManualCompleted ? (
-                  <React.Fragment>
+                <CardContent className="p-4 space-y-4">
+                  {/* OTP and Odometer Sections */}
+                  < div className="grid grid-cols-2 gap-4" >
                     <div className="space-y-1">
-                      <Label className="text-sm text-gray-600">Trip Completed Distance</Label>
-                      <div className="font-medium">{formData?.tripCompletedDistance ?? '-'}</div>
+                      <Label className="text-sm text-gray-600">Start OTP</Label>
+                      <div className="font-medium">{booking?.startOtp ?? '-'}</div>
                     </div>
-                    <div className="space-y-2 w-1/2">
-                      <Label className="text-sm text-gray-600">Trip Start Date&Time</Label>
-                      <Input
-                        type="datetime-local"
-                        value={
-                          formatForDateTimeLocal(formData?.tripStartedTime || booking?.tripStartedTime)
-                        }
-                        onChange={(e) => handleChange(e, "tripStartedTime")}
-                      />
+                    <div className="space-y-1">
+                      <Label className="text-sm text-gray-600">End OTP</Label>
+                      <div className="font-medium">{booking?.endOtp ?? '-'}</div>
                     </div>
-                    <div className="space-y-2 w-1/2">
-                      <Label className="text-sm text-gray-600">Trip End Date&Time</Label>
-                      <Input
-                        type="datetime-local"
-                        value={
-                          formatForDateTimeLocal(formData?.tripCompletedTime || booking?.tripCompletedTime)
-                        }
-                        onChange={(e) => handleChange(e, 'tripCompletedTime')}
-                      />
-                    </div>
+                  </div>
 
-                    <div className="space-y-2 w-1/2">
-                      <Label className="text-sm text-gray-600">Driver Charges</Label>
-
-                      {Object.entries(driverCharges).map(([key, value]) => (
-                        <div key={key} className="flex justify-center items-center gap-2">
-                          <span className="text-sm font-medium w-1/2">{capitalizeLabel(key)}</span>
-                          <Input
-                            value={value}
-                            onChange={(e) => handleDriverChargeChange(key, e.target.value)}
-                            type="text"
-                            placeholder="Amount"
-                            className="flex-1"
-                            min={0}
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="space-y-2 w-2/3">
-                      <Label className="text-sm text-gray-600">Extra Charges</Label>
-
-                      {/* Add New Extra Charge Inputs */}
-                      <div className="flex gap-2 mb-2">
-                        <Input
-                          value={newChargeKey}
-                          onChange={(e) => setNewChargeKey(e.target.value)}
-                          placeholder="Label"
-                          className="w-1/2"
-                        />
-                        <Input
-                          value={newChargeValue}
-                          onChange={(e) => setNewChargeValue(e.target.value)}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-sm text-gray-600">Start Odometer Value</Label>
+                      {isManualCompleted ?
+                        (<Input
                           type="text"
-                          placeholder="Amount"
-                          className="w-1/3"
-                          min={0}
+                          value={formData?.startOdometerValue}
+                          onChange={(e) => handleChange(e, 'startOdometerValue')}
+                          className="w-full"
+                        />)
+                        : <div className="font-medium">{booking?.startOdometerValue ?? '-'}</div>
+                      }
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-sm text-gray-600">End Odometer Value</Label>
+                      {isManualCompleted ?
+                        (<Input
+                          type="text"
+                          value={formData?.endOdometerValue}
+                          onChange={(e) => handleChange(e, 'endOdometerValue')}
+                          className="w-full"
+                        />)
+                        : <div className="font-medium">{booking?.endOdometerValue ?? '-'}</div>
+                      }
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-sm text-gray-600">Start Odometer</Label>
+                      <ImagePreview src={booking?.startOdometerImage ?? ''} alt="Start Odometer" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-sm text-gray-600">End Odometer</Label>
+                      <ImagePreview src={booking?.endOdometerImage ?? ''} alt="End Odometer" />
+                    </div>
+                  </div>
+
+                  {isManualCompleted ? (
+                    <React.Fragment>
+                      <div className="space-y-1">
+                        <Label className="text-sm text-gray-600">Trip Completed Distance</Label>
+                        <div className="font-medium">{formData?.tripCompletedDistance ?? '-'}</div>
+                      </div>
+                      <div className="space-y-2 w-1/2">
+                        <Label className="text-sm text-gray-600">Trip Start Date&Time</Label>
+                        <Input
+                          type="datetime-local"
+                          value={
+                            formatForDateTimeLocal(formData?.tripStartedTime || booking?.tripStartedTime)
+                          }
+                          onChange={(e) => handleChange(e, "tripStartedTime")}
                         />
-                        <Button
-                          variant="secondary"
-                          onClick={handleAddExtraCharge}
-                        >
-                          <Plus className="w-4 h-4 text-white" />
-                        </Button>
+                      </div>
+                      <div className="space-y-2 w-1/2">
+                        <Label className="text-sm text-gray-600">Trip End Date&Time</Label>
+                        <Input
+                          type="datetime-local"
+                          value={
+                            formatForDateTimeLocal(formData?.tripCompletedTime || booking?.tripCompletedTime)
+                          }
+                          onChange={(e) => handleChange(e, 'tripCompletedTime')}
+                        />
                       </div>
 
-                      {/* Existing Extra Charges List */}
-                      {Object.entries(extraCharges).filter(([key, value]) => Number(value) > 0).map(([key, value]) => (
-                        <div key={key} className="flex justify-center items-center gap-2">
-                          <span className="text-sm font-medium w-1/2">{capitalizeLabel(key)}</span>
-                          <Input
-                            value={value}
-                            onChange={(e) => handleExtraChargeChange(key, e.target.value)}
-                            type="text"
-                            placeholder="Amount"
-                            className="flex-1"
-                            min={0}
-                          />
-                          <Button
-                            variant="destructive"
-                            onClick={() => handleDeleteExtraCharge(key)}
-                          >
-                            <X className="w-4 h-4 text-white" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </React.Fragment>
-                ) : (
-
-                  <div>
-                    {afterTripFields.map((field) => renderField(field, 'after'))}
-
-                    {/* Driver Charges Section */}
-                    {(editMode === 'after' || isManualCompleted) ? (
                       <div className="space-y-2 w-1/2">
                         <Label className="text-sm text-gray-600">Driver Charges</Label>
-                        {Object.entries(driverCharges).filter(([key, value]) => Number(value) > 0).map(([key, value]) => (
+
+                        {Object.entries(driverCharges).map(([key, value]) => (
                           <div key={key} className="flex justify-center items-center gap-2">
                             <span className="text-sm font-medium w-1/2">{capitalizeLabel(key)}</span>
                             <Input
@@ -939,25 +870,7 @@ export default function BookingDetailsPage() {
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <>
-                        {Object.keys(driverCharges).length > 0 && (
-                          <div className="space-y-2 w-1/2">
-                            <Label className="text-sm"><span className=' text-sm font-semibold'> Driver Charges : </span></Label>
-                            {Object.entries(driverCharges).filter(([key, value]) => Number(value) > 0).map(([key, value]) => (
-                              <div key={key} className="flex justify-between items-center gap-2 ">
-                                <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
-                                <span className="text-sm font-medium">
-                                  {formatCurrency(Number(value) || 0)}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </>
-                    )}
 
-                    {(editMode === 'after') ? (
                       <div className="space-y-2 w-2/3">
                         <Label className="text-sm text-gray-600">Extra Charges</Label>
 
@@ -1006,43 +919,134 @@ export default function BookingDetailsPage() {
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <>
-                        {Object.keys(extraCharges).length > 0 && (
-                          <div className="space-y-2 w-1/2">
-                            <Label className="text-sm">
-                              <span className="text-sm font-semibold">Extra Charges:</span>
-                            </Label>
-                            {Object.entries(extraCharges).filter(([key, value]) => Number(value) > 0).map(([key, value]) => (
-                              <div key={key} className="flex justify-between items-center gap-2">
-                                <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
-                                <span className="text-sm font-medium">
-                                  {formatCurrency(Number(value) || 0)}
-                                </span>
-                              </div>
-                            ))}
+                    </React.Fragment>
+                  ) : (
+
+                    <div>
+                      {afterTripFields.map((field) => renderField(field, 'after'))}
+
+                      {/* Driver Charges Section */}
+                      {(editMode === 'after' || isManualCompleted) ? (
+                        <div className="space-y-2 w-1/2">
+                          <Label className="text-sm text-gray-600">Driver Charges</Label>
+                          {Object.entries(driverCharges).filter(([key, value]) => Number(value) > 0).map(([key, value]) => (
+                            <div key={key} className="flex justify-center items-center gap-2">
+                              <span className="text-sm font-medium w-1/2">{capitalizeLabel(key)}</span>
+                              <Input
+                                value={value}
+                                onChange={(e) => handleDriverChargeChange(key, e.target.value)}
+                                type="text"
+                                placeholder="Amount"
+                                className="flex-1"
+                                min={0}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <>
+                          {Object.keys(driverCharges).length > 0 && (
+                            <div className="space-y-2 w-1/2">
+                              <Label className="text-sm"><span className=' text-sm font-semibold'> Driver Charges : </span></Label>
+                              {Object.entries(driverCharges).filter(([key, value]) => Number(value) > 0).map(([key, value]) => (
+                                <div key={key} className="flex justify-between items-center gap-2 ">
+                                  <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
+                                  <span className="text-sm font-medium">
+                                    {formatCurrency(Number(value) || 0)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {(editMode === 'after') ? (
+                        <div className="space-y-2 w-2/3">
+                          <Label className="text-sm text-gray-600">Extra Charges</Label>
+
+                          {/* Add New Extra Charge Inputs */}
+                          <div className="flex gap-2 mb-2">
+                            <Input
+                              value={newChargeKey}
+                              onChange={(e) => setNewChargeKey(e.target.value)}
+                              placeholder="Label"
+                              className="w-1/2"
+                            />
+                            <Input
+                              value={newChargeValue}
+                              onChange={(e) => setNewChargeValue(e.target.value)}
+                              type="text"
+                              placeholder="Amount"
+                              className="w-1/3"
+                              min={0}
+                            />
+                            <Button
+                              variant="secondary"
+                              onClick={handleAddExtraCharge}
+                            >
+                              <Plus className="w-4 h-4 text-white" />
+                            </Button>
                           </div>
-                        )}
-                      </>
-                    )}
 
-                    {editMode === 'after' && (
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button variant="outline" onClick={handleCancel}>
-                          Cancel
-                        </Button>
-                        <Button onClick={handleSave}>Save Changes</Button>
-                      </div>
-                    )}
-                  </div>)
-                }
+                          {/* Existing Extra Charges List */}
+                          {Object.entries(extraCharges).filter(([key, value]) => Number(value) > 0).map(([key, value]) => (
+                            <div key={key} className="flex justify-center items-center gap-2">
+                              <span className="text-sm font-medium w-1/2">{capitalizeLabel(key)}</span>
+                              <Input
+                                value={value}
+                                onChange={(e) => handleExtraChargeChange(key, e.target.value)}
+                                type="text"
+                                placeholder="Amount"
+                                className="flex-1"
+                                min={0}
+                              />
+                              <Button
+                                variant="destructive"
+                                onClick={() => handleDeleteExtraCharge(key)}
+                              >
+                                <X className="w-4 h-4 text-white" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <>
+                          {Object.keys(extraCharges).length > 0 && (
+                            <div className="space-y-2 w-1/2">
+                              <Label className="text-sm">
+                                <span className="text-sm font-semibold">Extra Charges:</span>
+                              </Label>
+                              {Object.entries(extraCharges).filter(([key, value]) => Number(value) > 0).map(([key, value]) => (
+                                <div key={key} className="flex justify-between items-center gap-2">
+                                  <span className="text-sm font-medium">{capitalizeLabel(key)}</span>
+                                  <span className="text-sm font-medium">
+                                    {formatCurrency(Number(value) || 0)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
 
-              </CardContent>
-            </Card>
+                      {editMode === 'after' && (
+                        <div className="flex justify-end space-x-2 pt-4">
+                          <Button variant="outline" onClick={handleCancel}>
+                            Cancel
+                          </Button>
+                          <Button onClick={handleSave}>Save Changes</Button>
+                        </div>
+                      )}
+                    </div>)
+                  }
+
+                </CardContent>
+              </Card>}
           </div>
 
           {/* Trip Calculation Card (Full Width) */}
-          {(booking.tripCompletedFinalAmount > 0) && (
+          {(booking.tripCompletedFinalAmount > 0 && isManualCompletePending !== false) && (
             <div className=' rounded-lg flex flex-col items-center gap-6'>
 
               {/* Trip Summary */}
