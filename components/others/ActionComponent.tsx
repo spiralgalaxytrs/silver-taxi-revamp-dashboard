@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Eye, Pencil, Trash, MenuIcon } from "lucide-react";
+import { Eye, Pencil, Trash, MenuIcon, Forward } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -32,6 +32,7 @@ interface ActionDropdownProps {
   disableEdit?: boolean;
   disableView?: boolean;
   disableDelete?: boolean;
+  convertToBooking?: string;
 }
 
 const ActionDropdown = ({
@@ -44,6 +45,7 @@ const ActionDropdown = ({
   disableEdit = false,
   disableView = false,
   disableDelete = false,
+  convertToBooking
 }: ActionDropdownProps) => {
   const router = useRouter();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -62,10 +64,16 @@ const ActionDropdown = ({
           <MenuIcon className="w-16 h-16 text-black" strokeWidth={3} />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-40">
+      <DropdownMenuContent className="w-50">
         {!disableView && (
           <DropdownMenuItem onClick={() => router.push(`${viewPath}/${id}`)}>
             <Eye className="w-4 h-4 mr-2" /> View
+          </DropdownMenuItem>
+        )}
+
+        {convertToBooking && (
+          <DropdownMenuItem onClick={() => router.push(`${convertToBooking}`)}>
+            <Forward className="w-4 h-4 mr-2" /> Convert to Booking
           </DropdownMenuItem>
         )}
 
