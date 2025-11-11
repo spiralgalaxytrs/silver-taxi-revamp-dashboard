@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent } from "components/ui/card";
-import { Loader2, ChevronLeft } from "lucide-react";
+import { Loader2, ChevronLeft, Edit } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import {
     Tooltip,
@@ -219,7 +219,7 @@ export default function ViewDriverPage() {
     };
 
     const handleSubmit = async () => {
-        
+
         const amount = Number(adjustmentAmount);
         const id = editedDriver?.driverId;
 
@@ -391,7 +391,21 @@ export default function ViewDriverPage() {
                                 <h1 className="text-2xl font-bold text-gray-800">Driver Details</h1>
                             </div>
                             <h3 className="text-xl font-bold">
-                                {capitalize(editedDriver.name)} - {editedDriver.phone}
+                                <span>
+                                    {capitalize(editedDriver.name)} - &nbsp;
+                                </span>
+                                <span>
+                                    {editedDriver.phone}
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="hover:bg-transparent hover:scale-[1.5]"
+                                        onClick={() => {
+
+                                        }}>
+                                        <Edit className="w-4 h-4 inline-block ml-2 text-blue-500" />
+                                    </Button>
+                                </span>
                             </h3>
                             <Tooltip>
                                 <TooltipTrigger asChild>
@@ -537,6 +551,6 @@ export default function ViewDriverPage() {
                     </CardContent>
                 </TooltipProvider>
             </Card>
-        </div>
+        </div >
     );
 }

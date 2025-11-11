@@ -126,6 +126,7 @@ export function EnquiryPopup({
                 type="booking"
                 onDelete={handleDelete}
                 // viewPath="/admin/enquiries/view"
+                convertToBooking={enquiry?.status != "Booked" ? `/admin/bookings/create?enquiryId=${enquiry?.enquiryId}` : ''}
                 editPath="/admin/enquiry/edit"
                 className="absolute top-20 right-4"
                 disableView
