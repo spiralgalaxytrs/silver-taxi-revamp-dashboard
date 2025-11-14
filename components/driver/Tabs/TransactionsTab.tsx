@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { DriverTransaction, walletColumns } from "app/admin/drivers/view/[id]/walletColumns";
+import { walletColumns } from "app/admin/drivers/view/[id]/walletColumns";
 import { Button } from "components/ui/button";
 import { Activity } from "lucide-react";
 import { Card } from "components/ui/card";
@@ -24,9 +24,10 @@ import {
 import { useDriverTransactions } from "hooks/react-query/useWallet";
 import { RefreshCcw } from "lucide-react";
 import { StatsCard } from "./StatsCard";
+import { WalletTransaction } from "types/react-query/wallet";
 
 interface TransactionsTabProps {
-  walletTransactions: DriverTransaction[];
+  walletTransactions: WalletTransaction[];
   editedDriver: any;
   adjustmentAmount: string;
   setAdjustmentAmount: (value: string) => void;
