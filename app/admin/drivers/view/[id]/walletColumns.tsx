@@ -5,25 +5,14 @@ import {
     MRT_ColumnDef,
 } from 'material-react-table'
 import TooltipComponent from "components/others/TooltipComponent";
+import { WalletTransaction } from "types/react-query/wallet";
 
-export type DriverTransaction = {
-    transactionId: string;
-    driverId?: string;
-    initiatedBy: string;
-    initiatedTo: string;
-    ownedBy: "Driver" | "Vendor";
-    type: string;
-    amount: number;
-    createdAt?: string;
-    description: string
-    remark: string;
-};
-
-export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
+export const walletColumns: MRT_ColumnDef<WalletTransaction>[] = [
     {
         header: "S.No",
         Cell: ({ row }) => row.index + 1, // Assigns Serial Number dynamically
-        muiTableHeadCellProps: { align: 'left' ,
+        muiTableHeadCellProps: {
+            align: 'left',
             sx: {
                 '& .MuiBox-root': {
                     gap: 0, // ✅ Removes space between filter & menu icons
@@ -42,10 +31,11 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
         header: "Transaction ID",
         Header: () => (
             <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-              Transaction<br />ID
+                Transaction<br />ID
             </div>
-          ),
-        muiTableHeadCellProps: { align: 'left' ,
+        ),
+        muiTableHeadCellProps: {
+            align: 'left',
             sx: {
                 '& .MuiBox-root': {
                     gap: 0, // ✅ Removes space between filter & menu icons
@@ -66,7 +56,8 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
     {
         accessorKey: "initiatedTo",
         header: "Name/Phone",
-        muiTableHeadCellProps: { align: 'left' ,
+        muiTableHeadCellProps: {
+            align: 'left',
             sx: {
                 '& .MuiBox-root': {
                     gap: 0, // ✅ Removes space between filter & menu icons
@@ -83,7 +74,8 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
     {
         accessorKey: "ownedBy",
         header: "Category",
-        muiTableHeadCellProps: { align: 'left',
+        muiTableHeadCellProps: {
+            align: 'left',
             sx: {
                 '& .MuiBox-root': {
                     gap: 0, // ✅ Removes space between filter & menu icons
@@ -93,7 +85,7 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
                     margin: 0,
                 },
             },
-         },
+        },
         muiTableBodyCellProps: { align: 'left' },
         size: 20,
     },
@@ -102,9 +94,9 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
         header: "Transaction Type",
         Header: () => (
             <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-              Transaction<br />Type
+                Transaction<br />Type
             </div>
-          ),
+        ),
         Cell: ({ row }) => {
             const type = row.getValue("type") as string;
             return (
@@ -115,7 +107,8 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
                 </div>
             );
         },
-        muiTableHeadCellProps: { align: 'left' ,
+        muiTableHeadCellProps: {
+            align: 'left',
             sx: {
                 '& .MuiBox-root': {
                     gap: 0, // ✅ Removes space between filter & menu icons
@@ -125,11 +118,38 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
                     margin: 0,
                 },
             },
-         },
+        },
         muiTableBodyCellProps: { align: 'left' },
         size: 25,
     },
     {
+        accessorKey: "previousWalletBalance",
+        header: "Previous Balance",
+        Cell: ({ row }) => {
+            const fareBreakdown = row.original.fareBreakdown;
+            const amount = parseFloat(fareBreakdown?.previousWalletBalance || 0);
+            const formatted = new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+            }).format(amount);
+
+            return <div>{formatted}</div>
+        },
+        muiTableHeadCellProps: {
+            align: 'left',
+            sx: {
+                '& .MuiBox-root': {
+                    gap: 0, // ✅ Removes space between filter & menu icons
+                },
+                '& .MuiButtonBase-root': {
+                    padding: '2px',
+                    margin: 0,
+                },
+            },
+        },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
+    }, {
         accessorKey: "amount",
         header: "Amount",
         Cell: ({ row }) => {
@@ -143,7 +163,8 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
 
             return <div>{prefix} {formatted}</div>
         },
-        muiTableHeadCellProps: { align: 'left' ,
+        muiTableHeadCellProps: {
+            align: 'left',
             sx: {
                 '& .MuiBox-root': {
                     gap: 0, // ✅ Removes space between filter & menu icons
@@ -153,24 +174,52 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
                     margin: 0,
                 },
             },
-         },
+        },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
+    }, {
+        accessorKey: "postWalletBalance",
+        header: "Current Balance",
+        Cell: ({ row }) => {
+            const fareBreakdown = row.original.fareBreakdown;
+            const amount = parseFloat(fareBreakdown?.postWalletBalance || 0);
+            const formatted = new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+            }).format(amount);
+
+            return <div>{formatted}</div>
+        },
+        muiTableHeadCellProps: {
+            align: 'left',
+            sx: {
+                '& .MuiBox-root': {
+                    gap: 0, // ✅ Removes space between filter & menu icons
+                },
+                '& .MuiButtonBase-root': {
+                    padding: '2px',
+                    margin: 0,
+                },
+            },
+        },
         muiTableBodyCellProps: { align: 'left' },
         size: 20,
     },
     {
         accessorKey: "remark",
         header: "Remarks",
-        Cell:({row})=>{
+        Cell: ({ row }) => {
             const remark = row.getValue("remark") as string
-             if (!remark) return <div>-</div>
-           return (
-        <TooltipComponent name={remark}>
-          <div>{remark.slice(0, 15)}...</div>
-        </TooltipComponent>
-      )
-             
+            if (!remark) return <div>-</div>
+            return (
+                <TooltipComponent name={remark}>
+                    <div>{remark.slice(0, 15)}...</div>
+                </TooltipComponent>
+            )
+
         },
-        muiTableHeadCellProps: { align: 'left' ,
+        muiTableHeadCellProps: {
+            align: 'left',
             sx: {
                 '& .MuiBox-root': {
                     gap: 0, // ✅ Removes space between filter & menu icons
@@ -180,7 +229,7 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
                     margin: 0,
                 },
             },
-         },
+        },
         muiTableBodyCellProps: { align: 'left' },
         size: 20,
     },
@@ -201,7 +250,8 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
                 </div>
             )
         },
-        muiTableHeadCellProps: { align: 'left' ,
+        muiTableHeadCellProps: {
+            align: 'left',
             sx: {
                 '& .MuiBox-root': {
                     gap: 0, // ✅ Removes space between filter & menu icons
@@ -211,7 +261,7 @@ export const walletColumns: MRT_ColumnDef<DriverTransaction>[] = [
                     margin: 0,
                 },
             },
-         },
+        },
         muiTableBodyCellProps: { align: 'left' },
         size: 20,
     },

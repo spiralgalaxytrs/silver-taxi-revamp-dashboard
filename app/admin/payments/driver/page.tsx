@@ -111,7 +111,7 @@ export default function DriverPaymentPage() {
           payment.vendorId?.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.initiatedBy.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.initiatedTo.toLowerCase().includes(filters.search.toLowerCase()) ||
-          payment.ownedBy.toLowerCase().includes(filters.search.toLowerCase()) ||
+          payment.ownedBy !== undefined && payment.ownedBy.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.type.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.amount.toString().toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.description.toString().toLowerCase().includes(filters.search.toLowerCase())
