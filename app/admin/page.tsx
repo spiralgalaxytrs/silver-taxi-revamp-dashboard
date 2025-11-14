@@ -24,7 +24,10 @@ export default function AdminDashboard() {
 
   const { data: bookings = [], isPending: isLoading, refetch: refetchBookings } = useFetchBookings();
   const { data: enquiries = [], isPending: isEnquiriesLoading, refetch: refetchEnquiries } = useEnquiries();
-  const { data: drivers = [], isPending: isDriversLoading, refetch: refetchDrivers } = useDrivers({ enabled: true });
+  const { data: driversData = { drivers: [], pagination: { currentPage: 0, totalPages: 0, totalDrivers: 0, hasNext: false, hasPrev: false, limit: 0 } },
+    isPending: isDriversLoading,
+    refetch: refetchDrivers
+  } = useDrivers({ enabled: true });
   const { data: invoices = [], isPending: isInvoicesLoading } = useInvoices();
 
   const { manualBookings, vendorBookings, websiteBookings } = useMemo(() => {
@@ -198,7 +201,7 @@ export default function AdminDashboard() {
           </Card>
           <Card className="border-none bg-white shadow-md">
             <CardContent className="p-6">
-              <Overview drivers={drivers} isLoading={isDriversLoading} />
+              <Overview drivers={driversData?.drivers || []} isLoading={isDriversLoading} />
             </CardContent>
           </Card>
         </div>

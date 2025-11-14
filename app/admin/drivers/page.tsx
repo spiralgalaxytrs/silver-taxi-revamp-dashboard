@@ -46,11 +46,54 @@ import {
 export default function DriversPage(): JSX.Element {
   const router = useRouter();
 
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 25,
+  });
+
+  // Search and filter state
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
+  const [globalFilter, setGlobalFilter] = useState('');
+
+  // Calculate page number (MaterialReactTable uses 0-based, backend uses 1-based)
+  const page = pagination.pageIndex + 1;
+  const limit = pagination.pageSize;
+
+  // Sync globalFilter with search state for server-side search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearch(globalFilter);
+      // Reset to first page when search changes
+      setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    }, 500); // Debounce search by 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [globalFilter]);
+
+  // adminId will be extracted from token by backend if not provided
+  // You can pass it explicitly if available from your auth system
   const {
-    data: drivers = [],
+    data: driversData,
     isLoading,
     refetch
-  } = useDrivers({ enabled: true });
+  } = useDrivers({
+    enabled: true,
+    page,
+    limit,
+    search: search || undefined,
+    status: status || undefined,
+    sortBy,
+    sortOrder,
+    // adminId is optional - backend extracts from token if not provided
+  });
+
+  // Extract drivers and pagination from response
+  const drivers = driversData?.drivers || [];
+  const paginationInfo = driversData?.pagination;
 
   const {
     mutate: bulkDeleteDrivers
@@ -72,15 +115,9 @@ export default function DriversPage(): JSX.Element {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
   const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
-  const [sortConfig, setSortConfig] = useState<{
-    columnId: string | null;
-    direction: 'asc' | 'desc' | null;
-  }>({ columnId: null, direction: null });
 
-  // Filters state for search and created date range
+  // Legacy filters for date range (if still needed)
   const [filters, setFilters] = useState({
-    search: '',
-    isActive: null,
     creationDateStart: '',
     creationDateEnd: ''
   });
@@ -92,6 +129,7 @@ export default function DriversPage(): JSX.Element {
       walletAmount: driver.wallet?.balance ?? 0
     }))
   }, [drivers]);
+
   // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
   const columnVisibility = useMemo(() => {
     const serverVisibility = tableColumnVisibility.preferences || {};
@@ -110,22 +148,9 @@ export default function DriversPage(): JSX.Element {
   }, [localColumnVisibility, isColumnVisibilityUpdated]);
 
 
-  const unFiltered = [...driverData].sort((a, b) => {
-    const aCreatedAt = new Date(a.createdAt).getTime();
-    const bCreatedAt = new Date(b.createdAt).getTime();
-    return bCreatedAt - aCreatedAt; // Descending order
-  });
-
-  const applyFilters = () => {
-    let filtered = [...unFiltered];
-
-    if (filters.search) {
-      filtered = filtered.filter(driver =>
-        driver?.driverId?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        driver.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-        driver.email?.toLowerCase().includes(filters.search.toLowerCase())
-      );
-    }
+  // Apply client-side date filters only (search and status are server-side)
+  const finalDrivers = useMemo(() => {
+    let filtered = [...driverData];
 
     if (filters.creationDateStart || filters.creationDateEnd) {
       filtered = filtered.filter(driver => {
@@ -136,63 +161,41 @@ export default function DriversPage(): JSX.Element {
       });
     }
 
-    // Use this:
-    if (filters.isActive !== null && filters.isActive !== "") {
-      const isActiveValue = filters.isActive === "true";
-      filtered = filtered.filter(driver => driver.isActive === isActiveValue);
-    }
-
-    // Global sorting logic
-    if (sortConfig.columnId && sortConfig.direction) {
-      filtered.sort((a, b) => {
-        const aValue = a[sortConfig.columnId as keyof typeof a];
-        const bValue = b[sortConfig.columnId as keyof typeof b];
-
-        if (aValue === null || bValue === null) return 0;
-
-        if (aValue === bValue) return 0;
-
-        if (sortConfig.direction === 'asc') {
-          return (aValue ?? '') > (bValue ?? '') ? 1 : -1;
-        } else {
-          return (aValue ?? '') < (bValue ?? '') ? 1 : -1;
-        }
-      });
-    }
-
     return filtered;
-  };
+  }, [driverData, filters.creationDateStart, filters.creationDateEnd]);
 
-  const finalDrivers = applyFilters();
-
-  // Calculate counters whenever the driver data changes
-  const totalDrivers = finalDrivers.length;
-
+  // Calculate counters from pagination info or filtered data
+  const totalDrivers = paginationInfo?.totalDrivers || finalDrivers.length;
   const inactiveDrivers = useMemo(() => (
     finalDrivers.filter(driver => driver.isActive === false).length
   ), [finalDrivers]);
-
   const activeDrivers = totalDrivers - inactiveDrivers;
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    if (key === 'search') {
+      setSearch(value);
+      // Reset to first page when search changes
+      setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    } else if (key === 'status') {
+      setStatus(value);
+      // Reset to first page when status changes
+      setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    } else {
+      setFilters(prev => ({ ...prev, [key]: value }));
+    }
   };
 
   const handleClear = () => {
+    setSearch('');
+    setGlobalFilter(''); // Clear table search
+    setStatus('');
     setFilters({
-      search: '',
-      isActive: null,
       creationDateStart: '',
       creationDateEnd: ''
     });
-    setSortConfig({ columnId: null, direction: null });
-  };
-
-  const handleSort = (columnId: string) => {
-    setSortConfig(prev => ({
-      columnId,
-      direction: prev.columnId === columnId && prev.direction === 'asc' ? 'desc' : 'asc',
-    }));
+    setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    setSortBy('createdAt');
+    setSortOrder('DESC');
   };
 
   const getFormattedCreatedDateRange = () => {
@@ -370,20 +373,21 @@ export default function DriversPage(): JSX.Element {
                   <Input
                     id="search"
                     placeholder="Search drivers"
-                    value={filters.search}
+                    value={search}
                     onChange={(e) => handleFilterChange('search', e.target.value)}
                   />
                 </div>
                 <div className="flex flex-col w-[230px]">
                   <Label className="text-sm font-medium leading-none">Status</Label>
                   <div className='mt-1'>
-                    <Select onValueChange={(value) => handleFilterChange('isActive', value)}>
-                      <SelectTrigger id="isActive">
+                    <Select onValueChange={(value) => handleFilterChange('status', value)} value={status}>
+                      <SelectTrigger id="status">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="true">Active</SelectItem>
-                        <SelectItem value="false">Inactive</SelectItem>
+                        <SelectItem value="">All</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -418,36 +422,41 @@ export default function DriversPage(): JSX.Element {
             columns={columns as MRT_ColumnDef<any>[]}
             data={finalDrivers}
             enableRowSelection
-            positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting, columnVisibility }}
+            state={{
+              rowSelection,
+              sorting,
+              columnVisibility,
+              pagination,
+              globalFilter,
+            }}
+            onGlobalFilterChange={setGlobalFilter}
+            manualFiltering={true} // Enable server-side filtering
             onColumnVisibilityChange={(newVisibility) => {
               setIsColumnVisibilityUpdated(true);
               setLocalColumnVisibility(newVisibility);
             }}
-            onSortingChange={setSorting}
+            // onSortingChange={handleSortingChange}
             enableSorting
             enableColumnPinning={false}
+            // Server-side pagination
+            manualPagination={true}
+            onPaginationChange={setPagination}
+            rowCount={paginationInfo?.totalDrivers || 0}
             initialState={{
               density: 'compact',
-              pagination: { pageIndex: 0, pageSize: 10 },
+              pagination: { pageIndex: 0, pageSize: 25 },
               columnPinning: { right: ["actions"] },
-              showGlobalFilter: true,
+              showGlobalFilter: true, // Enable global search
             }}
             muiSearchTextFieldProps={{
               placeholder: 'Search ...',
               variant: 'outlined',
-              fullWidth: true, // 🔥 Makes the search bar take full width
               sx: {
-                minWidth: '600px', // Adjust width as needed
-                marginLeft: '16px',
+                minWidth: '600px',
               },
             }}
-            muiToolbarAlertBannerProps={{
-              sx: {
-                justifyContent: 'flex-start', // Aligns search left
-              },
-            }}
+            positionGlobalFilter="left"
             renderTopToolbarCustomActions={() => (
               <div className="flex flex-1 justify-end items-center">
                 {/* 🔁 Refresh Button */}
