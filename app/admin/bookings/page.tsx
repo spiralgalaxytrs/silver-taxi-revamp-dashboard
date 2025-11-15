@@ -293,23 +293,6 @@ export default function BookingsPage() {
     router.push('/admin/bookings/create');
   };
 
-  // const getFormattedBookingDateRange = () => {
-  //   const start = filters.bookingStartDate ? new Date(filters.bookingStartDate).toLocaleDateString() : '';
-  //   const end = filters.bookingEndDate ? new Date(filters.bookingEndDate).toLocaleDateString() : '';
-  //   return start && end ? `${start} - ${end}` : 'Pick a range';
-  // };
-
-  // const getFormattedDateRange = () => {
-  //   const start = filters.pickupStartDate ? new Date(filters.pickupStartDate).toLocaleDateString() : '';
-  //   const end = filters.pickupEndDate ? new Date(filters.pickupEndDate).toLocaleDateString() : '';
-  //   return start && end ? `${start} - ${end}` : 'Pick a range';
-  // };
-
-  // const getFormattedDropDateRange = () => {
-  //   const start = filters.dropStartDate ? new Date(filters.dropStartDate).toLocaleDateString() : '';
-  //   const end = filters.dropEndDate ? new Date(filters.dropEndDate).toLocaleDateString() : '';
-  //   return start && end ? `${start} - ${end}` : 'Pick a range';
-  // };
 
   const handleBulkDelete = () => {
     const selectedIds = Object.keys(rowSelection);
@@ -610,97 +593,6 @@ export default function BookingsPage() {
               </button>
             </div>
           </div>
-          {/* {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-t-2 mt-4 p-3 pt-8">
-              <div>
-                <label htmlFor="search" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Search
-                </label>
-                <Input
-                  id="search"
-                  placeholder="Search in bookings"
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="status" className='text-body-dark font-semibold text-sm leading-none mb-3'>Status</Label>
-                <div className='mt-1'>
-                  <Select onValueChange={(value) => handleFilterChange('status', value)}>
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="Not-Started">Not Started</SelectItem>
-                      <SelectItem value="Started">Started</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
-                      <SelectItem value="Cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="serviceType">Select ServiceType</Label>
-                <Select onValueChange={(value) => handleFilterChange('serviceType', value)}>
-                  <SelectTrigger id="serviceType">
-                    <SelectValue placeholder="Select servicType" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Services</SelectItem>
-                    <SelectItem value="One Way">One way</SelectItem>
-                    <SelectItem value="Round Trip">Round Trip</SelectItem>
-                    <SelectItem value="Airport">Airport</SelectItem>
-                    <SelectItem value="Package">Package</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Bookings At</Label>
-                <DateRangeAccordion
-                  label={getFormattedBookingDateRange()}
-                  startDate={filters.bookingStartDate}
-                  endDate={filters.bookingEndDate}
-                  onStartDateChange={(date: any) => handleFilterChange('bookingStartDate', date)}
-                  onEndDateChange={(date: any) => handleFilterChange('bookingEndDate', date)}
-                />
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Pickup Date</Label>
-                <DateRangeAccordion
-                  label={getFormattedDateRange()}
-                  startDate={filters.pickupStartDate}
-                  endDate={filters.pickupEndDate}
-                  onStartDateChange={(date: any) => handleFilterChange('pickupStartDate', date)}
-                  onEndDateChange={(date: any) => handleFilterChange('pickupEndDate', date)}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Drop Date</Label>
-                <DateRangeAccordion
-                  label={getFormattedDropDateRange()}
-                  startDate={filters.dropStartDate}
-                  endDate={filters.dropEndDate}
-                  onStartDateChange={(date: any) => handleFilterChange('dropStartDate', date)}
-                  onEndDateChange={(date: any) => handleFilterChange('dropEndDate', date)}
-                />
-              </div>
-
-              <div className='flex justify-start items-center'>
-                <Button
-                  className='mt-5 p-1 border-none bg-[#009F87] flex justify-center items-center w-28'
-                  // variant="outline"
-                  onClick={handleClear}
-                  disabled={isLoading}
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
-          )} */}
         </div>
         <div className="rounded bg-white shadow">
           <MaterialReactTable

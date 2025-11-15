@@ -112,8 +112,6 @@ export default function EnquiryPage() {
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
   }, [filters.status]);
 
-  const [lockBack, setLockBack] = useState(false);
-  useBackNavigation(lockBack);
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [isSpinning, setIsSpinning] = useState(false)
@@ -137,11 +135,6 @@ export default function EnquiryPage() {
   const manualEnquiries = enquiriesCount?.manual || 0
   const websiteEnquiries = enquiriesCount?.website || 0
 
-
-  const handleFilterChange = (key: string, value: any) => {
-    setFilters((prev) => ({ ...prev, [key]: value }))
-  }
-
   // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
   const columnVisibility = useMemo(() => {
     const serverVisibility = tableColumnVisibility.preferences || {};
@@ -162,24 +155,6 @@ export default function EnquiryPage() {
 
   const handleCreateEnquiry = () => {
     router.push('/admin/enquiry/create')
-  }
-
-  const getFormattedEnquiryDateRange = () => {
-    const start = filters.enquiryStartDate ? new Date(filters.enquiryStartDate).toLocaleDateString() : ''
-    const end = filters.enquiryEndDate ? new Date(filters.enquiryEndDate).toLocaleDateString() : ''
-    return start && end ? `${start} - ${end}` : 'Pick a range'
-  }
-
-  const getFormattedDateRange = () => {
-    const start = filters.pickupStartDate ? new Date(filters.pickupStartDate).toLocaleDateString() : ''
-    const end = filters.pickupEndDate ? new Date(filters.pickupEndDate).toLocaleDateString() : ''
-    return start && end ? `${start} - ${end}` : 'Pick a range'
-  }
-
-  const getFormattedDropDateRange = () => {
-    const start = filters.dropStartDate ? new Date(filters.dropStartDate).toLocaleDateString() : ''
-    const end = filters.dropEndDate ? new Date(filters.dropEndDate).toLocaleDateString() : ''
-    return start && end ? `${start} - ${end}` : 'Pick a range'
   }
 
   const handleBulkDelete = () => {
@@ -351,89 +326,6 @@ export default function EnquiryPage() {
               <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-orange-500 to-red-500 transform scale-x-100" />
             </Card>
           </div>
-          {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-t-2 mt-4 p-3 pt-8">
-              <div>
-                <label
-                  htmlFor="search"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Search
-                </label>
-                <Input
-                  id="search"
-                  placeholder="Search in enquiries"
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="status">Select Status</Label>
-                <Select onValueChange={(value) => handleFilterChange('status', value)}>
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="fake">Fake</SelectItem>
-                    <SelectItem value="current">Current</SelectItem>
-                    <SelectItem value="future">Future</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="serviceName">Select ServiceName</Label>
-                <Select onValueChange={(value) => handleFilterChange('serviceName', value)}>
-                  <SelectTrigger id="serviceName">
-                    <SelectValue placeholder="Select serviceName" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Services</SelectItem>
-                    <SelectItem value="One Way">One way</SelectItem>
-                    <SelectItem value="Round Trip">Round Trip</SelectItem>
-                    <SelectItem value="Airport">Airport</SelectItem>
-                    <SelectItem value="Package">Package</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Enquiry At
-                </Label>
-                <DateRangeAccordion
-                  label={getFormattedEnquiryDateRange()}
-                  startDate={filters.enquiryStartDate}
-                  endDate={filters.enquiryEndDate}
-                  onStartDateChange={(date: any) => handleFilterChange('enquiryStartDate', date)}
-                  onEndDateChange={(date: any) => handleFilterChange('enquiryEndDate', date)}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Pickup Date
-                </Label>
-                <DateRangeAccordion
-                  label={getFormattedDateRange()}
-                  startDate={filters.pickupStartDate}
-                  endDate={filters.pickupEndDate}
-                  onStartDateChange={(date: any) => handleFilterChange('pickupStartDate', date)}
-                  onEndDateChange={(date: any) => handleFilterChange('pickupEndDate', date)}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Drop Date
-                </Label>
-                <DateRangeAccordion
-                  label={getFormattedDropDateRange()}
-                  startDate={filters.dropStartDate}
-                  endDate={filters.dropEndDate}
-                  onStartDateChange={(date: any) => handleFilterChange('dropStartDate', date)}
-                  onEndDateChange={(date: any) => handleFilterChange('dropEndDate', date)}
-                />
-              </div>
-            </div>
-          )}
         </div>
         <div className="rounded bg-white shadow">
           <MaterialReactTable
