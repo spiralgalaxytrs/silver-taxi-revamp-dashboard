@@ -49,7 +49,7 @@ export default function DriversPage(): JSX.Element {
   // Pagination state
   const [pagination, setPagination] = useState({
     pageIndex: 0,
-    pageSize: 25,
+    pageSize: 10,
   });
 
   // Search and filter state
@@ -445,7 +445,7 @@ export default function DriversPage(): JSX.Element {
             rowCount={paginationInfo?.totalDrivers || 0}
             initialState={{
               density: 'compact',
-              pagination: { pageIndex: 0, pageSize: 25 },
+              pagination: { pageIndex: 0, pageSize: 10 },
               columnPinning: { right: ["actions"] },
               showGlobalFilter: true, // Enable global search
             }}

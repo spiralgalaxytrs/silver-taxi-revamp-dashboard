@@ -14,7 +14,7 @@ export const getDrivers = async (params?: GetDriversParams): Promise<DriversResp
       ...(params?.adminId && { adminId: params.adminId }),
     },
   });
-  console.log("res >> ", res.data.data);
+  // console.log("res >> ", res.data.data);
   return res.data.data;
 };
 

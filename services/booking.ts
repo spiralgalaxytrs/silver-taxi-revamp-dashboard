@@ -1,9 +1,18 @@
 import axios from "lib/http-common";
-import { Booking } from "types/react-query/booking";
+import { Booking, GetBookingsParams, BookingsResponse } from "types/react-query/booking";
 
-// Get all bookings
-export const fetchBookings = async () => {
-  const response = await axios.get("/v1/bookings");
+// Get all bookings with pagination, search, and filtering
+export const fetchBookings = async (params?: GetBookingsParams): Promise<BookingsResponse> => {
+  const response = await axios.get("/v1/bookings", {
+    params: {
+      ...(params?.page && { page: params.page }),
+      ...(params?.limit && { limit: params.limit }),
+      ...(params?.search && { search: params.search }),
+      ...(params?.status && { status: params.status }),
+      ...(params?.sortBy && { sortBy: params.sortBy }),
+      ...(params?.sortOrder && { sortOrder: params.sortOrder }),
+    },
+  });
   return response.data.data;
 };
 

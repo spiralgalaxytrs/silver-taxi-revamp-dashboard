@@ -47,13 +47,32 @@ export default function BookingsPage() {
   const pathname = usePathname();
   const { previousPath } = useNavigationStore()
 
-  // const { bookings, fetchBookings, isLoading, error, bulkDeleteBookings } = useBookingStore();
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
-  const {
-    data: bookings = [],
-    isLoading,
-    refetch
-  } = useFetchBookings();
+  // Search and filter state
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<string>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
+  const [globalFilter, setGlobalFilter] = useState('');
+
+  // Calculate page number (MaterialReactTable uses 0-based, backend uses 1-based)
+  const page = pagination.pageIndex + 1;
+  const limit = pagination.pageSize;
+
+  // Sync globalFilter with search state for server-side search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearch(globalFilter);
+      // Reset to first page when search changes
+      setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    }, 500); // Debounce search by 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [globalFilter]);
 
   const {
     mutate: bulkDeleteBookings
@@ -85,6 +104,55 @@ export default function BookingsPage() {
     vendor: false
   });
   const [isFilterApplied, setIsFilterApplied] = useState(true);
+
+  // Map filter state to actual booking status for backend
+  // notContacted, contacted, and vendor are client-side only filters
+  const getStatusForBackend = useMemo(() => {
+    if (filters.notStarted) return 'Not-Started';
+    if (filters.started) return 'Started';
+    if (filters.completed) return 'Completed';
+    if (filters.cancelled) return 'Cancelled';
+    if (filters.bookingConfirmed) return 'Booking Confirmed';
+    // notContacted, contacted, and vendor are client-side only - don't send status
+    return undefined;
+  }, [filters.notStarted, filters.started, filters.completed, filters.cancelled, filters.bookingConfirmed]);
+
+  // Reset pagination when status filters change
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, pageIndex: 0 }));
+  }, [filters.notStarted, filters.started, filters.completed, filters.cancelled, filters.bookingConfirmed]);
+
+  const {
+    data: bookingsData = {
+      bookings: [],
+      bookingsCount: {
+        bookingConfirmed: 0,
+        cancelled: 0,
+        completed: 0,
+        contacted: 0,
+        notContacted: 0,
+        notStarted: 0,
+        started: 0,
+        vendor: 0,
+      },
+      pagination: { currentPage: 0, totalPages: 0, totalCount: 0, hasNext: false, hasPrev: false, limit: 0 }
+    },
+    isLoading,
+    refetch
+  } = useFetchBookings({
+    enabled: true,
+    page,
+    limit,
+    search: search || undefined,
+    status: getStatusForBackend,
+    sortBy,
+    sortOrder,
+  });
+
+  // Extract bookings and pagination from response
+  const bookings = bookingsData.bookings;
+  const bookingsCount = bookingsData.bookingsCount;
+  const paginationInfo = bookingsData.pagination;
 
   const columnVisibility = useMemo(() => {
     const serverVisibility = tableColumnVisibility.preferences || {};
@@ -120,7 +188,7 @@ export default function BookingsPage() {
 
 
   const bookingData = useMemo(() => {
-    return bookings.map((booking: any) => {
+    return bookings && bookings.length > 0 ? bookings.map((booking: any) => {
 
       if (booking.status === "Reassign") {
         booking.status = "Booking Confirmed"
@@ -132,148 +200,10 @@ export default function BookingsPage() {
         pickupDate: booking.pickupDate,
         dropDate: booking.dropDate ? booking.dropDate : null,
       }
-    })
+    }) : []
   }, [bookings])
 
-
-  const applyFilters = () => {
-    let filteredData = [...bookingData];
-
-    // Debug: Log current filter state
-    // console.log('Current filters:', filters);
-
-    // Special case: Both bookingConfirmed and contacted are selected
-    if (filters.bookingConfirmed && filters.contacted) {
-      console.log('Applying both bookingConfirmed and contacted filters');
-      filteredData = filteredData.filter(booking =>
-        booking.status === "Booking Confirmed" && booking.isContacted === true && booking.createdBy !== "Vendor"
-      );
-    }
-    // Apply individual status filters
-    else if (filters.bookingConfirmed) {
-      console.log('Applying bookingConfirmed filter');
-      filteredData = filteredData.filter(booking => booking.status === "Booking Confirmed" || booking.status === "Reassign");
-    } else if (filters.contacted) {
-      console.log('Applying contacted filter');
-      // Contacted filter: show ONLY contacted bookings (exclude vendor bookings)
-      filteredData = filteredData.filter(booking =>
-        booking.isContacted === true && booking.createdBy !== "Vendor" && booking.status === "Booking Confirmed"
-      );
-    } else if (filters.notStarted) {
-      console.log('Applying notStarted filter');
-      filteredData = filteredData.filter(booking => booking.status === "Not-Started");
-    } else if (filters.started) {
-      console.log('Applying started filter');
-      filteredData = filteredData.filter(booking => booking.status === "Started");
-    } else if (filters.completed) {
-      console.log('Applying completed filter');
-      filteredData = filteredData.filter(booking => booking.status === "Completed" || booking.status === "Manual Completed");
-    } else if (filters.cancelled) {
-      console.log('Applying cancelled filter');
-      filteredData = filteredData.filter(booking => booking.status === "Cancelled");
-    } else if (filters.vendor) {
-      console.log('Applying vendor filter');
-      filteredData = filteredData.filter(booking =>
-        booking.createdBy === "Vendor" && booking.status === "Booking Confirmed" && booking.type === "App"
-      );
-      console.log(filteredData.length)
-    } else if (filters.notContacted) {
-      console.log('Applying notContacted filter');
-      // Not Contacted filter: show ONLY not contacted bookings (exclude vendor bookings)
-      filteredData = filteredData.filter(booking =>
-        booking.isContacted === false && booking.createdBy !== "Vendor" && booking.status === "Booking Confirmed"
-      );
-    }
-    return filteredData;
-  };
-
-  const filteredData = applyFilters();
-
-
-  const stats = useMemo(() => {
-    interface StatsType {
-      bookingConfirmed: number;
-      notStarted: number;
-      started: number;
-      completed: number;
-      cancelled: number;
-      notContacted: number;
-      contacted: number;
-      vendor: number;
-
-    }
-
-    return bookingData.reduce(
-      (acc: StatsType, booking: any) => {
-        // Count by status
-        switch (booking.status) {
-          case "Not-Started":
-            acc.notStarted += 1;
-            break;
-          case "Started":
-            acc.started += 1;
-            break;
-          case "Completed":
-            acc.completed += 1;
-            break;
-          case "Manual Completed":
-            acc.completed += 1; // Include Manual Completed in completed count
-            break;
-          case "Cancelled":
-            acc.cancelled += 1;
-            break;
-          case "Booking Confirmed":
-            acc.bookingConfirmed += 1;
-            break;
-          case "Reassign":
-            acc.bookingConfirmed += 1;
-            break;
-          case "Contacted":
-            acc.bookingConfirmed += 1;
-            break;
-        }
-
-        // Count contacted status (exclude vendor bookings)
-        if (booking.createdBy !== "Vendor") {
-          if (booking.isContacted === false) {
-            if (booking.createdBy !== "Vendor" && booking.status === "Booking Confirmed" && booking.isContacted === false) acc.notContacted += 1;
-          } else if (booking.isContacted === true) {
-            if (booking.createdBy !== "Vendor" && booking.status === "Booking Confirmed" && booking.isContacted) acc.contacted += 1;
-          }
-        } else {
-          acc.vendor += 1
-        }
-
-        return acc;
-      },
-      {
-        bookingConfirmed: 0,
-        notStarted: 0,
-        started: 0,
-        completed: 0,
-        cancelled: 0,
-        notContacted: 0,
-        contacted: 0,
-        vendor: 0
-      }
-    );
-  }, [bookingData]);
-
-  // Calculate dynamic stats based on current filter state
-  const dynamicStats = useMemo(() => {
-    const baseStats = { ...stats };
-
-    // If both bookingConfirmed and contacted are selected, adjust contacted count
-    if (filters.bookingConfirmed && filters.contacted) {
-      baseStats.contacted = bookingData.filter((booking: any) =>
-        booking.status === "Booking Confirmed" && booking.isContacted === true && booking.createdBy !== "Vendor"
-      ).length;
-    }
-
-    return baseStats;
-  }, [stats, filters.bookingConfirmed, filters.contacted, bookingData]);
-
-
+// console.log("bookings >> ", bookings);
 
   const handleFilterChange = (key: keyof typeof filters, value: boolean) => {
     setFilters(prev => {
@@ -390,7 +320,7 @@ export default function BookingsPage() {
   const confirmBulkDelete = async () => {
     const selectedIndices = Object.keys(rowSelection)
     const selectedIds = selectedIndices.map(index => {
-      const bookingId = filteredData[parseInt(index)]?.bookingId
+      const bookingId = bookings[parseInt(index)]?.bookingId
       return bookingId !== undefined ? bookingId : null
     }).filter(id => id !== null)
     bulkDeleteBookings(selectedIds, {
@@ -529,7 +459,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-orange-100"
                       icon={Activity}
-                      count={dynamicStats.notContacted.toLocaleString()}
+                      count={bookingsCount.bookingConfirmed.toLocaleString()}
                       label="Booking Confirmed"
                       subLabel="Not Contacted"
                       cardSize="w-[180px] h-[90px]"
@@ -552,7 +482,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-orange-100"
                       icon={Activity}
-                      count={dynamicStats.contacted.toLocaleString()}
+                      count={bookingsCount.contacted.toLocaleString()}
                       label="Booking Confirmed"
                       subLabel="Contacted"
                       cardSize="w-[180px] h-[90px]"
@@ -576,7 +506,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-purple-100"
                       icon={Activity}
-                      count={dynamicStats.notStarted.toLocaleString()}
+                      count={bookingsCount.notStarted.toLocaleString()}
                       label="Non Started"
                       cardSize="w-[180px] h-[90px]"
                     />
@@ -599,7 +529,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-blue-100"
                       icon={Activity}
-                      count={dynamicStats.started.toLocaleString()}
+                      count={bookingsCount.started.toLocaleString()}
                       label="Started"
                       className="rounded"
                       cardSize="w-[180px] h-[90px]"
@@ -623,7 +553,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-green-100"
                       icon={Activity}
-                      count={dynamicStats.completed.toLocaleString()}
+                      count={bookingsCount.completed.toLocaleString()}
                       label="Completed"
                       className="rounded"
                       cardSize="w-[180px] h-[90px]"
@@ -647,7 +577,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-red-100"
                       icon={Activity}
-                      count={dynamicStats.cancelled.toLocaleString()}
+                      count={bookingsCount.cancelled.toLocaleString()}
                       label="Cancelled"
                       cardSize="w-[180px] h-[90px]"
                     />
@@ -670,7 +600,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-red-100"
                       icon={Activity}
-                      count={dynamicStats.vendor.toLocaleString()}
+                      count={bookingsCount.vendor.toLocaleString()}
                       label="Vendor-Bookings"
                       cardSize="w-[180px] h-[90px]"
                     />
@@ -775,7 +705,7 @@ export default function BookingsPage() {
         <div className="rounded bg-white shadow">
           <MaterialReactTable
             columns={columns as MRT_ColumnDef<any>[]}
-            data={filteredData}
+            data={bookings}
             enableRowSelection
             positionGlobalFilter="left"
             enableColumnResizing
@@ -784,10 +714,42 @@ export default function BookingsPage() {
               setIsColumnVisibilityUpdated(true);
               setLocalColumnVisibility(newVisibility);
             }}
-            state={{ rowSelection, sorting, columnVisibility }}
+            state={{
+              rowSelection,
+              sorting,
+              columnVisibility,
+              pagination,
+              globalFilter,
+            }}
+            onGlobalFilterChange={setGlobalFilter}
+            manualFiltering={true} // Enable server-side filtering
             onSortingChange={setSorting}
             enableSorting
             enableColumnPinning={false}
+            // Server-side pagination
+            manualPagination={true}
+            onPaginationChange={(updater) => {
+              const newPagination = typeof updater === 'function' 
+                ? updater(pagination) 
+                : updater;
+              
+                console.log(newPagination);
+                console.log(pagination);
+                console.log(paginationInfo?.hasNext);
+                console.log(paginationInfo?.hasPrev);
+              // Prevent going to next page if hasNext is false
+              if (newPagination.pageIndex > pagination.pageIndex && !paginationInfo?.hasNext) {
+                return; // Don't update pagination
+              }
+              
+              // Prevent going to previous page if hasPrev is false
+              if (newPagination.pageIndex < pagination.pageIndex && !paginationInfo?.hasPrev) {
+                return; // Don't update pagination
+              }
+              
+              setPagination(newPagination);
+            }}
+            rowCount={paginationInfo?.totalCount || 0}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },
@@ -797,15 +759,8 @@ export default function BookingsPage() {
             muiSearchTextFieldProps={{
               placeholder: 'Search ...',
               variant: 'outlined',
-              fullWidth: true, // 🔥 Makes the search bar take full width
               sx: {
-                minWidth: '600px', // Adjust width as needed
-                marginLeft: '16px',
-              },
-            }}
-            muiToolbarAlertBannerProps={{
-              sx: {
-                justifyContent: 'flex-start', // Aligns search left
+                minWidth: '600px',
               },
             }}
             renderTopToolbarCustomActions={() => (

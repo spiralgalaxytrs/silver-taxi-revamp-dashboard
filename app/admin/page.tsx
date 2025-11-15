@@ -22,14 +22,15 @@ import { useState } from "react";
 export default function AdminDashboard() {
   const [showCreateCustomerModal, setShowCreateCustomerModal] = useState(false);
 
-  const { data: bookings = [], isPending: isLoading, refetch: refetchBookings } = useFetchBookings();
+  const { data: bookingsData = { bookings: [], pagination: { currentPage: 0, totalPages: 0, totalBookings: 0, hasNext: false, hasPrev: false, limit: 0 } }, isPending: isLoading, refetch: refetchBookings } = useFetchBookings();
   const { data: enquiries = [], isPending: isEnquiriesLoading, refetch: refetchEnquiries } = useEnquiries();
   const { data: driversData = { drivers: [], pagination: { currentPage: 0, totalPages: 0, totalDrivers: 0, hasNext: false, hasPrev: false, limit: 0 } },
     isPending: isDriversLoading,
     refetch: refetchDrivers
   } = useDrivers({ enabled: true });
   const { data: invoices = [], isPending: isInvoicesLoading } = useInvoices();
-
+  const drivers = driversData?.drivers || [];
+  const bookings = bookingsData?.bookings || [];
   const { manualBookings, vendorBookings, websiteBookings } = useMemo(() => {
     const currentYear = new Date().getFullYear();
 
@@ -201,7 +202,7 @@ export default function AdminDashboard() {
           </Card>
           <Card className="border-none bg-white shadow-md">
             <CardContent className="p-6">
-              <Overview drivers={driversData?.drivers || []} isLoading={isDriversLoading} />
+              <Overview drivers={drivers} isLoading={isDriversLoading} />
             </CardContent>
           </Card>
         </div>
