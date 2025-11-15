@@ -37,29 +37,35 @@ import {
   useTableColumnVisibility,
   useUpdateTableColumnVisibility
 } from 'hooks/react-query/useImageUpload';
+import { Enquiry } from 'types/react-query/enquiry'
 
 export default function EnquiryPage() {
   const router = useRouter()
-  const pathname = usePathname()
-  const { previousPath } = useNavigationStore()
 
-  const {
-    data: enquiries = [],
-    isLoading,
-    error,
-    refetch
-  } = useEnquiries();
-  const {
-    mutate: bulkDeleteEnquiries
-  } = useBulkDeleteEnquiries();
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
-  const {
-    data: tableColumnVisibility = {},
-  } = useTableColumnVisibility("enquiries");
+  // Search and filter state
+  const [search, setSearch] = useState('');
+  const [globalFilter, setGlobalFilter] = useState('');
 
-  const {
-    mutate: updateTableColumnVisibility
-  } = useUpdateTableColumnVisibility("enquiries");
+  // Calculate page number (MaterialReactTable uses 0-based, backend uses 1-based)
+  const page = pagination.pageIndex + 1;
+  const limit = pagination.pageSize;
+
+  // Sync globalFilter with search state for server-side search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearch(globalFilter);
+      // Reset to first page when search changes
+      setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    }, 500); // Debounce search by 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [globalFilter]);
 
   const [filters, setFilters] = useState({
     search: '',
@@ -74,50 +80,66 @@ export default function EnquiryPage() {
     dropEndDate: '',
   })
 
+  const {
+    data: enquiriesData = { enquiries: [], enquiriesCount: { total: 0, today: 0, manual: 0, website: 0 }, pagination: { currentPage: 1, totalPages: 1, totalCount: 0, hasNext: false, hasPrev: false, limit: 10 } },
+    isPending,
+    error,
+    refetch
+  } = useEnquiries({
+    page,
+    limit,
+    search: search || undefined,
+  });
+  const {
+    mutate: bulkDeleteEnquiries
+  } = useBulkDeleteEnquiries();
+
+  const {
+    data: tableColumnVisibility = {},
+  } = useTableColumnVisibility("enquiries");
+
+  const {
+    mutate: updateTableColumnVisibility
+  } = useUpdateTableColumnVisibility("enquiries");
+
+  // Handle API typo: backend returns "enquires" instead of "enquiries"
+  const enquiries = (enquiriesData.enquiries || (enquiriesData as any).enquires || []) as Enquiry[]
+  const enquiriesCount = enquiriesData.enquiriesCount
+  const paginationInfo = enquiriesData.pagination
+
+  // Reset pagination when status filter changes
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, pageIndex: 0 }));
+  }, [filters.status]);
+
   const [lockBack, setLockBack] = useState(false);
   useBackNavigation(lockBack);
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [isSpinning, setIsSpinning] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
-  const [totalEnquiries, setTotalEnquiries] = useState(0)
-  const [todayEnquiries, setTodayEnquiries] = useState(0)
-  const [manualEnquiries, setManualEnquiries] = useState(0)
-  const [websiteEnquiries, setWebsiteEnquiries] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
   const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
+  
   const enquiryData = useMemo(() => {
-    return enquiries.map((enquiry) => ({
+    const mapped = enquiries.map((enquiry: Enquiry) => ({
       ...enquiry,
       id: enquiry.enquiryId,
       dropDate: enquiry.dropDate ? new Date(enquiry.dropDate) : null,
     }))
+    return mapped;
   }, [enquiries])
+
+  // Use server-side counts if available, otherwise calculate from filtered data
+  const totalEnquiries = enquiriesCount?.total || 0
+  const todayEnquiries = enquiriesCount?.today || 0
+  const manualEnquiries = enquiriesCount?.manual || 0
+  const websiteEnquiries = enquiriesCount?.website || 0
 
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
-  }
-
-  const categorizeEnquiries = (enquiries: any[]) => {
-    const today = dayjs().startOf('day')
-    return enquiries.reduce(
-      (acc, enquiry) => {
-        const enquiryDate = enquiry.createdAt ? dayjs(enquiry.createdAt).startOf('day') : null
-        acc.total = enquiries.length
-        if (enquiryDate && enquiryDate.isSame(today, 'day')) {
-          acc.today++
-        }
-        if (enquiry.type === 'Manual') {
-          acc.manual++
-        } else if (enquiry.type === 'Website') {
-          acc.website++
-        }
-        return acc
-      },
-      { total: 0, today: 0, manual: 0, website: 0 }
-    )
   }
 
   // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
@@ -137,115 +159,6 @@ export default function EnquiryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localColumnVisibility, isColumnVisibilityUpdated]);
 
-
-  const handleClear = async () => {
-    try {
-      setFilters({
-        search: '',
-        vehicleType: '',
-        enquiryStartDate: '',
-        enquiryEndDate: '',
-        pickupStartDate: '',
-        pickupEndDate: '',
-        dropStartDate: '',
-        dropEndDate: '',
-        status: '',
-        serviceName: '',
-      })
-      setSorting([])
-      setRowSelection({})
-    } catch (error) {
-      console.error('Error refreshing data:', error)
-    }
-  }
-
-  const unFilteredData = [...enquiryData].sort((a, b) => {
-    const aCreatedAt = new Date(a.createdAt).getTime()
-    const bCreatedAt = new Date(b.createdAt).getTime()
-    return bCreatedAt - aCreatedAt
-  })
-
-  const applyFilters = () => {
-    let filteredData = [...unFilteredData]
-
-    if (filters.search) {
-      filteredData = filteredData.filter((enquiry) =>
-        enquiry.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enquiry.enquiryId?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enquiry.phone?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enquiry.pickup?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enquiry.drop?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enquiry.serviceType?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enquiry.type?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enquiry.status?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enquiry.createdBy?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        enquiry.createdAt?.toLowerCase().includes(filters.search.toLowerCase())
-      )
-    }
-
-    if (filters.status && filters.status !== 'all') {
-      filteredData = filteredData.filter((enquiry) =>
-        enquiry.status?.toLowerCase() === filters.status.toLowerCase()
-      )
-    }
-
-    if (filters.serviceName && filters.serviceName !== 'all') {
-      filteredData = filteredData.filter((enquiry) =>
-        enquiry.serviceType?.toLowerCase() === filters.serviceName.toLowerCase()
-      )
-    }
-
-    if (filters.enquiryStartDate || filters.enquiryEndDate) {
-      filteredData = filteredData.filter((enquiry) => {
-        const enquiredDate = new Date(enquiry.pickupDateTime).setHours(0, 0, 0, 0)
-        const startDate = filters.enquiryStartDate
-          ? new Date(filters.enquiryStartDate).setHours(0, 0, 0, 0)
-          : null
-        const endDate = filters.enquiryEndDate
-          ? new Date(filters.enquiryEndDate).setHours(0, 0, 0, 0)
-          : null
-        return (!startDate || enquiredDate >= startDate) && (!endDate || enquiredDate <= endDate)
-      })
-    }
-
-    if (filters.pickupStartDate || filters.pickupEndDate) {
-      filteredData = filteredData.filter((enquiry) => {
-        const pickupDate = new Date(enquiry.pickupDateTime).setHours(0, 0, 0, 0)
-        const startDate = filters.pickupStartDate
-          ? new Date(filters.pickupStartDate).setHours(0, 0, 0, 0)
-          : null
-        const endDate = filters.pickupEndDate
-          ? new Date(filters.pickupEndDate).setHours(0, 0, 0, 0)
-          : null
-        return (!startDate || pickupDate >= startDate) && (!endDate || pickupDate <= endDate)
-      })
-    }
-
-    if (filters.dropStartDate || filters.dropEndDate) {
-      filteredData = filteredData.filter((enquiry) => {
-        const dropDate = enquiry.dropDate ? new Date(enquiry.dropDate).setHours(0, 0, 0, 0) : null
-        const startDate = filters.dropStartDate
-          ? new Date(filters.dropStartDate).setHours(0, 0, 0, 0)
-          : null
-        const endDate = filters.dropEndDate
-          ? new Date(filters.dropEndDate).setHours(0, 0, 0, 0)
-          : null
-        return (!startDate || (dropDate && dropDate >= startDate)) && (!endDate || (dropDate && dropDate <= endDate))
-      })
-    }
-
-    return filteredData
-  }
-
-  const filteredData = useMemo(() => applyFilters(), [filters, enquiryData])
-
-  useEffect(() => {
-    const counts = categorizeEnquiries(filteredData)
-    setTotalEnquiries(counts.total)
-    setTodayEnquiries(counts.today)
-    setManualEnquiries(counts.manual)
-    setWebsiteEnquiries(counts.website)
-  }, [filteredData])
 
   const handleCreateEnquiry = () => {
     router.push('/admin/enquiry/create')
@@ -274,7 +187,7 @@ export default function EnquiryPage() {
     console.log("selectedIndices >> ", selectedIndices)
     if (selectedIndices.length === 0) return
     const selectedIds = selectedIndices.map(index => {
-      const enquiryId = filteredData[parseInt(index)]?.enquiryId
+      const enquiryId = enquiryData[parseInt(index)]?.enquiryId
       return enquiryId !== undefined ? enquiryId : null
     }).filter(id => id !== null)
     setIsDialogOpen(true)
@@ -283,7 +196,7 @@ export default function EnquiryPage() {
   const confirmBulkDelete = async () => {
     const selectedIndices = Object.keys(rowSelection)
     const selectedIds = selectedIndices.map(index => {
-      const enquiryId = filteredData[parseInt(index)]?.enquiryId
+      const enquiryId = enquiryData[parseInt(index)]?.enquiryId
       return enquiryId !== undefined ? enquiryId : null
     }).filter(id => id !== null)
     bulkDeleteEnquiries(selectedIds, {
@@ -325,7 +238,7 @@ export default function EnquiryPage() {
     }
   };
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <Loader2 className="w-12 h-12 animate-spin text-primary" />
@@ -347,16 +260,6 @@ export default function EnquiryPage() {
                 >
                   Create Enquiry
                 </Button> */}
-                {showFilters && (
-                  <Button
-                    className="border-none hover:underline-offset-1 hover:bg-none"
-                    variant="outline"
-                    onClick={handleClear}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Refreshing..." : "Clear"}
-                  </Button>
-                )}
                 {/* <Button
                   variant="none"
                   className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
@@ -535,18 +438,50 @@ export default function EnquiryPage() {
         <div className="rounded bg-white shadow">
           <MaterialReactTable
             columns={columns as MRT_ColumnDef<any>[]}
-            data={filteredData}
+            data={enquiryData}
             enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting, columnVisibility }}
             onColumnVisibilityChange={(newVisibility) => {
               setIsColumnVisibilityUpdated(true);
               setLocalColumnVisibility(newVisibility);
             }}
+            state={{
+              rowSelection,
+              sorting,
+              columnVisibility,
+              pagination,
+              globalFilter,
+            }}
+            onGlobalFilterChange={setGlobalFilter}
+            manualFiltering={true} // Enable server-side filtering
             onSortingChange={setSorting}
             enableSorting
             enableColumnPinning={false}
+            // Server-side pagination
+            manualPagination={true}
+            onPaginationChange={(updater) => {
+              const newPagination = typeof updater === 'function' 
+                ? updater(pagination) 
+                : updater;
+              
+              console.log(newPagination);
+              console.log(pagination);
+              console.log(paginationInfo?.hasNext);
+              console.log(paginationInfo?.hasPrev);
+              // Prevent going to next page if hasNext is false
+              if (newPagination.pageIndex > pagination.pageIndex && !paginationInfo?.hasNext) {
+                return; // Don't update pagination
+              }
+              
+              // Prevent going to previous page if hasPrev is false
+              if (newPagination.pageIndex < pagination.pageIndex && !paginationInfo?.hasPrev) {
+                return; // Don't update pagination
+              }
+              
+              setPagination(newPagination);
+            }}
+            rowCount={paginationInfo?.totalCount || 0}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },
@@ -556,10 +491,8 @@ export default function EnquiryPage() {
             muiSearchTextFieldProps={{
               placeholder: 'Search ...',
               variant: 'outlined',
-              fullWidth: true, // 🔥 Makes the search bar take full width
               sx: {
-                minWidth: '600px', // Adjust width as needed
-                marginLeft: '16px',
+                minWidth: '600px',
               },
             }}
             muiToolbarAlertBannerProps={{
