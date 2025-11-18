@@ -115,7 +115,6 @@ export default function EnquiryPage() {
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [isSpinning, setIsSpinning] = useState(false)
-  const [showFilters, setShowFilters] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
   const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
@@ -159,7 +158,7 @@ export default function EnquiryPage() {
 
   const handleBulkDelete = () => {
     const selectedIndices = Object.keys(rowSelection)
-    console.log("selectedIndices >> ", selectedIndices)
+    // console.log("selectedIndices >> ", selectedIndices)
     if (selectedIndices.length === 0) return
     const selectedIds = selectedIndices.map(index => {
       const enquiryId = enquiryData[parseInt(index)]?.enquiryId
@@ -357,10 +356,6 @@ export default function EnquiryPage() {
                 ? updater(pagination) 
                 : updater;
               
-              console.log(newPagination);
-              console.log(pagination);
-              console.log(paginationInfo?.hasNext);
-              console.log(paginationInfo?.hasPrev);
               // Prevent going to next page if hasNext is false
               if (newPagination.pageIndex > pagination.pageIndex && !paginationInfo?.hasNext) {
                 return; // Don't update pagination

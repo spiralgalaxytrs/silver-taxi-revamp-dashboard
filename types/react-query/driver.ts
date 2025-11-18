@@ -176,7 +176,6 @@ export interface GetDriversParams {
     status?: string;
     sortBy?: string;
     sortOrder?: 'ASC' | 'DESC';
-    adminId?: string;
 }
 
 export interface DriversResponse {
@@ -184,7 +183,7 @@ export interface DriversResponse {
     pagination: {
         currentPage: number;
         totalPages: number;
-        totalDrivers: number;
+        totalCount: number;
         hasNext: boolean;
         hasPrev: boolean;
         limit: number;

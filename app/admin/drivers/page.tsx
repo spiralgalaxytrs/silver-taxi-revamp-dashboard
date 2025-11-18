@@ -165,7 +165,7 @@ export default function DriversPage(): JSX.Element {
   }, [driverData, filters.creationDateStart, filters.creationDateEnd]);
 
   // Calculate counters from pagination info or filtered data
-  const totalDrivers = paginationInfo?.totalDrivers || finalDrivers.length;
+  const totalDrivers = paginationInfo?.totalCount || finalDrivers.length;
   const inactiveDrivers = useMemo(() => (
     finalDrivers.filter(driver => driver.isActive === false).length
   ), [finalDrivers]);
@@ -442,7 +442,7 @@ export default function DriversPage(): JSX.Element {
             // Server-side pagination
             manualPagination={true}
             onPaginationChange={setPagination}
-            rowCount={paginationInfo?.totalDrivers || 0}
+            rowCount={paginationInfo?.totalCount || 0}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },

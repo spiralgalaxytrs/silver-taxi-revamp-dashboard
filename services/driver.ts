@@ -11,7 +11,6 @@ export const getDrivers = async (params?: GetDriversParams): Promise<DriversResp
       ...(params?.status && { status: params.status }),
       ...(params?.sortBy && { sortBy: params.sortBy }),
       ...(params?.sortOrder && { sortOrder: params.sortOrder }),
-      ...(params?.adminId && { adminId: params.adminId }),
     },
   });
   // console.log("res >> ", res.data.data);
