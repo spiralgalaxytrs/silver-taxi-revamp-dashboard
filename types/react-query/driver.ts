@@ -180,6 +180,11 @@ export interface GetDriversParams {
 
 export interface DriversResponse {
     drivers: Driver[];
+    driversCount: {
+        total: number,
+        active: number,
+        inactive: number,
+    },
     pagination: {
         currentPage: number;
         totalPages: number;

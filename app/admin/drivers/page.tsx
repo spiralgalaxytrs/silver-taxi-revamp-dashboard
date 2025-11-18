@@ -5,19 +5,9 @@ import { useRouter } from "next/navigation";
 import { columns } from "./columns";
 import { Button } from "components/ui/button";
 import { toast } from "sonner"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from 'components/ui/select';
-import { Input } from "components/ui/input";
-import { Label } from "components/ui/label";
 import { Card } from "components/ui/card";
 import CounterCard from "components/cards/CounterCard";
 import { Activity, Trash, ArrowDown, ArrowUp, Loader2, RefreshCcw } from "lucide-react";
-import DateRangeAccordion from "components/others/DateRangeAccordion";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -36,7 +26,6 @@ import {
   MaterialReactTable,
   type MRT_ColumnDef
 } from 'material-react-table'
-import DriverWalletRequest from "components/driver/DriverWalletRequest";
 import {
   useTableColumnVisibility,
   useUpdateTableColumnVisibility
@@ -95,6 +84,10 @@ export default function DriversPage(): JSX.Element {
   const drivers = driversData?.drivers || [];
   const paginationInfo = driversData?.pagination;
 
+  const driversCount = useMemo(() => {
+    return driversData?.driversCount || { total: 0, active: 0, inactive: 0 };
+  }, [driversData]);
+
   const {
     mutate: bulkDeleteDrivers
   } = useBulkDeleteDrivers();
@@ -115,12 +108,6 @@ export default function DriversPage(): JSX.Element {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
   const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
-
-  // Legacy filters for date range (if still needed)
-  const [filters, setFilters] = useState({
-    creationDateStart: '',
-    creationDateEnd: ''
-  });
 
   const driverData = useMemo(() => {
     return drivers.map(driver => ({
@@ -151,58 +138,8 @@ export default function DriversPage(): JSX.Element {
   // Apply client-side date filters only (search and status are server-side)
   const finalDrivers = useMemo(() => {
     let filtered = [...driverData];
-
-    if (filters.creationDateStart || filters.creationDateEnd) {
-      filtered = filtered.filter(driver => {
-        const created = new Date(driver.createdAt).setHours(0, 0, 0, 0);
-        const filterStart = filters.creationDateStart ? new Date(filters.creationDateStart).setHours(0, 0, 0, 0) : null;
-        const filterEnd = filters.creationDateEnd ? new Date(filters.creationDateEnd).setHours(0, 0, 0, 0) : null;
-        return (!filterStart || created >= filterStart) && (!filterEnd || created <= filterEnd);
-      });
-    }
-
     return filtered;
-  }, [driverData, filters.creationDateStart, filters.creationDateEnd]);
-
-  // Calculate counters from pagination info or filtered data
-  const totalDrivers = paginationInfo?.totalCount || finalDrivers.length;
-  const inactiveDrivers = useMemo(() => (
-    finalDrivers.filter(driver => driver.isActive === false).length
-  ), [finalDrivers]);
-  const activeDrivers = totalDrivers - inactiveDrivers;
-
-  const handleFilterChange = (key: string, value: string) => {
-    if (key === 'search') {
-      setSearch(value);
-      // Reset to first page when search changes
-      setPagination(prev => ({ ...prev, pageIndex: 0 }));
-    } else if (key === 'status') {
-      setStatus(value);
-      // Reset to first page when status changes
-      setPagination(prev => ({ ...prev, pageIndex: 0 }));
-    } else {
-      setFilters(prev => ({ ...prev, [key]: value }));
-    }
-  };
-
-  const handleClear = () => {
-    setSearch('');
-    setGlobalFilter(''); // Clear table search
-    setStatus('');
-    setFilters({
-      creationDateStart: '',
-      creationDateEnd: ''
-    });
-    setPagination(prev => ({ ...prev, pageIndex: 0 }));
-    setSortBy('createdAt');
-    setSortOrder('DESC');
-  };
-
-  const getFormattedCreatedDateRange = () => {
-    const start = filters.creationDateStart ? new Date(filters.creationDateStart).toLocaleDateString() : '';
-    const end = filters.creationDateEnd ? new Date(filters.creationDateEnd).toLocaleDateString() : '';
-    return start && end ? `${start} - ${end}` : 'Pick a Range';
-  };
+  }, [driverData]);
 
   const handleBulkDelete = () => {
     const selectedIds = Object.keys(rowSelection);
@@ -329,7 +266,7 @@ export default function DriversPage(): JSX.Element {
                   <CounterCard
                     color="bg-emerald-100"
                     icon={Activity}
-                    count={totalDrivers.toLocaleString()}
+                    count={paginationInfo?.totalCount}
                     label="Total Drivers"
                     className="relative z-10 p-6"
                     cardSize="w-[180px] h-[90px]"
@@ -343,7 +280,7 @@ export default function DriversPage(): JSX.Element {
                   <CounterCard
                     color="bg-blue-100"
                     icon={Activity}
-                    count={activeDrivers.toLocaleString()}
+                    count={driversCount.active.toLocaleString()}
                     label="Active Drivers"
                     cardSize="w-[180px] h-[90px]"
                   />
@@ -356,7 +293,7 @@ export default function DriversPage(): JSX.Element {
                   <CounterCard
                     color="bg-purple-100"
                     icon={Activity}
-                    count={inactiveDrivers.toLocaleString()}
+                    count={driversCount.inactive.toLocaleString()}
                     label="Inactive Drivers"
                     cardSize="w-[180px] h-[90px]"
                   />
@@ -365,56 +302,6 @@ export default function DriversPage(): JSX.Element {
               </Card>
             </div>
           </div>
-          {showFilters && (
-            <React.Fragment>
-              <div className="flex gap-8 items-center mt-4">
-                <div className="flex flex-col w-[230px]">
-                  <Label className="text-sm font-medium leading-none">Search</Label>
-                  <Input
-                    id="search"
-                    placeholder="Search drivers"
-                    value={search}
-                    onChange={(e) => handleFilterChange('search', e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col w-[230px]">
-                  <Label className="text-sm font-medium leading-none">Status</Label>
-                  <div className='mt-1'>
-                    <Select onValueChange={(value) => handleFilterChange('status', value)} value={status}>
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">All</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="flex flex-col w-[230px]">
-                  <Label className="text-sm font-medium leading-none">Created At</Label>
-                  <DateRangeAccordion
-                    label={getFormattedCreatedDateRange()}
-                    startDate={filters.creationDateStart}
-                    endDate={filters.creationDateEnd}
-                    onStartDateChange={(date: any) => handleFilterChange('creationDateStart', date)}
-                    onEndDateChange={(date: any) => handleFilterChange('creationDateEnd', date)}
-                  />
-                </div>
-                <div className='flex justify-start items-center'>
-                  <Button
-                    className='mt-5 p-1 border-none bg-[#009F87] flex justify-center items-center w-28'
-                    // variant="outline"
-                    onClick={handleClear}
-                    disabled={isLoading}
-                  >
-                    Clear
-                  </Button>
-                </div>
-              </div>
-            </React.Fragment>
-          )}
         </div>
         {/* Data Table */}
         <div className="rounded bg-white shadow">
