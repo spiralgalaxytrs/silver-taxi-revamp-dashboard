@@ -19,7 +19,7 @@ import { toast } from 'sonner';
 import { playNotificationSound } from 'lib/capitalize';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-    useNotifications, useVendorNotifications,
+    useNotifications, 
     useMarkAsRead, useMarkAllAsRead,
     useMarkAllAsReadVendor
 } from 'hooks/react-query/useNotification';
@@ -38,24 +38,17 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
     const [isOpen, setIsOpen] = useState(false);
 
     const { data: notifications, isLoading } = useNotifications();
-    const { data: vendorNotifications, isLoading: vendorIsLoading } = useVendorNotifications();
     const { mutate: markAsRead } = useMarkAsRead();
     const { mutate: markAllAsRead } = useMarkAllAsRead();
     const { mutate: markAllAsReadVendor } = useMarkAllAsReadVendor();
 
 
     const data = useMemo(() => {
-        if (createdBy === 'vendor') {
-            return vendorNotifications?.data?.map((notification: any) => ({
-                ...notification,
-                date: new Date(notification.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-            })) ?? [];
-        }
         return notifications?.data?.map((notification: any) => ({
             ...notification,
             date: new Date(notification.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
         })) ?? [];
-    }, [createdBy, notifications, vendorNotifications]);
+    }, [createdBy, notifications]);
 
 
     useEffect(() => {
@@ -105,7 +98,7 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
     useEffect(() => {
         if ("Notification" in window) {
             Notification.requestPermission().then((permission) => {
-                console.log("Notification permission:", permission);
+                // console.log("Notification permission:", permission);
             });
         }
     }, []);
@@ -124,17 +117,9 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
 
 
     const unreadCount = useMemo(() => {
-        if (createdBy === 'vendor') {
-            return vendorNotifications?.unReadCount ?? 0;
-        }
         return notifications?.unReadCount ?? 0;
-    }, [createdBy, notifications, vendorNotifications]);
+    }, [createdBy, notifications]);
 
-
-    const handleViewAllNotifications = () => {
-        router.push(`/${createdBy}/notifications`);
-        setIsOpen(false);
-    };
 
     return (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -198,10 +183,6 @@ export function NotificationCenter({ createdBy }: { createdBy: string }) {
                             </DropdownMenuItem>
                         </div>
                     )}
-
-                    {<div className="flex justify-center m-3 sticky bottom-0 bg-white p-2">
-                        <Button variant={"outline"} onClick={handleViewAllNotifications}>View all notifications</Button>
-                    </div>}
                 </ScrollArea>
             </DropdownMenuContent>
         </DropdownMenu>

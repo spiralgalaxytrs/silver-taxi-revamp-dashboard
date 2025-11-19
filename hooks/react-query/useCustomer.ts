@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   getCustomers,
   getVendorCustomers,
@@ -8,12 +8,15 @@ import {
   multiDeleteCustomers,
   createCustomer
 } from "services/customer";
-import type { Customer, CustomerBooking } from "types/react-query/customer";
+import type { Customer, CustomerBooking, GetCustomersParams } from "types/react-query/customer";
 
-export const useCustomers = () => {
-  return useQuery<Customer[]>({
-    queryKey: ["customers"],
-    queryFn: getCustomers
+export const useCustomers = (params?: GetCustomersParams & { enabled?: boolean }) => {
+  const { enabled = true, ...queryParams } = params || {};
+  return useQuery({
+    queryKey: ["customers", queryParams],
+    queryFn: () => getCustomers(queryParams),
+    enabled,
+    placeholderData: keepPreviousData
   });
 };
 

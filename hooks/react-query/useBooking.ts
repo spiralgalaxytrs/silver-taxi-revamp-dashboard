@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   createBooking,
   deleteBooking,
@@ -17,13 +17,17 @@ import {
   fetchVendorBookingsById,
   toggleContactStatus,
 } from "services/booking";
-import type { Booking } from "types/react-query/booking";
+import type { Booking, GetBookingsParams } from "types/react-query/booking";
 
 
-export const useFetchBookings = () => {
+export const useFetchBookings = (params?: GetBookingsParams & { enabled?: boolean }) => {
+  const { enabled = true, ...queryParams } = params || {};
+  
   return useQuery({
-    queryKey: ["bookings"],
-    queryFn: fetchBookings,
+    queryKey: ["bookings", queryParams],
+    queryFn: () => fetchBookings(queryParams),
+    enabled,
+    placeholderData: keepPreviousData
   });
 };
 

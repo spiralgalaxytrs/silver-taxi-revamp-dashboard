@@ -34,7 +34,7 @@ export default function CustomerPaymentPage() {
   const router = useRouter();
 
   const {
-    data: bookings = []
+    data: bookingsData = { bookings: [], pagination: { currentPage: 0, totalPages: 0, totalBookings: 0, hasNext: false, hasPrev: false, limit: 0 } }
   } = useFetchBookings();
 
   const {
@@ -70,7 +70,7 @@ export default function CustomerPaymentPage() {
 
 
   const bookingData = useMemo(() =>
-    bookings
+    bookingsData.bookings
       .filter((booking: any) =>
         booking.status === "Completed" || booking.status === "Cancelled"
       )
@@ -78,7 +78,7 @@ export default function CustomerPaymentPage() {
         ...booking,
         id: booking.bookingId,
       })),
-    [bookings]
+    [bookingsData.bookings]
   );
 
   // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)

@@ -37,3 +37,28 @@ export interface CustomerBooking {
     bookingDate: string;
     totalAmount: number;
 }
+
+
+export interface GetCustomersParams {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface CustomersResponse {
+    customers: Customer[];
+    customersCount:{
+        totalTripCompleted: number;
+        totalAmount: number;
+    }
+    pagination: {
+        currentPage: number;
+        totalPages: number;
+        totalCount: number;
+        hasNext: boolean;
+        hasPrev: boolean;
+        limit: number;
+    };
+}

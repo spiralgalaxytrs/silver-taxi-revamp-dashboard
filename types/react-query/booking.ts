@@ -94,3 +94,35 @@ export interface Booking {
   convenienceFee?: number;
 }
 
+export interface GetBookingsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+  adminId?: string;
+}
+
+export interface BookingsResponse {
+  bookings: Booking[];
+  bookingsCount: {
+    vendor: number;
+    bookingConfirmed: number;
+    cancelled: number;
+    completed: number;
+    contacted: number;
+    notContacted: number;
+    notStarted: number;
+    started: number;
+  };
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+    limit: number;
+  };
+}
+

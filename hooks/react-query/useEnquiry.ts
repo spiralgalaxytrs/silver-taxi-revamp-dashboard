@@ -2,6 +2,7 @@ import {
     useQuery,
     useMutation,
     useQueryClient,
+    keepPreviousData,
 } from "@tanstack/react-query";
 import {
     getEnquiries,
@@ -14,14 +15,17 @@ import {
     bulkDeleteEnquiries,
 } from "services/enquiry";
 import { Enquiry } from "types/react-query/enquiry";
+import { GetEnquiriesParams } from "types/react-query/enquiry";
 
-export const useEnquiries = () =>
-    useQuery<Enquiry[]>({
-        queryKey: ["enquiries"],
-        queryFn: getEnquiries,
-        refetchIntervalInBackground: false,
-        staleTime: 3 * 60 * 1000,
-    });
+export const useEnquiries = (params?: GetEnquiriesParams & { enabled?: boolean }) => {
+    const { enabled = true, ...queryParams } = params || {};
+    return useQuery({
+    queryKey: ["enquiries", queryParams],
+    queryFn: () => getEnquiries(queryParams),
+    enabled,
+    placeholderData: keepPreviousData
+  });
+}
 
 export const useVendorEnquiries = () =>
     useQuery<Enquiry[]>({

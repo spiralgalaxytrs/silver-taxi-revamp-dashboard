@@ -1,9 +1,17 @@
 import axios from "lib/http-common";
-import type { Customer, CustomerBooking } from "types/react-query/customer";
+import type { Customer, CustomerBooking, CustomersResponse, GetCustomersParams } from "types/react-query/customer";
 
 // 🧾 Fetch all customers
-export const getCustomers = async (): Promise<Customer[]> => {
-  const res = await axios.get("/v1/customers");
+export const getCustomers = async (params: GetCustomersParams): Promise<CustomersResponse> => {
+  const res = await axios.get("/v1/customers", {
+    params: {
+      ...(params?.page && { page: params.page }),
+      ...(params?.limit && { limit: params.limit }),
+      ...(params?.search && { search: params.search }),
+      ...(params?.sortBy && { sortBy: params.sortBy }),
+      ...(params?.sortOrder && { sortOrder: params.sortOrder }),
+    },
+  });
   return res.data.data;
 };
 

@@ -73,7 +73,8 @@ export function BookingPopup({
   } = useToggleContactStatus();
 
   // Driver assignment functionality
-  const { data: drivers = [], isPending: isLoading, isError } = useDrivers({ enabled: open });
+  const { data: driversData = { drivers: [], pagination: { currentPage: 0, totalPages: 0, totalDrivers: 0, hasNext: false, hasPrev: false, limit: 0 } }, isPending: isLoading, isError } = useDrivers({ enabled: open });
+  const drivers = driversData?.drivers || [];
   const { data: booking = null, isLoading: isLoadingBooking, refetch } = useFetchBookingById(open ? (bookingId || '') : '');
   const { refetch: refetchBookings } = useFetchBookings();
   const { mutate: assignDriver } = useAssignDriver();

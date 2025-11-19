@@ -1,8 +1,16 @@
 import axios from "lib/http-common";
-import { Enquiry } from "types/react-query/enquiry";
+import { Enquiry, GetEnquiriesParams, EnquiriesResponse } from "types/react-query/enquiry";
 
-export const getEnquiries = async (): Promise<Enquiry[]> => {
-  const res = await axios.get("/v1/enquiries");
+export const getEnquiries = async (params: GetEnquiriesParams): Promise<EnquiriesResponse> => {
+  const res = await axios.get("/v1/enquiries", {
+    params: {
+      ...(params?.page && { page: params.page }),
+      ...(params?.limit && { limit: params.limit }),
+      ...(params?.search && { search: params.search }),
+      ...(params?.status && { status: params.status }),
+    },
+  });
+  console.log("res.data.data enquiries >> ", res.data.data);
   return res.data.data;
 };
 
