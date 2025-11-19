@@ -104,7 +104,7 @@ export function FairCalculationPopup({ isOpen, onClose, fareData, createdBy }: F
   const normalFare = fareBreakdown.normalFare;
   const modifiedFare = fareBreakdown.modifiedFare;
 
-  console.log("fareData >>>>>", fareData);
+  // console.log("fareData >>>>>", fareData);
 
   const { data: vehicle = null } = useVehicleById(fareData.vehicleId || "");
 

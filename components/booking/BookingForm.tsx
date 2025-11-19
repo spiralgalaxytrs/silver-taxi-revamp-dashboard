@@ -59,14 +59,14 @@ import InfoComponent from 'components/ui/Info';
 import { distance } from 'framer-motion';
 
 interface FareCalculationData {
-  distance: number;
-  duration: string;
-  estimatedAmount: number;
-  finalAmount: number;
-  fareBreakdown: any;
-  taxAmount: number;
-  taxPercentage: number;
-  convenienceFee: number;
+    distance: number;
+    duration: string;
+    estimatedAmount: number;
+    finalAmount: number;
+    fareBreakdown: any;
+    taxAmount: number;
+    taxPercentage: number;
+    convenienceFee: number;
 }
 
 
@@ -217,7 +217,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         extraHill: 0,
         extraPermitCharge: 0,
         extraToll: 0,
-     
+
     });
 
     // Fetch all package tariffs for the service type
@@ -455,112 +455,114 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         }
     };
 
-   const handleFairCalculation = async (serviceType: string, vehicleId: string, distance: number, pickupDateTime: string, dropDate: string) => {
-    setLocalLoading(true);
+    const handleFairCalculation = async (serviceType: string, vehicleId: string, distance: number, pickupDateTime: string, dropDate: string) => {
+        setLocalLoading(true);
 
-    console.log("fair calculation", formData.name)
-    try {
-        const payload: any = {
-            pickup: formData.pickup,   // REQUIRED
-            drop: formData.drop,       // REQUIRED
-            
-            // Convert all numeric fields to numbers
-            distance: Number(distance) || 0,
-            pricePerKm: Number(formData.pricePerKm) || 0,
-            extraPricePerKm: Number(formData.extraPricePerKm) || 0,
-            driverBeta: Number(formData.driverBeta) || 0,
-            extraDriverBeta: Number(formData.extraDriverBeta) || 0,
-            hill: Number(formData.hill) || 0,
-            extraHill: Number(formData.extraHill) || 0,
-            permitCharge: Number(formData.permitCharge) || 0,
-            extraPermitCharge: Number(formData.extraPermitCharge) || 0,
-            toll: Number(formData.toll) || 0,
-            extraToll: Number(formData.extraToll) || 0,
+        // console.log("fair calculation", formData.name)
+        try {
+            const payload: any = {
+                pickup: formData.pickup,   // REQUIRED
+                drop: formData.drop,       // REQUIRED
 
-            
-            // Existing fields
-            serviceType,
-            vehicleId,
-            vehicleType: formData.vehicleType,
-            pickupDateTime,
-            dropDate,
-            stops: formData.stops || [],
-            createdBy: formData.createdBy,
-            
-            // Recommended additions
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            advanceAmount: Number(formData.advanceAmount) || 0,
-            discountAmount: Number(formData.discountAmount) || 0,
-            paymentMethod: formData.paymentMethod || "Cash",
-            paymentStatus: formData.paymentStatus || "Unpaid",
-            status: formData.status || "Booking Confirmed",
-            type: formData.type || "App"
-        };
+                // Convert all numeric fields to numbers
+                distance: Number(distance) || 0,
+                pricePerKm: Number(formData.pricePerKm) || 0,
+                extraPricePerKm: Number(formData.extraPricePerKm) || 0,
+                driverBeta: Number(formData.driverBeta) || 0,
+                extraDriverBeta: Number(formData.extraDriverBeta) || 0,
+                hill: Number(formData.hill) || 0,
+                extraHill: Number(formData.extraHill) || 0,
+                permitCharge: Number(formData.permitCharge) || 0,
+                extraPermitCharge: Number(formData.extraPermitCharge) || 0,
+                toll: Number(formData.toll) || 0,
+                extraToll: Number(formData.extraToll) || 0,
 
-             // Add package-related fields only for Day/Hourly Packages
-        if (serviceType === 'Day Packages' || serviceType === 'Hourly Packages') {
-            if (!formData.packageId) {
-                toast.error('Please select a package first');
-                setLocalLoading(false);
-                return;
+
+                // Existing fields
+                serviceType,
+                vehicleId,
+                vehicleType: formData.vehicleType,
+                pickupDateTime,
+                dropDate,
+                stops: formData.stops || [],
+                createdBy: formData.createdBy,
+
+                // Recommended additions
+                name: formData.name,
+                email: formData.email,
+                phone: formData.phone,
+                advanceAmount: Number(formData.advanceAmount) || 0,
+                discountAmount: Number(formData.discountAmount) || 0,
+                paymentMethod: formData.paymentMethod || "Cash",
+                paymentStatus: formData.paymentStatus || "Unpaid",
+                status: formData.status || "Booking Confirmed",
+                type: formData.type || "App"
+            };
+
+            // Add package-related fields only for Day/Hourly Packages
+            if (serviceType === 'Day Packages' || serviceType === 'Hourly Packages') {
+                if (!formData.packageId) {
+                    toast.error('Please select a package first');
+                    setLocalLoading(false);
+                    return;
+                }
+
+                payload.packageId = formData.packageId;
+                payload.packageType = serviceType === 'Day Packages' ? 'Day Package' : 'Hourly Package';
+
+                // Add hourly-specific fields
+                if (serviceType === 'Hourly Packages') {
+                    payload.noOfHours = formData.noOfHours;
+                    payload.hourlyPrice = formData.hourlyPrice;
+                    payload.additionalExtraPricePerKm = formData.additionalExtraPricePerKm || 0;
+                }
             }
 
-            payload.packageId = formData.packageId;
-            payload.packageType = serviceType === 'Day Packages' ? 'Day Package' : 'Hourly Package';
-            
-            // Add hourly-specific fields
-            if (serviceType === 'Hourly Packages') {
-                payload.noOfHours = formData.noOfHours;
-                payload.hourlyPrice = formData.hourlyPrice;
-                payload.additionalExtraPricePerKm = formData.additionalExtraPricePerKm || 0;
-            }
+            // console.log("payload >>", payload)
+
+            const response = await axios.post(`/v1/bookings/fair-calculation`, payload);
+            const { data } = response.data;
+
+            // Update form with correct field names from backend response
+            // setFormData(prev => ({
+            //     ...prev,
+            //     estimatedAmount: data.estimatedAmount,
+            //     finalAmount: data.finalAmount,
+            //     driverBeta: data.driverBeta || 0,
+            //     pricePerKm: data.pricePerKm || 0,
+            //     taxAmount: data.taxAmount || 0,
+            //     taxPercentage: data.taxPercentage || 0,
+            //     price: data.estimatedAmount, // Use estimatedAmount as base price
+            //     extraPrice: data.extraPricePerKm || 0,
+            //     upPaidAmount: data.upPaidAmount || 0,
+            //     breakFareDetails: data.fareBreakdown || {},
+            //     distance: data.distance || distance,
+            //     // Add other relevant fields from response
+            //     duration: data.duration,
+            //     days: data.days,
+            //     convenienceFee: data.convenienceFee,
+            //     minKm: data.minKm,
+            //     toll: data.toll || 0,
+            //     extraToll: data.extraToll || 0,
+            //     hill: data.hill || 0,
+            //     extraHill: data.extraHill || 0,
+            //     permitCharge: data.permitCharge || 0,
+            //     extraPermitCharge: data.extraPermitCharge || 0,
+            //     extraDriverBeta: data.extraDriverBeta || 0,
+            //     extraPricePerKm: data.extraPricePerKm || 0
+            // }));
+
+            setShowFareCalculation(true);
+            // Pass the complete API response data to FairCalculationPopup
+            // This ensures all fields from fair-calculation API are available for booking creation
+            setFareData(data);
+        } catch (err) {
+            console.error('Fair calculation error:', err);
+            toast.error('Failed to calculate fare. Please check your inputs and try again.');
+        } finally {
+            setLocalLoading(false);
         }
-
-        const response = await axios.post(`/v1/bookings/fair-calculation`, payload);
-        const { data } = response.data;
-        
-        // Update form with correct field names from backend response
-        setFormData(prev => ({
-            ...prev,
-            estimatedAmount: data.estimatedAmount,
-            finalAmount: data.finalAmount,
-            driverBeta: data.driverBeta || 0,
-            pricePerKm: data.pricePerKm || 0,
-            taxAmount: data.taxAmount || 0,
-            taxPercentage: data.taxPercentage || 0,
-            price: data.estimatedAmount, // Use estimatedAmount as base price
-            extraPrice: data.extraPricePerKm || 0,
-            upPaidAmount: data.upPaidAmount || 0,
-            breakFareDetails: data.fareBreakdown || {},
-            distance: data.distance || distance,
-            // Add other relevant fields from response
-            duration: data.duration,
-            days: data.days,
-            convenienceFee: data.convenienceFee,
-            minKm: data.minKm,
-            toll: data.toll || 0,
-            extraToll: data.extraToll || 0,
-            hill: data.hill || 0,
-            extraHill: data.extraHill || 0,
-            permitCharge: data.permitCharge || 0,
-            extraPermitCharge: data.extraPermitCharge || 0,
-            extraDriverBeta: data.extraDriverBeta || 0,
-            extraPricePerKm: data.extraPricePerKm || 0
-        }));
-        
-        setShowFareCalculation(true);
-        // Pass the complete API response data to FairCalculationPopup
-        // This ensures all fields from fair-calculation API are available for booking creation
-        setFareData(data);
-    } catch (err) {
-        console.error('Fair calculation error:', err);
-        toast.error('Failed to calculate fare. Please check your inputs and try again.');
-    } finally {
-        setLocalLoading(false);
-    }
-};
+    };
 
     const handleInputChange = (name: keyof Booking, value: any) => {
         setFormData((prev) => {
@@ -666,33 +668,33 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
         });
     };
 
-    const calculateFare = async () => {
-        try {
-            // Call your fare calculation API here
-            const response = await axios.post('/api/calculate-fare', {
-                pickup: formData.pickup,
-                drop: formData.drop,
-                vehicleType: formData.vehicleType,
-                serviceType: formData.serviceType,
-                // Add other necessary parameters
-            });
+    /* const calculateFare = async () => {
+       try {
+           // Call your fare calculation API here
+           const response = await axios.post('/api/calculate-fare', {
+               pickup: formData.pickup,
+               drop: formData.drop,
+               vehicleType: formData.vehicleType,
+               serviceType: formData.serviceType,
+               // Add other necessary parameters
+           });
 
-            setFareData({
-                distance: response.data.distance,
-                duration: response.data.duration,
-                estimatedAmount: response.data.estimatedAmount,
-                finalAmount: response.data.finalAmount,
-                fareBreakdown: response.data.fareBreakdown,
-                taxAmount: response.data.taxAmount,
-                taxPercentage: response.data.taxPercentage,
-                convenienceFee: response.data.convenienceFee || 0
-            });
+           setFareData({
+               distance: response.data.distance,
+               duration: response.data.duration,
+               estimatedAmount: response.data.estimatedAmount,
+               finalAmount: response.data.finalAmount,
+               fareBreakdown: response.data.fareBreakdown,
+               taxAmount: response.data.taxAmount,
+               taxPercentage: response.data.taxPercentage,
+               convenienceFee: response.data.convenienceFee || 0
+           });
 
-            setShowFareCalculation(true);
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to calculate fare');
-        }
-    };
+           setShowFareCalculation(true);
+       } catch (error: any) {
+           toast.error(error.response?.data?.message || 'Failed to calculate fare');
+       }
+   }; */
 
     const handleNextStep = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
@@ -734,7 +736,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
             toast.error("Selected Vehicle Tariff Not Found");
             return;
         }
-         console.log("formData", formData)
+        // console.log("formData", formData)
         // Only calculate distance for non-package bookings
         if (formData.serviceType !== 'Day Packages' && formData.serviceType !== 'Hourly Packages') {
             await fetchDistance(formData.pickup, formData.drop);
@@ -768,7 +770,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                 } else if (Array.isArray(data[key])) {
                     // Handle arrays - keep empty arrays but filter their contents if they're objects
                     if (data[key].length > 0 && typeof data[key][0] === 'object') {
-                        filteredData[key] = data[key].map((item: any) => 
+                        filteredData[key] = data[key].map((item: any) =>
                             typeof item === 'object' ? filterFormData(item) : item
                         );
                     } else {
@@ -1087,11 +1089,11 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         </Select>
                                     </div>
                                 ) : null}
-                                </div>
+                            </div>
 
 
-                                {/* Show vehicle type only if vehicle selection is visible */}
-                                {/* {(formData.serviceType !== 'Hourly Packages' || formData.packageId) && (
+                            {/* Show vehicle type only if vehicle selection is visible */}
+                            {/* {(formData.serviceType !== 'Hourly Packages' || formData.packageId) && (
                                     formData.vehicleId ? (
                                         <div className="pt-2">
                                             <Label>Vehicle Type</Label>
@@ -1117,59 +1119,59 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
 
 
 
-                                {/* Package Selection for Hourly Packages */}
-                                {formData.serviceType === 'Hourly Packages' && (
-                                    <div className="space-y-2">
-                                        <Label>Package Selection <span className='text-red-500'>*</span></Label>
-                                        <Select
-                                            value={formData.packageId}
-                                            onValueChange={async (v) => {
-                                                const selectedPackage = allPkgTariffs.find(pkg => pkg.packageId === v);
+                            {/* Package Selection for Hourly Packages */}
+                            {formData.serviceType === 'Hourly Packages' && (
+                                <div className="space-y-2">
+                                    <Label>Package Selection <span className='text-red-500'>*</span></Label>
+                                    <Select
+                                        value={formData.packageId}
+                                        onValueChange={async (v) => {
+                                            const selectedPackage = allPkgTariffs.find(pkg => pkg.packageId === v);
 
-                                                // Update all related fields at once
-                                                setFormData(prev => {
-                                                    const newState = {
-                                                        ...prev,
-                                                        packageId: v,
-                                                        dayOrHour: selectedPackage?.noOfHours || '',
-                                                        distanceLimit: selectedPackage?.distanceLimit || 0,
-                                                        price: selectedPackage?.price || 0,
-                                                        extraPrice: selectedPackage?.extraPrice || 0,
-                                                        extraPricePerKm: selectedPackage?.extraPrice || 0,
-                                                        vehicleId: '' // Reset vehicle selection when package changes
-                                                    };
-                                                    return newState;
-                                                });
-                                            }}
-                                        >
-                                            <SelectTrigger className="h-12">
-                                                <SelectValue placeholder="Select a package" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {allPkgTariffs
-                                                    .filter((pkg, index, self) =>
-                                                        // Remove duplicates based on hours and distance only
-                                                        index === self.findIndex(p =>
-                                                            p.noOfHours === pkg.noOfHours &&
-                                                            p.distanceLimit === pkg.distanceLimit &&
-                                                            p.status === true &&
-                                                            p.createdBy === 'Admin'
-                                                        )
+                                            // Update all related fields at once
+                                            setFormData(prev => {
+                                                const newState = {
+                                                    ...prev,
+                                                    packageId: v,
+                                                    dayOrHour: selectedPackage?.noOfHours || '',
+                                                    distanceLimit: selectedPackage?.distanceLimit || 0,
+                                                    price: selectedPackage?.price || 0,
+                                                    extraPrice: selectedPackage?.extraPrice || 0,
+                                                    extraPricePerKm: selectedPackage?.extraPrice || 0,
+                                                    vehicleId: '' // Reset vehicle selection when package changes
+                                                };
+                                                return newState;
+                                            });
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-12">
+                                            <SelectValue placeholder="Select a package" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {allPkgTariffs
+                                                .filter((pkg, index, self) =>
+                                                    // Remove duplicates based on hours and distance only
+                                                    index === self.findIndex(p =>
+                                                        p.noOfHours === pkg.noOfHours &&
+                                                        p.distanceLimit === pkg.distanceLimit &&
+                                                        p.status === true &&
+                                                        p.createdBy === 'Admin'
                                                     )
-                                                    .map(pkg => (
-                                                        <SelectItem key={pkg.packageId} value={pkg.packageId}>
-                                                            {pkg.noOfHours} {Number(pkg.noOfHours) > 1 ? "Hours" : "Hour"} {pkg.distanceLimit} Km - ₹{pkg.price}
-                                                        </SelectItem>
-                                                    ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
+                                                )
+                                                .map(pkg => (
+                                                    <SelectItem key={pkg.packageId} value={pkg.packageId}>
+                                                        {pkg.noOfHours} {Number(pkg.noOfHours) > 1 ? "Hours" : "Hour"} {pkg.distanceLimit} Km - ₹{pkg.price}
+                                                    </SelectItem>
+                                                ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
 
-                                 <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-4">
                                 <h3 className="col-span-2 text-lg font-medium">Customer Details</h3>
                                 <div className="space-y-2">
-                                   <Label>Customer Name <span className='text-red-500'>*</span></Label>
+                                    <Label>Customer Name <span className='text-red-500'>*</span></Label>
                                     <Input
                                         value={formData.name}
                                         onChange={e => handleInputChange('name', e.target.value)}
@@ -1199,11 +1201,11 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         }}
                                     />
                                 </div>
-                                </div>
-                                  <div className="grid grid-cols-2 gap-4">
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
                                 <h3 className="col-span-2 text-lg font-medium">Location Details</h3>
                                 <div className="space-y-2">
-                                    
+
                                     <Label>Pickup Location <span className="text-red-500">*</span></Label>
                                     <LocationAutocomplete
                                         onSelect={handleLocationSelectFromGoogle}
@@ -1271,9 +1273,9 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         />
                                     </div>
                                 )}
-                                </div>
-                                 
-                                <div className="grid grid-cols-2 gap-4">
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
                                 <h3 className="col-span-2 text-lg font-medium">Pickup Date & Time Details</h3>
                                 <div className="space-y-2">
                                     <Label>Pickup Date & Time <span className='text-red-500'>*</span></Label>
@@ -1287,115 +1289,115 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                                         className="h-12"
                                     />
                                 </div>
-                                </div>
+                            </div>
 
-                                   {formData.serviceType === 'Round trip' && (
+                            {formData.serviceType === 'Round trip' && (
+                                <div className="space-y-2">
+                                    <Label>Drop Date <span className='text-red-500'>*</span></Label>
+                                    <Input
+                                        type="date"
+                                        value={formData.dropDate ? formData.dropDate : ''}
+                                        onChange={e => handleInputChange('dropDate', e.target.value)}
+                                        className="h-12"
+                                        min={getMinDate()}
+                                        max={getMaxDateTime().substring(0, 10)}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Pricing Details */}
+                            <div className="col-span-2 mt-4 pt-4">
+                                <h3 className="text-lg font-medium">Pricing Details</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label>Drop Date <span className='text-red-500'>*</span></Label>
+                                        <Label>Amount per Km</Label>
                                         <Input
-                                            type="date"
-                                            value={formData.dropDate ? formData.dropDate : ''}
-                                            onChange={e => handleInputChange('dropDate', e.target.value)}
+                                            type="number"
+                                            value={formData.pricePerKm || ''}
+                                            onChange={e => handleInputChange('pricePerKm', e.target.value)}
                                             className="h-12"
-                                            min={getMinDate()}
-                                            max={getMaxDateTime().substring(0, 10)}
                                         />
                                     </div>
-                                )}
-
-                                {/* Pricing Details */}
-                                <div className="col-span-2 mt-4 pt-4">
-                                    <h3 className="text-lg font-medium">Pricing Details</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Amount per Km</Label>
-                                            <Input
-                                                type="number"
-                                                value={formData.pricePerKm || ''}
-                                                onChange={e => handleInputChange('pricePerKm', e.target.value)}
-                                                className="h-12"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Extra Amount per Km</Label>
-                                            <Input
-                                                type="number"
-                                                value={formData.extraPricePerKm || ''}
-                                                onChange={e => handleInputChange('extraPricePerKm', e.target.value)}
-                                                className="h-12"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Driver Beta</Label>
-                                            <Input
-                                                type="number"
-                                                value={formData.driverBeta || ''}
-                                                onChange={e => handleInputChange('driverBeta', e.target.value)}
-                                                className="h-12"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Extra Driver Beta</Label>
-                                            <Input
-                                                type="number"
-                                                value={formData.extraDriverBeta || ''}
-                                                onChange={e => handleInputChange('extraDriverBeta', e.target.value)}
-                                                className="h-12"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Hill Charge</Label>
-                                            <Input
-                                                type="number"
-                                                value={formData.hill || ''}
-                                                onChange={e => handleInputChange('hill', e.target.value)}
-                                                className="h-12"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Extra Hill Charge</Label>
-                                            <Input
-                                                type="number"
-                                                value={formData.extraHill || ''}
-                                                onChange={e => handleInputChange('extraHill', e.target.value)}
-                                                className="h-12"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Permit Charge</Label>
-                                            <Input
-                                                type="number"
-                                                value={formData.permitCharge || ''}
-                                                onChange={e => handleInputChange('permitCharge', e.target.value)}
-                                                className="h-12"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Extra Permit Charge</Label>
-                                            <Input
-                                                type="number"
-                                                value={formData.extraPermitCharge || ''}
-                                                onChange={e => handleInputChange('extraPermitCharge', e.target.value)}
-                                                className="h-12"
-                                            />
-                                        </div>
+                                    <div className="space-y-2">
+                                        <Label>Extra Amount per Km</Label>
+                                        <Input
+                                            type="number"
+                                            value={formData.extraPricePerKm || ''}
+                                            onChange={e => handleInputChange('extraPricePerKm', e.target.value)}
+                                            className="h-12"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Driver Beta</Label>
+                                        <Input
+                                            type="number"
+                                            value={formData.driverBeta || ''}
+                                            onChange={e => handleInputChange('driverBeta', e.target.value)}
+                                            className="h-12"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Extra Driver Beta</Label>
+                                        <Input
+                                            type="number"
+                                            value={formData.extraDriverBeta || ''}
+                                            onChange={e => handleInputChange('extraDriverBeta', e.target.value)}
+                                            className="h-12"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Hill Charge</Label>
+                                        <Input
+                                            type="number"
+                                            value={formData.hill || ''}
+                                            onChange={e => handleInputChange('hill', e.target.value)}
+                                            className="h-12"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Extra Hill Charge</Label>
+                                        <Input
+                                            type="number"
+                                            value={formData.extraHill || ''}
+                                            onChange={e => handleInputChange('extraHill', e.target.value)}
+                                            className="h-12"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Permit Charge</Label>
+                                        <Input
+                                            type="number"
+                                            value={formData.permitCharge || ''}
+                                            onChange={e => handleInputChange('permitCharge', e.target.value)}
+                                            className="h-12"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Extra Permit Charge</Label>
+                                        <Input
+                                            type="number"
+                                            value={formData.extraPermitCharge || ''}
+                                            onChange={e => handleInputChange('extraPermitCharge', e.target.value)}
+                                            className="h-12"
+                                        />
                                     </div>
                                 </div>
+                            </div>
 
-                             
-                        
+
+
                         </div>
-                        
+
                     )}
 
                     <div className="flex justify-end gap-4 mt-8">
-                             <Button
-                                type="button"
-                                onClick={handleNextStep}
-                                disabled={isAnyLoading}
-                            >
-                                Check Fare
-                            </Button>
+                        <Button
+                            type="button"
+                            onClick={handleNextStep}
+                            disabled={isAnyLoading}
+                        >
+                            Check Fare
+                        </Button>
                     </div>
                 </form>
             </CardContent>
@@ -1415,10 +1417,10 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            
+
             {/* Fair Calculation Popup */}
             {fareData && (
-                <FairCalculationPopup 
+                <FairCalculationPopup
                     isOpen={showFareCalculation}
                     onClose={() => setShowFareCalculation(false)}
                     fareData={fareData}
