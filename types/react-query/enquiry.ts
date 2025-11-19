@@ -22,3 +22,28 @@ export interface ErrorResponse {
   message: string;
   success: boolean;
 }
+
+export interface GetEnquiriesParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+}
+
+export interface EnquiriesResponse {
+  enquiries: Enquiry[];
+  enquiriesCount: {
+    total: number;
+    today: number;
+    manual: number;
+    website: number;
+  }
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+    limit: number;
+  };
+}
