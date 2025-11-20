@@ -146,6 +146,7 @@ export default function BookingsPage() {
     search: search || undefined,
     status: getStatusForBackend,
     sortBy,
+    isContacted: filters.contacted,
     sortOrder,
   });
 
@@ -442,7 +443,7 @@ export default function BookingsPage() {
                     <CounterCard
                       color="bg-orange-100"
                       icon={Activity}
-                      count={bookingsCount.bookingConfirmed.toLocaleString()}
+                      count={bookingsCount.notContacted.toLocaleString()}
                       label="Booking Confirmed"
                       subLabel="Not Contacted"
                       cardSize="w-[180px] h-[90px]"

@@ -9,6 +9,7 @@ export const fetchBookings = async (params?: GetBookingsParams): Promise<Booking
       ...(params?.limit && { limit: params.limit }),
       ...(params?.search && { search: params.search }),
       ...(params?.status && { status: params.status }),
+      ...(params?.isContacted && { isContacted: params.isContacted }),
       ...(params?.sortBy && { sortBy: params.sortBy }),
       ...(params?.sortOrder && { sortOrder: params.sortOrder }),
     },
