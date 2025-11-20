@@ -99,6 +99,7 @@ export interface GetBookingsParams {
   limit?: number;
   search?: string;
   status?: string;
+  isContacted?: boolean;
   sortBy?: string;
   sortOrder?: 'ASC' | 'DESC';
   adminId?: string;
