@@ -614,7 +614,6 @@ export default function ViewDriverPage() {
                     </DialogContent>
                 </Dialog>
             </div>
-
         </div >
     );
 }
