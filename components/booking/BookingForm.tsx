@@ -661,7 +661,7 @@ export function BookingForm({ id, createdBy }: CreateBookingFormProps) {
                 newState.paymentStatus = Number(newState.advanceAmount) > 0 ? "Partial Paid" : "Unpaid";
             }
 
-            // Always recalc unpaid
+            // Always recalculate unpaid amount
             newState.upPaidAmount = Number(newState.finalAmount || 0) - Number(newState.advanceAmount || 0);
 
             return newState;
