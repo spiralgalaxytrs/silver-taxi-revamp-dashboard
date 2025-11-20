@@ -157,8 +157,7 @@ export const columns: MRT_ColumnDef<Driver>[] = [
       </div>
     ),
     Cell: ({ row }) => {
-      const status = row.getValue("isOnline") as boolean
-      console.log("status >> ", status)
+      const status = row.getValue("isOnline") as boolean 
 
       return (
         <div className="flex justify-center">

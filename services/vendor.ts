@@ -1,9 +1,17 @@
 // ✅ services/vendorService.ts
 import axios from "lib/http-common";
-import { Vendor, wallet } from "types/react-query/vendor";
+import { Vendor, wallet, GetVendorsParams, GetVendorsResponse } from "types/react-query/vendor";
 
-export const getVendors = async (): Promise<Vendor[]> => {
-  const res = await axios.get("/v1/vendors");
+export const getVendors = async (params?: GetVendorsParams): Promise<GetVendorsResponse> => {
+  const res = await axios.get("/v1/vendors", {
+    params: {
+      ...(params?.page && { page: params.page }),
+      ...(params?.limit && { limit: params.limit }),
+      ...(params?.search && { search: params.search }),
+      ...(params?.sortBy && { sortBy: params.sortBy }),
+      ...(params?.sortOrder && { sortOrder: params.sortOrder }),
+    },
+  });;
   return res.data.data;
 };
 

@@ -2,6 +2,7 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
+  keepPreviousData,
 } from "@tanstack/react-query";
 import {
   getDrivers,
@@ -15,19 +16,23 @@ import {
   toggleDriverStatus,
   adjustDriverWallet,
   verificationStatus,
-
   approveOrRejectDriverWalletRequest,
   getAllDriverWalletRequests,
   getDriverWalletRequestById,
 } from "services/driver";
+import type { GetDriversParams } from "types/react-query/driver";
 
-// 🚚 Get all drivers
-export const useDrivers = ({ enabled = true }) =>
-  useQuery({
-    queryKey: ["drivers"],
-    queryFn: getDrivers,
+// 🚚 Get all drivers with pagination, search, and filtering
+export const useDrivers = (params?: GetDriversParams & { enabled?: boolean }) => {
+  const { enabled = true, ...queryParams } = params || {};
+  
+  return useQuery({
+    queryKey: ["drivers", queryParams],
+    queryFn: () => getDrivers(queryParams),
     enabled,
+    placeholderData: keepPreviousData
   });
+};
 
 // 🚚 Get single driver by ID
 export const useDriverById = (id: string) =>

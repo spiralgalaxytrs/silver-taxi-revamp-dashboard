@@ -1,8 +1,19 @@
 import axios from "lib/http-common";
-import type { Driver, wallet, DriverWalletRequest, DriverActivityLog } from "types/react-query/driver";
+import type { Driver, wallet, DriverWalletRequest, DriverActivityLog, GetDriversParams, DriversResponse } from "types/react-query/driver";
 
-export const getDrivers = async (): Promise<Driver[]> => {
-  const res = await axios.get("/v1/drivers");
+
+export const getDrivers = async (params?: GetDriversParams): Promise<DriversResponse> => {
+  const res = await axios.get("/v1/drivers", {
+    params: {
+      ...(params?.page && { page: params.page }),
+      ...(params?.limit && { limit: params.limit }),
+      ...(params?.search && { search: params.search }),
+      ...(params?.status && { status: params.status }),
+      ...(params?.sortBy && { sortBy: params.sortBy }),
+      ...(params?.sortOrder && { sortOrder: params.sortOrder }),
+    },
+  });
+  // console.log("res >> ", res.data.data);
   return res.data.data;
 };
 

@@ -20,23 +20,49 @@ export interface Vendor {
     createdAt: string;
   };
   createdAt: string;
-  
+
   website?: string;
   reason?: string;
 }
 
 export interface wallet {
-    transactionId: string;
-    initiatedBy: string;
-    initiatedTo: string;
-    type: string;
-    date: string;
-    vendorId: string;
-    // driverId: string;
-    amount: number;
+  transactionId: string;
+  initiatedBy: string;
+  initiatedTo: string;
+  type: string;
+  date: string;
+  vendorId: string;
+  // driverId: string;
+  amount: number;
 
-    status: "Paid" | "Unpaid";
+  status: "Paid" | "Unpaid";
 
-    createdAt: string;
-    updatedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
+export interface GetVendorsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface GetVendorsResponse {
+  vendors: Vendor[];
+  vendorsCount: {
+    total: number;
+    active: number;
+    inactive: number;
+  }
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+    limit: number;
+  };
 }

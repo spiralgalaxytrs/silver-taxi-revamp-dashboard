@@ -11,12 +11,16 @@ import {
     toggleVendorStatus,
     adjustVendorWallet,
 } from 'services/vendor';
-import type { Vendor } from 'types/react-query/vendor';
+import type { Vendor, GetVendorsParams } from 'types/react-query/vendor';
+import { keepPreviousData } from '@tanstack/react-query';
 
-export const useVendors = () => {
+export const useVendors = (params?: GetVendorsParams & { enabled?: boolean }) => {
+    const { enabled = true, ...queryParams } = params || {};
     return useQuery({
-        queryKey: ['vendors'],
-        queryFn: getVendors,
+        queryKey: ['vendors', queryParams],
+        queryFn: () => getVendors(queryParams),
+        enabled,
+        placeholderData: keepPreviousData
     });
 };
 

@@ -62,10 +62,11 @@ export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryForm
     const router = useRouter()
 
     const {
-        data: enquiries = [],
+        data: enquiriesData = { enquiries: [], enquiriesCount: { total: 0, today: 0, manual: 0, website: 0 }, pagination: { currentPage: 1, totalPages: 1, totalCount: 0, hasNext: false, hasPrev: false, limit: 10 } },
         isLoading: isEnquiriesLoading,
         refetch: enquiryRefetch
     } = useEnquiries()
+    const enquiries = (enquiriesData.enquiries || (enquiriesData as any).enquires || [])
 
     const {
         mutate: createEnquiry,
@@ -327,7 +328,7 @@ export function CreateEnquiryForm({ onSubmit, id, createdBy }: CreateEnquiryForm
                                     />
                                 </div>
 
-                          { /*     <div className="space-y-2">
+                                { /*     <div className="space-y-2">
                                     <Label>Email</Label>
                                     <Input
                                         value={formData.email || ''}

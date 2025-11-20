@@ -371,7 +371,8 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     Cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const booking = row.original;
-      const { data: drivers = [], isPending: isLoading, isError } = useDrivers({ enabled: true });
+      const { data: driversData = { drivers: [], pagination: { currentPage: 0, totalPages: 0, totalDrivers: 0, hasNext: false, hasPrev: false, limit: 0 } }, isPending: isLoading, isError } = useDrivers({ enabled: true });
+      const drivers = driversData?.drivers || [];
       const { mutate: assignDriver } = useAssignDriver();
       const { mutate: assignAllDriver } = useAssignAllDriver();
 
