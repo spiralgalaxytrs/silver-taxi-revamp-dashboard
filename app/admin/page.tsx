@@ -24,10 +24,7 @@ export default function AdminDashboard() {
 
   const { data: bookingsData = { bookings: [], pagination: { currentPage: 0, totalPages: 0, totalBookings: 0, hasNext: false, hasPrev: false, limit: 0 } }, isPending: isLoading, refetch: refetchBookings } = useFetchBookings();
   const { data: enquiries = [], isPending: isEnquiriesLoading, refetch: refetchEnquiries } = useEnquiries();
-  const { data: driversData = { drivers: [], pagination: { currentPage: 0, totalPages: 0, totalDrivers: 0, hasNext: false, hasPrev: false, limit: 0 } },
-    isPending: isDriversLoading,
-    refetch: refetchDrivers
-  } = useDrivers({ enabled: true });
+  const { data: drivers = [], isPending: isDriversLoading, refetch: refetchDrivers } = useDrivers({ enabled: true });
   const { data: invoices = [], isPending: isInvoicesLoading } = useInvoices();
   const drivers = driversData?.drivers || [];
   const bookings = bookingsData?.bookings || [];

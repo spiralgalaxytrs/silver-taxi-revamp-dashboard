@@ -25,14 +25,14 @@ export interface Driver {
     panCardRemark?: string;
     aadharImageFront?: string;
     aadharImageBack?: string;
-    aadharImageFrontVerified?: "pending" | "accepted" | "rejected";
-    aadharImageBackVerified?: "pending" | "accepted" | "rejected";
+    aadharImageFrontVerified?:  "pending" | "accepted" | "rejected";
+    aadharImageBackVerified?:  "pending" | "accepted" | "rejected";
     aadharImageFrontRemark?: string;
     aadharImageBackRemark?: string;
     licenseImageFront?: string;
     licenseImageBack?: string;
-    licenseImageFrontVerified?: "pending" | "accepted" | "rejected";
-    licenseImageBackVerified?: "pending" | "accepted" | "rejected";
+    licenseImageFrontVerified?:  "pending" | "accepted" | "rejected";
+    licenseImageBackVerified?:  "pending" | "accepted" | "rejected";
     licenseImageFrontRemark?: string;
     licenseImageBackRemark?: string;
     createdBy: "Vendor" | "Admin" | "Driver";
@@ -109,7 +109,7 @@ export interface VehicleAttributes {
     insuranceRemark?: string;
     pollutionImage?: string;
     pollutionExpiryDate?: string;
-    pollutionImageVerified?: "pending" | "accepted" | "rejected";
+    pollutionImageVerified  ?: "pending" | "accepted" | "rejected";
     pollutionImageRemark?: string;
 
 }
@@ -166,31 +166,4 @@ export interface DriverActivityLog {
     newValue?: string;
     timestamp: Date;
     additionalInfo?: any;
-}
-
-
-export interface GetDriversParams {
-    page?: number;
-    limit?: number;
-    search?: string;
-    status?: string;
-    sortBy?: string;
-    sortOrder?: 'ASC' | 'DESC';
-}
-
-export interface DriversResponse {
-    drivers: Driver[];
-    driversCount: {
-        total: number,
-        active: number,
-        inactive: number,
-    },
-    pagination: {
-        currentPage: number;
-        totalPages: number;
-        totalCount: number;
-        hasNext: boolean;
-        hasPrev: boolean;
-        limit: number;
-    };
 }

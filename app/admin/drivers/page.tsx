@@ -35,58 +35,11 @@ import {
 export default function DriversPage(): JSX.Element {
   const router = useRouter();
 
-  // Pagination state
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
-
-  // Search and filter state
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<string>('');
-  const [sortBy, setSortBy] = useState<string>('createdAt');
-  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
-  const [globalFilter, setGlobalFilter] = useState('');
-
-  // Calculate page number (MaterialReactTable uses 0-based, backend uses 1-based)
-  const page = pagination.pageIndex + 1;
-  const limit = pagination.pageSize;
-
-  // Sync globalFilter with search state for server-side search
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setSearch(globalFilter);
-      // Reset to first page when search changes
-      setPagination(prev => ({ ...prev, pageIndex: 0 }));
-    }, 500); // Debounce search by 500ms
-
-    return () => clearTimeout(timeoutId);
-  }, [globalFilter]);
-
-  // adminId will be extracted from token by backend if not provided
-  // You can pass it explicitly if available from your auth system
   const {
-    data: driversData,
+    data: drivers = [],
     isLoading,
     refetch
-  } = useDrivers({
-    enabled: true,
-    page,
-    limit,
-    search: search || undefined,
-    status: status || undefined,
-    sortBy,
-    sortOrder,
-    // adminId is optional - backend extracts from token if not provided
-  });
-
-  // Extract drivers and pagination from response
-  const drivers = driversData?.drivers || [];
-  const paginationInfo = driversData?.pagination;
-
-  const driversCount = useMemo(() => {
-    return driversData?.driversCount || { total: 0, active: 0, inactive: 0 };
-  }, [driversData]);
+  } = useDrivers({ enabled: true });
 
   const {
     mutate: bulkDeleteDrivers
@@ -108,6 +61,18 @@ export default function DriversPage(): JSX.Element {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
   const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{
+    columnId: string | null;
+    direction: 'asc' | 'desc' | null;
+  }>({ columnId: null, direction: null });
+
+  // Filters state for search and created date range
+  const [filters, setFilters] = useState({
+    search: '',
+    isActive: null,
+    creationDateStart: '',
+    creationDateEnd: ''
+  });
 
   const driverData = useMemo(() => {
     return drivers.map(driver => ({
@@ -116,7 +81,6 @@ export default function DriversPage(): JSX.Element {
       walletAmount: driver.wallet?.balance ?? 0
     }))
   }, [drivers]);
-
   // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
   const columnVisibility = useMemo(() => {
     const serverVisibility = tableColumnVisibility.preferences || {};
@@ -135,11 +99,96 @@ export default function DriversPage(): JSX.Element {
   }, [localColumnVisibility, isColumnVisibilityUpdated]);
 
 
-  // Apply client-side date filters only (search and status are server-side)
-  const finalDrivers = useMemo(() => {
-    let filtered = [...driverData];
+  const unFiltered = [...driverData].sort((a, b) => {
+    const aCreatedAt = new Date(a.createdAt).getTime();
+    const bCreatedAt = new Date(b.createdAt).getTime();
+    return bCreatedAt - aCreatedAt; // Descending order
+  });
+
+  const applyFilters = () => {
+    let filtered = [...unFiltered];
+
+    if (filters.search) {
+      filtered = filtered.filter(driver =>
+        driver?.driverId?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        driver.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        driver.email?.toLowerCase().includes(filters.search.toLowerCase())
+      );
+    }
+
+    if (filters.creationDateStart || filters.creationDateEnd) {
+      filtered = filtered.filter(driver => {
+        const created = new Date(driver.createdAt).setHours(0, 0, 0, 0);
+        const filterStart = filters.creationDateStart ? new Date(filters.creationDateStart).setHours(0, 0, 0, 0) : null;
+        const filterEnd = filters.creationDateEnd ? new Date(filters.creationDateEnd).setHours(0, 0, 0, 0) : null;
+        return (!filterStart || created >= filterStart) && (!filterEnd || created <= filterEnd);
+      });
+    }
+
+    // Use this:
+    if (filters.isActive !== null && filters.isActive !== "") {
+      const isActiveValue = filters.isActive === "true";
+      filtered = filtered.filter(driver => driver.isActive === isActiveValue);
+    }
+
+    // Global sorting logic
+    if (sortConfig.columnId && sortConfig.direction) {
+      filtered.sort((a, b) => {
+        const aValue = a[sortConfig.columnId as keyof typeof a];
+        const bValue = b[sortConfig.columnId as keyof typeof b];
+
+        if (aValue === null || bValue === null) return 0;
+
+        if (aValue === bValue) return 0;
+
+        if (sortConfig.direction === 'asc') {
+          return (aValue ?? '') > (bValue ?? '') ? 1 : -1;
+        } else {
+          return (aValue ?? '') < (bValue ?? '') ? 1 : -1;
+        }
+      });
+    }
+
     return filtered;
-  }, [driverData]);
+  };
+
+  const finalDrivers = applyFilters();
+
+  // Calculate counters whenever the driver data changes
+  const totalDrivers = finalDrivers.length;
+
+  const inactiveDrivers = useMemo(() => (
+    finalDrivers.filter(driver => driver.isActive === false).length
+  ), [finalDrivers]);
+
+  const activeDrivers = totalDrivers - inactiveDrivers;
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleClear = () => {
+    setFilters({
+      search: '',
+      isActive: null,
+      creationDateStart: '',
+      creationDateEnd: ''
+    });
+    setSortConfig({ columnId: null, direction: null });
+  };
+
+  const handleSort = (columnId: string) => {
+    setSortConfig(prev => ({
+      columnId,
+      direction: prev.columnId === columnId && prev.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
+
+  const getFormattedCreatedDateRange = () => {
+    const start = filters.creationDateStart ? new Date(filters.creationDateStart).toLocaleDateString() : '';
+    const end = filters.creationDateEnd ? new Date(filters.creationDateEnd).toLocaleDateString() : '';
+    return start && end ? `${start} - ${end}` : 'Pick a Range';
+  };
 
   const handleBulkDelete = () => {
     const selectedIds = Object.keys(rowSelection);
@@ -302,6 +351,55 @@ export default function DriversPage(): JSX.Element {
               </Card>
             </div>
           </div>
+          {showFilters && (
+            <React.Fragment>
+              <div className="flex gap-8 items-center mt-4">
+                <div className="flex flex-col w-[230px]">
+                  <Label className="text-sm font-medium leading-none">Search</Label>
+                  <Input
+                    id="search"
+                    placeholder="Search drivers"
+                    value={filters.search}
+                    onChange={(e) => handleFilterChange('search', e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col w-[230px]">
+                  <Label className="text-sm font-medium leading-none">Status</Label>
+                  <div className='mt-1'>
+                    <Select onValueChange={(value) => handleFilterChange('isActive', value)}>
+                      <SelectTrigger id="isActive">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="true">Active</SelectItem>
+                        <SelectItem value="false">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex flex-col w-[230px]">
+                  <Label className="text-sm font-medium leading-none">Created At</Label>
+                  <DateRangeAccordion
+                    label={getFormattedCreatedDateRange()}
+                    startDate={filters.creationDateStart}
+                    endDate={filters.creationDateEnd}
+                    onStartDateChange={(date: any) => handleFilterChange('creationDateStart', date)}
+                    onEndDateChange={(date: any) => handleFilterChange('creationDateEnd', date)}
+                  />
+                </div>
+                <div className='flex justify-start items-center'>
+                  <Button
+                    className='mt-5 p-1 border-none bg-[#009F87] flex justify-center items-center w-28'
+                    // variant="outline"
+                    onClick={handleClear}
+                    disabled={isLoading}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            </React.Fragment>
+          )}
         </div>
         {/* Data Table */}
         <div className="rounded bg-white shadow">
@@ -309,41 +407,36 @@ export default function DriversPage(): JSX.Element {
             columns={columns as MRT_ColumnDef<any>[]}
             data={finalDrivers}
             enableRowSelection
+            positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{
-              rowSelection,
-              sorting,
-              columnVisibility,
-              pagination,
-              globalFilter,
-            }}
-            onGlobalFilterChange={setGlobalFilter}
-            manualFiltering={true} // Enable server-side filtering
+            state={{ rowSelection, sorting, columnVisibility }}
             onColumnVisibilityChange={(newVisibility) => {
               setIsColumnVisibilityUpdated(true);
               setLocalColumnVisibility(newVisibility);
             }}
-            // onSortingChange={handleSortingChange}
+            onSortingChange={setSorting}
             enableSorting
             enableColumnPinning={false}
-            // Server-side pagination
-            manualPagination={true}
-            onPaginationChange={setPagination}
-            rowCount={paginationInfo?.totalCount || 0}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },
               columnPinning: { right: ["actions"] },
-              showGlobalFilter: true, // Enable global search
+              showGlobalFilter: true,
             }}
             muiSearchTextFieldProps={{
               placeholder: 'Search ...',
               variant: 'outlined',
+              fullWidth: true, // 🔥 Makes the search bar take full width
               sx: {
-                minWidth: '600px',
+                minWidth: '600px', // Adjust width as needed
+                marginLeft: '16px',
               },
             }}
-            positionGlobalFilter="left"
+            muiToolbarAlertBannerProps={{
+              sx: {
+                justifyContent: 'flex-start', // Aligns search left
+              },
+            }}
             renderTopToolbarCustomActions={() => (
               <div className="flex flex-1 justify-end items-center">
                 {/* 🔁 Refresh Button */}
