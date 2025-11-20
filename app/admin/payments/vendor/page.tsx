@@ -88,7 +88,7 @@ export default function VendorPaymentPage() {
           payment.vendorId?.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.initiatedBy.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.initiatedTo.toLowerCase().includes(filters.search.toLowerCase()) ||
-          payment.ownedBy.toLowerCase().includes(filters.search.toLowerCase()) ||
+          payment.ownedBy !== undefined && payment.ownedBy.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.type.toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.amount.toString().toLowerCase().includes(filters.search.toLowerCase()) ||
           payment.description.toString().toLowerCase().includes(filters.search.toLowerCase())
@@ -98,7 +98,7 @@ export default function VendorPaymentPage() {
     if (filters.status) {
       filteredData = filteredData.filter(
         (payment) =>
-          payment.status.toLowerCase() === filters.status.toLowerCase()
+          payment?.ownedBy !== undefined && payment?.status?.toLowerCase() === filters.status.toLowerCase()
       );
     }
 

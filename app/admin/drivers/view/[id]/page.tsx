@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo, use } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent } from "components/ui/card";
 import { Loader2, ChevronLeft, Edit } from "lucide-react";
@@ -22,7 +22,8 @@ import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";
 import {
     useAdjustWallet,
-    useDriverById
+    useDriverById,
+    useUpdateDriver
 } from 'hooks/react-query/useDriver';
 import {
     useDriverTransactions
@@ -37,7 +38,9 @@ import VehicleTab from "components/driver/Tabs/VehicleTab";
 import TransactionsTab from "components/driver/Tabs/TransactionsTab";
 import BookingsTab from "components/driver/Tabs/BookingsTab";
 import { columns } from "./columns";
-import { walletColumns, DriverTransaction } from "./walletColumns";
+import { walletColumns } from "./walletColumns";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "components/ui/dialog"
+import { Input } from "components/ui/input";
 
 export default function ViewDriverPage() {
     const router = useRouter();
@@ -51,6 +54,7 @@ export default function ViewDriverPage() {
         isPending: isLoadingTransactions
     } = useDriverTransactions(id as string || "");
     const { mutate: adjustDriverWallet, isPending: isWalletAdjustmenting } = useAdjustWallet();
+    const { mutate: updateDriver, isPending: isUpdating } = useUpdateDriver();
     const {
         data: driver = null,
         isError: error,
@@ -81,6 +85,8 @@ export default function ViewDriverPage() {
     const [remarkError, setRemarkError] = useState("");
     const [walletMessage, setWalletMessage] = useState("");
     const [adjustmentReason, setAdjustmentReason] = useState("");
+    const [isMobileNumberEditModalOpen, setIsMobileNumberEditModalOpen] = useState(false);
+    const [mobileNumber, setMobileNumber] = useState("");
 
 
     useEffect(() => {
@@ -304,6 +310,29 @@ export default function ViewDriverPage() {
         }
     };
 
+    const handleMobileNumberUpdate = () => {
+
+        if (!mobileNumber || !editedDriver?.driverId) return
+        updateDriver({ id: editedDriver?.driverId, data: { phone: mobileNumber }, }, {
+            onSuccess: () => {
+                toast.success("Mobile number updated successfully", {
+                    style: {
+                        backgroundColor: "#009F7F",
+                        color: "#fff"
+                    },
+                });
+            },
+            onError: () => {
+                toast.error("Failed to update mobile number", {
+                    style: {
+                        backgroundColor: "#FF0000",
+                        color: "#fff"
+                    },
+                });
+            },
+        });
+    }
+
     const handleClose = () => {
         setAdjustmentAmount("");
         setAdjustmentRemarks("");
@@ -401,7 +430,7 @@ export default function ViewDriverPage() {
                                         size="icon"
                                         className="hover:bg-transparent hover:scale-[1.5]"
                                         onClick={() => {
-
+                                            setIsMobileNumberEditModalOpen(true);
                                         }}>
                                         <Edit className="w-4 h-4 inline-block ml-2 text-blue-500" />
                                     </Button>
@@ -551,6 +580,41 @@ export default function ViewDriverPage() {
                     </CardContent>
                 </TooltipProvider>
             </Card>
+            <div className="flex items-center justify-center">
+                <Dialog
+                    open={isMobileNumberEditModalOpen}
+                    onOpenChange={setIsMobileNumberEditModalOpen}
+                >
+                    <DialogContent className="max-w-[400px]">
+                        <DialogHeader>
+                            <DialogTitle className="leading-normal">Are you sure want to update this driver &nbsp;
+                                <span className="text-green-500">
+                                    {editedDriver?.name}
+                                </span>
+                                &nbsp; number ?</DialogTitle>
+                            <div>
+                                <div className="flex flex-col gap-2">
+                                    <Input
+                                        type="text"
+                                        placeholder="Mobile Number"
+                                        value={mobileNumber}
+                                        onChange={(e) => setMobileNumber(e.target.value)}
+                                        maxLength={10}
+                                    />
+                                </div>
+                            </div>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsMobileNumberEditModalOpen(false)}>No</Button>
+                            <Button onClick={() => {
+                                handleMobileNumberUpdate();
+                                setIsMobileNumberEditModalOpen(false);
+                            }}>Yes</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
         </div >
     );
 }
