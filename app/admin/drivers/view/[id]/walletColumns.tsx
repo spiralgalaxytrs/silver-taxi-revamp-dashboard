@@ -49,6 +49,45 @@ export const walletColumns: MRT_ColumnDef<WalletTransaction>[] = [
         muiTableBodyCellProps: { align: 'left' },
         size: 20,
     },
+    {
+        accessorKey: "tnxPaymentStatus",
+        header: "Transaction Status",
+        Header: () => (
+            <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
+                Transaction<br />Status
+            </div>
+        ),
+        Cell: ({ row }) => {
+            const status = row.getValue("tnxPaymentStatus") as string;
+            const lower = status?.toLowerCase();
+
+            const colorMap: Record<string, string> = {
+                pending: "bg-yellow-500 text-white",
+                success: "bg-green-600 text-white",
+                failed: "bg-red-600 text-white",
+            };
+
+            return (
+                <Badge className={colorMap[lower] || "bg-gray-500 text-white"}>
+                    {status}
+                </Badge>
+            );
+        },
+        muiTableHeadCellProps: {
+            align: 'left',
+            sx: {
+                '& .MuiBox-root': {
+                    gap: 0, // ✅ Removes space between filter & menu icons
+                },
+                '& .MuiButtonBase-root': {
+                    padding: '2px',
+                    margin: 0,
+                },
+            },
+        },
+        muiTableBodyCellProps: { align: 'left' },
+        size: 20,
+    },
     // {
     //     accessorKey: "driverId",
     //     header: "Driver ID",
