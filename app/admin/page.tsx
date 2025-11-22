@@ -11,7 +11,7 @@ import { InvoiceTable } from 'components/admin-dashboard/InvoiceTable'
 import { BookingTable } from 'components/admin-dashboard/BookingTable'
 import { EnquiryTable } from 'components/admin-dashboard/EnquiryTable'
 import { AreaChart } from 'components/charts/AreaChart'
-import { useFetchBookings } from 'hooks/react-query/useBooking'
+import { useFetchDashboardData, useFetchRecentBookings } from 'hooks/react-query/useBooking'
 import { useEnquiries } from 'hooks/react-query/useEnquiry';
 import { useDrivers } from 'hooks/react-query/useDriver';
 import { useInvoices } from 'hooks/react-query/useInvoice';
@@ -21,33 +21,61 @@ import { useState } from "react";
 
 export default function AdminDashboard() {
   const [showCreateCustomerModal, setShowCreateCustomerModal] = useState(false);
-
-  const { data: bookingsData = { bookings: [], pagination: { currentPage: 0, totalPages: 0, totalBookings: 0, hasNext: false, hasPrev: false, limit: 0 } }, isPending: isLoading, refetch: refetchBookings } = useFetchBookings();
-  const { data: enquiries = [], isPending: isEnquiriesLoading, refetch: refetchEnquiries } = useEnquiries();
+  const [barChartFilter, setBarChartFilter] = useState<'day' | 'week' | 'month' | 'year' | 'lastYear'>('week');
+  const [overviewFilter, setOverviewFilter] = useState<'day' | 'week' | 'month' | 'year' | 'lastYear'>('year');
+  const { data: bookingsData = {
+    bookings: [],
+    bookingsCount: { vendor: 0, website: 0, manual: 0 },
+    pagination: { currentPage: 0, totalPages: 0, totalCount: 0, hasNext: false, hasPrev: false, limit: 0 }
+  },
+    isPending: isLoading,
+    refetch: refetchBookings
+  } = useFetchRecentBookings({
+    enabled: true,
+    page: 1,
+    limit: 30,
+    sortBy: 'createdAt',
+    sortOrder: 'DESC',
+  });
   const { data: driversData = { drivers: [], pagination: { currentPage: 0, totalPages: 0, totalDrivers: 0, hasNext: false, hasPrev: false, limit: 0 } },
     isPending: isDriversLoading,
     refetch: refetchDrivers
   } = useDrivers({ enabled: true });
-  const { data: invoices = [], isPending: isInvoicesLoading } = useInvoices();
+  const { data: invoicesData = {
+    invoices: [],
+    pagination: { currentPage: 0, totalPages: 0, totalCount: 0, hasNext: false, hasPrev: false, limit: 0 }
+  }
+    , isPending: isInvoicesLoading
+  } = useInvoices({
+    enabled: true,
+    page: 1,
+    limit: 30,
+    sortBy: 'createdAt',
+    sortOrder: 'DESC',
+  });
+  const { data: dashboardData = {
+    areaChartData: { oneWay: 0, roundTrip: 0, hourlyPackages: 0 },
+    barChartData: [],
+    topDriversData: []
+  },
+    isPending: isDashboardLoading,
+    refetch: refetchDashboard } = useFetchDashboardData({
+      enabled: true,
+      areaChart: true,
+      barChart: barChartFilter,
+      topDrivers: overviewFilter,
+    });
   const drivers = driversData?.drivers || [];
+  const invoices = invoicesData?.invoices || [];
   const bookings = bookingsData?.bookings || [];
-  const { manualBookings, vendorBookings, websiteBookings } = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-
-    return bookings.reduce(
-      (acc: any, booking: any) => {
-        const bookingYear = new Date(booking.createdAt).getFullYear();
-        if (bookingYear !== currentYear) return acc;
-
-        if (booking.type === 'Manual') acc.manualBookings++;
-        if (booking.type === 'Website') acc.websiteBookings++;
-        if (booking.createdBy === 'Vendor') acc.vendorBookings++;
-        return acc;
-      },
-      { manualBookings: 0, vendorBookings: 0, websiteBookings: 0 }
-    );
-  }, [bookings]);
-
+  const areaChart = dashboardData?.areaChartData || { oneWay: 0, roundTrip: 0, hourlyPackages: 0 };
+  const barChart = dashboardData?.barChartData || [];
+  const topDrivers = dashboardData?.topDriversData || [];
+  const bookingsCount = bookingsData?.bookingsCount || {
+    vendor: 0,
+    website: 0,
+    manual: 0,
+  };
 
   return (
     <>
@@ -60,7 +88,7 @@ export default function AdminDashboard() {
           <div className='w-2/3'>
             <Card className="overflow-hidden border-none bg-white shadow-md w-full">
               <CardContent className="p-6">
-                <AreaChart createdBy="Admin" bookings={bookings} isLoading={isLoading} />
+                <AreaChart createdBy="Admin" bookings={areaChart} isLoading={isDashboardLoading} />
               </CardContent>
             </Card>
             {/* <Card className="overflow-hidden border-none bg-white shadow-md">
@@ -152,7 +180,7 @@ export default function AdminDashboard() {
               <CounterCard
                 color="bg-emerald-100"
                 icon={Users}
-                count={websiteBookings}
+                count={bookingsCount?.website || 0}
                 label="Website Bookings"
                 className="relative z-10 p-6"
               />
@@ -166,7 +194,7 @@ export default function AdminDashboard() {
               <CounterCard
                 color="bg-blue-100"
                 icon={Activity}
-                count={manualBookings}
+                count={bookingsCount?.manual || 0}
                 label="Manual Bookings"
                 className="relative z-10 p-6"
               />
@@ -180,7 +208,7 @@ export default function AdminDashboard() {
               <CounterCard
                 color="bg-purple-100"
                 icon={Activity}
-                count={vendorBookings}
+                count={bookingsCount?.vendor || 0}
                 label="Vendor Bookings"
                 className="relative z-10 p-6"
               />
@@ -197,12 +225,12 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card className="border-none bg-white shadow-md">
             <CardContent className="p-6">
-              <BarChartComponent createdBy='Admin' bookings={bookings} isLoading={isLoading} />
+              <BarChartComponent createdBy='Admin' data={barChart} isLoading={isDashboardLoading} filter={barChartFilter} setFilter={setBarChartFilter} />
             </CardContent>
           </Card>
           <Card className="border-none bg-white shadow-md">
             <CardContent className="p-6">
-              <Overview drivers={drivers} isLoading={isDriversLoading} />
+              <Overview data={topDrivers} isLoading={isDashboardLoading} filter={overviewFilter} setFilter={setOverviewFilter} />
             </CardContent>
           </Card>
         </div>

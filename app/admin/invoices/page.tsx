@@ -27,7 +27,7 @@ import {
   AlertDialogCancel,
   AlertDialogFooter
 } from 'components/ui/alert-dialog';
-import { ArrowDown, ArrowUp, Activity, Trash, RefreshCcw } from 'lucide-react';
+import { ArrowDown, ArrowUp, Activity, Trash, RefreshCcw, Loader2 } from 'lucide-react';
 import DateRangeAccordion from 'components/others/DateRangeAccordion';
 import {
   MRT_ColumnDef,
@@ -46,11 +46,54 @@ import {
 export default function InvoicesPage() {
   const router = useRouter();
 
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  // Search and filter state
+  const [search, setSearch] = useState('');
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [filters, setFilters] = useState({
+    search: '',
+    status: '',
+    creationDateStart: '',
+    creationDateEnd: ''
+  });
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Calculate page number (MaterialReactTable uses 0-based, backend uses 1-based)
+  const page = pagination.pageIndex + 1;
+  const limit = pagination.pageSize;
+
+  // Sync globalFilter with search state for server-side search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearch(globalFilter);
+      // Reset to first page when search changes
+      setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    }, 500); // Debounce search by 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [globalFilter]);
+
   const {
-    data: invoices = [],
+    data: invoicesData = { invoices: [], invoicesCount: { total: 0, partiallyPaid: 0, paid: 0, unpaid: 0 }, pagination: { currentPage: 1, totalPages: 1, totalCount: 0, hasNext: false, hasPrev: false, limit: 10 } },
+    isPending,
     refetch
-  } = useInvoices();
+  } = useInvoices({
+    page,
+    limit,
+    search: search || undefined,
+    status: filters.status || undefined,
+  });
   const { mutate: multiDeleteInvoice } = useMultiDeleteInvoice();
+
+  // Handle API response structure
+  const invoices = invoicesData.invoices || [];
+  const invoicesCount = invoicesData.invoicesCount;
+  const paginationInfo = invoicesData.pagination;
 
   const {
     data: tableColumnVisibility = {},
@@ -65,28 +108,21 @@ export default function InvoicesPage() {
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [isSpinning, setIsSpinning] = useState(false)
-  const [totalInvoices, setTotalInvoices] = useState(0);
-  const [partiallyPaidInvoices, setPartiallyPaidInvoices] = useState(0);
-  const [paidInvoices, setPaidInvoices] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [unpaidInvoices, setUnpaidInvoices] = useState(0);
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
   const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
-  const [sortConfig, setSortConfig] = useState<{
-    columnId: string | null;
-    direction: 'asc' | 'desc' | null;
-  }>({ columnId: null, direction: null });
 
-  const [filters, setFilters] = useState({
-    search: '',
-    status: '',
-    creationDateStart: '',
-    creationDateEnd: ''
-  });
-  const [showFilters, setShowFilters] = useState(false);
+  // Reset pagination when status filter changes
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, pageIndex: 0 }));
+  }, [filters.status]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
+    // Reset pagination when filters change
+    if (key === 'status') {
+      setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    }
   };
 
   const handleClear = async () => {
@@ -97,7 +133,9 @@ export default function InvoicesPage() {
         creationDateStart: '',
         creationDateEnd: ''
       });
-      setSortConfig({ columnId: null, direction: null }); // Reset sorting
+      setGlobalFilter('');
+      setSearch('');
+      setPagination(prev => ({ ...prev, pageIndex: 0 }));
     } catch (error) {
       console.error('Error clearing filters:', error);
     }
@@ -130,31 +168,13 @@ export default function InvoicesPage() {
     }));
   }, [invoices]);
 
-  const unFilteredData = [...invoiceData].sort((a, b) => {
-    const aCreatedAt = new Date(a.createdAt || "").getTime();
-    const bCreatedAt = new Date(b.createdAt || "").getTime();
-    return bCreatedAt - aCreatedAt; // Descending order
-  });
+  // Apply client-side date filtering if needed
+  const filteredData = useMemo(() => {
+    let data = [...invoiceData];
 
-  const applyFilters = () => {
-    let filteredData = [...unFilteredData];
-
-    if (filters.search) {
-      filteredData = filteredData.filter(
-        (invoice) =>
-          invoice.invoiceId?.toLowerCase().includes(filters.search.toLowerCase()) ||
-          invoice.email?.toLowerCase().includes(filters.search.toLowerCase())
-      );
-    }
-
-    if (filters.status) {
-      filteredData = filteredData.filter(
-        (invoice) => invoice.status === filters.status
-      );
-    }
-
+    // Client-side date filtering (if backend doesn't support it)
     if (filters.creationDateStart || filters.creationDateEnd) {
-      filteredData = filteredData.filter(invoice => {
+      data = data.filter(invoice => {
         const created = invoice.createdAt ? new Date(invoice.createdAt).setHours(0, 0, 0, 0) : null;
         const filterStart = filters.creationDateStart ? new Date(filters.creationDateStart).setHours(0, 0, 0, 0) : null;
         const filterEnd = filters.creationDateEnd ? new Date(filters.creationDateEnd).setHours(0, 0, 0, 0) : null;
@@ -162,83 +182,14 @@ export default function InvoicesPage() {
       });
     }
 
-    // Global sorting logic - Updated to handle different data types
-    if (sortConfig.columnId && sortConfig.direction) {
-      filteredData = [...filteredData].sort((a, b) => {
-        const columnKey = sortConfig.columnId as keyof typeof a;
-        const aValue = a[columnKey];
-        const bValue = b[columnKey];
+    return data;
+  }, [invoiceData, filters.creationDateStart, filters.creationDateEnd]);
 
-
-        // Handle null/undefined cases
-        if (aValue == null) return sortConfig.direction === 'asc' ? 1 : -1;
-        if (bValue == null) return sortConfig.direction === 'asc' ? -1 : 1;
-
-        // Date comparison for date fields
-        if (['startDate', 'endDate', 'createdAt'].includes(columnKey)) {
-          const dateA = new Date(aValue as string).getTime();
-          const dateB = new Date(bValue as string).getTime();
-          return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
-        }
-
-        // Numeric comparison for numeric fields
-        if (typeof aValue === 'number' && typeof bValue === 'number') {
-          return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
-        }
-
-        // Boolean comparison for status
-        if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
-          return sortConfig.direction === 'asc'
-            ? (aValue === bValue ? 0 : aValue ? -1 : 1)
-            : (aValue === bValue ? 0 : aValue ? 1 : -1);
-        }
-
-        // String comparison for other fields
-        const strA = String(aValue).toLowerCase();
-        const strB = String(bValue).toLowerCase();
-        return sortConfig.direction === 'asc'
-          ? strA.localeCompare(strB)
-          : strB.localeCompare(strA);
-      });
-    }
-
-    return filteredData;
-  };
-
-  const filteredData = applyFilters();
-
-  useEffect(() => {
-    const counts = filteredData.reduce(
-      (acc, invoice) => {
-        acc.total += 1;
-        switch (invoice.status) {
-          case 'Partial Paid':
-            acc.partiallyPaid += 1;
-            break;
-          case 'Paid':
-            acc.paid += 1;
-            break;
-          case 'Unpaid':
-            acc.unpaid += 1;
-            break;
-        }
-        return acc;
-      },
-      { total: 0, partiallyPaid: 0, paid: 0, unpaid: 0 }
-    );
-
-    setTotalInvoices(counts.total);
-    setPartiallyPaidInvoices(counts.partiallyPaid);
-    setPaidInvoices(counts.paid);
-    setUnpaidInvoices(counts.unpaid);
-  }, [filteredData]);
-
-  const handleSort = (columnId: string) => {
-    setSortConfig(prev => ({
-      columnId,
-      direction: prev.columnId === columnId && prev.direction === 'asc' ? 'desc' : 'asc',
-    }));
-  };
+  // Use server-side counts if available, otherwise calculate from filtered data
+  const totalInvoices = invoicesCount?.total || filteredData.length;
+  const partiallyPaidInvoices = invoicesCount?.partiallyPaid || filteredData.filter(inv => inv.status === 'Partial Paid').length;
+  const paidInvoices = invoicesCount?.paid || filteredData.filter(inv => inv.status === 'Paid').length;
+  const unpaidInvoices = invoicesCount?.unpaid || filteredData.filter(inv => inv.status === 'Unpaid').length;
 
   const getFormattedCreatedDateRange = () => {
     const start = filters.creationDateStart ? new Date(filters.creationDateStart).toLocaleDateString() : '';
@@ -267,7 +218,8 @@ export default function InvoicesPage() {
           },
         });
         setIsDialogOpen(false);
-        router.refresh();
+        setRowSelection({});
+        refetch();
       },
       onError: (error: any) => {
         toast.error(error?.response?.data?.message || "Error deleting Invoices", {
@@ -298,6 +250,14 @@ export default function InvoicesPage() {
   const handleCreateInvoice = () => {
     router.push('/admin/invoices/create');
   };
+
+  if (isPending && pagination.pageIndex === 0) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <React.Fragment>
@@ -423,22 +383,26 @@ export default function InvoicesPage() {
                 <Input
                   id="search"
                   placeholder="Search in invoices"
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  value={globalFilter}
+                  onChange={(e) => setGlobalFilter(e.target.value)}
                 />
               </div>
               <div className="flex flex-col w-[230px]">
                 <Label htmlFor="status" className="text-sm font-medium mb-3">
                   Status
                 </Label>
-                <Select onValueChange={(value) => handleFilterChange('status', value)}>
+                <Select 
+                  value={filters.status} 
+                  onValueChange={(value) => handleFilterChange('status', value)}
+                >
                   <SelectTrigger id="status">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="partially_paid">Partially Paid</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="unpaid">Unpaid</SelectItem>
+                    <SelectItem value="">All Status</SelectItem>
+                    <SelectItem value="Partial Paid">Partially Paid</SelectItem>
+                    <SelectItem value="Paid">Paid</SelectItem>
+                    <SelectItem value="Unpaid">Unpaid</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -471,14 +435,42 @@ export default function InvoicesPage() {
             enableRowSelection
             positionGlobalFilter="left"
             onRowSelectionChange={setRowSelection}
-            state={{ rowSelection, sorting, columnVisibility }}
             onColumnVisibilityChange={(newVisibility) => {
               setIsColumnVisibilityUpdated(true);
               setLocalColumnVisibility(newVisibility);
             }}
+            state={{
+              rowSelection,
+              sorting,
+              columnVisibility,
+              pagination,
+              globalFilter,
+            }}
+            onGlobalFilterChange={setGlobalFilter}
+            manualFiltering={true} // Enable server-side filtering
             onSortingChange={setSorting}
             enableSorting
             enableColumnPinning={false}
+            // Server-side pagination
+            manualPagination={true}
+            onPaginationChange={(updater) => {
+              const newPagination = typeof updater === 'function' 
+                ? updater(pagination) 
+                : updater;
+              
+              // Prevent going to next page if hasNext is false
+              if (newPagination.pageIndex > pagination.pageIndex && !paginationInfo?.hasNext) {
+                return; // Don't update pagination
+              }
+              
+              // Prevent going to previous page if hasPrev is false
+              if (newPagination.pageIndex < pagination.pageIndex && !paginationInfo?.hasPrev) {
+                return; // Don't update pagination
+              }
+              
+              setPagination(newPagination);
+            }}
+            rowCount={paginationInfo?.totalCount || 0}
             initialState={{
               density: 'compact',
               pagination: { pageIndex: 0, pageSize: 10 },
@@ -488,10 +480,8 @@ export default function InvoicesPage() {
             muiSearchTextFieldProps={{
               placeholder: 'Search ...',
               variant: 'outlined',
-              fullWidth: true, // 🔥 Makes the search bar take full width
               sx: {
-                minWidth: '600px', // Adjust width as needed
-                marginLeft: '16px',
+                minWidth: '600px',
               },
             }}
             muiToolbarAlertBannerProps={{

@@ -73,7 +73,11 @@ const ChartLegend = ({ config }: { config: ChartConfig }) => {
 
 interface AreaChartProps {
   createdBy: string;
-  bookings: any[];
+  bookings: {
+    oneWay: number;
+    roundTrip: number;
+    hourlyPackages: number;
+  };
   isLoading: boolean
 }
 
@@ -88,17 +92,19 @@ export function AreaChart({ createdBy, bookings, isLoading }: AreaChartProps) {
       // { service: "Airport", bookings: 0, fill: colorMap["Airport"] },
     ];
 
-    const filteredBookings =
-      createdBy === "Vendor"
-        ? bookings.filter((b) => b.createdBy === "Vendor")
-        : bookings;
+    const bookingMap = {
+      "One way": bookings.oneWay,
+      "Round trip": bookings.roundTrip,
+      "Hourly Packages": bookings.hourlyPackages,
+    };
 
-    filteredBookings.forEach((booking) => {
-      const index = initial.findIndex((item) => item.service === booking.serviceType);
-      if (index !== -1) initial[index].bookings++;
-    });
+    // assign dynamically without relying on array index
+    const finalData = initial.map((item) => ({
+      ...item,
+      bookings: bookingMap[item.service as keyof typeof bookingMap] ?? 0,
+    }));
 
-    return initial;
+    return finalData;
   }, [bookings, createdBy]);
 
   if (isLoading) {
@@ -128,7 +134,7 @@ export function AreaChart({ createdBy, bookings, isLoading }: AreaChartProps) {
               }}
               barSize={46}
               height={90}
-              
+
             >
               <YAxis
                 dataKey="service"

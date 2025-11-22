@@ -16,16 +16,39 @@ import {
   togglePaymentMethod,
   fetchVendorBookingsById,
   toggleContactStatus,
+  fetchRecentBookings,
+  fetchDashboardData,
 } from "services/booking";
-import type { Booking, GetBookingsParams } from "types/react-query/booking";
+import type { Booking, GetBookingsParams, GetDashboardDataParams } from "types/react-query/booking";
 
 
 export const useFetchBookings = (params?: GetBookingsParams & { enabled?: boolean }) => {
   const { enabled = true, ...queryParams } = params || {};
-  
+
   return useQuery({
     queryKey: ["bookings", queryParams],
     queryFn: () => fetchBookings(queryParams),
+    enabled,
+    placeholderData: keepPreviousData
+  });
+};
+
+export const useFetchRecentBookings = (params?: GetBookingsParams & { enabled?: boolean }) => {
+  const { enabled = true, ...queryParams } = params || {};
+
+  return useQuery({
+    queryKey: ["recent-bookings", queryParams],
+    queryFn: () => fetchRecentBookings(queryParams),
+    enabled,
+    placeholderData: keepPreviousData
+  });
+};
+
+export const useFetchDashboardData = (params?: GetDashboardDataParams & { enabled?: boolean }) => {
+  const { enabled = true, ...queryParams } = params || {};
+  return useQuery({
+    queryKey: ["dashboard-data", queryParams],
+    queryFn: () => fetchDashboardData(queryParams),
     enabled,
     placeholderData: keepPreviousData
   });

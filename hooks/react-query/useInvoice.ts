@@ -2,6 +2,7 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
+  keepPreviousData,
 } from "@tanstack/react-query";
 import {
   getInvoices,
@@ -13,12 +14,17 @@ import {
   deleteInvoice,
   multiDeleteInvoice,
 } from "services/invoice";
+import { GetInvoicesParams } from "types/react-query/invoice";
 
-export const useInvoices = () =>
-  useQuery({
-    queryKey: ["invoices"],
-    queryFn: getInvoices,
+export const useInvoices = (params?: GetInvoicesParams & { enabled?: boolean }) => {
+  const { enabled = true, ...queryParams } = params || {};
+  return useQuery({
+    queryKey: ["invoices", queryParams],
+    queryFn: () => getInvoices(queryParams),
+    enabled,
+    placeholderData: keepPreviousData,
   });
+};
 
 export const useInvoiceById = (id: string) =>
   useQuery({

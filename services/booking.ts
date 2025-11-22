@@ -1,5 +1,9 @@
 import axios from "lib/http-common";
-import { Booking, GetBookingsParams, BookingsResponse } from "types/react-query/booking";
+import {
+  Booking, GetBookingsParams,
+  BookingsResponse, RecentBookingsResponse,
+  DashboardDataResponse, GetDashboardDataParams
+} from "types/react-query/booking";
 
 // Get all bookings with pagination, search, and filtering
 export const fetchBookings = async (params?: GetBookingsParams): Promise<BookingsResponse> => {
@@ -14,6 +18,30 @@ export const fetchBookings = async (params?: GetBookingsParams): Promise<Booking
       ...(params?.sortOrder && { sortOrder: params.sortOrder }),
     },
   });
+  return response.data.data;
+};
+
+export const fetchRecentBookings = async (params?: GetBookingsParams): Promise<RecentBookingsResponse> => {
+  const response = await axios.get("/v1/bookings/recent", {
+    params: {
+      ...(params?.page && { page: params.page }),
+      ...(params?.limit && { limit: params.limit }),
+      ...(params?.sortBy && { sortBy: params.sortBy }),
+      ...(params?.sortOrder && { sortOrder: params.sortOrder }),
+    },
+  });
+  return response.data.data;
+};
+
+export const fetchDashboardData = async (params?: GetDashboardDataParams): Promise<DashboardDataResponse> => {
+  const response = await axios.get("/v1/bookings/dashboard", {
+    params: {
+      ...(params?.areaChart && { areaChart: params.areaChart }),
+      ...(params?.barChart && { barChart: params.barChart }),
+      ...(params?.topDrivers && { sortBy: params.topDrivers }),
+    },
+  });
+  console.log("dashboard data >> ", response.data.data);
   return response.data.data;
 };
 

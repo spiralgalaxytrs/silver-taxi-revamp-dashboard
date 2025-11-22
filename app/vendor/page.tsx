@@ -7,7 +7,7 @@ import CounterCard from 'components/cards/CounterCard'
 import { AreaChart } from 'components/charts/AreaChart'
 import { BarChartComponent } from 'components/charts/BarChart'
 import { PaymentComponent } from 'components/charts/PaymentChart'
-import { useFetchVendorBookings } from 'hooks/react-query/useBooking'
+import { useFetchDashboardData, useFetchVendorBookings } from 'hooks/react-query/useBooking'
 import { useVendorEnquiries } from 'hooks/react-query/useEnquiry';
 import { useDrivers } from 'hooks/react-query/useDriver';
 import { useVendorInvoices } from 'hooks/react-query/useInvoice';
@@ -24,6 +24,8 @@ export default function VendorDashboard() {
   const { data: invoices = [], isPending: isInvoicesLoading } = useVendorInvoices();
 
 
+  const [overviewFilter, setOverviewFilter] = useState<'day' | 'week' | 'month' | 'year' | 'lastYear'>('year');
+  const [barChartFilter, setBarChartFilter] = useState<'day' | 'week' | 'month' | 'year' | 'lastYear'>('week');
   const { totalBookings, totalBookingValue } = useMemo(() => {
     return bookings.reduce(
       (acc: any, booking: any) => {
@@ -34,6 +36,19 @@ export default function VendorDashboard() {
       { totalBookings: 0, totalBookingValue: 0 }
     );
   }, [bookings]);
+
+  const { data: dashboardData = {
+    areaChartData: { oneWay: 0, roundTrip: 0, hourlyPackages: 0 },
+    barChartData: [],
+    topDriversData: []
+  },
+    isPending: isDashboardLoading,
+    refetch: refetchDashboard } = useFetchDashboardData({
+      enabled: true,
+      areaChart: true,
+      barChart: barChartFilter,
+      topDrivers: overviewFilter,
+    });
 
 
   return (
@@ -56,32 +71,32 @@ export default function VendorDashboard() {
         </div>
 
         {/* Overall shortcuts */}
-          <ShortcutSection
-            col={3}
-            shortcuts={[
-              {
-                title: "Create Invoice",
-                href: "/vendor/invoices/create",
-                icon: FileText,
-                color: "from-blue-500 to-indigo-600",
-                hoverColor: "group-hover:from-blue-600 group-hover:to-indigo-700",
-              },
-              {
-                title: "Create Booking",
-                href: "/vendor/bookings/create",
-                icon: Calendar,
-                color: "from-emerald-500 to-teal-600",
-                hoverColor: "group-hover:from-emerald-600 group-hover:to-teal-700",
-              },
-              {
-                title: "Create Enquiry",
-                href: "/vendor/enquiry/create",
-                icon: MessageSquare,
-                color: "from-amber-500 to-orange-600",
-                hoverColor: "group-hover:from-amber-600 group-hover:to-orange-700",
-              }
-            ]}
-          />
+        <ShortcutSection
+          col={3}
+          shortcuts={[
+            {
+              title: "Create Invoice",
+              href: "/vendor/invoices/create",
+              icon: FileText,
+              color: "from-blue-500 to-indigo-600",
+              hoverColor: "group-hover:from-blue-600 group-hover:to-indigo-700",
+            },
+            {
+              title: "Create Booking",
+              href: "/vendor/bookings/create",
+              icon: Calendar,
+              color: "from-emerald-500 to-teal-600",
+              hoverColor: "group-hover:from-emerald-600 group-hover:to-teal-700",
+            },
+            {
+              title: "Create Enquiry",
+              href: "/vendor/enquiry/create",
+              icon: MessageSquare,
+              color: "from-amber-500 to-orange-600",
+              hoverColor: "group-hover:from-amber-600 group-hover:to-orange-700",
+            }
+          ]}
+        />
 
         {/* Invoice table */}
         <InvoiceTable invoices={invoices} isLoading={isInvoicesLoading} />
@@ -127,9 +142,14 @@ export default function VendorDashboard() {
         <div className="flex justify-center w-full gap-8">
           <Card className="border-none bg-white shadow-md w-[60%]">
             <CardContent className="p-6">
-              <BarChartComponent createdBy="Vendor" bookings={bookings} 
-              // enquiries={enquiries} 
-              isLoading={isLoading} />
+              <BarChartComponent 
+              createdBy="Vendor"
+               data={dashboardData?.barChartData || []} 
+               isLoading={isDashboardLoading} 
+               filter={barChartFilter} 
+               setFilter={setBarChartFilter}
+
+              />
             </CardContent>
           </Card>
         </div>

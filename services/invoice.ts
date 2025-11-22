@@ -1,8 +1,17 @@
 import axios from "lib/http-common";
-import { Invoice } from "types/react-query/invoice";
+import { Invoice, GetInvoicesParams, InvoicesResponse } from "types/react-query/invoice";
 
-export const getInvoices = async (): Promise<Invoice[]> => {
-  const res = await axios.get("/v1/invoices");
+export const getInvoices = async (params?: GetInvoicesParams): Promise<InvoicesResponse> => {
+  const res = await axios.get("/v1/invoices", {
+    params: {
+      ...(params?.page && { page: params.page }),
+      ...(params?.limit && { limit: params.limit }),
+      ...(params?.search && { search: params.search }),
+      ...(params?.status && { status: params.status }),
+      ...(params?.sortBy && { sortBy: params.sortBy }),
+      ...(params?.sortOrder && { sortOrder: params.sortOrder }),
+    },
+  });
   return res.data.data;
 };
 

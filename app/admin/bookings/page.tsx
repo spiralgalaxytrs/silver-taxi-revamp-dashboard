@@ -113,6 +113,7 @@ export default function BookingsPage() {
     if (filters.completed) return 'Completed';
     if (filters.cancelled) return 'Cancelled';
     if (filters.bookingConfirmed) return 'Booking Confirmed';
+    if (filters.vendor) return 'Vendor';
     // notContacted, contacted, and vendor are client-side only - don't send status
     return undefined;
   }, [filters.notStarted, filters.started, filters.completed, filters.cancelled, filters.bookingConfirmed]);

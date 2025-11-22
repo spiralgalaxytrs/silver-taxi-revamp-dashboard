@@ -29,3 +29,30 @@ export interface Invoice {
     GSTNumber?: string;
     offerId?: string | null;
 }
+
+export interface GetInvoicesParams {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    sortBy?: string;
+    sortOrder?: string;
+}
+
+export interface InvoicesResponse {
+    invoices: Invoice[];
+    invoicesCount?: {
+        total: number;
+        partiallyPaid: number;
+        paid: number;
+        unpaid: number;
+    };
+    pagination: {
+        currentPage: number;
+        totalPages: number;
+        totalCount: number;
+        hasNext: boolean;
+        hasPrev: boolean;
+        limit: number;
+    };
+}

@@ -105,6 +105,12 @@ export interface GetBookingsParams {
   adminId?: string;
 }
 
+export interface GetDashboardDataParams {
+  areaChart?: boolean;
+  barChart?: 'day' | 'week' | 'month' | 'year' | 'lastYear';
+  topDrivers?: 'day' | 'week' | 'month' | 'year' | 'lastYear';
+}
+
 export interface BookingsResponse {
   bookings: Booking[];
   bookingsCount: {
@@ -126,4 +132,29 @@ export interface BookingsResponse {
     limit: number;
   };
 }
+export interface RecentBookingsResponse {
+  bookings: Booking[];
+  bookingsCount: {
+    vendor: number;
+    website: number;
+    manual: number;
+  };
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+    limit: number;
+  };
+}
 
+export interface DashboardDataResponse {
+  areaChartData: {
+    oneWay: number;
+    roundTrip: number;
+    hourlyPackages: number;
+  };
+  barChartData: any;
+  topDriversData: any[];
+}

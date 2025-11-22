@@ -1,6 +1,6 @@
 "use client"
 
-import { TrendingUp } from "lucide-react"
+import { Loader2, TrendingUp } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import {
   Card,
@@ -51,127 +51,41 @@ const ChartLegend = ({ config }: { config: ChartConfig }) => {
 
 interface BarChartProps {
   createdBy: string
-  bookings: any[],
-  // enquiries: any[],
+  data: { category: string; Booking?: number; Bookings?: number; }[],
   isLoading: boolean
+  filter: TimeFilter
+  setFilter: (filter: TimeFilter) => void
 }
 
-export function BarChartComponent({ createdBy, bookings, isLoading }: BarChartProps) {
-  const [data, setData] = useState<{ category: string; Booking: number;}[]>([])
-  const [filter, setFilter] = useState<TimeFilter>('week')
+export function BarChartComponent({ createdBy, data: initialData, isLoading, filter: initialFilter, setFilter }: BarChartProps) {
+  // Normalize data: convert "Bookings" to "Booking" if needed
+  const normalizeData = (data: BarChartProps['data']): { category: string; Booking: number; }[] => {
+    return data.map((item) => ({
+      category: item.category,
+      Booking: item.Booking ?? item.Bookings ?? 0
+    }))
+  }
 
-  const formatHourToAMPM = (hour: number) => {
-    const formattedHour = hour % 12 || 12; // Convert 0-23 to 12-12-11
-    const period = hour < 12 ? 'AM' : 'PM';
-    return `${formattedHour} ${period}`;
-  };
+  const [data, setDataState] = useState<{ category: string; Booking: number; }[]>(() => normalizeData(initialData))
+  const [filter, setFilterState] = useState<TimeFilter>(initialFilter)
+
+  const handleFilterChange = (value: TimeFilter) => {
+    setFilterState(value)
+    setFilter(value)
+  }
 
   useEffect(() => {
-    const processData = () => {
-      const now = dayjs()
-      let startDate = dayjs()
-      let categories: string[] = []
+    setDataState(normalizeData(initialData))
+  }, [initialData])
 
-      // Determine date range based on filter
-      switch (filter) {
-        case 'day':
-          startDate = now.startOf('day')
-          categories = Array.from({ length: 24 }, (_, i) => formatHourToAMPM(i))
-          break
-        case 'week':
-          startDate = now.startOf('week')
-          categories = Array.from({ length: 7 }, (_, i) =>
-            startDate.add(i, 'day').format('ddd')
-          )
-          break
-        case 'month':
-          startDate = now.startOf('month')
-          const daysInMonth = now.daysInMonth()
-          categories = Array.from({ length: daysInMonth }, (_, i) =>
-            (i + 1).toString()
-          )
-          break
-        case 'year':
-          startDate = now.startOf('year')
-          categories = Array.from({ length: 12 }, (_, i) =>
-            startDate.add(i, 'month').format('MMM')
-          )
-          break
-        case 'lastYear':
-          startDate = now.subtract(1, 'year').startOf('year')
-          categories = Array.from({ length: 12 }, (_, i) =>
-            startDate.add(i, 'month').format('MMM')
-          )
-          break
-      }
+  console.log("data >> ", data);
 
-      // Initialize data structure
-      const result = categories.map(category => ({
-        category,
-        Booking: 0,
-        // Enquiry: 0
-      }))
-
-      if (createdBy === "Vendor") {
-        const filteredBookings = bookings.filter(booking => booking.createdBy === 'Vendor');
-        filteredBookings.forEach(booking => {
-          const date = dayjs(booking.bookingDate)
-          if (!date.isAfter(startDate)) return
-
-          const index = getCategoryIndex(date, filter, categories, startDate)
-          if (index !== -1) result[index].Booking++
-        })
-
-        // const filteredEnquiries = enquiries.filter((enquiry: any) => enquiry.createdBy === 'Vendor');
-        // filteredEnquiries.forEach(enquiry => {
-        //   const date = dayjs(enquiry.createdAt)
-        //   if (!date.isAfter(startDate)) return
-
-        //   const index = getCategoryIndex(date, filter, categories, startDate)
-        //       if (index !== -1) result[index].Enquiry++
-        // })
-      }
-
-      if (createdBy === "Admin") {
-        bookings.forEach((booking: any) => {
-          const date = dayjs(booking.bookingDate)
-          if (!date.isAfter(startDate)) return
-
-          const index = getCategoryIndex(date, filter, categories, startDate)
-          if (index !== -1) result[index].Booking++
-        })
-
-        // Process enquiries
-        // enquiries.forEach((enquiry: any) => {
-        //   const date = dayjs(enquiry.createdAt)
-        //   if (!date.isAfter(startDate)) return
-
-        //   const index = getCategoryIndex(date, filter, categories, startDate)
-        //   if (index !== -1) result[index].Enquiry++
-        // })
-      }
-
-      setData(result)
-    }
-
-    processData()
-  }, [bookings, filter, createdBy]) // Dependencies for data processing
-
-  const getCategoryIndex = (date: dayjs.Dayjs, filter: TimeFilter, categories: string[], startDate: dayjs.Dayjs): number => {
-    switch (filter) {
-      case 'day':
-        return date.hour()
-      case 'week':
-        return date.diff(startDate, 'day')
-      case 'month':
-        return date.date() - 1
-      case 'year':
-        return date.month()
-      case 'lastYear':
-        return date.month()
-      default:
-        return -1
-    }
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[350px] bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    )
   }
 
   return (
@@ -183,7 +97,7 @@ export function BarChartComponent({ createdBy, bookings, isLoading }: BarChartPr
             {filter === 'lastYear' ? 'Last Year' : `Current ${filter.charAt(0).toUpperCase() + filter.slice(1)}`}
           </CardDescription>
         </div>
-        <Select value={filter} onValueChange={(v) => setFilter(v as TimeFilter)}>
+        <Select value={filter} onValueChange={(v) => handleFilterChange(v as TimeFilter)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select filter" />
           </SelectTrigger>
