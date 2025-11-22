@@ -37,13 +37,23 @@ export function Overview({ data: initialData, isLoading, filter: initialFilter, 
     }
 
     // Determine the correct dataKey for the bar value and label
-    const labelKey = data.length > 0 
+    const labelKey = data.length > 0
         ? (data[0].name !== undefined ? "name" : data[0].category !== undefined ? "category" : "label")
         : "name";
-    
-    const valueKey = data.length > 0 
+
+    const valueKey = data.length > 0
         ? (data[0].total !== undefined ? "total" : data[0].Booking !== undefined ? "Booking" : "value")
         : "Booking";
+
+    if (data.length === 0) {
+        return (
+            <div className="flex items-center justify-center h-[450px] bg-gray-50">
+                <div className="text-l font-semibold">
+                    No data available
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-4 mt-3">
