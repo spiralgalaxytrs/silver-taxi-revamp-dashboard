@@ -40,7 +40,7 @@ export const useConfigKeys = () => {
             const response = await httpCommon.get('/v1/config-keys');
             return response.data;
         },
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        enabled: false,
     });
 };
 

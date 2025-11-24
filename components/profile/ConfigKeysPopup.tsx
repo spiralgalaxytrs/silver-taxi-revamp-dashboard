@@ -91,7 +91,7 @@ const ConfigKeysPopup: React.FC<ConfigKeysPopupProps> = ({ isOpen, onClose }) =>
                     setIsEditing(false);
                     onClose();
                 },
-                onError: () => {
+                onError: (error: any) => {
                     toast.error('Failed to save config keys', {
                         style: { backgroundColor: '#FF0000', color: '#fff' },
                     });

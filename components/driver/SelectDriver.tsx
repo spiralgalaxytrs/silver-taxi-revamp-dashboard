@@ -49,10 +49,12 @@ export function DriverSelectionPopup({
     const [lastViewWasDriverList, setLastViewWasDriverList] = useState(false);
     const [zoom, setZoom] = useState(7);
 
+
+    console.log("drivers in select driver popup >> ", drivers);
     const activeDrivers = drivers.filter(
         (driver: any) =>
-            String(driver.driverId) !== String(bookedDriverId) &&
-            driver.isActive === true
+            String(driver.driverId) !== String(bookedDriverId)
+         && driver.isActive === true
     );
 
     const filteredDrivers = activeDrivers.filter((driver: any) =>

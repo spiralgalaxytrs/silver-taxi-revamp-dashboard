@@ -19,13 +19,14 @@ import {
   approveOrRejectDriverWalletRequest,
   getAllDriverWalletRequests,
   getDriverWalletRequestById,
+  getDriversWithLocation,
 } from "services/driver";
 import type { GetDriversParams } from "types/react-query/driver";
 
 // 🚚 Get all drivers with pagination, search, and filtering
 export const useDrivers = (params?: GetDriversParams & { enabled?: boolean }) => {
   const { enabled = true, ...queryParams } = params || {};
-  
+
   return useQuery({
     queryKey: ["drivers", queryParams],
     queryFn: () => getDrivers(queryParams),
@@ -34,13 +35,23 @@ export const useDrivers = (params?: GetDriversParams & { enabled?: boolean }) =>
   });
 };
 
-// 🚚 Get single driver by ID
-export const useDriverById = (id: string) =>
-  useQuery({
+export const useDriverById = (id: string) => {
+  return useQuery({
     queryKey: ["driver", id],
     queryFn: () => getDriverById(id),
     enabled: !!id,
+    placeholderData: keepPreviousData
   });
+};
+
+export const useDriversWithLocation = () => {
+  return useQuery({
+    queryKey: ["drivers-with-location"],
+    queryFn: getDriversWithLocation,
+    enabled: true,
+    placeholderData: keepPreviousData
+  });
+};  
 
 // ✅ Create driver
 export const useCreateDriver = () => {
@@ -49,6 +60,7 @@ export const useCreateDriver = () => {
     mutationFn: createDriver,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["drivers"] });
+      queryClient.invalidateQueries({ queryKey: ["drivers-with-location"] });
     },
   });
 };
@@ -58,9 +70,10 @@ export const useUpdateDriver = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateDriver,
-    onSuccess: (_, { id }) => { 
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["drivers"] });
       queryClient.invalidateQueries({ queryKey: ["driver", id] });
+      queryClient.invalidateQueries({ queryKey: ["drivers-with-location"] });
     },
   });
 };
@@ -72,6 +85,7 @@ export const useDeleteDriver = () => {
     mutationFn: deleteDriver,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["drivers"] });
+      queryClient.invalidateQueries({ queryKey: ["drivers-with-location"] });
     },
   });
 };

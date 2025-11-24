@@ -178,6 +178,24 @@ export interface GetDriversParams {
     sortOrder?: 'ASC' | 'DESC';
 }
 
+export interface DriversWithLocationResponse {
+    drivers: {
+        adminId: string;
+        driverId: string;
+        name: string;
+        phone: string;
+        adminVerified: "Pending" | "Approved" | "Rejected";
+        fcmToken: string;
+        walletId: string;
+        geoLocation: {
+            latitude: number;
+            longitude: number;
+            timestamp: Date | String | null;
+        } | null;
+        updatedAt: Date | String | null;
+    }[];
+}
+
 export interface DriversResponse {
     drivers: Driver[];
     driversCount: {

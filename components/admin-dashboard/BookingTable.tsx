@@ -9,6 +9,8 @@ import {
     MRT_ColumnDef
 } from 'material-react-table';
 import { Button } from 'components/ui/button';
+import { useDriversWithLocation } from 'hooks/react-query/useDriver';
+import { useAssignDriver, useAssignAllDriver } from 'hooks/react-query/useBooking';
 
 export const BookingTable: React.FC<{ bookings: any[], isLoading: boolean }> = ({ bookings, isLoading }) => {
     const router = useRouter();
@@ -19,6 +21,16 @@ export const BookingTable: React.FC<{ bookings: any[], isLoading: boolean }> = (
         columnId: string | null;
         direction: 'asc' | 'desc' | null;
     }>({ columnId: null, direction: null });
+
+    const {
+        data: drivers,
+        isPending: isDriversLoading,
+        isError: isDriversError
+    } = useDriversWithLocation();
+
+
+    const { mutate: assignDriver } = useAssignDriver();
+    const { mutate: assignAllDriver } = useAssignAllDriver();
 
 
     const applyFilters = () => {
@@ -105,13 +117,20 @@ export const BookingTable: React.FC<{ bookings: any[], isLoading: boolean }> = (
                         positionGlobalFilter="left"
                         enableSorting
                         enableHiding={false}
-                        enableDensityToggle={false} 
+                        enableDensityToggle={false}
                         enableColumnPinning={false}
                         initialState={{
                             density: 'compact',
                             pagination: { pageIndex: 0, pageSize: 10 },
                             showGlobalFilter: true,
                             columnPinning: { right: ["actions"] },
+                        }}
+                        meta={{
+                            drivers,
+                            isDriversLoading,
+                            isDriversError,
+                            assignDriver,
+                            assignAllDriver
                         }}
                         muiSearchTextFieldProps={{
                             placeholder: 'Search ...',

@@ -30,7 +30,9 @@ import {
 import { useNavigationStore } from 'stores/navigationStore';
 import {
   useFetchBookings,
-  useBulkDeleteBookings
+  useBulkDeleteBookings,
+  useAssignDriver,
+  useAssignAllDriver
 } from 'hooks/react-query/useBooking'
 import {
   MaterialReactTable,
@@ -41,6 +43,7 @@ import {
   useUpdateTableColumnVisibility
 } from 'hooks/react-query/useImageUpload';
 import dayjs from 'dayjs';
+import { useDriversWithLocation } from 'hooks/react-query/useDriver';
 
 export default function BookingsPage() {
   const router = useRouter();
@@ -151,6 +154,16 @@ export default function BookingsPage() {
     sortOrder,
   });
 
+  const {
+    data: drivers,
+    isPending: isDriversLoading,
+    isError: isDriversError
+  } = useDriversWithLocation();
+
+  const { mutate: assignDriver } = useAssignDriver();
+  const { mutate: assignAllDriver } = useAssignAllDriver();
+
+
   // Extract bookings and pagination from response
   const bookings = bookingsData.bookings;
   const bookingsCount = bookingsData.bookingsCount;
@@ -205,7 +218,7 @@ export default function BookingsPage() {
     }) : []
   }, [bookings])
 
-// console.log("bookings >> ", bookings);
+  // console.log("bookings >> ", bookings);
 
   const handleFilterChange = (key: keyof typeof filters, value: boolean) => {
     setFilters(prev => {
@@ -623,24 +636,24 @@ export default function BookingsPage() {
             // Server-side pagination
             manualPagination={true}
             onPaginationChange={(updater) => {
-              const newPagination = typeof updater === 'function' 
-                ? updater(pagination) 
+              const newPagination = typeof updater === 'function'
+                ? updater(pagination)
                 : updater;
-              
-                console.log(newPagination);
-                console.log(pagination);
-                console.log(paginationInfo?.hasNext);
-                console.log(paginationInfo?.hasPrev);
+
+              console.log(newPagination);
+              console.log(pagination);
+              console.log(paginationInfo?.hasNext);
+              console.log(paginationInfo?.hasPrev);
               // Prevent going to next page if hasNext is false
               if (newPagination.pageIndex > pagination.pageIndex && !paginationInfo?.hasNext) {
                 return; // Don't update pagination
               }
-              
+
               // Prevent going to previous page if hasPrev is false
               if (newPagination.pageIndex < pagination.pageIndex && !paginationInfo?.hasPrev) {
                 return; // Don't update pagination
               }
-              
+
               setPagination(newPagination);
             }}
             rowCount={paginationInfo?.totalCount || 0}
@@ -649,6 +662,13 @@ export default function BookingsPage() {
               pagination: { pageIndex: 0, pageSize: 10 },
               columnPinning: { right: ["actions"] },
               showGlobalFilter: true,
+            }}
+            meta={{
+              drivers,
+              isDriversLoading,
+              isDriversError,
+              assignDriver,
+              assignAllDriver
             }}
             muiSearchTextFieldProps={{
               placeholder: 'Search ...',

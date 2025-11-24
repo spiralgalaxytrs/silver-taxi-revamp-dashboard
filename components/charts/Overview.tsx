@@ -63,9 +63,10 @@ export function Overview({ data: initialData, isLoading, filter: initialFilter, 
                 </div>
 
                 {/* Filter Controls */}
-                {/* <div className="flex gap-4">
+                <div className="flex gap-4">
                     <Select
                         value={filter}
+                        disabled
                         onValueChange={(value) => handleFilterChange(value as TimeFilter)}
                     >
                         <SelectTrigger className="w-[180px]">
@@ -78,7 +79,7 @@ export function Overview({ data: initialData, isLoading, filter: initialFilter, 
                             <SelectItem value="lastYear">Last Year</SelectItem>
                         </SelectContent>
                     </Select>
-                </div> */}
+                </div>
             </div>
 
             {/* Bar Chart */}

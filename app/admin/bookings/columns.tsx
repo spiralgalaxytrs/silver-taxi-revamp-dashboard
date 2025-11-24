@@ -43,7 +43,8 @@ import {
 } from "hooks/react-query/useBooking";
 import { useInvoiceById } from "hooks/react-query/useInvoice";
 import {
-  useDrivers
+  useDrivers,
+  useDriversWithLocation
 } from 'hooks/react-query/useDriver';
 import {
   useOffers
@@ -674,118 +675,111 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         Driver<br />Assigned
       </div>
     ),
-    Cell: ({ row }) => {
+    Cell: ({ row, table }) => {
       const status = row.getValue("status") as string;
       const booking = row.original;
-      const { data: driversData = { drivers: [], pagination: { currentPage: 0, totalPages: 0, totalDrivers: 0, hasNext: false, hasPrev: false, limit: 0 } },
-        isPending: isDriversLoading,
-        isError: isDriversError
-      } = useDrivers({ enabled: true });
-      const drivers = driversData?.drivers || [];
-      const { mutate: assignDriver } = useAssignDriver();
-      const { mutate: assignAllDriver } = useAssignAllDriver();
-
-      const bookingId = row.original?.bookingId as string ?? "";
-      // const [selectedDriverId, setSelectedDriverId] = useState<string>(''); // Keep this state for UI purposes
-
-      const handleDriverAssignment = async (driverId: string) => {
-        try {
-          if (!bookingId) return;
-
-          // setSelectedDriverId(driverId);
-          assignDriver({ bookingId, driverId }, {
-            onSuccess: (data: any) => {
-              toast.success(data?.message || 'Driver assigned successfully', {
-                style: {
-                  backgroundColor: "#009F7F",
-                  color: "#fff",
-                },
-              });
-            },
-            onError: (error: any) => {
-              toast.error(error?.response?.data?.message || 'Assignment failed', {
-                style: {
-                  backgroundColor: "#FF0000",
-                  color: "#fff",
-                },
-              });
-              // setSelectedDriverId('');
-            }
-          });
-
-        } catch (error: any) {
-          toast.error(error?.response?.data?.message || 'Assignment failed', {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
-          });
-        }
+    
+      // ✅ Get drivers + mutations from meta (coming from parent component)
+      const {
+        drivers = [],
+        isDriversLoading = false,
+        isDriversError = false,
+        assignDriver,
+        assignAllDriver,
+      } = table.options.meta as any;
+    
+      const bookingId = booking?.bookingId ?? "";
+      const bookedDriverId = booking?.driverId ?? "";
+    
+      // Find assigned driver
+      const assignedDriver = drivers.find(
+        (driver: any) => String(driver.driverId) === String(bookedDriverId)
+      );
+    
+      // Assign single driver
+      const handleDriverAssignment = (driverId: string) => {
+        if (!bookingId) return;
+    
+        assignDriver(
+          { bookingId, driverId },
+          {
+            onSuccess: (data: any) =>
+              toast.success(data?.message || "Driver assigned successfully", {
+                style: { backgroundColor: "#009F7F", color: "#fff" },
+              }),
+    
+            onError: (error: any) =>
+              toast.error(error?.response?.data?.message || "Assignment failed", {
+                style: { backgroundColor: "#FF0000", color: "#fff" },
+              }),
+          }
+        );
       };
-
-      const handleAllDriverAssign = async () => {
-        try {
-          if (!bookingId) return;
-
-          // setSelectedDriverId(driverId);
-          assignAllDriver({ id: bookingId }, {
-            onSuccess: (data: any) => {
-              toast.success(data?.message || 'Notification sent to eligible drivers successfully', {
-                style: {
-                  backgroundColor: "#009F7F",
-                  color: "#fff",
-                },
-              });
-            },
-            onError: (error: any) => {
-              toast.error(error?.response?.data?.message || 'Assign All drivers failed', {
-                style: {
-                  backgroundColor: "#FF0000",
-                  color: "#fff",
-                },
-              });
-            }
-          });
-        } catch (error: any) {
-          toast.error(error?.response?.data?.message || 'Assign All drivers failed', {
-            style: {
-              backgroundColor: "#FF0000",
-              color: "#fff",
-            },
-          });
-        }
+    
+      // Assign to all drivers
+      const handleAllDriverAssign = () => {
+        if (!bookingId) return;
+    
+        assignAllDriver(
+          { id: bookingId },
+          {
+            onSuccess: (data: any) =>
+              toast.success(
+                data?.message ||
+                  "Notification sent to eligible drivers successfully",
+                {
+                  style: { backgroundColor: "#009F7F", color: "#fff" },
+                }
+              ),
+    
+            onError: (error: any) =>
+              toast.error(
+                error?.response?.data?.message || "Assign All drivers failed",
+                {
+                  style: { backgroundColor: "#FF0000", color: "#fff" },
+                }
+              ),
+          }
+        );
       };
-
-      const currentBooking = booking
-      const bookedDriverId = currentBooking?.driverId;
-      const assignedDriver = drivers.find((driver: any) => String(driver.driverId) === String(bookedDriverId));
-
+    
       return (
         <DriverSelectionPopup
           trigger={
-            <Button variant="outline" size="default" disabled={false} className="py-2">
-              {assignedDriver ?
+            <Button variant="outline" size="default" className="py-2">
+              {assignedDriver ? (
                 <p className="flex items-center gap-2 text-sm font-medium py-1">
-                  {assignedDriver.name}<br />
-                  {assignedDriver.phone && ` (${assignedDriver.phone})`}
-                  <TooltipComponent name={booking?.driverId ? booking?.driverAccepted || "" : "Assign Driver"}>
-                    {currentBooking.driverAccepted === "accepted" ?
+                  {assignedDriver.name}
+                  <br />
+                  {assignedDriver.phone && `(${assignedDriver.phone})`}
+    
+                  <TooltipComponent
+                    name={
+                      booking?.driverId
+                        ? booking?.driverAccepted || ""
+                        : "Assign Driver"
+                    }
+                  >
+                    {booking.driverAccepted === "accepted" ? (
                       <span className="text-xs text-green-500">
                         <CheckCircle className="h-4 w-4" />
                       </span>
-                      : <span className="text-xs text-red-500">
+                    ) : (
+                      <span className="text-xs text-red-500">
                         <HelpCircle className="h-4 w-4" />
                       </span>
-                    }
+                    )}
                   </TooltipComponent>
                 </p>
-                : "Assign Driver"}
+              ) : (
+                "Assign Driver"
+              )}
             </Button>
           }
           onSelectDriver={handleDriverAssignment}
           assignAllDriver={handleAllDriverAssign}
           assignedDriver={assignedDriver}
-          bookedDriverId={bookedDriverId || ""}
+          bookedDriverId={bookedDriverId}
           status={status}
           drivers={drivers}
           isLoading={isDriversLoading}
@@ -793,6 +787,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         />
       );
     },
+    
     muiTableHeadCellProps: {
       align: 'left', sx: {
         '& .MuiBox-root': {

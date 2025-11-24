@@ -1,5 +1,5 @@
 import axios from "lib/http-common";
-import type { Driver, wallet, DriverWalletRequest, DriverActivityLog, GetDriversParams, DriversResponse } from "types/react-query/driver";
+import type { Driver, wallet, DriverWalletRequest, DriverActivityLog, GetDriversParams, DriversResponse, DriversWithLocationResponse } from "types/react-query/driver";
 
 
 export const getDrivers = async (params?: GetDriversParams): Promise<DriversResponse> => {
@@ -14,6 +14,11 @@ export const getDrivers = async (params?: GetDriversParams): Promise<DriversResp
     },
   });
   // console.log("res >> ", res.data.data);
+  return res.data.data;
+};
+
+export const getDriversWithLocation = async (): Promise<DriversWithLocationResponse> => {
+  const res = await axios.get("/v1/drivers/location");
   return res.data.data;
 };
 
