@@ -252,8 +252,7 @@ export function FairCalculationPopup({ isOpen, onClose, fareData, createdBy }: F
 
                   {/* Stop Locations */}
                   {fareData.stops && fareData.stops.length > 0 && (
-                    console.log("fareData.stops >>>>>", fareData.stops),
-                    fareData.stops.map((item: any, index: number) => (
+                    fareData.stops.map((item: string, index: number) => (
                       <div key={index} className="flex items-start gap-2 p-2 bg-blue-50 rounded-lg col-span-2">
                         <Route className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
