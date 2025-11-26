@@ -5,14 +5,15 @@ import { Card, CardContent, CardFooter, CardHeader } from 'components/ui/card';
 import { Label } from 'components/ui/label';
 import { Button } from 'components/ui/button';
 import { Input } from 'components/ui/input';
-import { Dialog, DialogContent, DialogTrigger } from 'components/ui/dialog';
 import { Eye, Edit, X, Loader2, Info, Plus, TriangleAlert, Edit2, Wallet } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useFetchBookingById, useManualBookingComplete, useUpdateBooking } from 'hooks/react-query/useBooking';
 import { toast } from 'sonner';
 import TooltipComponent from 'components/others/TooltipComponent';
 import { Booking } from 'types/react-query/booking';
+import { Dialog, DialogTrigger, DialogContent } from 'components/ui/dialog';
 import { formatForDateTimeLocal, isLocalDateTime } from 'lib/dateFunctions';
+import { AlertDialog, AlertDialogContent, AlertDialogTrigger, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from 'components/ui/alert-dialog';
 
 // Formatters
 const formatCurrency = (value: number | null | undefined) => `₹${value?.toLocaleString() || '0'}`;
@@ -77,8 +78,7 @@ export default function BookingDetailsPage() {
   const [newChargeKey, setNewChargeKey] = useState('');
   const [newChargeValue, setNewChargeValue] = useState('');
   const [isManualCompleted, setIsManualCompleted] = useState(false);
-
-
+ 
   const { data: booking, isLoading } = useFetchBookingById(bookingId || "");
   const { mutateAsync: updateBooking } = useUpdateBooking();
   const { mutateAsync: manualBookingComplete, isPending: isManualCompletePending } = useManualBookingComplete();
@@ -692,9 +692,27 @@ export default function BookingDetailsPage() {
                     <Button variant="outline" onClick={handleCancel}>
                       Cancel
                     </Button>
-                    <Button onClick={handleManualCompletionSave}>
-                      Save Manual Completion
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button>
+                          Save Manual Completion
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirm Manual Booking</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to confirm this manual booking?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleManualCompletionSave}>
+                            Confirm
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </>
                 ) : (
                   <>
@@ -1046,7 +1064,7 @@ export default function BookingDetailsPage() {
           </div>
 
           {/* Trip Calculation Card (Full Width) */}
-          {(booking.tripCompletedFinalAmount > 0 && isManualCompletePending !== false) && (
+          {(booking.tripCompletedFinalAmount > 0 && isManualCompleted == false) && (
             <div className=' rounded-lg flex flex-col items-center gap-6'>
 
               {/* Trip Summary */}
@@ -1329,6 +1347,7 @@ export default function BookingDetailsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
     </div >
   );
 }
