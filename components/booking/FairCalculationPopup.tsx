@@ -104,7 +104,7 @@ export function FairCalculationPopup({ isOpen, onClose, fareData, createdBy }: F
   const normalFare = fareBreakdown.normalFare;
   const modifiedFare = fareBreakdown.modifiedFare;
 
-  console.log("fareData >>>>>", fareData);
+  // console.log("fareData >>>>>", fareData);
 
   const { data: vehicle = null } = useVehicleById(fareData.vehicleId || "");
 
@@ -252,13 +252,13 @@ export function FairCalculationPopup({ isOpen, onClose, fareData, createdBy }: F
 
                   {/* Stop Locations */}
                   {fareData.stops && fareData.stops.length > 0 && (
-                    fareData.stops.map((item: { stop?: string }, index: number) => (
+                    fareData.stops.map((item: string, index: number) => (
                       <div key={index} className="flex items-start gap-2 p-2 bg-blue-50 rounded-lg col-span-2">
                         <Route className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium text-gray-500">Stop {index + 1}</p>
                           <p className="text-sm text-gray-800 truncate">
-                            {item.stop ? item.stop : "Not specified"}
+                            {item ? item : "Not specified"}
                           </p>
                         </div>
                       </div>
@@ -365,7 +365,7 @@ export function FairCalculationPopup({ isOpen, onClose, fareData, createdBy }: F
                       <span className="text-gray-600">Driver Beta</span>
                       <span className="font-medium">
                         {fareData.serviceType === "Round trip" && (fareData?.days || 0) > 1
-                          ? `${formatCurrency(fareData?.driverBeta || 0)} × ${fareData?.days || 0} days`
+                          ? `${formatCurrency((fareData?.driverBeta || 0) / (fareData?.days || 1))} × ${fareData?.days || 1} days`
                           : formatCurrency(fareData?.driverBeta || 0)}
                       </span>
                     </div>
@@ -445,7 +445,7 @@ export function FairCalculationPopup({ isOpen, onClose, fareData, createdBy }: F
                           <span className="text-gray-600">Driver Beta</span>
                           <span className="font-medium">
                             {fareData.serviceType === "Round trip" && (fareData?.days || 0) > 1
-                              ? `${formatCurrency(fareData?.fareBreakdown?.modifiedFare?.driverBeta || 0)} × ${fareData?.days || 0} days`
+                              ? `${formatCurrency((fareData?.fareBreakdown?.modifiedFare?.driverBeta || 0) / (fareData?.days || 1))} × ${fareData?.days || 1} days`
                               : formatCurrency(fareData?.fareBreakdown?.modifiedFare?.driverBeta || 0)}
                           </span>
                         </div>
