@@ -20,6 +20,7 @@ import {
   getAllDriverWalletRequests,
   getDriverWalletRequestById,
   getDriversWithLocation,
+  submitDriverWalletBulkRequest,
 } from "services/driver";
 import type { GetDriversParams } from "types/react-query/driver";
 
@@ -182,6 +183,12 @@ export const useDriverWalletRequestById = (id: string) => {
     queryKey: ["driver-wallet-request", id],
     queryFn: () => getDriverWalletRequestById(id),
     enabled: !!id,
+  });
+};
+
+export const useDriverWalletBulkRequest = () => {
+  return useMutation({
+    mutationFn: submitDriverWalletBulkRequest,
   });
 };
 

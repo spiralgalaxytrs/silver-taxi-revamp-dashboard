@@ -212,3 +212,21 @@ export interface DriversResponse {
         limit: number;
     };
 }
+
+export interface WalletBulkRequestPayload {
+    amount: number;
+    reason: string;
+    adjustmentType: "add" | "minus";
+    status?: boolean | null;
+    days?: number;
+}
+
+export interface WalletBulkRequestResponse {
+    success: boolean;
+    message: string;
+    data?: {
+        jobId: string;
+        chunks: number;
+        totalDrivers: number;
+    };
+}

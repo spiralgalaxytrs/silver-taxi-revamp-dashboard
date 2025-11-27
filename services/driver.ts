@@ -1,5 +1,15 @@
 import axios from "lib/http-common";
-import type { Driver, wallet, DriverWalletRequest, DriverActivityLog, GetDriversParams, DriversResponse, DriversWithLocationResponse } from "types/react-query/driver";
+import type {
+  Driver,
+  wallet,
+  DriverWalletRequest,
+  DriverActivityLog,
+  GetDriversParams,
+  DriversResponse,
+  DriversWithLocationResponse,
+  WalletBulkRequestPayload,
+  WalletBulkRequestResponse
+} from "types/react-query/driver";
 
 
 export const getDrivers = async (params?: GetDriversParams): Promise<DriversResponse> => {
@@ -151,5 +161,12 @@ export const getDriverWalletRequestById = async (id: string): Promise<DriverWall
 export const getDriverActivityLogs = async (id: string): Promise<DriverActivityLog[]> => {
   const res = await axios.get(`/v1/drivers/activity-logs/${id}`);
   return res.data.data;
+};
+
+export const submitDriverWalletBulkRequest = async (
+  payload: WalletBulkRequestPayload
+): Promise<WalletBulkRequestResponse> => {
+  const res = await axios.post(`/v1/drivers/wallet/bulk-request`, payload);
+  return res.data;
 };
 

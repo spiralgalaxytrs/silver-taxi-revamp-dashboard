@@ -6,6 +6,16 @@ import { columns } from "./columns";
 import { Button } from "components/ui/button";
 import { toast } from "sonner"
 import { Card } from "components/ui/card";
+import { Input } from "components/ui/input";
+import { Label } from "components/ui/label";
+import { Textarea } from "components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "components/ui/select";
 import CounterCard from "components/cards/CounterCard";
 import { Activity, Trash, ArrowDown, ArrowUp, Loader2, RefreshCcw } from "lucide-react";
 import {
@@ -20,7 +30,8 @@ import {
 } from 'components/ui/alert-dialog';
 import {
   useDrivers,
-  useBulkDeleteDrivers
+  useBulkDeleteDrivers,
+  useDriverWalletBulkRequest
 } from 'hooks/react-query/useDriver';
 import {
   MaterialReactTable,
@@ -30,6 +41,14 @@ import {
   useTableColumnVisibility,
   useUpdateTableColumnVisibility
 } from 'hooks/react-query/useImageUpload';
+
+type BulkWalletFormState = {
+  amount: string;
+  reason: string;
+  adjustmentType: 'add' | 'minus';
+  status: 'all' | 'active' | 'inactive';
+  days: string;
+};
 
 
 export default function DriversPage(): JSX.Element {
@@ -104,10 +123,23 @@ export default function DriversPage(): JSX.Element {
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [isSpinning, setIsSpinning] = useState(false)
-  const [showFilters, setShowFilters] = useState(false);
+  const [showBulkWalletForm, setShowBulkWalletForm] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
   const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
+  const [bulkWalletForm, setBulkWalletForm] = useState<BulkWalletFormState>({
+    amount: '',
+    reason: '',
+    adjustmentType: 'minus',
+    status: 'all',
+    days: '0',
+  });
+  const [bulkWalletError, setBulkWalletError] = useState<string | null>(null);
+
+  const {
+    mutate: submitBulkWalletRequest,
+    isPending: isSubmittingBulkRequest
+  } = useDriverWalletBulkRequest();
 
   const driverData = useMemo(() => {
     return drivers.map(driver => ({
@@ -116,6 +148,88 @@ export default function DriversPage(): JSX.Element {
       walletAmount: driver.wallet?.balance ?? 0
     }))
   }, [drivers]);
+
+  const resetBulkWalletForm = () => {
+    setBulkWalletForm({
+      amount: '',
+      reason: '',
+      adjustmentType: 'minus',
+      status: 'all',
+      days: '0',
+    });
+    setBulkWalletError(null);
+  };
+
+  const handleBulkWalletSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setBulkWalletError(null);
+
+    const parsedAmount = Number(bulkWalletForm.amount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount < 1) {
+      setBulkWalletError("Amount must be at least 1");
+      return;
+    }
+
+    const trimmedReason = bulkWalletForm.reason.trim();
+    if (!trimmedReason) {
+      setBulkWalletError("Reason is required");
+      return;
+    }
+
+    if (trimmedReason.length > 500) {
+      setBulkWalletError("Reason must be less than 500 characters");
+      return;
+    }
+
+    const parsedDays = Number(bulkWalletForm.days) || 0;
+    if (parsedDays < 0) {
+      setBulkWalletError("Days cannot be negative");
+      return;
+    }
+
+    const statusFilter =
+      bulkWalletForm.status === "all"
+        ? null
+        : bulkWalletForm.status === "active"
+          ? true
+          : false;
+
+    submitBulkWalletRequest(
+      {
+        amount: parsedAmount,
+        reason: trimmedReason,
+        days: parsedDays,
+        adjustmentType: bulkWalletForm.adjustmentType,
+        status: statusFilter,
+      },
+      {
+        onSuccess: (response) => {
+          toast.success(
+            response?.message ?? "Wallet bulk request sent to queue",
+            {
+              style: {
+                backgroundColor: "#009F7F",
+                color: "#fff",
+              },
+            }
+          );
+          resetBulkWalletForm();
+          setShowBulkWalletForm(false);
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to submit wallet bulk request",
+            {
+              style: {
+                backgroundColor: "#FF0000",
+                color: "#fff",
+              },
+            }
+          );
+        }
+      }
+    );
+  };
 
   // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
   const columnVisibility = useMemo(() => {
@@ -220,10 +334,10 @@ export default function DriversPage(): JSX.Element {
                   <Button
                     variant="none"
                     className="text-[#009F7F] hover:bg-[#009F7F] hover:text-white"
-                    onClick={() => setShowFilters(!showFilters)}
+                    onClick={() => setShowBulkWalletForm(!showBulkWalletForm)}
                   >
-                    {showFilters ? 'Hide Filters' : 'Show Filters'}
-                    {showFilters ? <ArrowDown className="ml-2" /> : <ArrowUp className="ml-2" />}
+                    {showBulkWalletForm ? 'Hide Bulk Wallet Tool' : 'Bulk Wallet Deduction'}
+                    {showBulkWalletForm ? <ArrowDown className="ml-2" /> : <ArrowUp className="ml-2" />}
                   </Button>
                 </div>
                 <div className="flex items-center gap-2">
@@ -257,7 +371,153 @@ export default function DriversPage(): JSX.Element {
                 </div>
               </div>
             </div>
-            {/* Counter Cards and Filter Controls */}
+            {/* Counter Cards and Bulk Wallet Controls */}
+            {showBulkWalletForm && (
+              <div className="rounded bg-white p-5 shadow space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold">Bulk Wallet Deduction / Credit</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Target drivers by status or inactivity days and send a queued wallet adjustment request.
+                  </p>
+                </div>
+
+                {bulkWalletError && (
+                  <p className="text-sm text-red-600">{bulkWalletError}</p>
+                )}
+
+                <form onSubmit={handleBulkWalletSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="bulk-amount">Amount</Label>
+                      <Input
+                        id="bulk-amount"
+                        type="number"
+                        min={1}
+                        step="0.01"
+                        placeholder="Enter amount"
+                        value={bulkWalletForm.amount}
+                        onChange={(event) =>
+                          setBulkWalletForm((prev) => ({
+                            ...prev,
+                            amount: event.target.value,
+                          }))
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Minimum amount is 1. Values are applied per driver.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bulk-type">Adjustment Type</Label>
+                      <Select
+                        value={bulkWalletForm.adjustmentType}
+                        onValueChange={(value) =>
+                          setBulkWalletForm((prev) => ({
+                            ...prev,
+                            adjustmentType: value as "add" | "minus",
+                          }))
+                        }
+                      >
+                        <SelectTrigger id="bulk-type">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="minus">Deduct (minus)</SelectItem>
+                          <SelectItem value="add">Credit (add)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bulk-status">Driver Status</Label>
+                      <Select
+                        value={bulkWalletForm.status}
+                        onValueChange={(value) =>
+                          setBulkWalletForm((prev) => ({
+                            ...prev,
+                            status: value as "all" | "active" | "inactive",
+                          }))
+                        }
+                      >
+                        <SelectTrigger id="bulk-status">
+                          <SelectValue placeholder="All drivers" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Drivers</SelectItem>
+                          <SelectItem value="active">Active Drivers</SelectItem>
+                          <SelectItem value="inactive">Inactive Drivers</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Matches the backend `status` flag. Leave as &quot;All&quot; to ignore.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bulk-days">Inactive Days</Label>
+                      <Input
+                        id="bulk-days"
+                        type="number"
+                        min={0}
+                        placeholder="0"
+                        value={bulkWalletForm.days}
+                        onChange={(event) =>
+                          setBulkWalletForm((prev) => ({
+                            ...prev,
+                            days: event.target.value,
+                          }))
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Drivers inactive for at least this many days (last active date comparison).
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bulk-reason">Reason</Label>
+                    <Textarea
+                      id="bulk-reason"
+                      placeholder="Explain why this adjustment is required..."
+                      rows={4}
+                      maxLength={500}
+                      value={bulkWalletForm.reason}
+                      onChange={(event) =>
+                        setBulkWalletForm((prev) => ({
+                          ...prev,
+                          reason: event.target.value,
+                        }))
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {bulkWalletForm.reason.length}/500 characters
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={resetBulkWalletForm}
+                      disabled={isSubmittingBulkRequest}
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isSubmittingBulkRequest}
+                      className="flex items-center gap-2"
+                    >
+                      {isSubmittingBulkRequest && (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      )}
+                      Send Bulk Request
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            )}
             <div className="flex justify-center gap-5 mb-5">
 
               <Card className="relative overflow-hidden border-none bg-gradient-to-br from-emerald-50 to-teal-50 shadow-md w-[230px] h-[120px] transform transition duration-300 ease-in-out hover:scale-105">
