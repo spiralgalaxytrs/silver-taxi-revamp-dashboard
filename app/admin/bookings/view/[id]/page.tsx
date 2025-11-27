@@ -78,7 +78,6 @@ export default function BookingDetailsPage() {
   const [newChargeKey, setNewChargeKey] = useState('');
   const [newChargeValue, setNewChargeValue] = useState('');
   const [isManualCompleted, setIsManualCompleted] = useState(false);
- 
   const { data: booking, isLoading } = useFetchBookingById(bookingId || "");
   const { mutateAsync: updateBooking } = useUpdateBooking();
   const { mutateAsync: manualBookingComplete, isPending: isManualCompletePending } = useManualBookingComplete();
@@ -1313,14 +1312,31 @@ export default function BookingDetailsPage() {
                       )}
 
                       {/* Extra Charges */}
-                      {Object.entries(extraCharges)
-                        .filter(([_, value]) => Number(value) > 0)
+                      {(Object.entries(extraCharges)
+                        .filter(([key, value]) => Number(value) > 0 && key !== 'Toll' && key !== 'Permit Charge' && key !== 'Hill')
                         .map(([key, value]) => (
                           <div key={key} className="flex justify-between">
                             <span>{capitalizeLabel(key)}</span>
                             <span>{formatCurrency(Number(value) || 0)}</span>
                           </div>
-                        ))}
+                        )))}
+
+                      {booking?.driverCommissionBreakup?.extraPerKmCharge > 0 && <div className="flex justify-between">
+                        <span>Extra Per Km Charge</span>
+                        <span>{formatCurrency(booking?.driverCommissionBreakup?.extraPerKmCharge)}</span>
+                      </div>}
+                      {booking?.extraDriverBeta > 0 && <div className="flex justify-between">
+                        <span>Extra Driver Beta</span>
+                        <span>{formatCurrency(booking?.extraDriverBeta)}</span>
+                      </div>}
+                      {booking?.extraHill > 0 && <div className="flex justify-between">
+                        <span>Extra Hill</span>
+                        <span>{formatCurrency(booking?.extraHill)}</span>
+                      </div>}
+                      {booking?.extraPermitCharge > 0 && <div className="flex justify-between">
+                        <span>Extra Permit</span>
+                        <span>{formatCurrency(booking?.extraPermitCharge)}</span>
+                      </div>} 
 
                       <div className="border-t-4 border-double border-gray-400 pt-2">
                         <div className="flex justify-between font-bold">
