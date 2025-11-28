@@ -125,6 +125,7 @@ export default function DriversPage(): JSX.Element {
   const [isSpinning, setIsSpinning] = useState(false)
   const [showBulkWalletForm, setShowBulkWalletForm] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isBulkWalletDialogOpen, setIsBulkWalletDialogOpen] = useState(false);
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
   const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
   const [bulkWalletForm, setBulkWalletForm] = useState<BulkWalletFormState>({
@@ -135,6 +136,7 @@ export default function DriversPage(): JSX.Element {
     days: '0',
   });
   const [bulkWalletError, setBulkWalletError] = useState<string | null>(null);
+  const [pendingBulkWalletData, setPendingBulkWalletData] = useState<any>(null);
 
   const {
     mutate: submitBulkWalletRequest,
@@ -194,14 +196,22 @@ export default function DriversPage(): JSX.Element {
           ? true
           : false;
 
+    // Store the validated data and show confirmation dialog
+    setPendingBulkWalletData({
+      amount: parsedAmount,
+      reason: trimmedReason,
+      days: parsedDays,
+      adjustmentType: bulkWalletForm.adjustmentType,
+      status: statusFilter,
+    });
+    setIsBulkWalletDialogOpen(true);
+  };
+
+  const confirmBulkWalletSubmit = () => {
+    if (!pendingBulkWalletData) return;
+
     submitBulkWalletRequest(
-      {
-        amount: parsedAmount,
-        reason: trimmedReason,
-        days: parsedDays,
-        adjustmentType: bulkWalletForm.adjustmentType,
-        status: statusFilter,
-      },
+      pendingBulkWalletData,
       {
         onSuccess: (response) => {
           toast.success(
@@ -215,6 +225,8 @@ export default function DriversPage(): JSX.Element {
           );
           resetBulkWalletForm();
           setShowBulkWalletForm(false);
+          setIsBulkWalletDialogOpen(false);
+          setPendingBulkWalletData(null);
         },
         onError: (error: any) => {
           toast.error(
@@ -226,9 +238,15 @@ export default function DriversPage(): JSX.Element {
               },
             }
           );
+          setIsBulkWalletDialogOpen(false);
         }
       }
     );
+  };
+
+  const cancelBulkWalletSubmit = () => {
+    setIsBulkWalletDialogOpen(false);
+    setPendingBulkWalletData(null);
   };
 
   // 🌟 Fix: Avoid calling updateTableColumnVisibility inside useMemo (side effect in render)
@@ -437,6 +455,8 @@ export default function DriversPage(): JSX.Element {
                           setBulkWalletForm((prev) => ({
                             ...prev,
                             status: value as "all" | "active" | "inactive",
+                            // Reset days when status changes away from inactive
+                            days: value === "inactive" ? prev.days : '0',
                           }))
                         }
                       >
@@ -449,30 +469,29 @@ export default function DriversPage(): JSX.Element {
                           <SelectItem value="inactive">Inactive Drivers</SelectItem>
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-muted-foreground">
-                        Matches the backend `status` flag. Leave as &quot;All&quot; to ignore.
-                      </p>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="bulk-days">Inactive Days</Label>
-                      <Input
-                        id="bulk-days"
-                        type="number"
-                        min={0}
-                        placeholder="0"
-                        value={bulkWalletForm.days}
-                        onChange={(event) =>
-                          setBulkWalletForm((prev) => ({
-                            ...prev,
-                            days: event.target.value,
-                          }))
-                        }
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Drivers inactive for at least this many days (last active date comparison).
-                      </p>
-                    </div>
+                    {bulkWalletForm.status === "inactive" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="bulk-days">Inactive Days</Label>
+                        <Input
+                          id="bulk-days"
+                          type="number"
+                          min={0}
+                          placeholder="0"
+                          value={bulkWalletForm.days}
+                          onChange={(event) =>
+                            setBulkWalletForm((prev) => ({
+                              ...prev,
+                              days: event.target.value,
+                            }))
+                          }
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Drivers inactive for at least this many days (last active date comparison).
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -490,9 +509,6 @@ export default function DriversPage(): JSX.Element {
                         }))
                       }
                     />
-                    <p className="text-xs text-muted-foreground">
-                      {bulkWalletForm.reason.length}/500 characters
-                    </p>
                   </div>
 
                   <div className="flex justify-end gap-3">
@@ -516,6 +532,44 @@ export default function DriversPage(): JSX.Element {
                     </Button>
                   </div>
                 </form>
+
+                {/* Bulk Wallet Confirmation Dialog */}
+                <AlertDialog open={isBulkWalletDialogOpen} onOpenChange={setIsBulkWalletDialogOpen}>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirm Bulk Wallet Request</AlertDialogTitle>
+                      {pendingBulkWalletData && (
+                        <div className="text-sm text-muted-foreground space-y-2 mt-2">
+                          <div>Are you sure you want to {pendingBulkWalletData.adjustmentType === "add" ? "credit" : "deduct"} <strong>₹{pendingBulkWalletData.amount}</strong> for selected drivers?</div>
+                          <div className="space-y-1">
+                            <div><strong>Type:</strong> {pendingBulkWalletData.adjustmentType === "add" ? "Credit (Add)" : "Deduct (Minus)"}</div>
+                            <div><strong>Status Filter:</strong> {
+                              pendingBulkWalletData.status === null ? "All Drivers" :
+                              pendingBulkWalletData.status === true ? "Active Drivers" : "Inactive Drivers"
+                            }</div>
+                            {pendingBulkWalletData.days > 0 && (
+                              <div><strong>Inactive Days:</strong> {pendingBulkWalletData.days} days</div>
+                            )}
+                            <div><strong>Reason:</strong> {pendingBulkWalletData.reason}</div>
+                          </div>
+                        </div>
+                      )}
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel onClick={cancelBulkWalletSubmit}>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={confirmBulkWalletSubmit} disabled={isSubmittingBulkRequest}>
+                        {isSubmittingBulkRequest ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Submitting...
+                          </>
+                        ) : (
+                          "Confirm & Send"
+                        )}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             )}
             <div className="flex justify-center gap-5 mb-5">
