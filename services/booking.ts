@@ -16,6 +16,7 @@ export const fetchBookings = async (params?: GetBookingsParams): Promise<Booking
       ...(params?.isContacted && { isContacted: params.isContacted }),
       ...(params?.sortBy && { sortBy: params.sortBy }),
       ...(params?.sortOrder && { sortOrder: params.sortOrder }),
+      ...(params?.searchBy && { searchBy: params.searchBy }),
     },
   });
   return response.data.data;

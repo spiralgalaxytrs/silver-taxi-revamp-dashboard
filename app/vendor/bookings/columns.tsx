@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "components/ui/button"
-import { Edit, SendHorizontal, Trash, Eye, ChevronDown } from "lucide-react"
+import { Edit, SendHorizontal, Trash, Eye, ChevronDown, CheckCircle, HelpCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "components/ui/badge"
 import { DriverSelectionPopup } from "components/driver/SelectDriver"
@@ -448,14 +448,75 @@ export const columns: MRT_ColumnDef<Booking>[] = [
       };
 
       const currentBooking = booking
-      const bookedDriverId = currentBooking?.driverId;
-      const assignedDriver = drivers.find((driver: any) => String(driver.driverId) === String(bookedDriverId));
+      const bookedDriverId = currentBooking?.driverId ?? "";
+
+      // Find assigned driver - check multiple sources
+      let assignedDriver: any = null;
+
+      // First, check if driver info is directly in booking (driverName, driverPhone)
+      if (currentBooking?.driverName && currentBooking?.driverPhone) {
+        assignedDriver = { 
+          name: currentBooking.driverName, 
+          phone: currentBooking.driverPhone 
+        };
+      }
+      // Second, check if driver object exists in booking
+      else if (currentBooking?.driver && typeof currentBooking.driver === 'object') {
+        const driverObj = currentBooking.driver;
+        if (driverObj.name || driverObj.phone) {
+          assignedDriver = {
+            name: driverObj.name || driverObj.driverName || "",
+            phone: driverObj.phone || driverObj.driverPhone || "",
+            driverId: driverObj.driverId || driverObj.id || bookedDriverId
+          };
+        }
+      }
+      // Finally, search in drivers array
+      if (!assignedDriver && bookedDriverId) {
+        const foundDriver = drivers.find(
+          (driver: any) => String(driver.driverId) === String(bookedDriverId) || 
+                         String(driver.id) === String(bookedDriverId)
+        );
+        if (foundDriver) {
+          assignedDriver = {
+            name: foundDriver.name || "",
+            phone: foundDriver.phone || "",
+            driverId: foundDriver.driverId || foundDriver.id
+          };
+        }
+      }
 
       return (
         <DriverSelectionPopup
           trigger={
-            <Button variant="outline" size="sm" disabled={isLoading}>
-              {assignedDriver ? assignedDriver.name : "Assign Driver"}
+            <Button variant="outline" size="default" className="py-2">
+              {assignedDriver ? (
+                <p className="flex items-center gap-2 text-sm font-medium py-1">
+                  {assignedDriver.name}
+                  <br />
+                  {assignedDriver.phone && `(${assignedDriver.phone})`}
+
+                  <TooltipComponent
+                    name={
+                      currentBooking?.driverId
+                        ? currentBooking?.driverAccepted || ""
+                        : "Assign Driver"
+                    }
+                  >
+                    {currentBooking?.driverAccepted === "accepted" ? (
+                      <span className="text-xs text-green-500">
+                        <CheckCircle className="h-4 w-4" />
+                      </span>
+                    ) : (
+                      <span className="text-xs text-red-500">
+                        <HelpCircle className="h-4 w-4" />
+                      </span>
+                    )}
+                  </TooltipComponent>
+                </p>
+              ) : (
+                "Assign Driver"
+              )}
             </Button>
           }
           onSelectDriver={handleDriverAssignment}

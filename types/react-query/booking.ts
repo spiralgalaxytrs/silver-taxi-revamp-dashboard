@@ -92,6 +92,9 @@ export interface Booking {
   minKm?: number;
 
   convenienceFee?: number;
+
+  driverName?: string | null;
+  driverPhone?: string | null;
 }
 
 export interface GetBookingsParams {
@@ -103,6 +106,7 @@ export interface GetBookingsParams {
   sortBy?: string;
   sortOrder?: 'ASC' | 'DESC';
   adminId?: string;
+  searchBy?: 'bookings' | 'drivers' | null;
 }
 
 export interface GetDashboardDataParams {

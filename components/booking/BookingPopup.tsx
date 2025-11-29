@@ -298,8 +298,43 @@ export function BookingPopup({
                 <Label className="text-sm font-medium">Assign Driver:</Label>
                 {(() => {
                   const currentBooking = booking;
-                  const bookedDriverId = currentBooking?.driverId;
-                  const assignedDriver = drivers.find((driver: any) => String(driver.driverId) === String(bookedDriverId));
+                  const bookedDriverId = currentBooking?.driverId ?? "";
+
+                  // Find assigned driver - check multiple sources
+                  let assignedDriver: any = null;
+
+                  // First, check if driver info is directly in booking (driverName, driverPhone)
+                  if (currentBooking?.driverName && currentBooking?.driverPhone) {
+                    assignedDriver = { 
+                      name: currentBooking.driverName, 
+                      phone: currentBooking.driverPhone 
+                    };
+                  }
+                  // Second, check if driver object exists in booking
+                  else if (currentBooking?.driver && typeof currentBooking.driver === 'object') {
+                    const driverObj = currentBooking.driver;
+                    if (driverObj.name || driverObj.phone) {
+                      assignedDriver = {
+                        name: driverObj.name || driverObj.driverName || "",
+                        phone: driverObj.phone || driverObj.driverPhone || "",
+                        driverId: driverObj.driverId || driverObj.id || bookedDriverId
+                      };
+                    }
+                  }
+                  // Finally, search in drivers array
+                  if (!assignedDriver && bookedDriverId) {
+                    const foundDriver = drivers.find(
+                      (driver: any) => String(driver.driverId) === String(bookedDriverId) || 
+                                     String(driver.id) === String(bookedDriverId)
+                    );
+                    if (foundDriver) {
+                      assignedDriver = {
+                        name: foundDriver.name || "",
+                        phone: foundDriver.phone || "",
+                        driverId: foundDriver.driverId || foundDriver.id
+                      };
+                    }
+                  }
 
                   return (
                     <DriverSelectionPopup

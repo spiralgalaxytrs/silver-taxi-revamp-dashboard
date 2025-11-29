@@ -678,7 +678,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
     Cell: ({ row, table }) => {
       const status = row.getValue("status") as string;
       const booking = row.original;
-    
+
       // ✅ Get drivers + mutations from meta (coming from parent component)
       const {
         drivers = [],
@@ -687,19 +687,50 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         assignDriver,
         assignAllDriver,
       } = table.options.meta as any;
-    
+
       const bookingId = booking?.bookingId ?? "";
       const bookedDriverId = booking?.driverId ?? "";
-    
-      // Find assigned driver
-      const assignedDriver = drivers.find(
-        (driver: any) => String(driver.driverId) === String(bookedDriverId)
-      );
-    
+
+      // Find assigned driver - check multiple sources
+      let assignedDriver: any = null;
+
+      // First, check if driver info is directly in booking (driverName, driverPhone)
+      if (booking?.driverName && booking?.driverPhone) {
+        assignedDriver = { 
+          name: booking.driverName, 
+          phone: booking.driverPhone 
+        };
+      }
+      // Second, check if driver object exists in booking
+      else if (booking?.driver && typeof booking.driver === 'object') {
+        const driverObj = booking.driver;
+        if (driverObj.name || driverObj.phone) {
+          assignedDriver = {
+            name: driverObj.name || driverObj.driverName || "",
+            phone: driverObj.phone || driverObj.driverPhone || "",
+            driverId: driverObj.driverId || driverObj.id || bookedDriverId
+          };
+        }
+      }
+      // Finally, search in drivers array from meta
+      if (!assignedDriver && bookedDriverId) {
+        const foundDriver = drivers.find(
+          (driver: any) => String(driver.driverId) === String(bookedDriverId) || 
+                         String(driver.id) === String(bookedDriverId)
+        );
+        if (foundDriver) {
+          assignedDriver = {
+            name: foundDriver.name || "",
+            phone: foundDriver.phone || "",
+            driverId: foundDriver.driverId || foundDriver.id
+          };
+        }
+      }
+
       // Assign single driver
       const handleDriverAssignment = (driverId: string) => {
         if (!bookingId) return;
-    
+
         assignDriver(
           { bookingId, driverId },
           {
@@ -707,7 +738,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
               toast.success(data?.message || "Driver assigned successfully", {
                 style: { backgroundColor: "#009F7F", color: "#fff" },
               }),
-    
+
             onError: (error: any) =>
               toast.error(error?.response?.data?.message || "Assignment failed", {
                 style: { backgroundColor: "#FF0000", color: "#fff" },
@@ -715,23 +746,23 @@ export const columns: MRT_ColumnDef<Booking>[] = [
           }
         );
       };
-    
+
       // Assign to all drivers
       const handleAllDriverAssign = () => {
         if (!bookingId) return;
-    
+
         assignAllDriver(
           { id: bookingId },
           {
             onSuccess: (data: any) =>
               toast.success(
                 data?.message ||
-                  "Notification sent to eligible drivers successfully",
+                "Notification sent to eligible drivers successfully",
                 {
                   style: { backgroundColor: "#009F7F", color: "#fff" },
                 }
               ),
-    
+
             onError: (error: any) =>
               toast.error(
                 error?.response?.data?.message || "Assign All drivers failed",
@@ -742,7 +773,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
           }
         );
       };
-    
+
       return (
         <DriverSelectionPopup
           trigger={
@@ -752,7 +783,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
                   {assignedDriver.name}
                   <br />
                   {assignedDriver.phone && `(${assignedDriver.phone})`}
-    
+
                   <TooltipComponent
                     name={
                       booking?.driverId
@@ -787,7 +818,7 @@ export const columns: MRT_ColumnDef<Booking>[] = [
         />
       );
     },
-    
+
     muiTableHeadCellProps: {
       align: 'left', sx: {
         '& .MuiBox-root': {

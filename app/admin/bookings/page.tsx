@@ -11,6 +11,13 @@ import { Input } from 'components/ui/input';
 import { ArrowDown, ArrowUp, Activity, Trash, RefreshCcw, Filter } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { Label } from 'components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from 'components/ui/select';
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -96,6 +103,7 @@ export default function BookingsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [localColumnVisibility, setLocalColumnVisibility] = useState<Record<string, boolean>>({})
   const [isColumnVisibilityUpdated, setIsColumnVisibilityUpdated] = useState(false);
+  const [searchBy, setSearchBy] = useState<'bookings' | 'drivers' | null>(null);
   const [filters, setFilters] = useState({
     bookingConfirmed: false, // Default filter
     notStarted: false,
@@ -126,6 +134,11 @@ export default function BookingsPage() {
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
   }, [filters.notStarted, filters.started, filters.completed, filters.cancelled, filters.bookingConfirmed]);
 
+  // Reset pagination when searchBy changes
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, pageIndex: 0 }));
+  }, [searchBy]);
+
   const {
     data: bookingsData = {
       bookings: [],
@@ -152,6 +165,7 @@ export default function BookingsPage() {
     sortBy,
     isContacted: filters.contacted,
     sortOrder,
+    searchBy: searchBy || undefined
   });
 
   const {
@@ -184,8 +198,30 @@ export default function BookingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localColumnVisibility, isColumnVisibilityUpdated]);
 
-  // Ensure at least one status filter is always selected
+  // Clear all filters when searchBy is selected
   useEffect(() => {
+    if (searchBy === 'bookings' || searchBy === 'drivers') {
+      setFilters(prev => ({
+        ...prev,
+        bookingConfirmed: false,
+        notStarted: false,
+        started: false,
+        completed: false,
+        cancelled: false,
+        notContacted: false,
+        contacted: false,
+        vendor: false,
+      }));
+    }
+  }, [searchBy]);
+
+  // Ensure at least one status filter is always selected (only when searchBy is not selected)
+  useEffect(() => {
+    // Skip this logic if searchBy is selected
+    if (searchBy === 'bookings' || searchBy === 'drivers') {
+      return;
+    }
+    
     const hasActiveStatusFilter = filters.bookingConfirmed || filters.notStarted || filters.started || filters.completed || filters.cancelled || filters.notContacted || filters.contacted;
     if (!hasActiveStatusFilter) {
       setFilters(prev => ({
@@ -199,9 +235,10 @@ export default function BookingsPage() {
         contacted: false,
       }));
     }
-  }, [filters.bookingConfirmed, filters.notStarted, filters.started, filters.completed, filters.cancelled, filters.notContacted, filters.contacted]);
+  }, [filters.bookingConfirmed, filters.notStarted, filters.started, filters.completed, filters.cancelled, filters.notContacted, filters.contacted, searchBy]);
 
 
+  
   const bookingData = useMemo(() => {
     return bookings && bookings.length > 0 ? bookings.map((booking: any) => {
 
@@ -298,10 +335,9 @@ export default function BookingsPage() {
     });
 
     setIsFilterApplied(true);
+    setSearchBy(null);
+    setGlobalFilter('');
   };
-
-
-
 
 
   const handleCreateBooking = () => {
@@ -678,7 +714,26 @@ export default function BookingsPage() {
               },
             }}
             renderTopToolbarCustomActions={() => (
-              <div className="flex flex-1 justify-end items-center">
+              <div className="flex flex-1 justify-end items-center gap-4">
+                {/* Search By Dropdown */}
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm font-medium whitespace-nowrap">Search By:</Label>
+                  <Select
+                    value={searchBy || "none"}
+                    onValueChange={(value) => {
+                      setSearchBy(value === "none" ? null : (value as 'bookings' | 'drivers'));
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Not Selected" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Not Selected</SelectItem>
+                      <SelectItem value="bookings">All Booking</SelectItem>
+                      <SelectItem value="drivers">Driver</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 {/* 🔁 Refresh Button */}
                 <Button
                   variant={"ghost"}
