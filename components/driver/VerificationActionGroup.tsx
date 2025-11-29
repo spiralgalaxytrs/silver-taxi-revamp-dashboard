@@ -58,7 +58,14 @@ export default function VerificationActionGroup({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
 
-
+  console.log("VerificationActionGroupProps", {
+    label,
+    fieldType,
+    driverId,
+    previousRemark,
+    editedDriver,
+    vehicleId,
+  });
 
 
   const { mutate: driverVerification } = useDriverVerification();
@@ -107,6 +114,7 @@ export default function VerificationActionGroup({
       payload[fields.remark] = remarkValue;
     }
 
+    console.log("payload >> ", payload);
     try {
       driverVerification({ id: driverId, data: payload }, {
         onSuccess: () => {

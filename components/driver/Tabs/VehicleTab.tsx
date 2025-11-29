@@ -152,10 +152,10 @@ export default function VehicleTab({
                       </div>
 
                       <div className="space-y-3 text-gray-700">
-                        <div className="flex items-center gap-3">
+                        {/* <div className="flex items-center gap-3">
                           <span className="font-semibold w-32">Vehicle Name:</span>
                           <p className="text-gray-900">{vehicle.name || "-"}</p>
-                        </div>
+                        </div> */}
                         <div className="flex items-center gap-3">
                           <span className="font-semibold w-32">Vehicle Type:</span>
                           <p className="text-gray-900">{vehicle.type || "-"}</p>
@@ -168,7 +168,7 @@ export default function VehicleTab({
                           <span className="font-semibold w-32">Fuel Type:</span>
                           <p className="text-gray-900">{vehicle.fuelType || "-"}</p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        {/* <div className="flex items-center gap-3">
                           <span className="font-semibold w-32">Vehicle Year:</span>
                           <p className="text-gray-900">{vehicle.vehicleYear || "-"}</p>
                         </div>
@@ -201,7 +201,7 @@ export default function VehicleTab({
                                   : "-"}
                             </p>
                           </div>
-                        </div>
+                        </div> */}
                         <div className="flex items-center gap-3">
                           <span className="font-semibold w-32">Verification Status:</span>
                           <p className="text-gray-900 capitalize">
@@ -248,7 +248,7 @@ export default function VehicleTab({
                                 status: vehicle.insuranceVerified as "accepted" | "rejected" | "pending" | undefined,
                                 remark: vehicle.insuranceRemark,
                               },
-                              {
+                              /* {
                                 type: "pollution" as VerificationField,
                                 url: vehicle.pollutionImage,
                                 label: "Pollution Certificate",
@@ -256,7 +256,7 @@ export default function VehicleTab({
                                 isExpired: vehicle.pollutionExpiryDate ? new Date(vehicle.pollutionExpiryDate) < new Date() : false,
                                 status: vehicle.pollutionImageVerified as "accepted" | "rejected" | "pending" | undefined,
                                 remark: vehicle.pollutionImageRemark,
-                              },
+                              }, */
                             ]
                               .filter((doc) => doc?.url)
                               .map((doc) => (
@@ -288,7 +288,7 @@ export default function VehicleTab({
                                       )}
                                     </div>
                                   </div>
-                                  {doc.expiry && (
+                                  {/* {doc.expiry && (
                                     <div className="mt-2">
                                       <p className="text-sm text-black mr-2">
                                         Expiry Status:
@@ -314,7 +314,7 @@ export default function VehicleTab({
                                         </TooltipProvider>
                                       </p>
                                     </div>
-                                  )}
+                                  )} */}
                                   <Dialog
                                     onOpenChange={(open) => {
                                       if (!open) {

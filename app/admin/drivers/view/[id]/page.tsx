@@ -342,15 +342,15 @@ export default function ViewDriverPage() {
     };
 
     const driverDocuments = [
-        { type: "panCard", url: editedDriver?.panCardImage, label: "PAN Card", status: editedDriver?.panCardVerified, remark: editedDriver?.panCardRemark },
+        // { type: "panCard", url: editedDriver?.panCardImage, label: "PAN Card", status: editedDriver?.panCardVerified, remark: editedDriver?.panCardRemark },
         { type: "aadharFront", url: editedDriver?.aadharImageFront, label: "Aadhar Front", status: editedDriver?.aadharImageFrontVerified, remark: editedDriver?.aadharImageFrontRemark },
         { type: "aadharBack", url: editedDriver?.aadharImageBack, label: "Aadhar Back", status: editedDriver?.aadharImageBackVerified, remark: editedDriver?.aadharImageBackRemark },
         {
             type: "licenseFront",
             url: editedDriver?.licenseImageFront,
             label: "License Front",
-            expiry: editedDriver?.licenseValidity,
-            isExpired: editedDriver?.licenseValidity ? new Date(editedDriver.licenseValidity) < new Date() : false,
+            // expiry: editedDriver?.licenseValidity,
+            // isExpired: editedDriver?.licenseValidity ? new Date(editedDriver.licenseValidity) < new Date() : false,
             status: editedDriver?.licenseImageFrontVerified,
             remark: editedDriver?.licenseImageFrontRemark,
         },
@@ -358,8 +358,8 @@ export default function ViewDriverPage() {
             type: "licenseBack",
             url: editedDriver?.licenseImageBack,
             label: "License Back",
-            expiry: editedDriver?.licenseValidity,
-            isExpired: editedDriver?.licenseValidity ? new Date(editedDriver.licenseValidity) < new Date() : false,
+            // expiry: editedDriver?.licenseValidity,
+            // isExpired: editedDriver?.licenseValidity ? new Date(editedDriver.licenseValidity) < new Date() : false,
             status: editedDriver?.licenseImageBackVerified,
             remark: editedDriver?.licenseImageBackRemark,
         },
