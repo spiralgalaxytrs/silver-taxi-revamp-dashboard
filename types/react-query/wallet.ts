@@ -7,7 +7,7 @@ export interface wallet {
   vendorId: string;
   // driverId: string;
   amount: number;
-  createdAt: string;
+  createdAt: Date | string;
   updatedAt: string;
 }
 
@@ -23,7 +23,7 @@ export interface WalletTransaction {
   reason?: string;
   remark: string;
   description: string
-  createdAt: string;
+  createdAt:Date | string;
   ownedBy?: "Vendor" | "Driver";
 
   walletId?: string;
