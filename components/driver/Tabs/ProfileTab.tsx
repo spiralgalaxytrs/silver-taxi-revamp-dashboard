@@ -179,7 +179,7 @@ export default function ProfileTab({
                         <span className="font-semibold w-32">Phone Number:</span>
                         <p className="text-gray-900">{editedDriver?.phone || "-"}</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    {/* <div className="flex items-center gap-3">
                         <span className="font-semibold w-32">Address:</span>
                         <p className="text-gray-900">{editedDriver?.address || "-"}</p>
                     </div>
@@ -192,7 +192,7 @@ export default function ProfileTab({
                                         : "-"}
                             </p>
                         </div>
-                    </div>
+                    </div> */}
                     <div className="flex items-center gap-3">
                         <span className="font-semibold w-32">Status</span>
                         <div className="mt-1 rounded-md">
