@@ -53,8 +53,8 @@ export interface Booking {
 
   startOtp: string;
   endOtp: string;
-  tripStartedTime?: Date;
-  tripCompletedTime?: Date;
+  tripStartedTime?: Date | string;
+  tripCompletedTime?: Date | string;
   startOdometerImage?: string | null;
   endOdometerImage?: string | null;
   startOdometerValue?: number;
